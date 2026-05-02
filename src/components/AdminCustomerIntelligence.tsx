@@ -3133,28 +3133,45 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
+          {/* Done-today metrics — counted once after applying same logic as the tab content */}
+          {(() => { return null; })()}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/40 rounded-xl mb-3">
-              <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                <Users className="w-3.5 h-3.5" />
-                كل العملاء
-                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{filteredProfiles?.length || 0}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="followup" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                <Zap className="w-3.5 h-3.5 text-orange-500" />
-                يحتاجون متابعة الآن
-                {followUpList.length > 0 && (
-                  <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                تمت اليوم
-                {Object.keys(handledMeta).length > 0 && (
-                  <Badge className="text-[10px] h-5 mr-1 bg-emerald-600 hover:bg-emerald-700 text-white">{Object.keys(handledMeta).length}</Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
+            {(() => {
+              const doneEntries = Object.values(handledMeta);
+              const doneTasksCount = doneEntries.length;
+              const doneStaffCount = new Set(doneEntries.map((r) => r.by)).size;
+              return (
+                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/40 rounded-xl mb-3">
+                  <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                    <Users className="w-3.5 h-3.5" />
+                    كل العملاء
+                    <Badge variant="secondary" className="text-[10px] h-5 mr-1">{filteredProfiles?.length || 0}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="followup" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                    <Zap className="w-3.5 h-3.5 text-orange-500" />
+                    يحتاجون متابعة الآن
+                    {followUpList.length > 0 && (
+                      <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    تمت اليوم
+                    {doneTasksCount > 0 && (
+                      <Badge
+                        className="text-[10px] h-5 mr-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                        title={`${doneTasksCount} مهمة منجزة بواسطة ${doneStaffCount} موظف`}
+                      >
+                        {doneTasksCount}
+                        {doneStaffCount > 1 && (
+                          <span className="opacity-80 font-medium">· {doneStaffCount}👤</span>
+                        )}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+              );
+            })()}
 
             {/* ===== Tab: Done Today (independent — fed directly from staff_task_handling) ===== */}
             <TabsContent value="done-today" className="space-y-2.5 mt-0 focus-visible:outline-none">
