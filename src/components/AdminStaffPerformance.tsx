@@ -255,19 +255,53 @@ export default function AdminStaffPerformance() {
 
   useEffect(() => { loadData(); }, [range]);
 
+  const maxScore = useMemo(
+    () => staff.reduce((m, s) => Math.max(m, s.score || 0), 0),
+    [staff]
+  );
+
   const filtered = useMemo(() => {
     let arr = [...staff];
     if (search.trim()) {
       const q = search.toLowerCase();
       arr = arr.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
     }
+    if (activeOnly) arr = arr.filter(s => s.total_actions > 0);
+    if (minScore > 0) arr = arr.filter(s => (s.score || 0) >= minScore);
     arr.sort((a, b) => {
       const av = (a[sortBy] as number) || 0;
       const bv = (b[sortBy] as number) || 0;
-      return bv - av;
+      return sortDir === "desc" ? bv - av : av - bv;
     });
     return arr;
-  }, [staff, search, sortBy]);
+  }, [staff, search, sortBy, sortDir, minScore, activeOnly]);
+
+  function exportCsv() {
+    const headers = [
+      "الترتيب", "الاسم", "الإيميل", "الدور", "النقاط", "عملاء فريدون",
+      "مكالمات", "واتساب", "ملاحظات", "طلبات", "إجمالي الإجراءات", "دقائق العمل",
+    ];
+    const lines = [headers.join(",")];
+    filtered.forEach((s, i) => {
+      const cells = [
+        i + 1, `"${s.name.replace(/"/g, '""')}"`, `"${s.email}"`, s.role,
+        s.score, s.unique_customers_contacted, s.phone_calls, s.whatsapp_msgs,
+        s.notes_added, s.orders_processed, s.total_actions, s.work_minutes,
+      ];
+      lines.push(cells.join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `staff-performance-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 
   // Aggregates
   const totalActions = staff.reduce((s, m) => s + m.total_actions, 0);
