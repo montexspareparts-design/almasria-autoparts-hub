@@ -56,6 +56,7 @@ const PROBLEM_LABEL_MAP = Object.fromEntries(PROBLEM_OPTIONS.map((p) => [p.value
 interface ReportData {
   id?: string;
   quotations_count: number;
+  invoices_count: number;
   calls_count: number;
   whatsapp_count: number;
   offers_sent_count: number;
