@@ -209,6 +209,7 @@ export function AdminERPCatalogBrowser() {
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
+        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
