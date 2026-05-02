@@ -1108,6 +1108,42 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_intraday_baselines: {
+        Row: {
+          batch_id: string
+          erp_id: string
+          id: string
+          name: string
+          qty: number
+          retail_price: number | null
+          snapshot_at: string
+          triggered_by: string | null
+          wholesale_price: number | null
+        }
+        Insert: {
+          batch_id: string
+          erp_id: string
+          id?: string
+          name: string
+          qty?: number
+          retail_price?: number | null
+          snapshot_at?: string
+          triggered_by?: string | null
+          wholesale_price?: number | null
+        }
+        Update: {
+          batch_id?: string
+          erp_id?: string
+          id?: string
+          name?: string
+          qty?: number
+          retail_price?: number | null
+          snapshot_at?: string
+          triggered_by?: string | null
+          wholesale_price?: number | null
+        }
+        Relationships: []
+      }
       erp_sync_alerts: {
         Row: {
           alert_key: string
@@ -3490,6 +3526,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      erp_intraday_baseline_status: {
+        Args: never
+        Returns: {
+          has_baseline: boolean
+          items_in_baseline: number
+          last_batch_id: string
+          last_snapshot_at: string
+          minutes_ago: number
+        }[]
+      }
       extract_models_from_name: { Args: { p_name: string }; Returns: string[] }
       extract_part_family: { Args: { p_name: string }; Returns: string }
       extract_year_from_name: { Args: { p_name: string }; Returns: number }
@@ -3636,6 +3682,26 @@ export type Database = {
           team_size: number
         }[]
       }
+      get_today_erp_restocked_items: {
+        Args: never
+        Returns: {
+          baseline_at: string
+          current_qty: number
+          delta: number
+          erp_id: string
+          had_shortage_request: boolean
+          in_our_system: boolean
+          is_new: boolean
+          minutes_since_baseline: number
+          name: string
+          our_product_id: string
+          prev_qty: number
+          retail_price: number
+          shortage_requests_count: number
+          was_zero: boolean
+          wholesale_price: number
+        }[]
+      }
       get_today_new_in_erp: {
         Args: never
         Returns: {
@@ -3768,6 +3834,13 @@ export type Database = {
       }
       send_morning_restock_summary: { Args: never; Returns: Json }
       take_daily_stock_snapshot: { Args: never; Returns: Json }
+      take_erp_intraday_baseline: {
+        Args: never
+        Returns: {
+          batch_id: string
+          items_count: number
+        }[]
+      }
       take_intraday_stock_baseline: {
         Args: never
         Returns: {
