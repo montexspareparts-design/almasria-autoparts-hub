@@ -765,14 +765,55 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
               </PopoverContent>
             </Popover>
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs"
+              onClick={exportCsv}
+              disabled={!filteredRows.length}
+              title="تصدير النتائج الحالية CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              CSV
+            </Button>
+
             {hasActiveFilter && (
               <Button
                 variant="ghost" size="sm" className="h-9 gap-1 text-xs"
-                onClick={() => { setFilterStaff("all"); setFilterStatus("all"); setFilterDate(null); }}
+                onClick={() => {
+                  setFilterStaff("all"); setFilterStatus("all"); setFilterDate(null);
+                  setSearch(""); setMinPerf(0);
+                }}
               >
                 <XCircle className="w-3.5 h-3.5" />مسح الفلتر
               </Button>
             )}
+          </div>
+        </div>
+
+        {/* Search + min performance */}
+        <div className="flex items-center gap-3 flex-wrap mb-3 pb-3 border-b border-border/50">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="بحث في الاسم/الإيميل/أفضل صفقة/مشاكل/ملاحظات..."
+              className="h-9 pr-8 text-xs"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs flex-1 min-w-[200px] max-w-sm">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground whitespace-nowrap">حد أدنى للأداء:</span>
+            <Slider
+              min={0}
+              max={Math.max(maxPerf, 10)}
+              step={1}
+              value={[minPerf]}
+              onValueChange={(v) => setMinPerf(v[0] || 0)}
+              className="flex-1"
+            />
+            <Badge variant="outline" className="font-mono w-12 justify-center">{minPerf}</Badge>
           </div>
         </div>
 
