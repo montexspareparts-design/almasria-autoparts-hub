@@ -730,7 +730,7 @@ export default function TeamShortagesView() {
                 })}
               </AnimatePresence>
             </ul>
-          </ScrollArea>
+          </div>
         )}
       </Card>
     </div>
