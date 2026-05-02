@@ -2215,6 +2215,7 @@ export type Database = {
           followups_count: number
           id: string
           incomplete_orders_count: number
+          invoices_count: number
           is_submitted: boolean
           lost_opportunities_count: number
           main_problem: string | null
@@ -2244,6 +2245,7 @@ export type Database = {
           followups_count?: number
           id?: string
           incomplete_orders_count?: number
+          invoices_count?: number
           is_submitted?: boolean
           lost_opportunities_count?: number
           main_problem?: string | null
@@ -2273,6 +2275,7 @@ export type Database = {
           followups_count?: number
           id?: string
           incomplete_orders_count?: number
+          invoices_count?: number
           is_submitted?: boolean
           lost_opportunities_count?: number
           main_problem?: string | null

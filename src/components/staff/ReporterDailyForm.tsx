@@ -56,6 +56,7 @@ const PROBLEM_LABEL_MAP = Object.fromEntries(PROBLEM_OPTIONS.map((p) => [p.value
 interface ReportData {
   id?: string;
   quotations_count: number;
+  invoices_count: number;
   calls_count: number;
   whatsapp_count: number;
   offers_sent_count: number;
@@ -81,7 +82,7 @@ interface ReportData {
 }
 
 const EMPTY: ReportData = {
-  quotations_count: 0, calls_count: 0, whatsapp_count: 0, offers_sent_count: 0,
+  quotations_count: 0, invoices_count: 0, calls_count: 0, whatsapp_count: 0, offers_sent_count: 0,
   offers_count: 0, offers_converted_count: 0, incomplete_orders_count: 0,
   followups_count: 0, new_customers_count: 0, main_problem: "", problem_notes: "",
   lost_opportunities_count: 0, is_submitted: false, submitted_at: null, self_rating: null,
@@ -129,6 +130,7 @@ function emptyFieldsRatio(d: ReportData): number {
 function getMissingRequiredFields(d: ReportData): string[] {
   const required: { key: keyof ReportData; label: string }[] = [
     { key: "quotations_count",        label: "عدد عروض الأسعار" },
+    { key: "invoices_count",          label: "عدد الفواتير" },
     { key: "calls_count",             label: "عدد المكالمات" },
     { key: "whatsapp_count",          label: "عملاء واتساب" },
     { key: "offers_sent_count",       label: "عروض/كشوف مُرسلة" },
@@ -206,6 +208,7 @@ export default function ReporterDailyForm() {
     user_id: user!.id,
     report_date: todayStr(),
     quotations_count: data.quotations_count,
+    invoices_count: data.invoices_count,
     calls_count: data.calls_count,
     whatsapp_count: data.whatsapp_count,
     offers_sent_count: data.offers_sent_count,
@@ -518,6 +521,7 @@ function TodayForm({
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
           <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} hint="عدد عروض الأسعار اللي عملتها وبعتّها للعملاء النهارده — سواء عبر واتساب أو إيميل أو يدوي." />
+          <NumField icon={<FileCheck className="w-3.5 h-3.5 text-emerald-600" />} label="عدد الفواتير" required value={data.invoices_count} onChange={setNum("invoices_count")} disabled={locked} hint="إجمالي عدد الفواتير اللي اتعملت النهارده على السيستم." />
           <NumField icon={<Phone className="w-3.5 h-3.5 text-purple-600" />} label="عدد المكالمات" required value={data.calls_count} onChange={setNum("calls_count")} disabled={locked} hint="إجمالي المكالمات التليفونية اللي اتعملت النهارده (واردة + صادرة) مع العملاء فقط — مش الزمايل." />
           <NumField icon={<MessageCircle className="w-3.5 h-3.5 text-green-600" />} label="عملاء واتساب" required value={data.whatsapp_count} onChange={setNum("whatsapp_count")} disabled={locked} hint="عدد العملاء المختلفين اللي تواصلت معاهم على واتساب النهارده — مش عدد الرسائل، الرقم لكل عميل مرة واحدة." />
           <NumField icon={<FileCheck className="w-3.5 h-3.5 text-cyan-600" />} label="عملاء أُرسل لهم عروض/كشوف" required value={data.offers_sent_count} onChange={setNum("offers_sent_count")} disabled={locked} hint="عدد العملاء اللي بعتّ لهم عرض سعر أو كشف حساب رسمي النهارده — لازم يكون مرفق بـ PDF أو ملف." />

@@ -1,0 +1,1 @@
+ALTER TABLE public.reporter_daily_reports ADD COLUMN IF NOT EXISTS invoices_count integer NOT NULL DEFAULT 0;
