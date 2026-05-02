@@ -588,15 +588,43 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
     return list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }, [rows, profilesMap]);
 
+  const maxPerf = useMemo(
+    () => rows.reduce((m, r) => Math.max(m, Number(r.performance_score) || 0), 0),
+    [rows]
+  );
+
   const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
+    const q = search.trim().toLowerCase();
+    let arr = rows.filter((r) => {
       if (filterStaff !== "all" && r.user_id !== filterStaff) return false;
       if (filterStatus === "submitted" && !r.is_submitted) return false;
       if (filterStatus === "draft" && r.is_submitted) return false;
       if (filterDate && r.report_date !== filterDate) return false;
+      if (minPerf > 0 && (Number(r.performance_score) || 0) < minPerf) return false;
+      if (q) {
+        const p = profilesMap[r.user_id];
+        const haystack = [
+          p?.full_name, p?.email,
+          r.best_deal_today, r.problems_faced, r.tomorrow_plan, r.general_notes,
+          r.report_date,
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     });
-  }, [rows, filterStaff, filterStatus, filterDate]);
+    arr.sort((a, b) => {
+      let av: number | string = a[sortBy] ?? 0;
+      let bv: number | string = b[sortBy] ?? 0;
+      if (sortBy === "report_date") {
+        av = String(av); bv = String(bv);
+        return sortDir === "desc" ? (bv as string).localeCompare(av as string) : (av as string).localeCompare(bv as string);
+      }
+      const an = Number(av) || 0;
+      const bn = Number(bv) || 0;
+      return sortDir === "desc" ? bn - an : an - bn;
+    });
+    return arr;
+  }, [rows, profilesMap, filterStaff, filterStatus, filterDate, search, minPerf, sortBy, sortDir]);
 
   // Available dates (unique, sorted desc) — used for quick chips
   const availableDates = useMemo(() => {
@@ -612,7 +640,46 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
     }
   }, [from, to, filterDate]);
 
-  const hasActiveFilter = filterStaff !== "all" || filterStatus !== "all" || filterDate !== null;
+  const hasActiveFilter =
+    filterStaff !== "all" || filterStatus !== "all" || filterDate !== null ||
+    !!search.trim() || minPerf > 0;
+
+  function exportCsv() {
+    const headers = [
+      "الموظف", "الإيميل", "التاريخ", "اليوم",
+      "عروض", "مكالمات", "واتساب", "محولة", "عملاء جدد",
+      "غير مكتملة", "نقاط الأداء", "الحالة", "أفضل صفقة", "مشاكل", "خطة بكرة",
+    ];
+    const lines = [headers.join(",")];
+    filteredRows.forEach((r) => {
+      const p = profilesMap[r.user_id] || {};
+      const day = (() => { try { return format(new Date(r.report_date), "EEEE", { locale: ar }); } catch { return ""; } })();
+      const cells = [
+        `"${(p.full_name || "موظف").replace(/"/g, '""')}"`,
+        `"${(p.email || "").replace(/"/g, '""')}"`,
+        r.report_date, day,
+        r.quotations_count || 0, r.calls_count || 0, r.whatsapp_count || 0,
+        r.offers_converted_count || 0, r.new_customers_count || 0,
+        r.incomplete_orders_count || 0, r.performance_score || 0,
+        r.is_submitted ? "مُسلَّم" : "مسودة",
+        `"${(r.best_deal_today || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${(r.problems_faced || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${(r.tomorrow_plan || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+      ];
+      lines.push(cells.join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporter-reports-${from}_${to}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 
   return (
     <div className="space-y-4">
