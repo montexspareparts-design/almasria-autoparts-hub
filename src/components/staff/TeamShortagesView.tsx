@@ -150,13 +150,48 @@ export default function TeamShortagesView() {
   }, [fetchRows]);
 
   const counts = useMemo(() => {
-    const c: Record<StatusKey | "all", number> = { all: rows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0 };
-    rows.forEach(r => { c[r.status] = (c[r.status] || 0) + 1; });
+    const c: Record<StatusKey | "all" | "arrived", number> = { all: rows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0, arrived: 0 };
+    rows.forEach(r => {
+      c[r.status] = (c[r.status] || 0) + 1;
+      if (r.status === "fulfilled") c.arrived += 1;
+    });
     return c;
   }, [rows]);
 
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (dateFilter === "today") {
+      return { from: startOfToday, to: null as Date | null };
+    }
+    if (dateFilter === "yesterday") {
+      const startYesterday = new Date(startOfToday); startYesterday.setDate(startYesterday.getDate() - 1);
+      return { from: startYesterday, to: startOfToday };
+    }
+    if (dateFilter === "week") {
+      const start7 = new Date(startOfToday); start7.setDate(start7.getDate() - 6);
+      return { from: start7, to: null };
+    }
+    return { from: null, to: null };
+  }, [dateFilter]);
+
   const filtered = useMemo(() => {
-    let list = tab === "all" ? rows : rows.filter(r => r.status === tab);
+    let list: Row[];
+    if (tab === "all") list = rows;
+    else if (tab === "arrived") list = rows.filter(r => r.status === "fulfilled");
+    else list = rows.filter(r => r.status === tab);
+
+    // فلترة بالتاريخ — نستخدم reviewed_at للأصناف اللي وصلت، created_at للباقي
+    if (dateRange.from) {
+      list = list.filter(r => {
+        const ref = (tab === "arrived" || r.status === "fulfilled") && r.reviewed_at
+          ? new Date(r.reviewed_at)
+          : new Date(r.created_at);
+        if (dateRange.to) return ref >= dateRange.from! && ref < dateRange.to;
+        return ref >= dateRange.from!;
+      });
+    }
+
     if (q.trim()) {
       const s = q.trim().toLowerCase();
       list = list.filter(r => {
@@ -167,9 +202,13 @@ export default function TeamShortagesView() {
       });
     }
     return list;
-  }, [rows, tab, q, staffMap]);
+  }, [rows, tab, q, staffMap, dateRange]);
 
   const uniqueStaff = useMemo(() => new Set(rows.map(r => r.staff_user_id)).size, [rows]);
+  const arrivedToday = useMemo(() => {
+    const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
+    return rows.filter(r => r.status === "fulfilled" && r.reviewed_at && new Date(r.reviewed_at) >= startOfToday).length;
+  }, [rows]);
 
   return (
     <div className="space-y-4" dir="rtl">
