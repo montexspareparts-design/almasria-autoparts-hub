@@ -111,7 +111,7 @@ export function AdminERPCatalogBrowser() {
     setLoading(true);
     try {
       const [cacheData, prodData] = await Promise.all([
-        fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, qty, retail_price, wholesale_price"),
+        fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, part_number, qty, retail_price, wholesale_price"),
         fetchAllPaginated<OnsiteRow>("products", "id, sku, erp_item_code, part_number, name_ar, stock_quantity, base_price, is_active, brand"),
       ]);
 
