@@ -62,6 +62,26 @@ export function AdminERPCatalogBrowser() {
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkConfirm, setBulkConfirm] = useState<null | { action: "activate" | "hide"; count: number }>(null);
+  const [exactCounts, setExactCounts] = useState<{ total: number; active: number; inactive: number; cache: number } | null>(null);
+
+  const loadExactCounts = async () => {
+    try {
+      const [totalRes, activeRes, inactiveRes, cacheRes] = await Promise.all([
+        supabase.from("products").select("*", { count: "exact", head: true }),
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", false),
+        supabase.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }),
+      ]);
+      setExactCounts({
+        total: totalRes.count ?? 0,
+        active: activeRes.count ?? 0,
+        inactive: inactiveRes.count ?? 0,
+        cache: cacheRes.count ?? 0,
+      });
+    } catch (err: any) {
+      console.error("Failed to load exact counts:", err);
+    }
+  };
 
   const fetchAllPaginated = async <T,>(
     table: "erp_full_catalog_cache" | "products",
