@@ -876,6 +876,8 @@ function TodayErpRestockedInline() {
           </Button>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
