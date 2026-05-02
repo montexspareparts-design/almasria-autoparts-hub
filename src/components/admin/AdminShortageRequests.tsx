@@ -460,15 +460,19 @@ function DetailCard({ row, isEditing, editStatus, editResponse, setEditStatus, s
         <div className="space-y-2 border-t pt-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">الحالة الجديدة</Label>
+              <Label className="text-xs">الحالة الجديدة (يدوي)</Label>
               <Select value={editStatus} onValueChange={(v) => setEditStatus(v as StatusKey)}>
-                <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(["open", "sourcing", "fulfilled", "rejected"] as StatusKey[]).map(k => (
-                    <SelectItem key={k} value={k}>{STATUS_META[k].label}</SelectItem>
-                  ))}
+                <SelectTrigger className="h-9 bg-background"><SelectValue placeholder="اختر الحالة" /></SelectTrigger>
+                <SelectContent className="z-[100] bg-popover" position="popper" sideOffset={4}>
+                  <SelectItem value="open">🟡 مفتوح — لسه بيتراجع</SelectItem>
+                  <SelectItem value="sourcing">🔵 جارٍ التوفير — بنشتغل عليه</SelectItem>
+                  <SelectItem value="fulfilled">🟢 تم التوفير — متاح دلوقتي</SelectItem>
+                  <SelectItem value="rejected">🔴 مرفوض — مش هيتوفر</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                💡 ملاحظة: الحالة بتتحدّث تلقائياً لـ"تم التوفير" لما الفيصل يرجّع رصيد كافي
+              </p>
             </div>
           </div>
           <div>
