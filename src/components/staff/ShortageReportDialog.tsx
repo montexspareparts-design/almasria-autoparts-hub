@@ -198,7 +198,7 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[9px] font-bold text-emerald-700 bg-emerald-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-base font-extrabold text-emerald-950 tracking-wide bg-white px-2.5 py-1 rounded border-2 border-emerald-400 shadow-sm">
+                    <span dir="ltr" className="font-mono text-lg font-extrabold text-emerald-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-emerald-400 shadow-sm">
                       {chosen.sku}
                     </span>
                   </div>
@@ -212,7 +212,7 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[9px] font-bold text-blue-700 bg-blue-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-base font-extrabold text-blue-950 tracking-wide bg-white px-2.5 py-1 rounded border-2 border-blue-400 shadow-sm">
+                    <span dir="ltr" className="font-mono text-lg font-extrabold text-blue-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-blue-400 shadow-sm">
                       {chosenErp.erp_id}
                     </span>
                   </div>
