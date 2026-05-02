@@ -260,7 +260,7 @@ export default function TeamShortagesView() {
               <p className="text-xs sm:text-sm text-white/80 mt-1 leading-snug">
                 كل بلاغ بيتسجل هنا = فرصة بيع ضايعة بنحاول نرجّعها. كل ما تبلّغ أكتر، الإدارة بتعرف توفّر أسرع 💪
               </p>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <ShortageReportDialog
                   onSuccess={fetchRows}
                   trigger={
@@ -270,6 +270,19 @@ export default function TeamShortagesView() {
                     >
                       <Sparkles className="w-4 h-4 text-amber-500" />
                       بلّغ عن صنف ناقص دلوقتي
+                    </Button>
+                  }
+                />
+                <ShortageBulkImportDialog
+                  onSuccess={fetchRows}
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2 bg-white/15 backdrop-blur-sm text-white border-white/30 hover:bg-white/25 hover:text-white font-semibold"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      استيراد إكسيل
                     </Button>
                   }
                 />
