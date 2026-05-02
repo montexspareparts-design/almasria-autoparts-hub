@@ -274,7 +274,22 @@ export default function TodayRestockedDialog({
 
           {/* شريط الإجراءات */}
           <div className="p-3 border-b bg-amber-50/40 flex flex-wrap items-center gap-2">
-            {tab === "restocked" && (
+            {/* الزر الرئيسي: مزامنة فعلية مع الفيصل */}
+            <Button
+              size="sm"
+              onClick={handleSyncAndCheck}
+              disabled={syncing}
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            >
+              {syncing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5" />
+              )}
+              {syncing ? "جاري المزامنة..." : "🔄 عرفني إيه اللي زاد دلوقتي"}
+            </Button>
+
+            {tab === "restocked" && baseline?.has_baseline && (
               <Button
                 size="sm"
                 variant="outline"
@@ -287,7 +302,7 @@ export default function TodayRestockedDialog({
                 ) : (
                   <RefreshCcw className="w-3.5 h-3.5" />
                 )}
-                {baseline?.has_baseline ? "حدّث نقطة المقارنة" : "ابدأ المقارنة"}
+                صفّر نقطة المقارنة
               </Button>
             )}
             <Button
@@ -298,7 +313,7 @@ export default function TodayRestockedDialog({
               className="gap-1.5"
             >
               <RefreshCcw className="w-3.5 h-3.5" />
-              تحديث القائمة
+              تحديث
             </Button>
 
             <div className="relative flex-1 min-w-[180px] ms-auto">
