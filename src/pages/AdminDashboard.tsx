@@ -233,6 +233,8 @@ const AdminDashboard = () => {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // حالة طي/فتح كل مجموعة في السايدبار. لو المستخدم لم يلمس المجموعة → نفتح المجموعة اللي فيها التبويب النشط فقط.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const canAccess = isAdmin || isModerator;
 
