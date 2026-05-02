@@ -482,7 +482,7 @@ function TodayForm({
     <>
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <TeamBenchmarkLine todayScore={todayScore} />
-      {/* Focus strip — يملأ مكان الأقسام التي أُزيلت بدل ترك فراغ */}
+      {/* Focus strip — تذكير أن كل الأرقام بتتدخل يدوي من الموظف */}
       <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-l from-primary/5 via-background to-amber-500/5 px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-lg">
@@ -490,15 +490,15 @@ function TodayForm({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground leading-tight">
-              ركّز على إدخال أرقام اليوم بدقة
+              ادخل أرقامك يدوياً بدقة
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
-              المؤشرات والأهداف بقت بتتحسب أوتوماتيك من بياناتك — مفيش داعي تدخّل يدوي.
+              كل المؤشرات والأهداف بتعتمد على الأرقام اللي بتكتبها بنفسك — اتأكد إنها صحيحة قبل الإرسال.
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-1 shrink-0 text-[10px] text-muted-foreground bg-muted/40 rounded-full px-2 py-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            حساب تلقائي
+          <div className="hidden sm:flex items-center gap-1 shrink-0 text-[10px] text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300/60 rounded-full px-2 py-1 font-semibold">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            إدخال يدوي
           </div>
         </div>
       </div>
