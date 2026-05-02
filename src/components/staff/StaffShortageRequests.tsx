@@ -114,6 +114,32 @@ export default function StaffShortageRequests() {
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchRows]);
 
+  // جلب رصيد الفيصل الحالي للأصناف اللي عندها بلاغات مفتوحة (open/sourcing)
+  const [erpStockMap, setErpStockMap] = useState<Record<string, number>>({});
+  const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
+  useEffect(() => {
+    const openRows = rows.filter(r => r.status === "open" || r.status === "sourcing");
+    if (openRows.length === 0) { setErpStockMap({}); return; }
+    const skus = Array.from(new Set(
+      openRows.map(r => (r.manual_sku || r.product?.sku || "").trim()).filter(Boolean)
+    ));
+    if (skus.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from("erp_full_catalog_cache" as any)
+        .select("erp_id, qty, fetched_at")
+        .in("erp_id", skus);
+      const map: Record<string, number> = {};
+      let latest: string | null = null;
+      (data || []).forEach((r: any) => {
+        map[r.erp_id] = Number(r.qty || 0);
+        if (!latest || r.fetched_at > latest) latest = r.fetched_at;
+      });
+      setErpStockMap(map);
+      setErpStockFetchedAt(latest);
+    })();
+  }, [rows]);
+
   // Search products (debounced) — يبحث بالتوازي في:
   //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
   //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
