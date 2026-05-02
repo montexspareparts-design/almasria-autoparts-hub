@@ -149,13 +149,15 @@ export default function AdminShortageRequests() {
     return details.filter(d => d.status === statusFilter);
   }, [details, statusFilter]);
 
-  // إخفاء الأصناف اللي كل بلاغاتها "تم التوفير" — إلا لو الأدمن طلب يشوفها
+  // إخفاء الأصناف اللي كل بلاغاتها اتاخد فيها أكشن (تم التوفير أو مرفوض) — إلا لو الأدمن طلب يشوفها
   const visiblePriority = useMemo(() => {
     if (showFulfilled) return priority;
     return priority.filter(r => {
       const reports = Number(r.reports_count) || 0;
       const fulfilled = Number(r.fulfilled_count) || 0;
-      return reports === 0 || fulfilled < reports;
+      const rejected = Number(r.rejected_count) || 0;
+      // يفضل الصنف ظاهر طول ما في بلاغ مفتوح أو جارٍ التوفير
+      return reports === 0 || (fulfilled + rejected) < reports;
     });
   }, [priority, showFulfilled]);
 
