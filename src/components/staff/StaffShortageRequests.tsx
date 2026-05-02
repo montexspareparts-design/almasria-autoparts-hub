@@ -632,10 +632,10 @@ export default function StaffShortageRequests() {
         )}
       </div>
 
-      {/* Auto-sync info banner */}
-      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-center gap-2.5 text-xs">
-        <RefreshCw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 animate-[spin_4s_linear_infinite]" />
-        <div className="flex-1 leading-relaxed">
+      {/* Auto-sync info banner + manual trigger */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-start gap-2.5 text-xs">
+        <RefreshCw className={cn("w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
+        <div className="flex-1 leading-relaxed min-w-0">
           <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
           <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
           <span className="font-semibold text-emerald-700 dark:text-emerald-400">«تم التوفير»</span>
@@ -646,6 +646,20 @@ export default function StaffShortageRequests() {
             </span>
           )}
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={manualSyncing}
+          onClick={runManualSync}
+          className="h-8 px-2.5 gap-1.5 shrink-0 border-sky-300 dark:border-sky-700 bg-white/80 dark:bg-sky-950/40 hover:bg-white text-sky-700 dark:text-sky-300 text-[11px] font-semibold"
+          title="افحص الفيصل دلوقتي — لو فيه أي توافر، البلاغ هيتنقل لـ«تم التوفير» وهيوصلك إشعار"
+        >
+          {manualSyncing ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> جاري الفحص…</>
+          ) : (
+            <><Sparkles className="w-3.5 h-3.5" /> افحص دلوقتي</>
+          )}
+        </Button>
       </div>
 
       {/* Tabs by status */}
