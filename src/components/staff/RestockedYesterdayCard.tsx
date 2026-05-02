@@ -30,9 +30,25 @@ interface RestockedItem {
   shortage_requests_count: number;
   base_price: number | null;
   baseline_date: string | null;
+  last_zero_date: string | null;
+  days_since_zero: number | null;
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
+
+function formatZeroDate(iso: string | null): string {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return new Intl.DateTimeFormat("ar-EG", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    }).format(d);
+  } catch {
+    return iso;
+  }
+}
 type PeriodDays = 1 | 7 | 14 | 30;
 
 const PERIOD_OPTIONS: { value: PeriodDays; label: string; shortLabel: string }[] = [
@@ -183,11 +199,12 @@ export default function RestockedYesterdayCard() {
       {/* Table-like header (RTL: right-to-left columns) */}
       <div
         dir="rtl"
-        className="hidden sm:grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_110px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
+        className="hidden sm:grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_100px_120px_100px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
       >
         <div>اسم الصنف</div>
         <div>البارت نمبر</div>
         <div className="text-center">الرصيد الجديد</div>
+        <div className="text-center">آخر نفاد</div>
         <div className="text-center">الكود</div>
         <div className="text-center">الحالة</div>
       </div>
@@ -204,7 +221,7 @@ export default function RestockedYesterdayCard() {
               <div
                 dir="rtl"
                 key={item.product_id}
-                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_110px_90px] gap-3 px-4 py-3 items-center transition-colors ${
+                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_100px_120px_100px_90px] gap-3 px-4 py-3 items-center transition-colors ${
                   item.had_shortage_request
                     ? "bg-rose-50/50 hover:bg-rose-100/60"
                     : "bg-white hover:bg-emerald-50/60"
@@ -247,6 +264,29 @@ export default function RestockedYesterdayCard() {
                       <span className="mx-0.5">+{item.delta}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* آخر نفاد */}
+                <div className="text-center">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">
+                    آخر نفاد
+                  </div>
+                  {item.last_zero_date ? (
+                    <div className="inline-flex flex-col items-center">
+                      <span className="text-[11px] font-mono font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
+                        {formatZeroDate(item.last_zero_date)}
+                      </span>
+                      {typeof item.days_since_zero === "number" && (
+                        <span className="text-[10px] text-amber-700 mt-0.5">
+                          {item.days_since_zero === 0
+                            ? "امبارح"
+                            : `من ${item.days_since_zero} يوم`}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">—</span>
+                  )}
                 </div>
 
                 {/* الكود */}

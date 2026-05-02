@@ -3531,8 +3531,10 @@ export type Database = {
           baseline_date: string
           brand: string
           current_stock: number
+          days_since_zero: number
           delta: number
           had_shortage_request: boolean
+          last_zero_date: string
           name_ar: string
           prev_stock: number
           product_id: string
