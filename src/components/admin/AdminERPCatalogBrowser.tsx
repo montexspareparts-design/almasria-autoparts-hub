@@ -355,12 +355,21 @@ export function AdminERPCatalogBrowser() {
           غير موجودة على الموقع ({filteredMissing.length})
         </Button>
         <Button
+          variant={viewMode === "visitor" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("visitor")}
+          className="gap-1 border-green-500/50"
+        >
+          <Eye className="w-4 h-4 text-green-600" />
+          🌐 يراها الزائر ({totalActive.toLocaleString("ar-EG")})
+        </Button>
+        <Button
           variant={viewMode === "onsite" ? "default" : "outline"}
           size="sm"
           onClick={() => setViewMode("onsite")}
           className="gap-1"
         >
-          <Eye className="w-4 h-4" />
+          <Package className="w-4 h-4" />
           إجمالي الجدول ({totalProducts.toLocaleString("ar-EG")})
         </Button>
         <Badge variant="outline" className="gap-1 border-green-500/40 bg-green-50 dark:bg-green-950/30">
