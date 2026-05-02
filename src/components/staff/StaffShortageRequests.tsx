@@ -655,7 +655,10 @@ export default function StaffShortageRequests() {
               </motion.div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-bold text-emerald-900">أصناف تم توفيرها على الفيصل</h4>
+                  <h4 className="font-bold text-emerald-900">
+                    تم توفير <span className="text-emerald-700">{recentlyFulfilled.length}</span>{" "}
+                    {recentlyFulfilled.length === 1 ? "صنف" : "أصناف"} آخر 14 يوم
+                  </h4>
                   {newlyFulfilled.length > 0 && (
                     <motion.span
                       animate={{ scale: [1, 1.1, 1] }}
@@ -668,7 +671,9 @@ export default function StaffShortageRequests() {
                   )}
                 </div>
                 <p className="text-[11px] text-emerald-700 mt-0.5">
-                  المزامنة مع الفيصل كل ساعة — اتصل بالعميل وبشّره
+                  {newlyFulfilled.length > 0
+                    ? `عندك ${newlyFulfilled.length} ${newlyFulfilled.length === 1 ? "صنف" : "أصناف"} جديدة لسه ما شفتهاش — اتصل بالعميل وبشّره`
+                    : "المزامنة مع الفيصل كل ساعة — اتصل بالعميل وبشّره"}
                 </p>
               </div>
             </div>
