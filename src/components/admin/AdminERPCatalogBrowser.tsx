@@ -521,6 +521,7 @@ export function AdminERPCatalogBrowser() {
                   <thead className="bg-muted/50 text-xs">
                     <tr>
                       <th className="p-2 text-right">كود الصنف</th>
+                      <th className="p-2 text-right">بارت نمبر</th>
                       <th className="p-2 text-right">اسم الصنف (الفيصل)</th>
                       <th className="p-2 text-center">الرصيد</th>
                       <th className="p-2 text-center">سعر القطاعي</th>
