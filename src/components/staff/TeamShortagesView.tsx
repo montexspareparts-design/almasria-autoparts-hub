@@ -181,6 +181,36 @@ export default function TeamShortagesView() {
         </div>
       </Card>
 
+      {/* Auto-sync banner + manual trigger */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-start gap-2.5 text-xs">
+        <RefreshCw className={cn("w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
+        <div className="flex-1 leading-relaxed min-w-0">
+          <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
+          <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«تم التوفير»</span>
+          <span className="text-muted-foreground"> وهيوصل إشعار فوري للموظف اللي طلبه.</span>
+          {erpStockFetchedAt && (
+            <span className="block text-[10px] text-muted-foreground mt-0.5">
+              آخر مزامنة: {new Date(erpStockFetchedAt).toLocaleString("ar-EG", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short" })}
+            </span>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={manualSyncing}
+          onClick={runManualSync}
+          className="h-8 px-2.5 gap-1.5 shrink-0 border-sky-300 dark:border-sky-700 bg-white/80 dark:bg-sky-950/40 hover:bg-white text-sky-700 dark:text-sky-300 text-[11px] font-semibold"
+          title="افحص الفيصل دلوقتي — لو فيه أي توافر، البلاغات هتتنقل لـ«تم التوفير»"
+        >
+          {manualSyncing ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> جاري الفحص…</>
+          ) : (
+            <><Sparkles className="w-3.5 h-3.5" /> افحص دلوقتي</>
+          )}
+        </Button>
+      </div>
+
       {/* Filters bar */}
       <Card className="p-3 sm:p-4 space-y-3">
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
