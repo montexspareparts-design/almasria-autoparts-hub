@@ -3763,6 +3763,26 @@ export type Database = {
         Args: { target_date?: string }
         Returns: Json
       }
+      get_staff_activity_enhanced: {
+        Args: { _target_date?: string }
+        Returns: {
+          daily_report_submitted: boolean
+          email: string
+          first_seen_at: string
+          full_name: string
+          last_path: string
+          last_seen_at: string
+          page_views: number
+          paths_count: number
+          role: Database["public"]["Enums"]["app_role"]
+          seconds_since_last: number
+          session_minutes: number
+          shortage_reports_today: number
+          status: string
+          top_paths: string[]
+          user_id: string
+        }[]
+      }
       get_staff_activity_report: {
         Args: { _target_date?: string }
         Returns: {
