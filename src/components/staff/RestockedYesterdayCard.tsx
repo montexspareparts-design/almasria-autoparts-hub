@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentlyInStockDialog from "@/components/staff/CurrentlyInStockDialog";
+import TodayRestockedDialog from "@/components/staff/TodayRestockedDialog";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -197,14 +198,13 @@ export default function RestockedYesterdayCard() {
                   ? <>أول Snapshot اتسجل: <span className="font-bold">{formatDate(firstSnap)}</span> — استنى للسنابشوت الجاي عشان نبدأ المقارنة.</>
                   : <>لسه مفيش أي Snapshot للمخزون. السنابشوت الأول بيتسجل تلقائياً 6 صباحاً.</>}
               </div>
-              <div className="mt-3">
-                <CurrentlyInStockDialog
-                  triggerLabel="📦 المتاح حالياً في المخزن"
-                />
-                <p className="text-[10px] text-sky-700/70 mt-1.5">
-                  لحد ما نبدأ نقارن، تقدر تستعرض كل الأصناف اللي ليها رصيد دلوقتي.
-                </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <TodayRestockedDialog triggerLabel="🔄 عرفني إيه اللي وصل النهاردة" />
+                <CurrentlyInStockDialog triggerLabel="📦 المتاح حالياً في المخزن" variant="ghost" />
               </div>
+              <p className="text-[10px] text-sky-700/70 mt-1.5">
+                "وصل النهاردة" بيقارن الرصيد الحالي بنقطة مقارنة لحظية تقدر تأخذها بضغطة زر — مفيد لو ضفت صنف لتوّك من الفيصل.
+              </p>
             </div>
           </div>
           <PeriodSwitcher period={period} onChange={setPeriod} />
@@ -223,6 +223,10 @@ export default function RestockedYesterdayCard() {
             مفيش أصناف رصيدها زاد خلال {periodLabel}.
           </div>
           <PeriodSwitcher period={period} onChange={setPeriod} />
+        </div>
+        <div className="p-3 border-t border-muted/40 flex flex-wrap gap-2 bg-white/50">
+          <TodayRestockedDialog triggerLabel="🔄 شوف اللي وصل النهاردة بمزامنة لحظية" />
+          <CurrentlyInStockDialog triggerLabel="📦 المتاح حالياً" variant="ghost" />
         </div>
       </Card>
     );
