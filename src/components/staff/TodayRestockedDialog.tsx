@@ -193,6 +193,11 @@ export default function TodayRestockedDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Force restocked tab for non-admins
+  useEffect(() => {
+    if (!isAdmin && tab === "new_in_erp") setTab("restocked");
+  }, [isAdmin, tab]);
+
   // أخذ baseline فقط
   const handleTakeBaseline = async () => {
     setRefreshing(true);
