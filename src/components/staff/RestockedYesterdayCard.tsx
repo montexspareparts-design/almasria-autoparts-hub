@@ -30,6 +30,8 @@ interface RestockedItem {
   shortage_requests_count: number;
   base_price: number | null;
   baseline_date: string | null;
+  last_zero_date: string | null;
+  days_since_zero: number | null;
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
