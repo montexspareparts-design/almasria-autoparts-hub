@@ -55,19 +55,21 @@ export default function TeamShortagesView() {
     const list = (data as any as Row[]) || [];
     setRows(list);
 
-    // Fetch profile names for all unique staff_user_id
+    // Fetch profile names for all unique staff_user_id (عبر RPC آمنة تشمل reporters)
     const ids = Array.from(new Set(list.map(r => r.staff_user_id).filter(Boolean)));
     if (ids.length > 0) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id,full_name,email")
-        .in("user_id", ids);
+      const { data: profs, error: rpcErr } = await supabase.rpc(
+        "get_staff_display_names" as any,
+        { _user_ids: ids }
+      );
       const m: Record<string, string> = {};
-      (profs || []).forEach((p: any) => {
-        const name = (p.full_name || "").trim() ||
-          (p.email ? String(p.email).split("@")[0] : "زميل");
-        m[p.user_id] = name;
-      });
+      if (!rpcErr && profs) {
+        (profs as any[]).forEach((p: any) => {
+          m[p.user_id] = (p.full_name || "زميل").trim() || "زميل";
+        });
+      }
+      // fallback: لأي ID مش راجع — حط placeholder
+      ids.forEach(id => { if (!m[id]) m[id] = "زميل"; });
       setStaffMap(m);
     }
     setLoading(false);

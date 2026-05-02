@@ -3480,6 +3480,13 @@ export type Database = {
           total_sales: number
         }[]
       }
+      get_staff_display_names: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_submit_streak: { Args: { _user_id: string }; Returns: number }
       get_team_avg_today: {
         Args: never
