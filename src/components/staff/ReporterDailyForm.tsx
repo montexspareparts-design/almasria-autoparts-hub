@@ -90,6 +90,40 @@ const EMPTY: ReportData = {
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (d: Date) => d.toISOString().slice(0, 10);
 
+// ============================================================
+// Soft validation: warnings (not blockers) عشان نمنع الأخطاء الواضحة
+// ============================================================
+function buildConsistencyWarnings(d: ReportData, autoStats: { orders: number; invoices: number; sales: number }): string[] {
+  const warnings: string[] = [];
+  if (Number(d.offers_converted_count) > Number(d.offers_sent_count) && Number(d.offers_sent_count) > 0) {
+    warnings.push("⚠️ عدد العروض المحوّلة أكبر من المرسلة — هل أنت متأكد؟");
+  }
+  if (Number(d.quotations_count) === 0 && Number(d.offers_sent_count) > 0) {
+    warnings.push("⚠️ كتبت إنك أرسلت عروض بدون ما تعمل عروض أسعار اليوم.");
+  }
+  if (
+    Number(d.calls_count) + Number(d.whatsapp_count) === 0 &&
+    Number(d.new_customers_count) > 0
+  ) {
+    warnings.push("⚠️ ضفت عملاء جدد بدون أي مكالمة أو واتساب — تأكّد.");
+  }
+  if (autoStats.orders > 0 && Number(d.offers_converted_count) === 0) {
+    warnings.push(`⚠️ السيستم سجّل لك ${autoStats.orders} طلب اليوم، لكن مفيش عروض محوّلة في تقريرك.`);
+  }
+  return warnings;
+}
+
+// نسبة الحقول الفاضية (= 0) من الحقول الرئيسية الـ9
+function emptyFieldsRatio(d: ReportData): number {
+  const fields = [
+    d.quotations_count, d.calls_count, d.whatsapp_count,
+    d.offers_sent_count, d.offers_converted_count, d.incomplete_orders_count,
+    d.followups_count, d.new_customers_count, d.lost_opportunities_count,
+  ].map((v) => Number(v || 0));
+  const empties = fields.filter((v) => v === 0).length;
+  return empties / fields.length;
+}
+
 export default function ReporterDailyForm() {
   const { user } = useAuth();
   const { toast } = useToast();
