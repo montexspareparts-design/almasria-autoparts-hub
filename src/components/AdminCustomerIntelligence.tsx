@@ -2604,12 +2604,30 @@ const AdminCustomerIntelligence = () => {
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", (isDone || handledByOther) && "opacity-70")}>{task.reason}</p>
                           {/* Show what the staff did with the customer (note from "تم" dialog) */}
                           {handledRec?.note && (
-                            <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-400/40 px-2 py-1.5">
-                              <div className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 mb-0.5 flex items-center gap-1">
-                                <CheckCircle2 className="w-2.5 h-2.5" />
-                                ما تم مع العميل
+                            <div className={cn(
+                              "mt-1.5 rounded-md px-2 py-1.5 border",
+                              handledRec.note.trim().length < 10
+                                ? "bg-amber-500/10 border-amber-400/60"
+                                : "bg-emerald-500/10 border-emerald-400/40"
+                            )}>
+                              <div className={cn(
+                                "text-[9px] font-black mb-0.5 flex items-center gap-1",
+                                handledRec.note.trim().length < 10
+                                  ? "text-amber-700 dark:text-amber-400"
+                                  : "text-emerald-700 dark:text-emerald-400"
+                              )}>
+                                {handledRec.note.trim().length < 10 ? (
+                                  <>⚠️ تفاصيل ناقصة — راجع مع الموظف</>
+                                ) : (
+                                  <><CheckCircle2 className="w-2.5 h-2.5" /> ما تم مع العميل</>
+                                )}
                               </div>
-                              <p className="text-[10px] text-emerald-900 dark:text-emerald-200 leading-snug whitespace-pre-wrap">{handledRec.note}</p>
+                              <p className={cn(
+                                "text-[10px] leading-snug whitespace-pre-wrap",
+                                handledRec.note.trim().length < 10
+                                  ? "text-amber-900 dark:text-amber-200"
+                                  : "text-emerald-900 dark:text-emerald-200"
+                              )}>{handledRec.note}</p>
                             </div>
                           )}
                           {handledByOther && (() => {
