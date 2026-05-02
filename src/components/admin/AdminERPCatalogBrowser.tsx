@@ -20,6 +20,7 @@ import {
 type CacheRow = {
   erp_id: string;
   name: string;
+  part_number: string | null;
   qty: number | null;
   retail_price: number | null;
   wholesale_price: number | null;
@@ -110,7 +111,7 @@ export function AdminERPCatalogBrowser() {
     setLoading(true);
     try {
       const [cacheData, prodData] = await Promise.all([
-        fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, qty, retail_price, wholesale_price"),
+        fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, part_number, qty, retail_price, wholesale_price"),
         fetchAllPaginated<OnsiteRow>("products", "id, sku, erp_item_code, part_number, name_ar, stock_quantity, base_price, is_active, brand"),
       ]);
 
@@ -166,7 +167,11 @@ export function AdminERPCatalogBrowser() {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
       if (!q) return true;
-      return r.erp_id.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q);
+      return (
+        r.erp_id.toLowerCase().includes(q) ||
+        (r.name ?? "").toLowerCase().includes(q) ||
+        (r.part_number ?? "").toLowerCase().includes(q)
+      );
     });
     return sortMissing(filtered);
   }, [rows, existingSkus, search, minQty, sortMode]);
@@ -516,6 +521,7 @@ export function AdminERPCatalogBrowser() {
                   <thead className="bg-muted/50 text-xs">
                     <tr>
                       <th className="p-2 text-right">كود الصنف</th>
+                      <th className="p-2 text-right">بارت نمبر</th>
                       <th className="p-2 text-right">اسم الصنف (الفيصل)</th>
                       <th className="p-2 text-center">الرصيد</th>
                       <th className="p-2 text-center">سعر القطاعي</th>
@@ -529,7 +535,8 @@ export function AdminERPCatalogBrowser() {
                       const isAdded = added.has(r.erp_id);
                       return (
                         <tr key={r.erp_id} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono text-xs">{r.erp_id}</td>
+                          <td className="p-2 font-mono text-xs font-bold">{r.erp_id}</td>
+                          <td className="p-2 font-mono text-[11px] text-muted-foreground">{r.part_number || "—"}</td>
                           <td className="p-2">{r.name}</td>
                           <td className="p-2 text-center">
                             <Badge variant={(r.qty ?? 0) > 10 ? "default" : "secondary"}>{r.qty ?? 0}</Badge>
