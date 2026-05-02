@@ -417,7 +417,7 @@ export function AdminERPCatalogBrowser() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث بالكود أو الاسم..."
+                placeholder="ابحث بالكود أو البارت نمبر أو الاسم..."
                 className="pr-10"
               />
             </div>
