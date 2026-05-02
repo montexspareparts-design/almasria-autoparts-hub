@@ -10,8 +10,11 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Trophy, Users, Clock, Phone, MessageCircle, Zap, Activity,
-  Calendar, TrendingUp, Eye, Award, Target, ArrowUpDown, RefreshCw,
+  Calendar, TrendingUp, Eye, Award, Target, ArrowUp, ArrowDown, ArrowUpDown, RefreshCw, Download, Filter,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import StaffPerformanceDetail from "@/components/admin/StaffPerformanceDetail";
 
 type KpiKey = "active" | "actions" | "customers" | "calls" | "sla";
@@ -78,8 +81,20 @@ export default function AdminStaffPerformance() {
   const [staff, setStaff] = useState<StaffMetric[]>([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof StaffMetric>("score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [minScore, setMinScore] = useState<number>(0);
+  const [activeOnly, setActiveOnly] = useState<boolean>(false);
   const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string } | null>(null);
   const [selectedKpi, setSelectedKpi] = useState<KpiKey | null>(null);
+
+  function handleSort(k: keyof StaffMetric) {
+    if (k === sortBy) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(k);
+      setSortDir("desc");
+    }
+  }
 
   const { from, to } = useMemo(() => getDateRange(range), [range]);
 
@@ -240,19 +255,53 @@ export default function AdminStaffPerformance() {
 
   useEffect(() => { loadData(); }, [range]);
 
+  const maxScore = useMemo(
+    () => staff.reduce((m, s) => Math.max(m, s.score || 0), 0),
+    [staff]
+  );
+
   const filtered = useMemo(() => {
     let arr = [...staff];
     if (search.trim()) {
       const q = search.toLowerCase();
       arr = arr.filter(s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q));
     }
+    if (activeOnly) arr = arr.filter(s => s.total_actions > 0);
+    if (minScore > 0) arr = arr.filter(s => (s.score || 0) >= minScore);
     arr.sort((a, b) => {
       const av = (a[sortBy] as number) || 0;
       const bv = (b[sortBy] as number) || 0;
-      return bv - av;
+      return sortDir === "desc" ? bv - av : av - bv;
     });
     return arr;
-  }, [staff, search, sortBy]);
+  }, [staff, search, sortBy, sortDir, minScore, activeOnly]);
+
+  function exportCsv() {
+    const headers = [
+      "الترتيب", "الاسم", "الإيميل", "الدور", "النقاط", "عملاء فريدون",
+      "مكالمات", "واتساب", "ملاحظات", "طلبات", "إجمالي الإجراءات", "دقائق العمل",
+    ];
+    const lines = [headers.join(",")];
+    filtered.forEach((s, i) => {
+      const cells = [
+        i + 1, `"${s.name.replace(/"/g, '""')}"`, `"${s.email}"`, s.role,
+        s.score, s.unique_customers_contacted, s.phone_calls, s.whatsapp_msgs,
+        s.notes_added, s.orders_processed, s.total_actions, s.work_minutes,
+      ];
+      lines.push(cells.join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `staff-performance-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 
   // Aggregates
   const totalActions = staff.reduce((s, m) => s + m.total_actions, 0);
@@ -337,19 +386,47 @@ export default function AdminStaffPerformance() {
 
       {/* Detailed Table */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="w-4 h-4" />
-              مقارنة تفصيلية ({filtered.length})
+              مقارنة تفصيلية ({filtered.length}{filtered.length !== staff.length ? ` / ${staff.length}` : ""})
             </CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Input
-                placeholder="بحث باسم الموظف..."
+                placeholder="بحث باسم الموظف أو الإيميل..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-48 text-xs"
+                className="h-8 w-56 text-xs"
               />
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={exportCsv} disabled={!filtered.length}>
+                <Download className="w-3.5 h-3.5" />
+                تصدير CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Advanced filters */}
+          <div className="flex items-center gap-4 flex-wrap pt-2 border-t border-border/50">
+            <div className="flex items-center gap-2 text-xs">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label htmlFor="active-only" className="cursor-pointer">نشطين فقط</Label>
+              <Switch id="active-only" checked={activeOnly} onCheckedChange={setActiveOnly} />
+            </div>
+            <div className="flex items-center gap-2 text-xs flex-1 min-w-[200px] max-w-sm">
+              <span className="text-muted-foreground whitespace-nowrap">حد أدنى للنقاط:</span>
+              <Slider
+                min={0}
+                max={Math.max(maxScore, 10)}
+                step={1}
+                value={[minScore]}
+                onValueChange={(v) => setMinScore(v[0] || 0)}
+                className="flex-1"
+              />
+              <Badge variant="outline" className="font-mono w-12 justify-center">{minScore}</Badge>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              فرز: <span className="font-bold text-foreground">{String(sortBy)}</span> ({sortDir === "desc" ? "تنازلي ↓" : "تصاعدي ↑"})
             </div>
           </div>
         </CardHeader>
@@ -367,13 +444,13 @@ export default function AdminStaffPerformance() {
                   <TableRow>
                     <TableHead className="text-xs">#</TableHead>
                     <TableHead className="text-xs">الموظف</TableHead>
-                    <SortableHead label="النقاط" k="score" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="عملاء" k="unique_customers_contacted" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="مكالمات" k="phone_calls" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="واتساب" k="whatsapp_msgs" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="ملاحظات" k="notes_added" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="طلبات" k="orders_processed" current={sortBy} setSort={setSortBy} />
-                    <SortableHead label="إجراءات" k="total_actions" current={sortBy} setSort={setSortBy} />
+                    <SortableHead label="النقاط" k="score" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="عملاء" k="unique_customers_contacted" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="مكالمات" k="phone_calls" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="واتساب" k="whatsapp_msgs" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="ملاحظات" k="notes_added" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="طلبات" k="orders_processed" current={sortBy} dir={sortDir} onSort={handleSort} />
+                    <SortableHead label="إجراءات" k="total_actions" current={sortBy} dir={sortDir} onSort={handleSort} />
                     <TableHead className="text-xs">جلسة العمل</TableHead>
                     <TableHead className="text-xs"></TableHead>
                   </TableRow>
@@ -590,12 +667,26 @@ function KpiCard({ icon: Icon, label, value, sub, color, onClick }: { icon: any;
   );
 }
 
-function SortableHead({ label, k, current, setSort }: { label: string; k: keyof StaffMetric; current: keyof StaffMetric; setSort: (k: keyof StaffMetric) => void }) {
+function SortableHead({
+  label, k, current, dir, onSort,
+}: {
+  label: string;
+  k: keyof StaffMetric;
+  current: keyof StaffMetric;
+  dir: "asc" | "desc";
+  onSort: (k: keyof StaffMetric) => void;
+}) {
+  const active = current === k;
+  const Icon = active ? (dir === "desc" ? ArrowDown : ArrowUp) : ArrowUpDown;
   return (
-    <TableHead className="text-xs cursor-pointer hover:text-primary" onClick={() => setSort(k)}>
+    <TableHead
+      className={`text-xs cursor-pointer hover:text-primary select-none ${active ? "text-primary font-bold" : ""}`}
+      onClick={() => onSort(k)}
+      title={active ? `اضغط لعكس الفرز (${dir === "desc" ? "تنازلي" : "تصاعدي"})` : "اضغط للفرز"}
+    >
       <div className="flex items-center gap-1">
         {label}
-        <ArrowUpDown className={`w-3 h-3 ${current === k ? "text-primary" : "opacity-30"}`} />
+        <Icon className={`w-3 h-3 ${active ? "text-primary" : "opacity-30"}`} />
       </div>
     </TableHead>
   );

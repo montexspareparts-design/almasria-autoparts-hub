@@ -16,10 +16,12 @@ import {
   Trophy, Medal, Award, Calendar as CalIcon, Loader2, Eye, FileText,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users, UserPlus,
   Target, AlertTriangle, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
-  TrendingUp, Heart, CheckCircle2, AlertCircle,
+  TrendingUp, Heart, CheckCircle2, AlertCircle, Search, ArrowUp, ArrowDown, ArrowUpDown, Download, Filter,
 } from "lucide-react";
 import ShoutoutsLog from "./ShoutoutsLog";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -506,6 +508,15 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
   const [filterStaff, setFilterStaff] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "submitted" | "draft">("all");
   const [filterDate, setFilterDate] = useState<string | null>(null); // YYYY-MM-DD
+  const [search, setSearch] = useState("");
+  const [minPerf, setMinPerf] = useState<number>(0);
+  type SortKey = "report_date" | "quotations_count" | "calls_count" | "offers_converted_count" | "new_customers_count" | "performance_score";
+  const [sortBy, setSortBy] = useState<SortKey>("report_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  function handleSort(k: SortKey) {
+    if (k === sortBy) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(k); setSortDir(k === "report_date" ? "desc" : "desc"); }
+  }
 
   // Weekly + Monthly aggregates (always shown alongside the current range)
   const today = new Date();
@@ -577,15 +588,43 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
     return list.sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }, [rows, profilesMap]);
 
+  const maxPerf = useMemo(
+    () => rows.reduce((m, r) => Math.max(m, Number(r.performance_score) || 0), 0),
+    [rows]
+  );
+
   const filteredRows = useMemo(() => {
-    return rows.filter((r) => {
+    const q = search.trim().toLowerCase();
+    let arr = rows.filter((r) => {
       if (filterStaff !== "all" && r.user_id !== filterStaff) return false;
       if (filterStatus === "submitted" && !r.is_submitted) return false;
       if (filterStatus === "draft" && r.is_submitted) return false;
       if (filterDate && r.report_date !== filterDate) return false;
+      if (minPerf > 0 && (Number(r.performance_score) || 0) < minPerf) return false;
+      if (q) {
+        const p = profilesMap[r.user_id];
+        const haystack = [
+          p?.full_name, p?.email,
+          r.best_deal_today, r.problems_faced, r.tomorrow_plan, r.general_notes,
+          r.report_date,
+        ].filter(Boolean).join(" ").toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     });
-  }, [rows, filterStaff, filterStatus, filterDate]);
+    arr.sort((a, b) => {
+      let av: number | string = a[sortBy] ?? 0;
+      let bv: number | string = b[sortBy] ?? 0;
+      if (sortBy === "report_date") {
+        av = String(av); bv = String(bv);
+        return sortDir === "desc" ? (bv as string).localeCompare(av as string) : (av as string).localeCompare(bv as string);
+      }
+      const an = Number(av) || 0;
+      const bn = Number(bv) || 0;
+      return sortDir === "desc" ? bn - an : an - bn;
+    });
+    return arr;
+  }, [rows, profilesMap, filterStaff, filterStatus, filterDate, search, minPerf, sortBy, sortDir]);
 
   // Available dates (unique, sorted desc) — used for quick chips
   const availableDates = useMemo(() => {
@@ -601,7 +640,46 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
     }
   }, [from, to, filterDate]);
 
-  const hasActiveFilter = filterStaff !== "all" || filterStatus !== "all" || filterDate !== null;
+  const hasActiveFilter =
+    filterStaff !== "all" || filterStatus !== "all" || filterDate !== null ||
+    !!search.trim() || minPerf > 0;
+
+  function exportCsv() {
+    const headers = [
+      "الموظف", "الإيميل", "التاريخ", "اليوم",
+      "عروض", "مكالمات", "واتساب", "محولة", "عملاء جدد",
+      "غير مكتملة", "نقاط الأداء", "الحالة", "أفضل صفقة", "مشاكل", "خطة بكرة",
+    ];
+    const lines = [headers.join(",")];
+    filteredRows.forEach((r) => {
+      const p = profilesMap[r.user_id] || {};
+      const day = (() => { try { return format(new Date(r.report_date), "EEEE", { locale: ar }); } catch { return ""; } })();
+      const cells = [
+        `"${(p.full_name || "موظف").replace(/"/g, '""')}"`,
+        `"${(p.email || "").replace(/"/g, '""')}"`,
+        r.report_date, day,
+        r.quotations_count || 0, r.calls_count || 0, r.whatsapp_count || 0,
+        r.offers_converted_count || 0, r.new_customers_count || 0,
+        r.incomplete_orders_count || 0, r.performance_score || 0,
+        r.is_submitted ? "مُسلَّم" : "مسودة",
+        `"${(r.best_deal_today || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${(r.problems_faced || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${(r.tomorrow_plan || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+      ];
+      lines.push(cells.join(","));
+    });
+    const csv = "\uFEFF" + lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporter-reports-${from}_${to}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 
   return (
     <div className="space-y-4">
@@ -687,14 +765,55 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
               </PopoverContent>
             </Popover>
 
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs"
+              onClick={exportCsv}
+              disabled={!filteredRows.length}
+              title="تصدير النتائج الحالية CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              CSV
+            </Button>
+
             {hasActiveFilter && (
               <Button
                 variant="ghost" size="sm" className="h-9 gap-1 text-xs"
-                onClick={() => { setFilterStaff("all"); setFilterStatus("all"); setFilterDate(null); }}
+                onClick={() => {
+                  setFilterStaff("all"); setFilterStatus("all"); setFilterDate(null);
+                  setSearch(""); setMinPerf(0);
+                }}
               >
                 <XCircle className="w-3.5 h-3.5" />مسح الفلتر
               </Button>
             )}
+          </div>
+        </div>
+
+        {/* Search + min performance */}
+        <div className="flex items-center gap-3 flex-wrap mb-3 pb-3 border-b border-border/50">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <Search className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="بحث في الاسم/الإيميل/أفضل صفقة/مشاكل/ملاحظات..."
+              className="h-9 pr-8 text-xs"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs flex-1 min-w-[200px] max-w-sm">
+            <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground whitespace-nowrap">حد أدنى للأداء:</span>
+            <Slider
+              min={0}
+              max={Math.max(maxPerf, 10)}
+              step={1}
+              value={[minPerf]}
+              onValueChange={(v) => setMinPerf(v[0] || 0)}
+              className="flex-1"
+            />
+            <Badge variant="outline" className="font-mono w-12 justify-center">{minPerf}</Badge>
           </div>
         </div>
 
@@ -746,12 +865,13 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
               <thead className="text-[11px] text-muted-foreground border-b">
                 <tr className="text-right">
                   <th className="p-2">الموظف</th>
-                  <th className="p-2">التاريخ</th>
+                  <SortTh label="التاريخ" k="report_date" current={sortBy} dir={sortDir} onSort={handleSort} />
                   <th className="p-2">اليوم</th>
-                  <th className="p-2 text-center">عروض</th>
-                  <th className="p-2 text-center">مكالمات</th>
-                  <th className="p-2 text-center">محولة</th>
-                  <th className="p-2 text-center">جدد</th>
+                  <SortTh label="عروض" k="quotations_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="مكالمات" k="calls_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="محولة" k="offers_converted_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="جدد" k="new_customers_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="أداء" k="performance_score" current={sortBy} dir={sortDir} onSort={handleSort} center />
                   <th className="p-2 text-center">الحالة</th>
                   <th className="p-2"></th>
                 </tr>
@@ -918,5 +1038,35 @@ function DayOffPanel({ profilesMap }: { profilesMap: Record<string, any> }) {
         )}
       </div>
     </Card>
+  );
+}
+
+function SortTh({
+  label, k, current, dir, onSort, center,
+}: {
+  label: string;
+  k: string;
+  current: string;
+  dir: "asc" | "desc";
+  onSort: (k: any) => void;
+  center?: boolean;
+}) {
+  const active = current === k;
+  const Icon = active ? (dir === "desc" ? ArrowDown : ArrowUp) : ArrowUpDown;
+  return (
+    <th
+      className={cn(
+        "p-2 cursor-pointer select-none hover:text-primary transition-colors",
+        center && "text-center",
+        active && "text-primary font-bold"
+      )}
+      onClick={() => onSort(k)}
+      title={active ? `اضغط لعكس الفرز (${dir === "desc" ? "تنازلي" : "تصاعدي"})` : "اضغط للفرز"}
+    >
+      <span className={cn("inline-flex items-center gap-1", center && "justify-center")}>
+        {label}
+        <Icon className={cn("w-3 h-3", active ? "text-primary" : "opacity-30")} />
+      </span>
+    </th>
   );
 }
