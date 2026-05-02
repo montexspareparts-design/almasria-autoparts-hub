@@ -328,8 +328,9 @@ export default function ReporterDailyForm() {
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
             onPreview={() => {
-              // Smart guard: لو أكتر من 60% من الحقول = 0 → نسأل قبل ما نفتح المعاينة
-              if (emptyFieldsRatio(data) >= 0.6) {
+              // Smart guard: لو فيه حقول إلزامية ناقصة → افتح dialog ذكي يحدد إيه اللي ناقص
+              const missing = getMissingRequiredFields(data);
+              if (missing.length > 0 || emptyFieldsRatio(data) >= 0.6) {
                 setEmptyWarnOpen(true);
               } else {
                 setPreviewOpen(true);
