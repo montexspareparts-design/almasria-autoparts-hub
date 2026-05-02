@@ -1,0 +1,1 @@
+ALTER TABLE public.staff_task_handling ADD COLUMN IF NOT EXISTS note text;
