@@ -593,16 +593,14 @@ export default function StaffShortageRequests() {
                 </p>
               </div>
             </div>
-            {newlyFulfilled.length > 0 && (
-              <Button
-                size="sm" variant="outline"
-                onClick={markAllSeen}
-                className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
-                علّم كمشاهد
-              </Button>
-            )}
+            <Button
+              size="sm" variant="outline"
+              onClick={markAllSeen}
+              className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
+              تمام شفتها
+            </Button>
           </div>
 
           <ScrollArea className="relative max-h-[200px]">
