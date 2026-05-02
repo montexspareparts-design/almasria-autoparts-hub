@@ -572,6 +572,15 @@ function saveSeen(map: Record<string, number>) {
   try { localStorage.setItem(ERP_SEEN_KEY, JSON.stringify(map)); } catch {}
 }
 
+type ErpPeriod = "today" | "yesterday" | "week" | "month";
+
+const ERP_PERIOD_OPTIONS: { value: ErpPeriod; label: string; short: string }[] = [
+  { value: "today",     label: "وصل النهاردة",   short: "النهاردة" },
+  { value: "yesterday", label: "وصل امبارح",      short: "امبارح" },
+  { value: "week",      label: "آخر 7 أيام",      short: "7 أيام" },
+  { value: "month",     label: "آخر 30 يوم",     short: "30 يوم" },
+];
+
 function TodayErpRestockedInline() {
   const [items, setItems] = useState<ErpItem[]>([]);
   const [partNumberMap, setPartNumberMap] = useState<Record<string, string>>({});
@@ -580,6 +589,7 @@ function TodayErpRestockedInline() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [seen, setSeen] = useState<Record<string, number>>(() => loadSeen());
+  const [period, setPeriod] = useState<ErpPeriod>("today");
 
   const markSeen = (erpId: string) => {
     setSeen((prev) => {
@@ -589,10 +599,11 @@ function TodayErpRestockedInline() {
     });
   };
 
-  const load = async () => {
+  const load = async (p: ErpPeriod = period) => {
     setLoading(true);
+    setExpanded(false);
     const [{ data: itemsData }, { data: baseData }] = await Promise.all([
-      supabase.rpc("get_today_erp_restocked_items" as any),
+      supabase.rpc("get_erp_restocked_items_period" as any, { _period: p }),
       supabase.rpc("erp_intraday_baseline_status" as any),
     ]);
     const list = ((itemsData as any) || []) as ErpItem[];
@@ -600,7 +611,6 @@ function TodayErpRestockedInline() {
     const b = Array.isArray(baseData) ? baseData[0] : baseData;
     setHasBaseline(!!(b as any)?.has_baseline);
 
-    // اجلب البارت نمبر (name_ar) لكل الأصناف من جدول products
     const skus = Array.from(new Set(list.map((i) => i.erp_id).filter(Boolean)));
     if (skus.length > 0) {
       const { data: prodRows } = await supabase
@@ -619,8 +629,9 @@ function TodayErpRestockedInline() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    load(period);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
   const filtered = useMemo(() => {
     // اخفي الأصناف اللي الموظف ضغط عليها "تم الاطلاع" خلال آخر 24 ساعة
