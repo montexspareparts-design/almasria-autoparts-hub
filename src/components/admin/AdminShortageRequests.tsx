@@ -290,19 +290,32 @@ export default function AdminShortageRequests() {
       </div>
 
       <Tabs defaultValue="priority">
-        <TabsList>
-          <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
-          <TabsTrigger value="all" className="gap-1.5"><BarChart3 className="w-4 h-4" />كل البلاغات</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <TabsList>
+            <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
+            <TabsTrigger value="all" className="gap-1.5"><BarChart3 className="w-4 h-4" />كل البلاغات</TabsTrigger>
+          </TabsList>
+          <Button
+            type="button"
+            size="sm"
+            variant={showFulfilled ? "default" : "outline"}
+            className="h-8 text-xs gap-1.5"
+            onClick={() => setShowFulfilled(v => !v)}
+          >
+            {showFulfilled ? "إخفاء اللي تم توفيره" : "إظهار اللي تم توفيره"}
+          </Button>
+        </div>
 
         {/* Priority Report */}
         <TabsContent value="priority" className="space-y-2 mt-4">
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-          ) : priority.length === 0 ? (
-            <p className="text-center text-muted-foreground py-10 text-sm">مفيش بلاغات في الفترة دي</p>
+          ) : visiblePriority.length === 0 ? (
+            <p className="text-center text-muted-foreground py-10 text-sm">
+              {priority.length === 0 ? "مفيش بلاغات في الفترة دي" : "كل الأصناف تم توفيرها 🎉"}
+            </p>
           ) : (
-            priority.map((row, idx) => {
+            visiblePriority.map((row, idx) => {
               const staffCount = Number(row.unique_staff_count);
               const score = Math.round(Number(row.priority_score));
               const intensity = Math.min(100, staffCount * 20);
