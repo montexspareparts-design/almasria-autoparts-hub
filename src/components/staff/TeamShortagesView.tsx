@@ -497,7 +497,8 @@ export default function TeamShortagesView() {
                   const meta = STATUS_META[r.status];
                   const Icon = meta.icon;
                   const name = r.manual_name || r.product?.name_ar || "—";
-                  const sku  = r.manual_sku || r.product?.sku || "";
+                  const sku  = r.manual_sku || r.product?.erp_item_code || r.product?.sku || "";
+                  const partNumber = r.product?.part_number || "";
                   const who  = staffMap[r.staff_user_id] || "زميل";
                   const isMine = r.staff_user_id === user?.id;
                   return (
