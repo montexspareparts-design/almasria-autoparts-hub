@@ -63,19 +63,38 @@ export function AdminERPCatalogBrowser() {
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkConfirm, setBulkConfirm] = useState<null | { action: "activate" | "hide"; count: number }>(null);
 
+  const fetchAllPaginated = async <T,>(
+    table: "erp_full_catalog_cache" | "products",
+    columns: string,
+    pageSize = 1000
+  ): Promise<T[]> => {
+    const all: T[] = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(columns)
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      const chunk = (data ?? []) as T[];
+      all.push(...chunk);
+      if (chunk.length < pageSize) break;
+      from += pageSize;
+      if (from > 50000) break; // safety guard
+    }
+    return all;
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
-      const [{ data: cacheData, error: cacheErr }, { data: prodData, error: prodErr }] = await Promise.all([
-        supabase.from("erp_full_catalog_cache").select("erp_id, name, qty, retail_price, wholesale_price").limit(20000),
-        supabase.from("products").select("id, sku, erp_item_code, name_ar, stock_quantity, base_price, is_active, brand").limit(20000),
+      const [cacheData, prodData] = await Promise.all([
+        fetchAllPaginated<CacheRow>("erp_full_catalog_cache", "erp_id, name, qty, retail_price, wholesale_price"),
+        fetchAllPaginated<OnsiteRow>("products", "id, sku, erp_item_code, name_ar, stock_quantity, base_price, is_active, brand"),
       ]);
 
-      if (cacheErr) throw cacheErr;
-      if (prodErr) throw prodErr;
-
       const skuSet = new Set<string>();
-      (prodData ?? []).forEach((p: any) => {
+      prodData.forEach((p: any) => {
         if (p.is_active) {
           if (p.sku) skuSet.add(String(p.sku));
           if (p.erp_item_code) skuSet.add(String(p.erp_item_code));
@@ -83,8 +102,8 @@ export function AdminERPCatalogBrowser() {
       });
 
       setExistingSkus(skuSet);
-      setRows((cacheData ?? []) as CacheRow[]);
-      setOnsiteRows((prodData ?? []) as OnsiteRow[]);
+      setRows(cacheData);
+      setOnsiteRows(prodData);
     } catch (err: any) {
       toast({ title: "خطأ في التحميل", description: err.message, variant: "destructive" });
     } finally {
