@@ -70,6 +70,7 @@ describe("Shortage banner dismissal logic", () => {
     const seen2 = markAllSeen(rowsNew, seen1);
     expect(seen2.has("a")).toBe(true);
     expect(seen2.has("b")).toBe(true);
+  });
 });
 
 describe("Shortage banner — تغيرات القائمة في نفس الجلسة", () => {
