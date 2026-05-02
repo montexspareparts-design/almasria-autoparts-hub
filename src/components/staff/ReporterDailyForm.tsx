@@ -28,8 +28,9 @@ import {
   ClipboardList, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users,
   UserPlus, AlertTriangle, Target, Eye, History, BarChart3,
-  Sparkles, Palmtree, Trash2,
+  Sparkles, Palmtree, Trash2, Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   PersonalCompareCard,
@@ -454,15 +455,15 @@ function TodayForm({
       )}
       <Card className="p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-4">
-          <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} />
-          <NumField icon={<Phone className="w-3.5 h-3.5 text-purple-600" />} label="عدد المكالمات" required value={data.calls_count} onChange={setNum("calls_count")} disabled={locked} />
-          <NumField icon={<MessageCircle className="w-3.5 h-3.5 text-green-600" />} label="عملاء واتساب" required value={data.whatsapp_count} onChange={setNum("whatsapp_count")} disabled={locked} />
-          <NumField icon={<FileCheck className="w-3.5 h-3.5 text-cyan-600" />} label="عملاء أُرسل لهم عروض/كشوف" required value={data.offers_sent_count} onChange={setNum("offers_sent_count")} disabled={locked} />
-          <NumField icon={<RefreshCw className="w-3.5 h-3.5 text-blue-600" />} label="عروض اتحولت لطلبات" required value={data.offers_converted_count} onChange={setNum("offers_converted_count")} disabled={locked} />
-          <NumField icon={<XCircle className="w-3.5 h-3.5 text-rose-600" />} label="طلبات لم تكتمل" required value={data.incomplete_orders_count} onChange={setNum("incomplete_orders_count")} disabled={locked} />
-          <NumField icon={<Users className="w-3.5 h-3.5 text-teal-600" />} label="عملاء تمت متابعتهم" required value={data.followups_count} onChange={setNum("followups_count")} disabled={locked} />
-          <NumField icon={<UserPlus className="w-3.5 h-3.5 text-emerald-600" />} label="عملاء جدد تم إضافتهم" required value={data.new_customers_count} onChange={setNum("new_customers_count")} disabled={locked} />
-          <NumField icon={<Target className="w-3.5 h-3.5 text-orange-600" />} label="مهتمين ولم يتم إغلاقهم" required value={data.lost_opportunities_count} onChange={setNum("lost_opportunities_count")} disabled={locked} />
+          <NumField icon={<FileSpreadsheet className="w-3.5 h-3.5 text-indigo-600" />} label="عدد عروض الأسعار اليوم" required value={data.quotations_count} onChange={setNum("quotations_count")} disabled={locked} hint="عدد عروض الأسعار اللي عملتها وبعتّها للعملاء النهارده — سواء عبر واتساب أو إيميل أو يدوي." />
+          <NumField icon={<Phone className="w-3.5 h-3.5 text-purple-600" />} label="عدد المكالمات" required value={data.calls_count} onChange={setNum("calls_count")} disabled={locked} hint="إجمالي المكالمات التليفونية اللي اتعملت النهارده (واردة + صادرة) مع العملاء فقط — مش الزمايل." />
+          <NumField icon={<MessageCircle className="w-3.5 h-3.5 text-green-600" />} label="عملاء واتساب" required value={data.whatsapp_count} onChange={setNum("whatsapp_count")} disabled={locked} hint="عدد العملاء المختلفين اللي تواصلت معاهم على واتساب النهارده — مش عدد الرسائل، الرقم لكل عميل مرة واحدة." />
+          <NumField icon={<FileCheck className="w-3.5 h-3.5 text-cyan-600" />} label="عملاء أُرسل لهم عروض/كشوف" required value={data.offers_sent_count} onChange={setNum("offers_sent_count")} disabled={locked} hint="عدد العملاء اللي بعتّ لهم عرض سعر أو كشف حساب رسمي النهارده — لازم يكون مرفق بـ PDF أو ملف." />
+          <NumField icon={<RefreshCw className="w-3.5 h-3.5 text-blue-600" />} label="عروض اتحولت لطلبات" required value={data.offers_converted_count} onChange={setNum("offers_converted_count")} disabled={locked} hint="عدد عروض الأسعار اللي العميل وافق عليها واتحوّلت لطلب فعلي على السيستم النهارده." />
+          <NumField icon={<XCircle className="w-3.5 h-3.5 text-rose-600" />} label="طلبات لم تكتمل" required value={data.incomplete_orders_count} onChange={setNum("incomplete_orders_count")} disabled={locked} hint="طلبات بدأها العميل ووقفت أو اتلغت لأي سبب (سعر/تأخير/مشكلة) — اللي محتاجة متابعة." />
+          <NumField icon={<Users className="w-3.5 h-3.5 text-teal-600" />} label="عملاء تمت متابعتهم" required value={data.followups_count} onChange={setNum("followups_count")} disabled={locked} hint="عملاء قدام عرض/طلب قديم رجعت كلّمتهم النهارده عشان تقفل الصفقة أو تطمن على الحالة." />
+          <NumField icon={<UserPlus className="w-3.5 h-3.5 text-emerald-600" />} label="عملاء جدد تم إضافتهم" required value={data.new_customers_count} onChange={setNum("new_customers_count")} disabled={locked} hint="عملاء جداد بالكامل دخلوا قاعدة البيانات لأول مرة على إيدك النهارده — مش عملاء قدام." />
+          <NumField icon={<Target className="w-3.5 h-3.5 text-orange-600" />} label="مهتمين ولم يتم إغلاقهم" required value={data.lost_opportunities_count} onChange={setNum("lost_opportunities_count")} disabled={locked} hint="فرص بيع كان فيها عميل مهتم فعلاً بس الصفقة ما اتقفلتش (السبب يتسجّل تحت في الأسئلة)." />
         </div>
 
         <div className="mt-5 pt-5 border-t">
@@ -748,12 +749,29 @@ function ReportSummaryCard({ report }: { report: ReportData }) {
 }
 
 /* ------------------------ Helpers ------------------------ */
-function NumField({ icon, label, required, value, onChange, disabled }: any) {
+function NumField({ icon, label, required, value, onChange, disabled, hint }: any) {
   return (
     <div>
       <Label className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-foreground">
         {icon}<span>{label}</span>
         {required && <span className="text-rose-500">*</span>}
+        {hint && (
+          <Tooltip delayDuration={150}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label="توضيح"
+                className="ms-auto text-muted-foreground hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="end" className="max-w-[260px] text-[11px] leading-relaxed">
+              {hint}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </Label>
       <Input
         type="number" inputMode="numeric" min={0}
