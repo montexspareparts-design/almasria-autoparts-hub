@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, Trophy, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Trophy, Sparkles, Flame, Target, CheckCircle2, AlertCircle, Users2 } from "lucide-react";
 
 // ============================================================
 // نفس صيغة احتساب الأداء المستخدمة في الـ edge function
