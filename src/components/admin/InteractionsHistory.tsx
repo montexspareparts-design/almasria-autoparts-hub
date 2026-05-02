@@ -61,6 +61,7 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [hideEmpty, setHideEmpty] = useState(true);
 
   const fromTs = `${dateFrom}T00:00:00.000Z`;
   const toTs = `${dateTo}T23:59:59.999Z`;
@@ -194,6 +195,7 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
     return rows.filter((r) => {
       if (actionFilter !== "all" && r.action !== actionFilter) return false;
       if (staffFilter !== "all" && r.staffUserId !== staffFilter) return false;
+      if (hideEmpty && !(r.note && r.note.trim().length > 0)) return false;
       if (term) {
         const cust = profileMap.get(r.customerUserId);
         const haystack = [
@@ -209,7 +211,13 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
       }
       return true;
     });
-  }, [rows, actionFilter, staffFilter, search, profileMap]);
+  }, [rows, actionFilter, staffFilter, search, profileMap, hideEmpty]);
+
+  // Count of empty interactions in current date range (for warning badge)
+  const emptyCount = useMemo(
+    () => rows.filter((r) => !(r.note && r.note.trim().length > 0)).length,
+    [rows]
+  );
 
   // Quick counters per action (post-date-filter, pre-other-filters)
   const counters = useMemo(() => {
@@ -337,6 +345,18 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
               {r.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => setHideEmpty((v) => !v)}
+            className={`h-6 px-2 rounded-md text-[10px] font-black border transition-all ${
+              hideEmpty
+                ? "bg-emerald-500/15 border-emerald-400/50 text-emerald-700 dark:text-emerald-400"
+                : "bg-amber-500/15 border-amber-400/50 text-amber-700 dark:text-amber-400"
+            }`}
+            title={hideEmpty ? "إخفاء التفاعلات الفاضية شغّال — اضغط لعرضها" : "عرض كل التفاعلات حتى الفاضية — اضغط للإخفاء"}
+          >
+            {hideEmpty ? "✓ بدون الفاضية" : "⚠️ يعرض الفاضية"}
+          </button>
           {(actionFilter !== "all" || staffFilter !== "all" || search) && (
             <Button
               type="button"
@@ -351,6 +371,21 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
           )}
         </div>
       </div>
+
+      {/* Empty interactions warning for management */}
+      {emptyCount > 0 && (
+        <div className="rounded-lg border-2 border-amber-400/60 bg-amber-500/10 dark:bg-amber-500/5 p-2.5 flex items-start gap-2">
+          <span className="text-base">⚠️</span>
+          <div className="flex-1 text-[11px]">
+            <p className="font-black text-amber-900 dark:text-amber-200">
+              فيه <strong>{emptyCount}</strong> تفاعل بدون تفاصيل في المدى ده
+            </p>
+            <p className="text-[10px] text-amber-800 dark:text-amber-300/80 mt-0.5">
+              الموظف ضغط زر (اتصال / واتساب / نتيجة) من غير ما يكتب اللي حصل. راجع معاهم وذكّرهم باستخدام زر «تم» مع كتابة ملحوظة.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Result count */}
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
@@ -409,9 +444,13 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
                         {staffName}
                       </span>
                     </div>
-                    {r.note && (
+                    {r.note && r.note.trim().length > 0 ? (
                       <p className="text-[12px] text-foreground/90 leading-relaxed bg-card/60 rounded-md p-2 border border-border/40 mt-1">
                         {r.note}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-400/40 rounded-md px-2 py-1 mt-1 inline-flex items-center gap-1">
+                        ⚠️ تفاعل بدون تفاصيل — الموظف ضغط الزر بس مكتبش اللي حصل
                       </p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1.5">
