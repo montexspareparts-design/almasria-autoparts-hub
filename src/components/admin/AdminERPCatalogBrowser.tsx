@@ -415,30 +415,45 @@ export function AdminERPCatalogBrowser() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="relative flex-1 min-w-[200px]">
+          {/* صف 1: حقلا البحث الرئيسيان — جنب بعض على الديسكتوب، فوق بعض على الموبايل */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="ابحث بالكود أو الاسم..."
-                className="pr-10"
+                className="pr-10 h-10"
               />
             </div>
-            <div className="relative flex-1 min-w-[180px] max-w-[260px]">
+            <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={partNumberFilter}
                 onChange={(e) => setPartNumberFilter(e.target.value)}
-                placeholder="بارت نمبر / Part Number"
-                className="pr-10 font-mono"
+                placeholder="فلتر بارت نمبر فقط"
+                className="pr-10 h-10 font-mono"
                 title="فلتر مستقل بالبارت نمبر فقط"
               />
+              {partNumberFilter && (
+                <button
+                  type="button"
+                  onClick={() => setPartNumberFilter("")}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground px-1.5 py-0.5 rounded hover:bg-muted"
+                  title="مسح"
+                >
+                  ✕
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* صف 2: فلاتر إضافية — Grid على الموبايل، flex على الديسكتوب */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-center">
             <select
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as SortMode)}
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              className="h-10 rounded-md border border-input bg-background px-2 text-sm w-full sm:w-auto"
               title="ترتيب"
             >
               <option value="qty_desc">الأعلى رصيداً</option>
@@ -447,14 +462,14 @@ export function AdminERPCatalogBrowser() {
               <option value="name_desc">أبجدي (ي → أ)</option>
             </select>
             {viewMode === "missing" ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">حد أدنى للرصيد:</span>
                 <Input
                   type="number"
                   min={0}
                   value={minQty}
                   onChange={(e) => setMinQty(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-20"
+                  className="w-20 h-10"
                 />
               </div>
             ) : (
@@ -462,7 +477,7 @@ export function AdminERPCatalogBrowser() {
                 <select
                   value={brandFilter}
                   onChange={(e) => setBrandFilter(e.target.value)}
-                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  className="h-10 rounded-md border border-input bg-background px-2 text-sm w-full sm:w-auto"
                   title="فلترة العلامة"
                 >
                   <option value="all">كل العلامات</option>
@@ -475,19 +490,20 @@ export function AdminERPCatalogBrowser() {
                     variant={showInactive ? "default" : "outline"}
                     size="sm"
                     onClick={() => setShowInactive((v) => !v)}
+                    className="h-10 col-span-2 sm:col-span-1"
                   >
                     {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
                   </Button>
                 )}
                 {viewMode === "visitor" && (
-                  <Badge variant="outline" className="border-green-500/40 bg-green-50 dark:bg-green-950/30 gap-1">
+                  <Badge variant="outline" className="border-green-500/40 bg-green-50 dark:bg-green-950/30 gap-1 col-span-2 sm:col-span-1 justify-center sm:justify-start h-10 sm:h-auto">
                     <Eye className="w-3 h-3 text-green-600" />
                     is_active = true فقط
                   </Badge>
                 )}
               </>
             )}
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="h-10 col-span-2 sm:col-span-1 sm:mr-auto">
               {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               تحديث
             </Button>
