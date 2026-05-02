@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      _erp_pn_stage: {
+        Row: {
+          erp_id: string
+          part_number: string | null
+        }
+        Insert: {
+          erp_id: string
+          part_number?: string | null
+        }
+        Update: {
+          erp_id?: string
+          part_number?: string | null
+        }
+        Relationships: []
+      }
       admin_notification_phones: {
         Row: {
           created_at: string
@@ -3601,6 +3616,13 @@ export type Database = {
       }
     }
     Functions: {
+      apply_erp_part_numbers: {
+        Args: { p_erp_ids: string[]; p_part_numbers: string[] }
+        Returns: {
+          cache_updated: number
+          products_updated: number
+        }[]
+      }
       bulk_import_products: { Args: { _items: Json }; Returns: Json }
       bulk_sync_names: { Args: { _items: Json }; Returns: Json }
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }
