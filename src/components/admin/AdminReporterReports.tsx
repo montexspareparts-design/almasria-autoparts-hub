@@ -865,12 +865,13 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
               <thead className="text-[11px] text-muted-foreground border-b">
                 <tr className="text-right">
                   <th className="p-2">الموظف</th>
-                  <th className="p-2">التاريخ</th>
+                  <SortTh label="التاريخ" k="report_date" current={sortBy} dir={sortDir} onSort={handleSort} />
                   <th className="p-2">اليوم</th>
-                  <th className="p-2 text-center">عروض</th>
-                  <th className="p-2 text-center">مكالمات</th>
-                  <th className="p-2 text-center">محولة</th>
-                  <th className="p-2 text-center">جدد</th>
+                  <SortTh label="عروض" k="quotations_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="مكالمات" k="calls_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="محولة" k="offers_converted_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="جدد" k="new_customers_count" current={sortBy} dir={sortDir} onSort={handleSort} center />
+                  <SortTh label="أداء" k="performance_score" current={sortBy} dir={sortDir} onSort={handleSort} center />
                   <th className="p-2 text-center">الحالة</th>
                   <th className="p-2"></th>
                 </tr>
