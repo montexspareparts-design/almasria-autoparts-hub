@@ -564,6 +564,32 @@ export function AdminERPCatalogBrowser() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!bulkConfirm} onOpenChange={(o) => !o && setBulkConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkConfirm?.action === "activate" ? "تفعيل جماعي" : "إخفاء جماعي"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم {bulkConfirm?.action === "activate" ? "تفعيل" : "إخفاء"} <strong>{bulkConfirm?.count}</strong> صنف
+              {brandFilter !== "all" && <> من العلامة <strong>{brandFilter}</strong></>}
+              {search && <> مطابقين للبحث "<strong>{search}</strong>"</>}.
+              <br />
+              هل أنت متأكد؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkConfirm && handleBulkToggle(bulkConfirm.action)}
+              className={bulkConfirm?.action === "hide" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              تأكيد
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
