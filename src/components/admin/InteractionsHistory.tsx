@@ -61,6 +61,7 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [staffFilter, setStaffFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [hideEmpty, setHideEmpty] = useState(true);
 
   const fromTs = `${dateFrom}T00:00:00.000Z`;
   const toTs = `${dateTo}T23:59:59.999Z`;
