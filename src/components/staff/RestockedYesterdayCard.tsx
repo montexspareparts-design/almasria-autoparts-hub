@@ -736,11 +736,30 @@ function TodayErpRestockedInline() {
           </p>
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white/60 p-6 text-center text-xs text-muted-foreground border-t border-amber-200/40">
-          {period === "today"
-            ? "مفيش أصناف رصيدها زاد في الفيصل النهاردة لحد دلوقتي."
-            : `مفيش لقطات مقارنة محفوظة لـ«${currentPeriodLabel}» — التاريخ بنبنيه تلقائياً كل يوم 6 صباحاً، فالفترات دي هتمتلي تدريجياً.`}
+        <div className="bg-white/60 p-6 text-center text-xs text-muted-foreground border-t border-amber-200/40 space-y-2">
+          {period === "today" ? (
+            <p>مفيش أصناف رصيدها زاد في الفيصل النهاردة لحد دلوقتي.</p>
+          ) : period === "yesterday" ? (
+            <>
+              <p className="font-semibold text-amber-900">لسه مفيش لقطة مقارنة لـ«إمبارح».</p>
+              <p className="leading-relaxed">
+                اللقطة اليومية بتتسجّل تلقائياً <span className="font-bold">الساعة 6 صباحاً</span>.
+                {" "}ابتداءً من <span className="font-bold">{nextCronRunLabel()}</span> هتبدأ تظهر مقارنات «إمبارح» يومياً.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-amber-900">
+                لسه ما عندناش لقطات كافية لـ«{currentPeriodLabel}».
+              </p>
+              <p className="leading-relaxed">
+                التاريخ بنبنيه تلقائياً عبر cron يومي <span className="font-bold">الساعة 6 صباحاً</span> (التشغيل الجاي: <span className="font-bold">{nextCronRunLabel()}</span>).
+                {" "}محتاجين <span className="font-bold">{period === "week" ? "7 لقطات" : "30 لقطة"}</span> على الأقل عشان المقارنة تطلع دقيقة، فالفترة دي هتمتلي تدريجياً من النهاردة وطالع.
+              </p>
+            </>
+          )}
         </div>
+
       ) : filtered.length === 0 ? (
         <div className="bg-white/60 p-6 text-center text-xs text-muted-foreground border-t border-amber-200/40">
           {search.trim()
