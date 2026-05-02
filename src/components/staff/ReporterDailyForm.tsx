@@ -138,7 +138,7 @@ function getMissingRequiredFields(d: ReportData): string[] {
     { key: "incomplete_orders_count", label: "طلبات لم تكتمل" },
     { key: "followups_count",         label: "عملاء تمت متابعتهم" },
     { key: "new_customers_count",     label: "عملاء جدد" },
-    { key: "lost_opportunities_count",label: "مهتمين ولم يتم إغلاقهم" },
+    
   ];
   return required
     .filter(({ key }) => {
