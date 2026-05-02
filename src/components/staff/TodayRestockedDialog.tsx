@@ -118,7 +118,7 @@ export default function TodayRestockedDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // أول مرة الموظف يضغط الزر — لو مفيش baseline أصلاً، نأخذ سنابشوت أولي + نفسّر
+  // أخذ baseline فقط
   const handleTakeBaseline = async () => {
     setRefreshing(true);
     try {
@@ -126,17 +126,51 @@ export default function TodayRestockedDialog({
       if (error) throw error;
       toast({
         title: "✅ اتسجلت نقطة المقارنة",
-        description: "هنرصد أي صنف رصيده يزيد من اللحظة دي. ارجع تاني بعد المزامنة الجاية للفيصل.",
+        description: "هنرصد أي صنف رصيده يزيد من اللحظة دي.",
       });
       await loadAll();
     } catch (e: any) {
+      toast({ title: "تعذّر التسجيل", description: e?.message ?? "حصل خطأ", variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // الزر الرئيسي: مزامنة فعلية من الفيصل + مقارنة
+  const [syncing, setSyncing] = useState(false);
+  const handleSyncAndCheck = async () => {
+    setSyncing(true);
+    try {
+      // 1) لو مفيش baseline، ناخد واحدة الأول
+      if (!baseline?.has_baseline) {
+        const { error: bErr } = await supabase.rpc("take_intraday_stock_baseline" as any);
+        if (bErr) throw bErr;
+        toast({ title: "📸 اتسجلت نقطة المقارنة", description: "جاري المزامنة مع الفيصل..." });
+      }
+
+      // 2) مزامنة فعلية من الفيصل: refresh كاش + sync رصيد الموقع
+      const { error: syncErr } = await supabase.functions.invoke("erp-search-products", {
+        body: { refresh: true, compareSample: true, applyStockSync: true, sampleSize: 50 },
+      });
+      if (syncErr) {
+        console.warn("ERP sync warning:", syncErr);
+      }
+
+      // 3) reload البيانات عشان نشوف الزيادات
+      await loadAll();
+
       toast({
-        title: "تعذّر التسجيل",
-        description: e?.message ?? "حصل خطأ",
+        title: "✅ تمت المزامنة",
+        description: "تم تحديث الرصيد من الفيصل. الأصناف اللي زادت ظاهرة دلوقتي.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "⚠️ حصل مشكلة في المزامنة",
+        description: e?.message ?? "جرّب تاني بعد شوية",
         variant: "destructive",
       });
     } finally {
-      setRefreshing(false);
+      setSyncing(false);
     }
   };
 
