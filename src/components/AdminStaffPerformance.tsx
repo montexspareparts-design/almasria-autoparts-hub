@@ -667,12 +667,26 @@ function KpiCard({ icon: Icon, label, value, sub, color, onClick }: { icon: any;
   );
 }
 
-function SortableHead({ label, k, current, setSort }: { label: string; k: keyof StaffMetric; current: keyof StaffMetric; setSort: (k: keyof StaffMetric) => void }) {
+function SortableHead({
+  label, k, current, dir, onSort,
+}: {
+  label: string;
+  k: keyof StaffMetric;
+  current: keyof StaffMetric;
+  dir: "asc" | "desc";
+  onSort: (k: keyof StaffMetric) => void;
+}) {
+  const active = current === k;
+  const Icon = active ? (dir === "desc" ? ArrowDown : ArrowUp) : ArrowUpDown;
   return (
-    <TableHead className="text-xs cursor-pointer hover:text-primary" onClick={() => setSort(k)}>
+    <TableHead
+      className={`text-xs cursor-pointer hover:text-primary select-none ${active ? "text-primary font-bold" : ""}`}
+      onClick={() => onSort(k)}
+      title={active ? `اضغط لعكس الفرز (${dir === "desc" ? "تنازلي" : "تصاعدي"})` : "اضغط للفرز"}
+    >
       <div className="flex items-center gap-1">
         {label}
-        <ArrowUpDown className={`w-3 h-3 ${current === k ? "text-primary" : "opacity-30"}`} />
+        <Icon className={`w-3 h-3 ${active ? "text-primary" : "opacity-30"}`} />
       </div>
     </TableHead>
   );
