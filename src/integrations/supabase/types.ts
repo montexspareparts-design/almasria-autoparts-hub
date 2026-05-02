@@ -1177,6 +1177,41 @@ export type Database = {
         }
         Relationships: []
       }
+      intraday_stock_baselines: {
+        Row: {
+          batch_id: string
+          id: string
+          product_id: string
+          snapshot_at: string
+          stock_quantity: number
+          triggered_by: string | null
+        }
+        Insert: {
+          batch_id: string
+          id?: string
+          product_id: string
+          snapshot_at?: string
+          stock_quantity?: number
+          triggered_by?: string | null
+        }
+        Update: {
+          batch_id?: string
+          id?: string
+          product_id?: string
+          snapshot_at?: string
+          stock_quantity?: number
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intraday_stock_baselines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           client_type: string
@@ -3601,12 +3636,39 @@ export type Database = {
           team_size: number
         }[]
       }
+      get_today_restocked_items: {
+        Args: never
+        Returns: {
+          base_price: number
+          baseline_at: string
+          brand: string
+          current_stock: number
+          delta: number
+          had_shortage_request: boolean
+          minutes_since_baseline: number
+          name_ar: string
+          prev_stock: number
+          product_id: string
+          shortage_requests_count: number
+          sku: string
+          was_zero: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      intraday_baseline_status: {
+        Args: never
+        Returns: {
+          has_baseline: boolean
+          items_in_baseline: number
+          last_snapshot_at: string
+          minutes_ago: number
+        }[]
       }
       is_reporter_only: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
@@ -3690,6 +3752,14 @@ export type Database = {
       }
       send_morning_restock_summary: { Args: never; Returns: Json }
       take_daily_stock_snapshot: { Args: never; Returns: Json }
+      take_intraday_stock_baseline: {
+        Args: never
+        Returns: {
+          batch_id: string
+          items_count: number
+          snapshot_at: string
+        }[]
+      }
       user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
         Args: { _code: string }
