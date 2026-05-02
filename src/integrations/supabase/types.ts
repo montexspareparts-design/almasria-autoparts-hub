@@ -3608,6 +3608,16 @@ export type Database = {
       normalize_eg_phone: { Args: { raw: string }; Returns: string }
       phone_already_registered: { Args: { _phone: string }; Returns: boolean }
       recompute_product_year_coverage: { Args: never; Returns: undefined }
+      restock_baseline_status: {
+        Args: { _days_back?: number }
+        Returns: {
+          baseline_target_date: string
+          distinct_days: number
+          earliest_snapshot: string
+          has_baseline: boolean
+          latest_snapshot: string
+        }[]
+      }
       search_all_products_for_shortage: {
         Args: { _q: string }
         Returns: {
