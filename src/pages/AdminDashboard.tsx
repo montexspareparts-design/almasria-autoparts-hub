@@ -1092,7 +1092,7 @@ const AdminDashboard = () => {
           className={`
             ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
             fixed lg:static inset-y-0 right-0 top-14 z-40
-            w-64 lg:w-60 xl:w-64
+            w-72 lg:w-64 xl:w-72
             bg-card/95 backdrop-blur-sm border-l border-border/50
             transition-transform duration-200 ease-out
             overflow-y-auto
@@ -1115,31 +1115,31 @@ const AdminDashboard = () => {
               const groupPending =
                 (group.items.some(it => it.id === "dealers") ? pendingCount : 0);
               return (
-                <div key={group.label} className="rounded-xl bg-muted/20 border border-border/40 overflow-hidden">
+                <div key={group.label} className="rounded-xl bg-card border border-border/60 shadow-sm overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: !isOpen }))}
                     className={`
-                      w-full flex items-center gap-2 px-3 py-2.5 text-[12px] font-extrabold tracking-wide
-                      transition-colors text-foreground/80 hover:bg-muted/40
-                      ${groupHasActive ? "bg-primary/[0.06]" : ""}
+                      w-full flex items-center gap-2 px-3.5 py-3 text-[13.5px] font-extrabold tracking-wide
+                      transition-colors hover:bg-muted/50
+                      ${groupHasActive ? "bg-primary/10 text-primary" : "text-foreground"}
                     `}
                     aria-expanded={isOpen}
                   >
                     <span className="truncate flex-1 text-right">{group.label}</span>
                     {!isOpen && groupPending > 0 && (
-                      <span className="bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[18px] h-4 flex items-center justify-center px-1">
+                      <span className="bg-destructive text-destructive-foreground text-[10px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5">
                         {groupPending}
                       </span>
                     )}
-                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground/60 transition-transform duration-200 ${isOpen ? "-rotate-90" : "rotate-180"}`} />
+                    <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "-rotate-90" : "rotate-180"}`} />
                   </button>
 
                   <div
                     className={`grid transition-[grid-template-rows] duration-200 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                   >
                     <div className="overflow-hidden">
-                      <div className="p-1.5 pt-0.5 space-y-0.5">
+                      <div className="border-t border-border/50 p-1.5 divide-y divide-border/40">
                         {group.items.map((section) => {
                           const Icon = section.icon;
                           const isActive = activeSection === section.id;
@@ -1153,14 +1153,14 @@ const AdminDashboard = () => {
                                 setSidebarOpen(false);
                               }}
                               className={`
-                                w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 relative group
+                                w-full flex items-center gap-3 px-2.5 py-2.5 rounded-lg text-[14px] font-semibold transition-all duration-150 relative group
                                 ${isActive
-                                  ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
                                   : isReportReminder
                                     ? isReportEarly
-                                      ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
-                                      : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
-                                    : "text-foreground/75 hover:text-foreground hover:bg-muted/60"
+                                      ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300"
+                                      : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 report-reminder-glow"
+                                    : "text-foreground/85 hover:text-foreground hover:bg-muted/70"
                                 }
                               `}
                               title={
@@ -1171,20 +1171,23 @@ const AdminDashboard = () => {
                                     : undefined
                               }
                             >
+                              {isActive && (
+                                <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-primary-foreground rounded-l-full" aria-hidden />
+                              )}
                               <div className={`
-                                w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                                w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-colors
                                 ${isActive
-                                  ? "bg-primary-foreground/15 text-primary-foreground"
+                                  ? "bg-primary-foreground/20 text-primary-foreground"
                                   : isReportReminder
                                     ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300"
-                                    : "bg-muted/60 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
+                                    : "bg-muted text-foreground/70 group-hover:bg-background group-hover:text-foreground"
                                 }
                               `}>
-                                <Icon className="w-4 h-4" />
+                                <Icon className="w-[18px] h-[18px]" strokeWidth={2.25} />
                               </div>
-                              <span className="truncate flex-1 text-right">{section.label}</span>
+                              <span className="truncate flex-1 text-right leading-tight">{section.label}</span>
                               {isReportReminder && (
-                                <span className={`text-[9px] font-extrabold rounded-md px-1.5 py-0.5 ${
+                                <span className={`text-[10px] font-extrabold rounded-md px-1.5 py-0.5 ${
                                   isReportEarly
                                     ? "bg-amber-200 text-amber-800 dark:bg-amber-800/60 dark:text-amber-100"
                                     : "bg-amber-500 text-white animate-pulse"
@@ -1193,7 +1196,7 @@ const AdminDashboard = () => {
                                 </span>
                               )}
                               {section.id === "dealers" && pendingCount > 0 && (
-                                <span className={`text-[10px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5 ${
+                                <span className={`text-[11px] font-bold rounded-md min-w-[22px] h-5 flex items-center justify-center px-1.5 ${
                                   isActive ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"
                                 }`}>
                                   {pendingCount}
