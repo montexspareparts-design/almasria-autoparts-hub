@@ -2604,12 +2604,30 @@ const AdminCustomerIntelligence = () => {
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", (isDone || handledByOther) && "opacity-70")}>{task.reason}</p>
                           {/* Show what the staff did with the customer (note from "تم" dialog) */}
                           {handledRec?.note && (
-                            <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-400/40 px-2 py-1.5">
-                              <div className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 mb-0.5 flex items-center gap-1">
-                                <CheckCircle2 className="w-2.5 h-2.5" />
-                                ما تم مع العميل
+                            <div className={cn(
+                              "mt-1.5 rounded-md px-2 py-1.5 border",
+                              handledRec.note.trim().length < 10
+                                ? "bg-amber-500/10 border-amber-400/60"
+                                : "bg-emerald-500/10 border-emerald-400/40"
+                            )}>
+                              <div className={cn(
+                                "text-[9px] font-black mb-0.5 flex items-center gap-1",
+                                handledRec.note.trim().length < 10
+                                  ? "text-amber-700 dark:text-amber-400"
+                                  : "text-emerald-700 dark:text-emerald-400"
+                              )}>
+                                {handledRec.note.trim().length < 10 ? (
+                                  <>⚠️ تفاصيل ناقصة — راجع مع الموظف</>
+                                ) : (
+                                  <><CheckCircle2 className="w-2.5 h-2.5" /> ما تم مع العميل</>
+                                )}
                               </div>
-                              <p className="text-[10px] text-emerald-900 dark:text-emerald-200 leading-snug whitespace-pre-wrap">{handledRec.note}</p>
+                              <p className={cn(
+                                "text-[10px] leading-snug whitespace-pre-wrap",
+                                handledRec.note.trim().length < 10
+                                  ? "text-amber-900 dark:text-amber-200"
+                                  : "text-emerald-900 dark:text-emerald-200"
+                              )}>{handledRec.note}</p>
                             </div>
                           )}
                           {handledByOther && (() => {
@@ -5526,24 +5544,49 @@ const AdminCustomerIntelligence = () => {
               onChange={(e) => setDoneDialogNote(e.target.value)}
               placeholder="مثال: اتصلت بالعميل، طلب فلتر زيت كامري 2020، هيقرر بكرة ويرجعلي."
               rows={4}
-              className="resize-none text-sm"
+              className={`resize-none text-sm ${doneDialogNote.trim().length > 0 && doneDialogNote.trim().length < 10 ? "border-amber-500 focus-visible:ring-amber-500" : ""}`}
               autoFocus
             />
-            {doneDialogNote.length > 0 && (
-              <p className="text-[10px] text-muted-foreground text-left">
-                {doneDialogNote.length} حرف
+            <div className="flex items-center justify-between text-[10px]">
+              {doneDialogNote.trim().length === 0 ? (
+                <p className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                  ⚠️ مطلوب: اكتب تفاصيل واضحة عن اللي عملته (10 حروف على الأقل)
+                </p>
+              ) : doneDialogNote.trim().length < 10 ? (
+                <p className="text-amber-600 dark:text-amber-400 font-bold">
+                  ⚠️ التفاصيل قصيرة جداً — الإدارة محتاجة توضيح أكتر
+                </p>
+              ) : (
+                <p className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  ✓ التفاصيل واضحة
+                </p>
+              )}
+              <p className="text-muted-foreground">
+                {doneDialogNote.trim().length} حرف
               </p>
-            )}
+            </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"
-              disabled={doneDialogSaving || !doneDialogNote.trim()}
+              disabled={doneDialogSaving}
               onClick={async () => {
                 if (!doneDialogTaskId) return;
                 const note = doneDialogNote.trim();
                 if (!note) {
-                  toast({ title: "اكتب وصف مختصر للي عملته", variant: "destructive" });
+                  toast({
+                    title: "🚫 ممنوع تحفظ من غير ملحوظة",
+                    description: "لازم تكتب اللي عملته مع العميل عشان الإدارة تقدر تتابع شغلك.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                if (note.length < 10) {
+                  toast({
+                    title: "⚠️ التفاصيل قصيرة جداً",
+                    description: "اكتب 10 حروف على الأقل توضح اللي عملته (مثال: اتصلت ورد، هيرجعلي بكرة).",
+                    variant: "destructive",
+                  });
                   return;
                 }
                 setDoneDialogSaving(true);
