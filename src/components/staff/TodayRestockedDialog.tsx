@@ -101,7 +101,6 @@ export default function TodayRestockedDialog({
   const [baseline, setBaseline] = useState<BaselineStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   // Add-to-site dialog state (admin only)
@@ -124,19 +123,31 @@ export default function TodayRestockedDialog({
 
   const loadAll = async () => {
     setLoading(true);
-    const [{ data: itemsData }, { data: baseData }] = await Promise.all([
-      supabase.rpc("get_today_erp_restocked_items" as any),
-      supabase.rpc("erp_intraday_baseline_status" as any),
-    ]);
-    setItems((itemsData as any) || []);
-    const b = Array.isArray(baseData) ? baseData[0] : baseData;
-    setBaseline((b as any) ?? null);
-    setLoaded(true);
-    setLoading(false);
+    try {
+      const [{ data: itemsData, error: itemsError }, { data: baseData, error: baseError }] = await Promise.all([
+        supabase.rpc("get_today_erp_restocked_items" as any),
+        supabase.rpc("erp_intraday_baseline_status" as any),
+      ]);
+
+      if (itemsError) throw itemsError;
+      if (baseError) throw baseError;
+
+      setItems((itemsData as any) || []);
+      const b = Array.isArray(baseData) ? baseData[0] : baseData;
+      setBaseline((b as any) ?? null);
+    } catch (e: any) {
+      toast({
+        title: "تعذّر تحميل بيانات الوصول",
+        description: e?.message ?? "حصل خطأ أثناء جلب البيانات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (!open || loaded) return;
+    if (!open) return;
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
