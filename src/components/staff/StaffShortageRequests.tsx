@@ -261,10 +261,23 @@ export default function StaffShortageRequests() {
     } catch { return recentlyFulfilled; }
   }, [recentlyFulfilled, seenKey]);
 
+  // إخفاء البانر بالكامل لما الموظف يضغط "تمام شفتها" — مرتبط بآخر ID شافه
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      // لو كل العناصر الحالية اتشافت قبل كده → اخفي البانر
+      const allSeen = recentlyFulfilled.length > 0 && recentlyFulfilled.every(r => seen.has(r.id));
+      setBannerDismissed(allSeen);
+    } catch { setBannerDismissed(false); }
+  }, [recentlyFulfilled, seenKey]);
+
   const markAllSeen = useCallback(() => {
     if (typeof window === "undefined") return;
     const ids = recentlyFulfilled.map(r => r.id);
     localStorage.setItem(seenKey, JSON.stringify(ids));
+    setBannerDismissed(true);
   }, [recentlyFulfilled, seenKey]);
 
   const resetForm = () => {
@@ -543,7 +556,7 @@ export default function StaffShortageRequests() {
       </div>
 
       {/* 🎉 بانر الأصناف اللي تم توفيرها حديثاً (آخر 14 يوم) — يظهر بشكل بارز فوق التبويبات */}
-      {recentlyFulfilled.length > 0 && (
+      {recentlyFulfilled.length > 0 && !bannerDismissed && (
         <motion.div
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 shadow-sm"
@@ -580,16 +593,14 @@ export default function StaffShortageRequests() {
                 </p>
               </div>
             </div>
-            {newlyFulfilled.length > 0 && (
-              <Button
-                size="sm" variant="outline"
-                onClick={markAllSeen}
-                className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
-                علّم كمشاهد
-              </Button>
-            )}
+            <Button
+              size="sm" variant="outline"
+              onClick={markAllSeen}
+              className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 ml-1" />
+              تمام شفتها
+            </Button>
           </div>
 
           <ScrollArea className="relative max-h-[200px]">
