@@ -60,6 +60,23 @@ export default function TeamShortagesView() {
   const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
   const [manualSyncing, setManualSyncing] = useState(false);
 
+  // الأصناف اللي الموظف شافها وأقرّ إنه استلم الإشعار (محلي لكل موظف)
+  const ackKey = user?.id ? `shortages_ack_${user.id}` : "shortages_ack_anon";
+  const [acknowledgedIds, setAcknowledgedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(ackKey) : null;
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
+  const acknowledgeRow = useCallback((id: string) => {
+    setAcknowledgedIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      try { localStorage.setItem(ackKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  }, [ackKey]);
+
   const fetchRows = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
