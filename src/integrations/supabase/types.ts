@@ -2537,6 +2537,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_activity_events: {
+        Row: {
+          event_at: string
+          event_date: string
+          hour_of_day: number
+          id: string
+          path: string
+          user_id: string
+        }
+        Insert: {
+          event_at?: string
+          event_date?: string
+          hour_of_day?: number
+          id?: string
+          path: string
+          user_id: string
+        }
+        Update: {
+          event_at?: string
+          event_date?: string
+          hour_of_day?: number
+          id?: string
+          path?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_contact_marks: {
         Row: {
           context: string
@@ -3701,6 +3728,10 @@ export type Database = {
           unique_customers_count: number
           unique_staff_count: number
         }[]
+      }
+      get_staff_activity_dashboard: {
+        Args: { target_date?: string }
+        Returns: Json
       }
       get_staff_activity_report: {
         Args: { _target_date?: string }
