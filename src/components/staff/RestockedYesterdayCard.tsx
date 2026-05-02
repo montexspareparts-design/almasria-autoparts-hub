@@ -199,13 +199,12 @@ export default function RestockedYesterdayCard() {
       {/* Table-like header (RTL: right-to-left columns) */}
       <div
         dir="rtl"
-        className="hidden sm:grid grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_100px_120px_100px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
+        className="hidden sm:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_130px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
       >
         <div>اسم الصنف</div>
         <div>البارت نمبر</div>
         <div className="text-center">الرصيد الجديد</div>
         <div className="text-center">آخر نفاد</div>
-        <div className="text-center">الكود</div>
         <div className="text-center">الحالة</div>
       </div>
 
@@ -221,7 +220,7 @@ export default function RestockedYesterdayCard() {
               <div
                 dir="rtl"
                 key={item.product_id}
-                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.2fr)_100px_120px_100px_90px] gap-3 px-4 py-3 items-center transition-colors ${
+                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_130px_90px] gap-3 px-4 py-3 items-center transition-colors ${
                   item.had_shortage_request
                     ? "bg-rose-50/50 hover:bg-rose-100/60"
                     : "bg-white hover:bg-emerald-50/60"
@@ -240,13 +239,13 @@ export default function RestockedYesterdayCard() {
                   )}
                 </div>
 
-                {/* البارت نمبر */}
+                {/* البارت نمبر (= SKU) */}
                 <div className="min-w-0" dir="ltr">
                   <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">
                     البارت نمبر
                   </div>
-                  <span className="inline-block font-mono text-xs font-bold text-emerald-950 bg-emerald-100/70 px-2 py-1 rounded break-all">
-                    {item.name_ar}
+                  <span className="inline-block font-mono text-xs font-bold text-emerald-950 bg-emerald-100/70 px-2 py-1 rounded break-all tracking-wide">
+                    {item.sku}
                   </span>
                 </div>
 
@@ -287,16 +286,6 @@ export default function RestockedYesterdayCard() {
                   ) : (
                     <span className="text-[10px] text-muted-foreground">—</span>
                   )}
-                </div>
-
-                {/* الكود */}
-                <div className="text-center">
-                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">
-                    الكود
-                  </div>
-                  <span className="inline-block font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded">
-                    {item.sku}
-                  </span>
                 </div>
 
                 {/* الحالة */}
