@@ -572,6 +572,15 @@ function saveSeen(map: Record<string, number>) {
   try { localStorage.setItem(ERP_SEEN_KEY, JSON.stringify(map)); } catch {}
 }
 
+type ErpPeriod = "today" | "yesterday" | "week" | "month";
+
+const ERP_PERIOD_OPTIONS: { value: ErpPeriod; label: string; short: string }[] = [
+  { value: "today",     label: "وصل النهاردة",   short: "النهاردة" },
+  { value: "yesterday", label: "وصل امبارح",      short: "امبارح" },
+  { value: "week",      label: "آخر 7 أيام",      short: "7 أيام" },
+  { value: "month",     label: "آخر 30 يوم",     short: "30 يوم" },
+];
+
 function TodayErpRestockedInline() {
   const [items, setItems] = useState<ErpItem[]>([]);
   const [partNumberMap, setPartNumberMap] = useState<Record<string, string>>({});
@@ -580,6 +589,7 @@ function TodayErpRestockedInline() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [seen, setSeen] = useState<Record<string, number>>(() => loadSeen());
+  const [period, setPeriod] = useState<ErpPeriod>("today");
 
   const markSeen = (erpId: string) => {
     setSeen((prev) => {
@@ -589,10 +599,11 @@ function TodayErpRestockedInline() {
     });
   };
 
-  const load = async () => {
+  const load = async (p: ErpPeriod = period) => {
     setLoading(true);
+    setExpanded(false);
     const [{ data: itemsData }, { data: baseData }] = await Promise.all([
-      supabase.rpc("get_today_erp_restocked_items" as any),
+      supabase.rpc("get_erp_restocked_items_period" as any, { _period: p }),
       supabase.rpc("erp_intraday_baseline_status" as any),
     ]);
     const list = ((itemsData as any) || []) as ErpItem[];
@@ -600,7 +611,6 @@ function TodayErpRestockedInline() {
     const b = Array.isArray(baseData) ? baseData[0] : baseData;
     setHasBaseline(!!(b as any)?.has_baseline);
 
-    // اجلب البارت نمبر (name_ar) لكل الأصناف من جدول products
     const skus = Array.from(new Set(list.map((i) => i.erp_id).filter(Boolean)));
     if (skus.length > 0) {
       const { data: prodRows } = await supabase
@@ -619,8 +629,9 @@ function TodayErpRestockedInline() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    load(period);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
   const filtered = useMemo(() => {
     // اخفي الأصناف اللي الموظف ضغط عليها "تم الاطلاع" خلال آخر 24 ساعة
@@ -638,73 +649,106 @@ function TodayErpRestockedInline() {
   const visible = expanded ? filtered : filtered.slice(0, 6);
   const shortageCount = filtered.filter((i) => i.had_shortage_request).length;
 
-  if (loading) {
-    return (
-      <div className="border-t border-sky-200/70 bg-white/40 p-4 flex items-center gap-2 text-sky-700 text-xs">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        جاري فحص أصناف الفيصل...
-      </div>
-    );
-  }
+  const currentPeriodLabel = ERP_PERIOD_OPTIONS.find(o => o.value === period)?.label ?? "";
 
-  if (!hasBaseline) {
-    return (
-      <div className="border-t border-sky-200/70 bg-white/60 p-4">
-        <div className="flex items-center gap-2 text-sky-900 text-xs font-semibold">
-          <Info className="w-4 h-4" />
-          لسه مفيش نقطة مقارنة لحظية للفيصل النهاردة.
-        </div>
-        <p className="text-[11px] text-sky-700 mt-1.5 leading-relaxed">
-          اضغط <span className="font-bold">"🔄 عرفني إيه اللي وصل النهاردة"</span> فوق عشان نسجّل أول لقطة من رصيد الفيصل.
-          بعدها أي صنف رصيده يزيد هيظهر هنا تلقائياً باسم + بارت نمبر + كمية.
-        </p>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="border-t border-sky-200/70 bg-white/60 p-4 text-center text-xs text-muted-foreground">
-        مفيش أصناف رصيدها زاد في الفيصل بعد آخر نقطة مقارنة النهاردة.
-      </div>
-    );
-  }
+  // التبويبات (دايماً ظاهرة فوق سواء فيه بيانات أو لأ)
+  const PeriodTabs = (
+    <div className="flex flex-wrap items-center gap-1 p-0.5 rounded-md bg-white/80 border border-amber-200 w-fit">
+      {ERP_PERIOD_OPTIONS.map((opt) => {
+        const active = period === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => setPeriod(opt.value)}
+            disabled={loading}
+            className={`text-[11px] font-bold px-2.5 py-1 rounded transition-colors disabled:opacity-50 ${
+              active
+                ? "bg-amber-600 text-white shadow-sm"
+                : "text-amber-800 hover:bg-amber-100"
+            }`}
+            title={opt.label}
+          >
+            {opt.short}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="border-t border-amber-200/70 bg-gradient-to-br from-amber-50/40 via-white to-emerald-50/30">
-      {/* Header */}
+      {/* Header — تبويبات الفترة + بحث */}
       <div className="px-4 pt-3 pb-2 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
           <TrendingUp className="w-4 h-4 text-amber-600" />
-          🎉 وصل النهاردة من الفيصل
-          <Badge className="bg-amber-600 text-white font-mono h-5 px-1.5 text-[10px]">
-            {items.length}
-          </Badge>
-          {shortageCount > 0 && (
-            <Badge className="bg-rose-600 text-white gap-0.5 h-5 px-1.5 text-[10px]">
-              <Flame className="w-2.5 h-2.5" />
-              {shortageCount} فرصة
-            </Badge>
+          🎉 {currentPeriodLabel} من الفيصل
+          {!loading && hasBaseline && items.length > 0 && (
+            <>
+              <Badge className="bg-amber-600 text-white font-mono h-5 px-1.5 text-[10px]">
+                {filtered.length}
+              </Badge>
+              {shortageCount > 0 && (
+                <Badge className="bg-rose-600 text-white gap-0.5 h-5 px-1.5 text-[10px]">
+                  <Flame className="w-2.5 h-2.5" />
+                  {shortageCount} فرصة
+                </Badge>
+              )}
+            </>
           )}
         </div>
-        <div className="relative flex-1 min-w-[160px] ms-auto max-w-xs">
-          <Search className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ابحث..."
-            className="pr-7 pl-7 h-7 text-xs bg-white border-amber-200"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
+        <div className="ms-auto flex items-center gap-2 flex-wrap">
+          {PeriodTabs}
+          <div className="relative w-[160px]">
+            <Search className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث..."
+              className="pr-7 pl-7 h-7 text-xs bg-white border-amber-200"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Body — الحالات المختلفة */}
+      {loading ? (
+        <div className="bg-white/40 p-6 flex items-center justify-center gap-2 text-sky-700 text-xs border-t border-amber-200/40">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          جاري فحص أصناف الفيصل لـ«{currentPeriodLabel}»...
+        </div>
+      ) : !hasBaseline ? (
+        <div className="bg-white/60 p-4 border-t border-amber-200/40">
+          <div className="flex items-center gap-2 text-sky-900 text-xs font-semibold">
+            <Info className="w-4 h-4" />
+            لسه مفيش نقطة مقارنة لحظية للفيصل.
+          </div>
+          <p className="text-[11px] text-sky-700 mt-1.5 leading-relaxed">
+            اضغط <span className="font-bold">"🔄 عرفني إيه اللي وصل النهاردة"</span> فوق عشان نسجّل أول لقطة من رصيد الفيصل.
+            بعدها أي صنف رصيده يزيد هيظهر هنا تلقائياً، وهنبدأ نبني تاريخ تلقائي للفترات الأطول (امبارح/أسبوع/شهر) من النهاردة وطالع.
+          </p>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="bg-white/60 p-6 text-center text-xs text-muted-foreground border-t border-amber-200/40">
+          {period === "today"
+            ? "مفيش أصناف رصيدها زاد في الفيصل النهاردة لحد دلوقتي."
+            : `مفيش لقطات مقارنة محفوظة لـ«${currentPeriodLabel}» — التاريخ بنبنيه تلقائياً كل يوم 6 صباحاً، فالفترات دي هتمتلي تدريجياً.`}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-white/60 p-6 text-center text-xs text-muted-foreground border-t border-amber-200/40">
+          {search.trim()
+            ? `مفيش نتايج للبحث "${search}".`
+            : "كل الأصناف اللي وصلت اتعلّمت كـ«تم الاطلاع» — هترجع تظهر بعد 24 ساعة."}
+        </div>
+      ) : (
+        <>
 
       {/* Column headers */}
       <div
@@ -831,6 +875,8 @@ function TodayErpRestockedInline() {
             )}
           </Button>
         </div>
+      )}
+        </>
       )}
     </div>
   );
