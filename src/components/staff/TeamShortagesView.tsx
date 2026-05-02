@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import ShortageReportDialog from "./ShortageReportDialog";
 import ShortageBulkImportDialog from "./ShortageBulkImportDialog";
-import { computeDateRange, applyDateRange, computeCounts, applyTabFilter } from "./teamShortagesFilters";
+import { computeDateRange, applyDateRange, computeCounts, applyTabFilter, referenceDate } from "./teamShortagesFilters";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
@@ -93,7 +93,8 @@ export default function TeamShortagesView() {
     setLoading(true);
     const { data } = await supabase
       .from("stock_shortage_requests" as any)
-      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,staff_user_id,product:products(sku,name_ar)")
+      .select("id,product_id,manual_sku,manual_name,requested_quantity,customer_note,status,admin_response,created_at,reviewed_at,updated_at,staff_user_id,product:products(sku,name_ar)")
+      .order("updated_at", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(500);
     const list = (data as any as Row[]) || [];
@@ -208,7 +209,7 @@ export default function TeamShortagesView() {
         return name.includes(s) || sku.includes(s) || who.includes(s);
       });
     }
-    return list;
+    return [...list].sort((a, b) => referenceDate(b).getTime() - referenceDate(a).getTime());
   }, [rows, tab, q, staffMap, dateRange, resultFilter]);
 
   const uniqueStaff = useMemo(() => new Set(rows.map(r => r.staff_user_id)).size, [rows]);
