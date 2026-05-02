@@ -19,6 +19,7 @@ import {
   CalendarRange,
   Clock,
   Info,
+  Check,
 } from "lucide-react";
 
 interface RestockedItem {
