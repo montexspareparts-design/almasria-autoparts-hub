@@ -25,6 +25,8 @@ import {
 interface RestockedItem {
   product_id: string;
   sku: string;
+  erp_item_code: string | null;
+  part_number: string | null;
   name_ar: string;
   brand: string | null;
   prev_stock: number;
