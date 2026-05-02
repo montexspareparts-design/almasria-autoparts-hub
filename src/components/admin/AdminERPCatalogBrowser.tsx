@@ -253,8 +253,8 @@ export function AdminERPCatalogBrowser() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2 items-center">
-            <div className="relative">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
@@ -263,6 +263,17 @@ export function AdminERPCatalogBrowser() {
                 className="pr-10"
               />
             </div>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              title="ترتيب"
+            >
+              <option value="qty_desc">الأعلى رصيداً</option>
+              <option value="qty_asc">الأقل رصيداً</option>
+              <option value="name_asc">أبجدي (أ → ي)</option>
+              <option value="name_desc">أبجدي (ي → أ)</option>
+            </select>
             {viewMode === "missing" ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">حد أدنى للرصيد:</span>
