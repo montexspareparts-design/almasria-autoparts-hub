@@ -10,8 +10,11 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Trophy, Users, Clock, Phone, MessageCircle, Zap, Activity,
-  Calendar, TrendingUp, Eye, Award, Target, ArrowUpDown, RefreshCw,
+  Calendar, TrendingUp, Eye, Award, Target, ArrowUp, ArrowDown, ArrowUpDown, RefreshCw, Download, Filter,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import StaffPerformanceDetail from "@/components/admin/StaffPerformanceDetail";
 
 type KpiKey = "active" | "actions" | "customers" | "calls" | "sla";
@@ -78,8 +81,20 @@ export default function AdminStaffPerformance() {
   const [staff, setStaff] = useState<StaffMetric[]>([]);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof StaffMetric>("score");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [minScore, setMinScore] = useState<number>(0);
+  const [activeOnly, setActiveOnly] = useState<boolean>(false);
   const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string } | null>(null);
   const [selectedKpi, setSelectedKpi] = useState<KpiKey | null>(null);
+
+  function handleSort(k: keyof StaffMetric) {
+    if (k === sortBy) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(k);
+      setSortDir("desc");
+    }
+  }
 
   const { from, to } = useMemo(() => getDateRange(range), [range]);
 
