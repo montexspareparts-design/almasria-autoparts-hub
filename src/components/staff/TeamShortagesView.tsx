@@ -310,18 +310,13 @@ export default function TeamShortagesView() {
         </div>
       </Card>
 
-      {/* Auto-sync banner + manual trigger */}
-      <div className="rounded-xl border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-3 flex items-start gap-2.5 text-xs shadow-sm">
-        <RefreshCw className={cn("w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
-        <div className="flex-1 leading-relaxed min-w-0">
-          <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
-          <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
-          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«وصل المخزن»</span>
-          <span className="text-muted-foreground"> وهيوصل إشعار فوري للموظف اللي طلبه.</span>
+      {/* Auto-sync banner — مختصر */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-sky-50/60 dark:bg-sky-950/20 px-3 py-2 flex items-center gap-2 text-[11px] shadow-sm">
+        <RefreshCw className={cn("w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0", manualSyncing ? "animate-spin" : "animate-[spin_4s_linear_infinite]")} />
+        <div className="flex-1 leading-tight min-w-0">
+          <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة كل ساعة من الفيصل</span>
           {erpStockFetchedAt && (
-            <span className="block text-[10px] text-muted-foreground mt-0.5">
-              آخر مزامنة: {new Date(erpStockFetchedAt).toLocaleString("ar-EG", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short" })}
-            </span>
+            <span className="text-muted-foreground"> · آخر فحص: {new Date(erpStockFetchedAt).toLocaleString("ar-EG", { hour: "numeric", minute: "2-digit" })}</span>
           )}
         </div>
         <Button
@@ -329,13 +324,13 @@ export default function TeamShortagesView() {
           variant="outline"
           disabled={manualSyncing}
           onClick={runManualSync}
-          className="h-8 px-2.5 gap-1.5 shrink-0 border-sky-300 dark:border-sky-700 bg-white/80 dark:bg-sky-950/40 hover:bg-white text-sky-700 dark:text-sky-300 text-[11px] font-semibold"
-          title="افحص الفيصل دلوقتي — لو فيه أي توافر، البلاغات هتتنقل لـ«وصل المخزن»"
+          className="h-7 px-2 gap-1 shrink-0 border-sky-300 dark:border-sky-700 bg-white/80 dark:bg-sky-950/40 hover:bg-white text-sky-700 dark:text-sky-300 text-[11px] font-semibold"
+          title="افحص الفيصل دلوقتي"
         >
           {manualSyncing ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> جاري الفحص…</>
+            <><Loader2 className="w-3 h-3 animate-spin" /> فحص…</>
           ) : (
-            <><Sparkles className="w-3.5 h-3.5" /> افحص دلوقتي</>
+            <><Sparkles className="w-3 h-3" /> افحص</>
           )}
         </Button>
       </div>
@@ -391,11 +386,8 @@ export default function TeamShortagesView() {
           </TabsList>
         </Tabs>
 
-        {/* فلتر التاريخ */}
+        {/* فلتر التاريخ — chips بدون ليبل */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 font-semibold ms-1">
-            <Calendar className="w-3 h-3" /> الفترة:
-          </span>
           {(Object.keys(DATE_FILTER_META) as DateFilter[]).map((key) => {
             const m = DATE_FILTER_META[key];
             const Icon = m.icon;
@@ -408,7 +400,7 @@ export default function TeamShortagesView() {
                 className={cn(
                   "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
                   active
-                    ? "bg-gradient-to-l from-indigo-500 to-violet-600 text-white border-transparent shadow-sm font-semibold scale-[1.02]"
+                    ? "bg-gradient-to-l from-indigo-500 to-violet-600 text-white border-transparent shadow-sm font-semibold"
                     : "bg-background text-muted-foreground border-border hover:border-indigo-300 hover:text-indigo-700"
                 )}
               >
@@ -417,43 +409,33 @@ export default function TeamShortagesView() {
               </button>
             );
           })}
-        </div>
-
-        {/* فلتر النتيجة — اعرض «وصلت المخزن» أو «مقبول» أو «مرفوض» فقط */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 font-semibold ms-1">
-            <CheckCircle2 className="w-3 h-3" /> النتيجة:
-          </span>
-          {(Object.keys(RESULT_FILTER_META) as ResultFilter[]).map((key) => {
-            const m = RESULT_FILTER_META[key];
-            const Icon = m.icon;
-            const active = resultFilter === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setResultFilter(key)}
-                className={cn(
-                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
-                  active
-                    ? `bg-gradient-to-l ${m.cls} text-white border-transparent shadow-sm font-semibold scale-[1.02]`
-                    : "bg-background text-muted-foreground border-border hover:border-emerald-300 hover:text-emerald-700"
-                )}
-                aria-pressed={active}
-              >
-                <Icon className="w-3 h-3" />
-                {m.label}
-              </button>
-            );
-          })}
-          {resultFilter !== "all" && (
-            <button
-              type="button"
-              onClick={() => setResultFilter("all")}
-              className="text-[11px] text-muted-foreground hover:text-foreground underline ms-1"
-            >
-              مسح
-            </button>
+          {/* فلتر النتيجة — مدمج في نفس الصف، يظهر بس لو التبويب "الكل" أو "وصلت المخزن" */}
+          {(tab === "all" || tab === "arrived") && (
+            <>
+              <span className="mx-1 text-muted-foreground/40">·</span>
+              {(Object.keys(RESULT_FILTER_META) as ResultFilter[]).map((key) => {
+                const m = RESULT_FILTER_META[key];
+                const Icon = m.icon;
+                const active = resultFilter === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setResultFilter(key)}
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
+                      active
+                        ? `bg-gradient-to-l ${m.cls} text-white border-transparent shadow-sm font-semibold`
+                        : "bg-background text-muted-foreground border-border hover:border-emerald-300 hover:text-emerald-700"
+                    )}
+                    aria-pressed={active}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {m.label}
+                  </button>
+                );
+              })}
+            </>
           )}
         </div>
 
