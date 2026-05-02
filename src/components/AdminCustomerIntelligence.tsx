@@ -5267,6 +5267,83 @@ const AdminCustomerIntelligence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* "تم" Dialog — asks the staff what they did with the customer */}
+      <Dialog
+        open={!!doneDialogTaskId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDoneDialogTaskId(null);
+            setDoneDialogNote("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              إيه اللي عملته مع العميل؟
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-xs text-muted-foreground">
+              اكتب باختصار اللي اتعمل (اتصلت — اتفقت معاه — بعتله عرض سعر — رد عليه...). الإدارة هتشوف ده في «تمت اليوم».
+            </p>
+            <Textarea
+              value={doneDialogNote}
+              onChange={(e) => setDoneDialogNote(e.target.value)}
+              placeholder="مثال: اتصلت بالعميل، طلب فلتر زيت كامري 2020، هيقرر بكرة ويرجعلي."
+              rows={4}
+              className="resize-none text-sm"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              type="button"
+              disabled={doneDialogSaving || !doneDialogNote.trim()}
+              onClick={async () => {
+                if (!doneDialogTaskId) return;
+                const note = doneDialogNote.trim();
+                if (!note) {
+                  toast({ title: "اكتب وصف مختصر للي عملته", variant: "destructive" });
+                  return;
+                }
+                setDoneDialogSaving(true);
+                try {
+                  await markHandled(doneDialogTaskId, "done", note);
+                  // Mark task as completed locally so it shows in "تمت اليوم"
+                  setCompletedTasks(prev => {
+                    const next = new Set(prev);
+                    next.add(doneDialogTaskId);
+                    try { localStorage.setItem(tasksStorageKey, JSON.stringify(Array.from(next))); } catch {}
+                    return next;
+                  });
+                  toast({ title: "✅ تم — الإدارة هتشوف اللي عملته" });
+                  setDoneDialogTaskId(null);
+                  setDoneDialogNote("");
+                } finally {
+                  setDoneDialogSaving(false);
+                }
+              }}
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {doneDialogSaving ? "جاري الحفظ..." : "تم — احفظ"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setDoneDialogTaskId(null);
+                setDoneDialogNote("");
+              }}
+            >
+              إلغاء
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
