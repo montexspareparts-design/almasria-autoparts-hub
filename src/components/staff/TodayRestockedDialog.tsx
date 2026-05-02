@@ -330,21 +330,24 @@ export default function TodayRestockedDialog({
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger
-              value="new_in_erp"
-              className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
-            >
-              <PackagePlus className="w-3.5 h-3.5" />
-              في الفيصل (مش على الموقع)
-              {erpTotal > 0 && (
-                <Badge className="bg-blue-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{erpTotal}</Badge>
-              )}
-              {erpShortageCount > 0 && (
-                <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
-                  <Flame className="w-2.5 h-2.5" />{erpShortageCount}
-                </Badge>
-              )}
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger
+                value="new_in_erp"
+                className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
+              >
+                <PackagePlus className="w-3.5 h-3.5" />
+                في الفيصل (مش على الموقع)
+                <Badge className="bg-purple-600 text-white text-[9px] px-1 ms-0.5 h-4">إدارة</Badge>
+                {erpTotal > 0 && (
+                  <Badge className="bg-blue-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{erpTotal}</Badge>
+                )}
+                {erpShortageCount > 0 && (
+                  <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
+                    <Flame className="w-2.5 h-2.5" />{erpShortageCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* شريط الإجراءات */}
