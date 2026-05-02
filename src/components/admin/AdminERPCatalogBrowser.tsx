@@ -396,6 +396,8 @@ export function AdminERPCatalogBrowser() {
             <span>
               {viewMode === "missing"
                 ? "أصناف الفيصل غير الموجودة على الموقع"
+                : viewMode === "visitor"
+                ? `🌐 الأصناف الظاهرة فعلياً للزائر (${filteredVisitor.length.toLocaleString("ar-EG")})`
                 : "أصناف الموقع — تحكم في الإظهار/الإخفاء"}
             </span>
           </CardTitle>
