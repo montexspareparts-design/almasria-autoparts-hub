@@ -71,6 +71,7 @@ export default function AdminShortageRequests() {
   const [fromDate, setFromDate] = useState<Date>(() => { const d = new Date(); d.setDate(d.getDate() - 30); d.setHours(0,0,0,0); return d; });
   const [toDate, setToDate] = useState<Date>(() => { const d = new Date(); d.setHours(23,59,59,999); return d; });
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
+  const [showFulfilled, setShowFulfilled] = useState(false);
 
   // Detail dialog
   const [openGroup, setOpenGroup] = useState<PriorityRow | null>(null);
@@ -146,12 +147,22 @@ export default function AdminShortageRequests() {
     return details.filter(d => d.status === statusFilter);
   }, [details, statusFilter]);
 
+  // إخفاء الأصناف اللي كل بلاغاتها "تم التوفير" — إلا لو الأدمن طلب يشوفها
+  const visiblePriority = useMemo(() => {
+    if (showFulfilled) return priority;
+    return priority.filter(r => {
+      const reports = Number(r.reports_count) || 0;
+      const fulfilled = Number(r.fulfilled_count) || 0;
+      return reports === 0 || fulfilled < reports;
+    });
+  }, [priority, showFulfilled]);
+
   const totals = useMemo(() => ({
-    items: priority.length,
-    reports: priority.reduce((s, r) => s + Number(r.reports_count), 0),
-    qty: priority.reduce((s, r) => s + Number(r.total_quantity), 0),
+    items: visiblePriority.length,
+    reports: visiblePriority.reduce((s, r) => s + Number(r.reports_count), 0),
+    qty: visiblePriority.reduce((s, r) => s + Number(r.total_quantity), 0),
     staff: new Set(details.map(d => d.staff_user_id)).size,
-  }), [priority, details]);
+  }), [visiblePriority, details]);
 
   const openGroupDetails = (g: PriorityRow) => {
     setOpenGroup(g);
@@ -279,19 +290,32 @@ export default function AdminShortageRequests() {
       </div>
 
       <Tabs defaultValue="priority">
-        <TabsList>
-          <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
-          <TabsTrigger value="all" className="gap-1.5"><BarChart3 className="w-4 h-4" />كل البلاغات</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <TabsList>
+            <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
+            <TabsTrigger value="all" className="gap-1.5"><BarChart3 className="w-4 h-4" />كل البلاغات</TabsTrigger>
+          </TabsList>
+          <Button
+            type="button"
+            size="sm"
+            variant={showFulfilled ? "default" : "outline"}
+            className="h-8 text-xs gap-1.5"
+            onClick={() => setShowFulfilled(v => !v)}
+          >
+            {showFulfilled ? "إخفاء اللي تم توفيره" : "إظهار اللي تم توفيره"}
+          </Button>
+        </div>
 
         {/* Priority Report */}
         <TabsContent value="priority" className="space-y-2 mt-4">
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-          ) : priority.length === 0 ? (
-            <p className="text-center text-muted-foreground py-10 text-sm">مفيش بلاغات في الفترة دي</p>
+          ) : visiblePriority.length === 0 ? (
+            <p className="text-center text-muted-foreground py-10 text-sm">
+              {priority.length === 0 ? "مفيش بلاغات في الفترة دي" : "كل الأصناف تم توفيرها 🎉"}
+            </p>
           ) : (
-            priority.map((row, idx) => {
+            visiblePriority.map((row, idx) => {
               const staffCount = Number(row.unique_staff_count);
               const score = Math.round(Number(row.priority_score));
               const intensity = Math.min(100, staffCount * 20);
