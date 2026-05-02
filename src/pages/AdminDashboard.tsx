@@ -136,9 +136,7 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "👨‍💼 الموظفين",
     items: [
-      { id: "staff-overview", label: "متابعة الموظفين (نشاط + تقارير)", icon: Activity },
-      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
-      { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
+      { id: "staff-overview", label: "متابعة الموظفين (نشاط + أداء + تقارير)", icon: Activity },
       { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
       { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
       { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
@@ -809,11 +807,11 @@ const AdminDashboard = () => {
             </Tabs>
           </Suspense>
         );
-      case "staff-performance":
-        return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
       case "staff-overview":
-      case "staff-activity":      // legacy alias
-      case "reporter-reports":    // legacy alias
+      case "staff-activity":      // legacy alias → tab=activity
+      case "staff-performance":   // legacy alias → tab=performance
+      case "daily-reports":       // legacy alias → tab=reports
+      case "reporter-reports":    // legacy alias → tab=reports
         return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
@@ -920,9 +918,7 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminPermissionRequests /></Suspense>;
       case "role-permissions":
         return isAdmin ? <Suspense fallback={<SectionLoader />}><AdminRolePermissions /></Suspense> : <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
-      case "daily-reports":
-        return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
-      // "reporter-reports" handled above as part of staff-overview
+      // "daily-reports" + "reporter-reports" handled above as part of staff-overview
       case "shortage-requests":
         return <Suspense fallback={<SectionLoader />}><AdminShortageRequests /></Suspense>;
       case "daily-report-editor":
