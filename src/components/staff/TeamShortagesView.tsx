@@ -67,6 +67,7 @@ export default function TeamShortagesView() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<StatusKey | "all" | "arrived">("open");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [resultFilter, setResultFilter] = useState<ResultFilter>("all");
   const [q, setQ] = useState("");
   const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
   const [manualSyncing, setManualSyncing] = useState(false);
