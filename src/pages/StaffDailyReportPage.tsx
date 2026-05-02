@@ -20,8 +20,9 @@ import { cn } from "@/lib/utils";
  */
 export default function StaffDailyReportPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
+  const view = (searchParams.get("view") === "shortages" ? "shortages" : "report") as "report" | "shortages";
   const editMode = searchParams.get("edit") === "1" && isAdmin;
   // Force the Al-Faisal (Reporter) form when ?as=reporter is present (admin preview)
   const forceReporter = searchParams.get("as") === "reporter" && isAdmin;
