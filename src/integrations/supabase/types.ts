@@ -3616,6 +3616,13 @@ export type Database = {
       }
     }
     Functions: {
+      apply_erp_part_numbers: {
+        Args: { p_erp_ids: string[]; p_part_numbers: string[] }
+        Returns: {
+          cache_updated: number
+          products_updated: number
+        }[]
+      }
       bulk_import_products: { Args: { _items: Json }; Returns: Json }
       bulk_sync_names: { Args: { _items: Json }; Returns: Json }
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }
