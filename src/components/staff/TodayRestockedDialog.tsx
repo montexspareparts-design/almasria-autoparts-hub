@@ -309,16 +309,17 @@ export default function TodayRestockedDialog({
             {syncing ? "جاري المزامنة..." : "🔄 عرفني إيه اللي زاد دلوقتي"}
           </Button>
 
-          {baseline?.has_baseline && (
+          {baseline?.has_baseline && isAdmin && (
             <Button
               size="sm"
               variant="outline"
               onClick={handleResetBaseline}
               disabled={syncing}
+              title="للأدمن فقط — يبدأ نقطة مقارنة جديدة دلوقتي بدل أول snapshot النهاردة"
               className="gap-1.5 border-amber-300 text-amber-900 hover:bg-amber-100"
             >
               <RefreshCcw className="w-3.5 h-3.5" />
-              صفّر نقطة المقارنة
+              ابدأ نقطة مقارنة جديدة
             </Button>
           )}
 
