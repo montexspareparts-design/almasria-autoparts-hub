@@ -2310,12 +2310,14 @@ const AdminCustomerIntelligence = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        const el = document.querySelector('[data-tab-trigger="done-today"]') as HTMLElement | null;
-                        el?.click();
-                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        if (!showCompletedTasks) setShowCompletedTasks(true);
+                        setTimeout(() => {
+                          const el = document.getElementById("today-tasks-list");
+                          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 80);
                       }}
                       className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
-                      title="اضغط لعرض المهام المنجزة اليوم"
+                      title="اضغط لعرض المهام المنجزة اليوم داخل القائمة"
                     >
                       <CheckCircle2 className="w-3 h-3" />
                       {doneCount} تمت اليوم
