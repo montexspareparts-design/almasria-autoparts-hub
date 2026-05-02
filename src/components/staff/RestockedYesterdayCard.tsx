@@ -664,7 +664,7 @@ function TodayErpRestockedInline() {
   return (
     <div className="border-t border-amber-200/70 bg-gradient-to-br from-amber-50/40 via-white to-emerald-50/30">
       {/* Header — تبويبات الفترة + بحث */}
-      <div className="px-4 pt-3 pb-2 flex flex-wrap items-center gap-2">
+        <div className="px-4 pt-3 pb-2 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
           <TrendingUp className="w-4 h-4 text-amber-600" />
           🎉 {currentPeriodLabel} من الفيصل
@@ -683,6 +683,7 @@ function TodayErpRestockedInline() {
           )}
         </div>
         <div className="ms-auto flex items-center gap-2 flex-wrap">
+            <TodayRestockedDialog triggerLabel="🔄 عرفني إيه اللي وصل النهاردة" />
           {PeriodTabs}
           <div className="relative w-[160px]">
             <Search className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
