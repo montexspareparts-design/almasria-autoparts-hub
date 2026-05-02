@@ -1821,6 +1821,30 @@ export type Database = {
           },
         ]
       }
+      product_stock_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          snapshot_date: string
+          stock_quantity: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          snapshot_date: string
+          stock_quantity?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          snapshot_date?: string
+          stock_quantity?: number
+        }
+        Relationships: []
+      }
       product_tier_prices: {
         Row: {
           discount_price: number | null
@@ -3500,6 +3524,22 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_restocked_items: {
+        Args: { _days_back?: number }
+        Returns: {
+          base_price: number
+          brand: string
+          current_stock: number
+          delta: number
+          had_shortage_request: boolean
+          name_ar: string
+          prev_stock: number
+          product_id: string
+          shortage_requests_count: number
+          sku: string
+          was_zero: boolean
+        }[]
+      }
       get_shortage_priority_report: {
         Args: { _from?: string; _to?: string }
         Returns: {
@@ -3623,6 +3663,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      take_daily_stock_snapshot: { Args: never; Returns: Json }
       user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
         Args: { _code: string }
