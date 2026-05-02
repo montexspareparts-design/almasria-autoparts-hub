@@ -1721,12 +1721,20 @@ Deno.serve(async (req) => {
           if (wholesalePrice > 0) wholesaleItems.push({ id: erpId, wholesalePrice });
           if (name) nameItems.push({ id: erpId, name });
         } else if (qty > stockThreshold && name) {
+          // ✅ شرط جديد: لازم الصنف يكون أصلي (الاسم فيه "اصلي/أصلي") أو DENSO (في الاسم أو الكود)
+          const nameLower = name.toLowerCase();
+          const idLower = erpId.toLowerCase();
+          const isGenuineWord = name.includes("اصلي") || name.includes("أصلي") || name.includes("اصلى") || name.includes("أصلى");
+          const isDenso = nameLower.includes("denso") || idLower.includes("denso");
+          if (!isGenuineWord && !isDenso) continue;
+
           newGenuineCandidates.push({
             erp_id: erpId,
             name,
             qty,
             retailPrice,
             wholesalePrice,
+            match_reason: isDenso ? "denso" : "genuine_word",
           });
         }
       }
