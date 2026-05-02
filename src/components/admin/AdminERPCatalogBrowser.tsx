@@ -83,21 +83,44 @@ export function AdminERPCatalogBrowser() {
     loadData();
   }, []);
 
+  const sortMissing = (arr: CacheRow[]) => {
+    const copy = [...arr];
+    switch (sortMode) {
+      case "qty_desc": copy.sort((a, b) => (b.qty ?? 0) - (a.qty ?? 0)); break;
+      case "qty_asc": copy.sort((a, b) => (a.qty ?? 0) - (b.qty ?? 0)); break;
+      case "name_asc": copy.sort((a, b) => arabicCollator.compare(a.name ?? "", b.name ?? "")); break;
+      case "name_desc": copy.sort((a, b) => arabicCollator.compare(b.name ?? "", a.name ?? "")); break;
+    }
+    return copy;
+  };
+
+  const sortOnsite = (arr: OnsiteRow[]) => {
+    const copy = [...arr];
+    switch (sortMode) {
+      case "qty_desc": copy.sort((a, b) => (b.stock_quantity ?? 0) - (a.stock_quantity ?? 0)); break;
+      case "qty_asc": copy.sort((a, b) => (a.stock_quantity ?? 0) - (b.stock_quantity ?? 0)); break;
+      case "name_asc": copy.sort((a, b) => arabicCollator.compare(a.name_ar ?? "", b.name_ar ?? "")); break;
+      case "name_desc": copy.sort((a, b) => arabicCollator.compare(b.name_ar ?? "", a.name_ar ?? "")); break;
+    }
+    return copy;
+  };
+
   // Missing items (not on site, filtered by min qty + search)
   const filteredMissing = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const filtered = rows.filter((r) => {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
       if (!q) return true;
       return r.erp_id.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q);
     });
-  }, [rows, existingSkus, search, minQty]);
+    return sortMissing(filtered);
+  }, [rows, existingSkus, search, minQty, sortMode]);
 
   // Onsite items (with optional inactive + search filter)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return onsiteRows.filter((r) => {
+    const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
       if (!q) return true;
       return (
@@ -106,7 +129,9 @@ export function AdminERPCatalogBrowser() {
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
-  }, [onsiteRows, search, showInactive]);
+    return sortOnsite(filtered);
+  }, [onsiteRows, search, showInactive, sortMode]);
+
 
   const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
   const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
