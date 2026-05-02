@@ -358,6 +358,7 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
   const [openReport, setOpenReport] = useState<any | null>(null);
   const [filterStaff, setFilterStaff] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "submitted" | "draft">("all");
+  const [filterDate, setFilterDate] = useState<string | null>(null); // YYYY-MM-DD
 
   // Weekly + Monthly aggregates (always shown alongside the current range)
   const today = new Date();
