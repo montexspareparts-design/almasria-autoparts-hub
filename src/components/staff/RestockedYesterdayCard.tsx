@@ -224,6 +224,10 @@ export default function RestockedYesterdayCard() {
           </div>
           <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
+        <div className="p-3 border-t border-muted/40 flex flex-wrap gap-2 bg-white/50">
+          <TodayRestockedDialog triggerLabel="🔄 شوف اللي وصل النهاردة بمزامنة لحظية" />
+          <CurrentlyInStockDialog triggerLabel="📦 المتاح حالياً" variant="ghost" />
+        </div>
       </Card>
     );
   }
