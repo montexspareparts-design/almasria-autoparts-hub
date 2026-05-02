@@ -58,6 +58,7 @@ const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 // StaffHome merged into AdminDashboard (?section=daily-dashboard) — see redirect below.
 const StaffDailyReportPage = lazy(() => import("./pages/StaffDailyReportPage"));
+const StaffRestockedPage = lazy(() => import("./pages/StaffRestockedPage"));
 const ReporterSectionsEditor = lazy(() => import("./pages/admin/ReporterSectionsEditor"));
 const StaffDailyBriefPage = lazy(() => import("./pages/StaffDailyBriefPage"));
 const StaffTasksPage = lazy(() => import("./pages/StaffTasksPage"));
@@ -167,6 +168,8 @@ const App = () => (
                     <Route path="/admin/staff-home" element={<Navigate to="/admin?section=my-daily-tasks" replace />} />
                     <Route path="/admin/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/staff/daily-report" element={<StaffDailyReportPage />} />
+                    <Route path="/admin/restocked" element={<StaffRestockedPage />} />
+                    <Route path="/staff/restocked" element={<StaffRestockedPage />} />
                     <Route path="/admin/reporter-sections-editor" element={<ReporterSectionsEditor />} />
                     <Route path="/admin/daily-brief" element={<StaffDailyBriefPage />} />
                     <Route path="/staff/daily-brief" element={<StaffDailyBriefPage />} />

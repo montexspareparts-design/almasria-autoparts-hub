@@ -41,7 +41,7 @@ import {
 } from "./ReporterEnhancements";
 import StaffShortageRequests from "./StaffShortageRequests";
 import MissingReportPrompt from "./MissingReportPrompt";
-import RestockedYesterdayCard from "./RestockedYesterdayCard";
+
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -484,7 +484,6 @@ function TodayForm({
   const warnings = !locked ? buildConsistencyWarnings(data, autoStats) : [];
   return (
     <>
-      <RestockedYesterdayCard />
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <TeamBenchmarkLine todayScore={todayScore} />
       {/* Focus strip — تذكير أن كل الأرقام بتتدخل يدوي من الموظف */}

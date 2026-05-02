@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, ClipboardList, LogOut, Settings2, PackageX, FileText } from "lucide-react";
+import { ArrowRight, ClipboardList, LogOut, Settings2, PackageX, FileText, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StaffDailyReport from "@/components/staff/StaffDailyReport";
 import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
 import TeamShortagesView from "@/components/staff/TeamShortagesView";
+import RestockedYesterdayCard from "@/components/staff/RestockedYesterdayCard";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,7 +23,8 @@ export default function StaffDailyReportPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
-  const view = (searchParams.get("view") === "shortages" ? "shortages" : "report") as "report" | "shortages";
+  const viewParam = searchParams.get("view");
+  const view = (viewParam === "shortages" ? "shortages" : viewParam === "restocked" ? "restocked" : "report") as "report" | "shortages" | "restocked";
   const editMode = searchParams.get("edit") === "1" && isAdmin;
   // Force the Al-Faisal (Reporter) form when ?as=reporter is present (admin preview)
   const forceReporter = searchParams.get("as") === "reporter" && isAdmin;
@@ -132,6 +134,7 @@ export default function StaffDailyReportPage() {
             {([
               { key: "report",     label: "تقريري اليومي",   shortLabel: "تقريري",  icon: FileText },
               { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX },
+              { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck },
             ] as const).map((t) => {
               const Icon = t.icon;
               const active = view === t.key;
@@ -166,11 +169,15 @@ export default function StaffDailyReportPage() {
       {/* Content */}
       <main className={cn(
         "mx-auto px-3 sm:px-6 py-4 sm:py-6",
-        view === "shortages" ? "max-w-5xl" : "max-w-3xl"
+        view === "report" ? "max-w-3xl" : "max-w-5xl"
       )}>
-        {view === "shortages"
-          ? <TeamShortagesView />
-          : (showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />)}
+        {view === "shortages" ? (
+          <TeamShortagesView />
+        ) : view === "restocked" ? (
+          <RestockedYesterdayCard />
+        ) : (
+          showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />
+        )}
       </main>
     </div>
   );
