@@ -535,7 +535,8 @@ export function AdminERPCatalogBrowser() {
                       const isAdded = added.has(r.erp_id);
                       return (
                         <tr key={r.erp_id} className="border-t hover:bg-muted/30">
-                          <td className="p-2 font-mono text-xs">{r.erp_id}</td>
+                          <td className="p-2 font-mono text-xs font-bold">{r.erp_id}</td>
+                          <td className="p-2 font-mono text-[11px] text-muted-foreground">{r.part_number || "—"}</td>
                           <td className="p-2">{r.name}</td>
                           <td className="p-2 text-center">
                             <Badge variant={(r.qty ?? 0) > 10 ? "default" : "secondary"}>{r.qty ?? 0}</Badge>
