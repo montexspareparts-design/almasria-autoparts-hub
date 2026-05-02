@@ -36,7 +36,7 @@ type OnsiteRow = {
   brand: string | null;
 };
 
-type ViewMode = "missing" | "onsite";
+type ViewMode = "missing" | "onsite" | "visitor";
 type SortMode = "qty_desc" | "qty_asc" | "name_asc" | "name_desc";
 
 const PAGE_SIZE = 50;
@@ -192,12 +192,31 @@ export function AdminERPCatalogBrowser() {
     return Array.from(set).sort();
   }, [onsiteRows]);
 
+  // ✨ ما يراه الزائر فعلياً = is_active = true (نفس فلتر useProductListing)
+  const filteredVisitor = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = onsiteRows.filter((r) => {
+      if (!r.is_active) return false;
+      if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (!q) return true;
+      return (
+        (r.sku ?? "").toLowerCase().includes(q) ||
+        (r.erp_item_code ?? "").toLowerCase().includes(q) ||
+        (r.name_ar ?? "").toLowerCase().includes(q)
+      );
+    });
+    return sortOnsite(filtered);
+  }, [onsiteRows, search, sortMode, brandFilter]);
 
-  const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
+  const activeList: CacheRow[] | OnsiteRow[] =
+    viewMode === "missing" ? filteredMissing : viewMode === "visitor" ? filteredVisitor : filteredOnsite;
   const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
-  const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const pageOnsite = (viewMode === "visitor" ? filteredVisitor : filteredOnsite).slice(
+    safePage * PAGE_SIZE,
+    safePage * PAGE_SIZE + PAGE_SIZE
+  );
 
   useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
 
@@ -336,12 +355,21 @@ export function AdminERPCatalogBrowser() {
           غير موجودة على الموقع ({filteredMissing.length})
         </Button>
         <Button
+          variant={viewMode === "visitor" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("visitor")}
+          className="gap-1 border-green-500/50"
+        >
+          <Eye className="w-4 h-4 text-green-600" />
+          🌐 يراها الزائر ({totalActive.toLocaleString("ar-EG")})
+        </Button>
+        <Button
           variant={viewMode === "onsite" ? "default" : "outline"}
           size="sm"
           onClick={() => setViewMode("onsite")}
           className="gap-1"
         >
-          <Eye className="w-4 h-4" />
+          <Package className="w-4 h-4" />
           إجمالي الجدول ({totalProducts.toLocaleString("ar-EG")})
         </Button>
         <Badge variant="outline" className="gap-1 border-green-500/40 bg-green-50 dark:bg-green-950/30">
@@ -368,6 +396,8 @@ export function AdminERPCatalogBrowser() {
             <span>
               {viewMode === "missing"
                 ? "أصناف الفيصل غير الموجودة على الموقع"
+                : viewMode === "visitor"
+                ? `🌐 الأصناف الظاهرة فعلياً للزائر (${filteredVisitor.length.toLocaleString("ar-EG")})`
                 : "أصناف الموقع — تحكم في الإظهار/الإخفاء"}
             </span>
           </CardTitle>
@@ -418,13 +448,21 @@ export function AdminERPCatalogBrowser() {
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
-                <Button
-                  variant={showInactive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowInactive((v) => !v)}
-                >
-                  {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
-                </Button>
+                {viewMode === "onsite" && (
+                  <Button
+                    variant={showInactive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowInactive((v) => !v)}
+                  >
+                    {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
+                  </Button>
+                )}
+                {viewMode === "visitor" && (
+                  <Badge variant="outline" className="border-green-500/40 bg-green-50 dark:bg-green-950/30 gap-1">
+                    <Eye className="w-3 h-3 text-green-600" />
+                    is_active = true فقط
+                  </Badge>
+                )}
               </>
             )}
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
