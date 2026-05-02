@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Activity, Clock, Eye, RefreshCw, Search, UserCheck } from "lucide-react";
 import { format } from "date-fns";
+import StaffHourlyActivityChart from "@/components/admin/StaffHourlyActivityChart";
 
 type Row = {
   user_id: string;
@@ -114,6 +115,9 @@ export default function AdminStaffActivity() {
           </Button>
         </div>
       </div>
+
+      {/* Hourly chart */}
+      <StaffHourlyActivityChart date={date} />
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

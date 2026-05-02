@@ -100,20 +100,62 @@ export async function trackPageVisit(path: string, title?: string) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Skip recording for staff/admin users — they're operating the system, not visiting
+    // الموظفون (admin/moderator/reporter) لا يُسجَّلون كزوار/عملاء
+    // بدلاً من ذلك نسجّل نشاطهم في staff_activity_events + staff_session_activity
     if (user?.id) {
       const { data: roleRow } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "moderator"])
+        .in("role", ["admin", "moderator", "reporter"])
         .maybeSingle();
       if (roleRow) {
-        // Drop from pending and skip
+        // اسحبه من قائمة الـ pending الخاصة بالزوار
         const remaining = readPending().filter(
           (p) => !(p.path === visit.path && p.visited_at === visit.visited_at)
         );
         writePending(remaining);
+
+        // سجّل event للمخطط بالساعة
+        try {
+          await supabase.from("staff_activity_events").insert({
+            user_id: user.id,
+            path: visit.path,
+            event_at: visit.visited_at,
+          });
+        } catch { /* silent */ }
+
+        // upsert في staff_session_activity (تجميعة اليوم)
+        try {
+          const today = new Date().toISOString().slice(0, 10);
+          const { data: existing } = await supabase
+            .from("staff_session_activity")
+            .select("id, page_views, paths")
+            .eq("user_id", user.id)
+            .eq("session_date", today)
+            .maybeSingle();
+          if (existing) {
+            const newPaths = Array.from(new Set([...(existing.paths || []), visit.path])).slice(0, 50);
+            await supabase
+              .from("staff_session_activity")
+              .update({
+                page_views: (existing.page_views || 0) + 1,
+                last_seen_at: visit.visited_at,
+                paths: newPaths,
+              })
+              .eq("id", existing.id);
+          } else {
+            await supabase.from("staff_session_activity").insert({
+              user_id: user.id,
+              session_date: today,
+              first_seen_at: visit.visited_at,
+              last_seen_at: visit.visited_at,
+              page_views: 1,
+              paths: [visit.path],
+            });
+          }
+        } catch { /* silent */ }
+
         return;
       }
     }
