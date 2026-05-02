@@ -2310,12 +2310,14 @@ const AdminCustomerIntelligence = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        const el = document.querySelector('[data-tab-trigger="done-today"]') as HTMLElement | null;
-                        el?.click();
-                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        if (!showCompletedTasks) setShowCompletedTasks(true);
+                        setTimeout(() => {
+                          const el = document.getElementById("today-tasks-list");
+                          el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }, 80);
                       }}
                       className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
-                      title="اضغط لعرض المهام المنجزة اليوم"
+                      title="اضغط لعرض المهام المنجزة اليوم داخل القائمة"
                     >
                       <CheckCircle2 className="w-3 h-3" />
                       {doneCount} تمت اليوم
@@ -3201,195 +3203,25 @@ const AdminCustomerIntelligence = () => {
 
         return (
           <Tabs defaultValue="all" className="w-full">
-            {(() => {
-              const doneEntries = Object.values(handledMeta);
-              const doneTasksCount = doneEntries.length;
-              const doneStaffCount = new Set(doneEntries.map((r) => r.by)).size;
-              return (
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl mb-3">
-                  <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                    <Users className="w-3.5 h-3.5" />
-                    كل العملاء
-                    <Badge variant="secondary" className="text-[10px] h-5 mr-1">{filteredProfiles?.length || 0}</Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="followup" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                    <Zap className="w-3.5 h-3.5 text-orange-500" />
-                    يحتاجون متابعة الآن
-                    {followUpList.length > 0 && (
-                      <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="done-today" data-tab-trigger="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    تمت اليوم
-                    {doneTasksCount > 0 && (
-                      <Badge
-                        className="text-[10px] h-5 mr-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                        title={`${doneTasksCount} مهمة منجزة بواسطة ${doneStaffCount} موظف`}
-                      >
-                        {doneTasksCount}
-                        {doneStaffCount > 1 && (
-                          <span className="opacity-80 font-medium">· {doneStaffCount}👤</span>
-                        )}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="interactions" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
-                    <History className="w-3.5 h-3.5 text-primary" />
-                    سجل التفاعلات
-                  </TabsTrigger>
-                </TabsList>
-              );
-            })()}
+            <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/40 rounded-xl mb-3">
+              <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <Users className="w-3.5 h-3.5" />
+                كل العملاء
+                <Badge variant="secondary" className="text-[10px] h-5 mr-1">{filteredProfiles?.length || 0}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="followup" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <Zap className="w-3.5 h-3.5 text-orange-500" />
+                يحتاجون متابعة الآن
+                {followUpList.length > 0 && (
+                  <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="interactions" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <History className="w-3.5 h-3.5 text-primary" />
+                سجل التفاعلات
+              </TabsTrigger>
+            </TabsList>
 
-            {/* ===== Tab: Done Today (independent — fed directly from staff_task_handling) ===== */}
-            <TabsContent value="done-today" className="space-y-2.5 mt-0 focus-visible:outline-none">
-              {(() => {
-                const profileById = new Map((profiles || []).map((p: any) => [p.user_id, p]));
-                // Build entries directly from handledMeta — independent of visibleTasks
-                const entries = Object.entries(handledMeta)
-                  .map(([taskId, rec]) => {
-                    const customerUserId = taskId.split(":")[0];
-                    const taskKind = taskId.split(":").slice(1).join(":") || "";
-                    const profile = profileById.get(customerUserId) as any | undefined;
-                    return { taskId, taskKind, customerUserId, profile, rec };
-                  })
-                  .sort((a, b) => new Date(b.rec.at).getTime() - new Date(a.rec.at).getTime());
-
-                if (entries.length === 0) {
-                  const todayLabel = new Date().toLocaleDateString("ar-EG", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    timeZone: "Africa/Cairo",
-                  });
-                  return (
-                    <div className="rounded-2xl border-2 border-dashed border-emerald-300/50 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-8 text-center">
-                      <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4 ring-4 ring-emerald-500/10">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-                      </div>
-                      <p className="text-base font-black text-foreground mb-1">لا توجد مهام منجزة اليوم بعد</p>
-                      <p className="text-xs text-muted-foreground mb-4">{todayLabel}</p>
-                      <div className="max-w-md mx-auto rounded-xl bg-card/80 border border-border/60 p-3 text-right space-y-2">
-                        <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
-                          <span className="text-emerald-600">✨</span>
-                          إزاي تظهر مهمة هنا؟
-                        </p>
-                        <ul className="text-[11px] text-muted-foreground space-y-1.5 leading-relaxed">
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-600 font-black mt-0.5">١.</span>
-                            <span>افتح تبويب «كل العملاء» أو «يحتاجون متابعة الآن».</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-600 font-black mt-0.5">٢.</span>
-                            <span>اضغط <strong className="text-foreground">«اتصال»</strong> أو <strong className="text-foreground">«واتساب»</strong> أو <strong className="text-foreground">«نتيجة»</strong> أو <strong className="text-foreground">«تم»</strong> على المهمة.</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-600 font-black mt-0.5">٣.</span>
-                            <span>المهمة هتنتقل هنا تلقائياً وكل الموظفين والإدارة هيشوفوها.</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/70 mt-4">
-                        🔄 التحديث فوري — مفيش حاجة تعملها لتظهر المهام
-                      </p>
-                    </div>
-                  );
-                }
-
-
-                // Group by staff for clearer admin overview
-                const byStaff = new Map<string, typeof entries>();
-                entries.forEach((e) => {
-                  const key = e.rec.byName || "موظف";
-                  if (!byStaff.has(key)) byStaff.set(key, [] as any);
-                  byStaff.get(key)!.push(e);
-                });
-
-                const actionMeta = (action: string) => {
-                  switch (action) {
-                    case "call": return { label: "اتصل", icon: "📞", color: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-400/40" };
-                    case "whatsapp": return { label: "راسل واتساب", icon: "💬", color: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-400/40" };
-                    case "note": return { label: "أضاف ملاحظة", icon: "📝", color: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40" };
-                    case "outcome": return { label: "سجّل نتيجة", icon: "🎯", color: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-400/40" };
-                    case "done": return { label: "أنجز المهمة", icon: "✅", color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40" };
-                    default: return { label: "تعامل", icon: "✋", color: "bg-muted text-muted-foreground border-border" };
-                  }
-                };
-
-                return (
-                  <div className="space-y-4">
-                    {/* Summary header */}
-                    <div className="rounded-xl bg-gradient-to-l from-emerald-500/10 to-emerald-500/5 border border-emerald-400/40 p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4" />
-                          إجمالي المهام المنجزة اليوم
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {byStaff.size} موظف • {entries.length} مهمة
-                        </p>
-                      </div>
-                      <div className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{entries.length}</div>
-                    </div>
-
-                    {/* Per-staff groups */}
-                    {Array.from(byStaff.entries()).map(([staffName, items]) => (
-                      <div key={staffName} className="rounded-xl border border-border bg-card overflow-hidden">
-                        <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
-                          <p className="text-xs font-black text-foreground flex items-center gap-1.5">
-                            <Users className="w-3.5 h-3.5 text-primary" />
-                            {staffName}
-                          </p>
-                          <Badge variant="secondary" className="text-[10px] h-5">{items.length} مهمة</Badge>
-                        </div>
-                        <div className="divide-y divide-border/60">
-                          {items.map(({ taskId, customerUserId, profile, rec }) => {
-                            const meta = actionMeta(rec.action);
-                            const mins = Math.max(0, Math.floor((Date.now() - new Date(rec.at).getTime()) / 60000));
-                            const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : `منذ ${Math.floor(mins/60)}س ${mins%60}د`;
-                            const customerName = profile?.full_name || profile?.email || "عميل غير معروف";
-                            const customerPhone = profile?.phone;
-                            return (
-                              <div key={taskId} className="p-3 hover:bg-muted/30 transition-colors">
-                                <div className="flex items-start gap-2.5">
-                                  <span className={cn("text-[10px] font-black px-2 py-1 rounded-md border inline-flex items-center gap-1 shrink-0", meta.color)}>
-                                    <span>{meta.icon}</span>
-                                    {meta.label}
-                                  </span>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <p className="text-xs font-black text-foreground truncate">{customerName}</p>
-                                      <span className="text-[10px] text-muted-foreground shrink-0">{ago}</span>
-                                    </div>
-                                    {customerPhone && (
-                                      <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                                        <Phone className="w-2.5 h-2.5" />
-                                        {customerPhone}
-                                      </p>
-                                    )}
-                                    {rec.note && (
-                                      <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-400/40 px-2 py-1.5">
-                                        <div className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 mb-0.5">ما تم مع العميل:</div>
-                                        <p className="text-[11px] text-emerald-900 dark:text-emerald-200 leading-snug whitespace-pre-wrap">{rec.note}</p>
-                                      </div>
-                                    )}
-                                    <p className="text-[9px] text-muted-foreground mt-1 font-mono opacity-60 truncate" title={taskId}>
-                                      {new Date(rec.at).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </TabsContent>
 
 
             {/* ===== Tab: Needs Follow-up Now ===== */}
