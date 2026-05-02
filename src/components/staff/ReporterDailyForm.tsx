@@ -40,6 +40,7 @@ import {
   TeamBenchmarkLine,
 } from "./ReporterEnhancements";
 import StaffShortageRequests from "./StaffShortageRequests";
+import MissingReportPrompt from "./MissingReportPrompt";
 
 const PROBLEM_OPTIONS = [
   { value: "price", label: "السعر" },
@@ -272,6 +273,8 @@ export default function ReporterDailyForm() {
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }} className="space-y-4"
     >
+      {/* مودال يظهر تلقائياً لو الموظف مقدمش تقرير امبارح */}
+      <MissingReportPrompt />
       {/* Header */}
       <Card className="p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 text-white">
         <div className="flex items-start justify-between gap-3 flex-wrap">

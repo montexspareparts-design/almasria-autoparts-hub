@@ -2266,6 +2266,36 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_missing_report_justifications: {
+        Row: {
+          created_at: string
+          id: string
+          missed_date: string
+          reason_text: string | null
+          reason_type: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          missed_date: string
+          reason_text?: string | null
+          reason_type?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          missed_date?: string
+          reason_text?: string | null
+          reason_type?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reporter_motivational_messages: {
         Row: {
           created_at: string
@@ -3436,6 +3466,23 @@ export type Database = {
           performance_score: number
           quotations_count: number
           reports_count: number
+          whatsapp_count: number
+        }[]
+      }
+      get_reporter_daily_timeline: {
+        Args: { _from: string; _to: string; _user_id: string }
+        Returns: {
+          calls_count: number
+          day: string
+          day_off_reason: string
+          justification_text: string
+          justification_type: string
+          offers_converted_count: number
+          quotations_count: number
+          report_id: string
+          self_rating: number
+          status: string
+          submitted_at: string
           whatsapp_count: number
         }[]
       }
