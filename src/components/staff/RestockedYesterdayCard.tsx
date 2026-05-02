@@ -618,13 +618,19 @@ function TodayErpRestockedInline() {
 
     const skus = Array.from(new Set(list.map((i) => i.erp_id).filter(Boolean)));
     if (skus.length > 0) {
-      const { data: prodRows } = await supabase
-        .from("products")
-        .select("sku,part_number")
-        .in("sku", skus);
+      // نجيب part_number من المصدرين: products (الموقع) + erp_full_catalog_cache (الفيصل)
+      const [{ data: prodRows }, { data: erpRows }] = await Promise.all([
+        supabase.from("products").select("sku,part_number").in("sku", skus),
+        supabase.from("erp_full_catalog_cache" as any).select("erp_id,part_number").in("erp_id", skus),
+      ]);
       const map: Record<string, string> = {};
+      // أولوية: erp_full_catalog_cache (الفيصل = المصدر الأصلي)
+      (erpRows as any[] || []).forEach((r: any) => {
+        if (r?.erp_id && r?.part_number) map[r.erp_id] = r.part_number;
+      });
+      // fallback: products (لو مش لاقي في الفيصل)
       (prodRows || []).forEach((p: any) => {
-        if (p?.sku && p?.part_number) map[p.sku] = p.part_number;
+        if (p?.sku && p?.part_number && !map[p.sku]) map[p.sku] = p.part_number;
       });
       setPartNumberMap(map);
     } else {
@@ -852,7 +858,7 @@ function TodayErpRestockedInline() {
                   {partNumber}
                 </span>
               ) : (
-                <span className="text-[11px] text-muted-foreground italic">— غير موجود في الموقع</span>
+                <span className="text-[11px] text-muted-foreground">—</span>
               )}
             </div>
 
