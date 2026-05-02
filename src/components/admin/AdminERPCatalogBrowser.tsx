@@ -139,7 +139,7 @@ export function AdminERPCatalogBrowser() {
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive]);
+  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode]);
 
   const handleAdd = async (row: CacheRow) => {
     setAdding((s) => ({ ...s, [row.erp_id]: true }));
