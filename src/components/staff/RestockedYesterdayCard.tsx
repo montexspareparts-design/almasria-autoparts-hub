@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TrendingUp, Flame, Package, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import {
+  TrendingUp,
+  Flame,
+  Package,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Search,
+  X,
+} from "lucide-react";
 
 interface RestockedItem {
   product_id: string;
@@ -20,11 +30,14 @@ interface RestockedItem {
   base_price: number | null;
 }
 
+type FilterMode = "all" | "shortages" | "was_zero";
+
 export default function RestockedYesterdayCard() {
   const [items, setItems] = useState<RestockedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-  const [showOnlyShortages, setShowOnlyShortages] = useState(false);
+  const [filter, setFilter] = useState<FilterMode>("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +48,27 @@ export default function RestockedYesterdayCard() {
     };
     load();
   }, []);
+
+  const shortageCount = items.filter((i) => i.had_shortage_request).length;
+  const wasZeroCount = items.filter((i) => i.was_zero).length;
+
+  const filtered = useMemo(() => {
+    let list = items;
+    if (filter === "shortages") list = list.filter((i) => i.had_shortage_request);
+    else if (filter === "was_zero") list = list.filter((i) => i.was_zero);
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (i) =>
+          i.name_ar?.toLowerCase().includes(q) ||
+          i.sku?.toLowerCase().includes(q) ||
+          i.brand?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [items, filter, search]);
+
+  const visibleItems = expanded ? filtered : filtered.slice(0, 8);
 
   if (loading) {
     return (
@@ -58,108 +92,236 @@ export default function RestockedYesterdayCard() {
     );
   }
 
-  const filtered = showOnlyShortages ? items.filter(i => i.had_shortage_request) : items;
-  const visibleItems = expanded ? filtered : filtered.slice(0, 5);
-  const shortageCount = items.filter(i => i.had_shortage_request).length;
-
   return (
-    <Card className="p-4 border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 via-white to-amber-50 shadow-sm">
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-2 min-w-0 flex-1">
-          <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="font-bold text-base text-emerald-900">🎉 وصل امبارح — فرص بيع جاهزة</h3>
-            <p className="text-xs text-emerald-700 mt-0.5">
-              {items.length} صنف رصيدهم زاد عن امبارح
-              {shortageCount > 0 && (
-                <> • <span className="font-bold text-rose-700">{shortageCount}</span> منهم كان عميل بيسأل عليهم</>
-              )}
-            </p>
+    <Card className="border-2 border-emerald-300 bg-gradient-to-br from-emerald-50/60 via-white to-amber-50/40 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-emerald-200/70 bg-white/40">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-base text-emerald-900">🎉 وصل امبارح — فرص بيع جاهزة</h3>
+              <p className="text-xs text-emerald-700 mt-0.5">
+                {items.length} صنف رصيدهم زاد عن امبارح
+                {shortageCount > 0 && (
+                  <>
+                    {" • "}
+                    <span className="font-bold text-rose-700">{shortageCount}</span> منهم كان عميل بيسأل عليهم
+                  </>
+                )}
+              </p>
+            </div>
           </div>
         </div>
-        {shortageCount > 0 && (
-          <button
-            onClick={() => setShowOnlyShortages(v => !v)}
-            className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors ${
-              showOnlyShortages
-                ? "bg-rose-600 text-white"
-                : "bg-rose-100 text-rose-700 hover:bg-rose-200"
-            }`}
-          >
-            🔥 الفرص المؤكدة فقط
-          </button>
-        )}
+
+        {/* Search + Filters */}
+        <div className="mt-3 flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث باسم الصنف، البارت نمبر، الكود، أو الماركة..."
+              className="pr-9 pl-8 h-9 text-sm bg-white border-emerald-200 focus-visible:ring-emerald-400"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="مسح"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1 p-0.5 rounded-md bg-white border border-emerald-200 shrink-0">
+            <FilterPill active={filter === "all"} onClick={() => setFilter("all")}>
+              الكل ({items.length})
+            </FilterPill>
+            {shortageCount > 0 && (
+              <FilterPill
+                active={filter === "shortages"}
+                onClick={() => setFilter("shortages")}
+                tone="rose"
+              >
+                🔥 فرص ({shortageCount})
+              </FilterPill>
+            )}
+            {wasZeroCount > 0 && (
+              <FilterPill
+                active={filter === "was_zero"}
+                onClick={() => setFilter("was_zero")}
+                tone="amber"
+              >
+                رجع من 0 ({wasZeroCount})
+              </FilterPill>
+            )}
+          </div>
+        </div>
       </div>
 
-      <ScrollArea className={expanded ? "h-72" : ""}>
-        <div className="space-y-1.5">
-          {visibleItems.map(item => (
-            <div
-              key={item.product_id}
-              className={`p-2.5 rounded-lg border flex items-start gap-3 transition-colors ${
-                item.had_shortage_request
-                  ? "bg-rose-50/70 border-rose-200 hover:bg-rose-100/70"
-                  : "bg-white border-emerald-100 hover:bg-emerald-50/50"
-              }`}
-            >
-              <div className="flex flex-col items-center gap-1 shrink-0">
-                {item.had_shortage_request ? (
-                  <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] px-1.5 py-0 h-5">
-                    <Flame className="w-3 h-3 mr-0.5" /> فرصة
-                  </Badge>
-                ) : item.was_zero ? (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0 h-5">
-                    رجع متاح
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
-                    +{item.delta}
-                  </Badge>
-                )}
-              </div>
+      {/* Table-like header (RTL: right-to-left columns) */}
+      <div
+        dir="rtl"
+        className="hidden sm:grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_110px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-emerald-900/80 bg-emerald-100/60 border-b border-emerald-200"
+      >
+        <div>اسم الصنف</div>
+        <div>البارت نمبر</div>
+        <div className="text-center">الرصيد الجديد</div>
+        <div className="text-center">الكود</div>
+        <div className="text-center">الحالة</div>
+      </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-foreground truncate font-mono leading-tight" dir="ltr">
+      {/* Rows */}
+      <ScrollArea className={expanded ? "h-[420px]" : ""}>
+        {filtered.length === 0 ? (
+          <div className="p-6 text-center text-sm text-muted-foreground">
+            مفيش نتائج للبحث/الفلتر الحالي.
+          </div>
+        ) : (
+          <div className="divide-y divide-emerald-100">
+            {visibleItems.map((item) => (
+              <div
+                dir="rtl"
+                key={item.product_id}
+                className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_110px_110px_90px] gap-3 px-4 py-3 items-center transition-colors ${
+                  item.had_shortage_request
+                    ? "bg-rose-50/50 hover:bg-rose-100/60"
+                    : "bg-white hover:bg-emerald-50/60"
+                }`}
+              >
+                {/* اسم الصنف */}
+                <div className="min-w-0">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">
+                    اسم الصنف
+                  </div>
+                  <p className="text-sm font-semibold text-foreground leading-tight break-words">
                     {item.name_ar}
                   </p>
+                  {item.brand && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded" dir="ltr">
-                    كود: {item.sku}
+
+                {/* البارت نمبر */}
+                <div className="min-w-0" dir="ltr">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">
+                    البارت نمبر
+                  </div>
+                  <span className="inline-block font-mono text-xs font-bold text-emerald-950 bg-emerald-100/70 px-2 py-1 rounded break-all">
+                    {item.name_ar}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    من <span className="font-bold text-rose-600">{item.prev_stock}</span> →{" "}
-                    <span className="font-bold text-emerald-700">{item.current_stock}</span>
+                </div>
+
+                {/* الرصيد الجديد */}
+                <div className="text-center">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">
+                    الرصيد الجديد
+                  </div>
+                  <div className="font-mono">
+                    <span className="text-base font-extrabold text-emerald-700">
+                      {item.current_stock}
+                    </span>
+                    <div className="text-[10px] text-muted-foreground mt-0.5">
+                      من <span className="font-bold text-rose-600">{item.prev_stock}</span>
+                      <span className="mx-0.5">+{item.delta}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* الكود */}
+                <div className="text-center">
+                  <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">
+                    الكود
+                  </div>
+                  <span className="inline-block font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded">
+                    {item.sku}
                   </span>
-                  {item.had_shortage_request && (
-                    <span className="text-[10px] font-semibold text-rose-700">
-                      {item.shortage_requests_count} بلاغ نقص سابق
+                </div>
+
+                {/* الحالة */}
+                <div className="flex sm:justify-center">
+                  {item.had_shortage_request ? (
+                    <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
+                      <Flame className="w-3 h-3" /> فرصة
+                    </Badge>
+                  ) : item.was_zero ? (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 h-auto">
+                      رجع متاح
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto">
+                      +{item.delta}
+                    </Badge>
+                  )}
+                  {item.had_shortage_request && item.shortage_requests_count > 0 && (
+                    <span className="hidden sm:inline ms-1 text-[10px] font-semibold text-rose-700 self-center">
+                      ({item.shortage_requests_count})
                     </span>
                   )}
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </ScrollArea>
 
-      {filtered.length > 5 && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setExpanded(v => !v)}
-          className="w-full mt-2 text-emerald-700 hover:bg-emerald-100"
-        >
-          {expanded ? (
-            <>إخفاء <ChevronUp className="w-4 h-4 mr-1" /></>
-          ) : (
-            <>عرض الكل ({filtered.length}) <ChevronDown className="w-4 h-4 mr-1" /></>
-          )}
-        </Button>
+      {filtered.length > 8 && (
+        <div className="border-t border-emerald-200/70 bg-white/40">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setExpanded((v) => !v)}
+            className="w-full text-emerald-700 hover:bg-emerald-100 rounded-none"
+          >
+            {expanded ? (
+              <>
+                إخفاء <ChevronUp className="w-4 h-4 mr-1" />
+              </>
+            ) : (
+              <>
+                عرض الكل ({filtered.length}) <ChevronDown className="w-4 h-4 mr-1" />
+              </>
+            )}
+          </Button>
+        </div>
       )}
     </Card>
+  );
+}
+
+function FilterPill({
+  children,
+  active,
+  onClick,
+  tone = "emerald",
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+  tone?: "emerald" | "rose" | "amber";
+}) {
+  const toneActive = {
+    emerald: "bg-emerald-600 text-white",
+    rose: "bg-rose-600 text-white",
+    amber: "bg-amber-500 text-white",
+  }[tone];
+  const toneIdle = {
+    emerald: "text-emerald-700 hover:bg-emerald-100",
+    rose: "text-rose-700 hover:bg-rose-100",
+    amber: "text-amber-700 hover:bg-amber-100",
+  }[tone];
+  return (
+    <button
+      onClick={onClick}
+      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded whitespace-nowrap transition-colors ${
+        active ? toneActive : toneIdle
+      }`}
+    >
+      {children}
+    </button>
   );
 }
