@@ -1,17 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Sparkles,
   Search,
@@ -23,8 +34,18 @@ import {
   PackageCheck,
   PackagePlus,
   AlertCircle,
+  Plus,
+  CheckCircle2,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+const BRAND_OPTIONS: { value: string; label: string }[] = [
+  { value: "toyota_genuine", label: "Toyota Genuine (أصلي)" },
+  { value: "denso", label: "DENSO" },
+  { value: "aisin", label: "AISIN" },
+  { value: "fbk", label: "FBK" },
+  { value: "toyota_oils", label: "Toyota Oils (زيوت)" },
+];
 
 interface TodayRestockedItem {
   product_id: string;
@@ -87,6 +108,7 @@ export default function TodayRestockedDialog({
   variant = "primary",
 }: Props) {
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<TodayRestockedItem[]>([]);
   const [newInErp, setNewInErp] = useState<NewInErpItem[]>([]);
@@ -96,6 +118,59 @@ export default function TodayRestockedDialog({
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [tab, setTab] = useState<"restocked" | "new_in_erp">("restocked");
+
+  // Add-to-site dialog state (admin only)
+  const [addTarget, setAddTarget] = useState<NewInErpItem | null>(null);
+  const [addBrand, setAddBrand] = useState<string>("");
+  const [addCategoryId, setAddCategoryId] = useState<string>("");
+  const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addedSkus, setAddedSkus] = useState<Set<string>>(new Set());
+  const [categories, setCategories] = useState<{ id: string; name_ar: string }[]>([]);
+
+  // Load categories once when admin opens
+  useEffect(() => {
+    if (!isAdmin || !open || categories.length > 0) return;
+    supabase
+      .from("product_categories")
+      .select("id,name_ar")
+      .order("name_ar")
+      .then(({ data }) => setCategories((data as any) || []));
+  }, [isAdmin, open, categories.length]);
+
+  const handleAddToSite = async () => {
+    if (!addTarget || !addBrand || !addCategoryId) return;
+    setAddSubmitting(true);
+    try {
+      const { error } = await supabase.from("products").insert({
+        sku: addTarget.erp_id,
+        name_ar: addTarget.name,
+        name_en: addTarget.name,
+        brand: addBrand as any,
+        category_id: addCategoryId,
+        base_price: addTarget.retail_price ?? 0,
+        wholesale_price: addTarget.wholesale_price ?? addTarget.retail_price ?? 0,
+        stock_quantity: addTarget.qty,
+        is_active: true,
+      } as any);
+      if (error) throw error;
+      toast({
+        title: "✅ تمت إضافة الصنف للموقع",
+        description: `${addTarget.name} (${addTarget.erp_id})`,
+      });
+      setAddedSkus((prev) => new Set(prev).add(addTarget.erp_id));
+      setAddTarget(null);
+      setAddBrand("");
+      setAddCategoryId("");
+    } catch (e: any) {
+      toast({
+        title: "تعذّرت الإضافة",
+        description: e?.message ?? "حصل خطأ",
+        variant: "destructive",
+      });
+    } finally {
+      setAddSubmitting(false);
+    }
+  };
 
   const loadAll = async () => {
     setLoading(true);
@@ -117,6 +192,11 @@ export default function TodayRestockedDialog({
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Force restocked tab for non-admins
+  useEffect(() => {
+    if (!isAdmin && tab === "new_in_erp") setTab("restocked");
+  }, [isAdmin, tab]);
 
   // أخذ baseline فقط
   const handleTakeBaseline = async () => {
@@ -255,21 +335,24 @@ export default function TodayRestockedDialog({
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger
-              value="new_in_erp"
-              className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
-            >
-              <PackagePlus className="w-3.5 h-3.5" />
-              في الفيصل (مش على الموقع)
-              {erpTotal > 0 && (
-                <Badge className="bg-blue-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{erpTotal}</Badge>
-              )}
-              {erpShortageCount > 0 && (
-                <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
-                  <Flame className="w-2.5 h-2.5" />{erpShortageCount}
-                </Badge>
-              )}
-            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger
+                value="new_in_erp"
+                className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
+              >
+                <PackagePlus className="w-3.5 h-3.5" />
+                في الفيصل (مش على الموقع)
+                <Badge className="bg-purple-600 text-white text-[9px] px-1 ms-0.5 h-4">إدارة</Badge>
+                {erpTotal > 0 && (
+                  <Badge className="bg-blue-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{erpTotal}</Badge>
+                )}
+                {erpShortageCount > 0 && (
+                  <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
+                    <Flame className="w-2.5 h-2.5" />{erpShortageCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* شريط الإجراءات */}
@@ -448,7 +531,8 @@ export default function TodayRestockedDialog({
                     دي أصناف موجودة في الفيصل برصيد متاح، بس <span className="font-bold">لسه مش معروضة على الموقع</span> (محتاجة إضافة من الإدارة). لو فيه عميل بيطلبها، سجّل بلاغ نقص.
                   </span>
                 </div>
-                <div className="hidden sm:grid grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
+                <div className="hidden sm:grid grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
+                  <div className="text-center">إجراء</div>
                   <div className="text-center">الحالة</div>
                   <div className="text-center">الرصيد</div>
                   <div>كود الفيصل</div>
@@ -456,53 +540,76 @@ export default function TodayRestockedDialog({
                 </div>
                 <ScrollArea className="h-[400px]">
                   <div className="divide-y divide-blue-100">
-                    {filteredErp.map((item) => (
-                      <div
-                        key={item.erp_id}
-                        className={`grid grid-cols-1 sm:grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-3 items-center transition-colors ${
-                          item.had_shortage_request
-                            ? "bg-rose-50/50 hover:bg-rose-100/60"
-                            : "bg-white hover:bg-blue-50/60"
-                        }`}
-                      >
-                        <div className="flex sm:justify-center gap-1 flex-wrap">
-                          {item.had_shortage_request && (
-                            <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
-                              <Flame className="w-3 h-3" /> فرصة
-                            </Badge>
-                          )}
-                          {item.is_inactive ? (
-                            <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-orange-300 text-orange-700">
-                              غير مفعّل
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
-                              جديد على الفيصل
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          <span className="text-base font-extrabold text-emerald-700 font-mono">
-                            {item.qty}
-                          </span>
-                        </div>
-                        <div className="min-w-0" dir="ltr">
-                          <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
-                            {item.erp_id}
-                          </span>
-                        </div>
-                        <div className="min-w-0 text-right">
-                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                            {item.name}
-                          </p>
-                          {item.retail_price && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                    {filteredErp.map((item) => {
+                      const alreadyAdded = addedSkus.has(item.erp_id);
+                      return (
+                        <div
+                          key={item.erp_id}
+                          className={`grid grid-cols-1 sm:grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
+                            item.had_shortage_request
+                              ? "bg-rose-50/50 hover:bg-rose-100/60"
+                              : "bg-white hover:bg-blue-50/60"
+                          }`}
+                        >
+                          <div className="flex sm:justify-center">
+                            {alreadyAdded ? (
+                              <Badge className="bg-emerald-600 text-white text-[10px] gap-0.5 px-2 py-1">
+                                <CheckCircle2 className="w-3 h-3" /> تمت الإضافة
+                              </Badge>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setAddTarget(item);
+                                  setAddBrand("");
+                                  setAddCategoryId("");
+                                }}
+                                className="h-7 px-2 gap-1 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                              >
+                                <Plus className="w-3 h-3" />
+                                أضف للموقع
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex sm:justify-center gap-1 flex-wrap">
+                            {item.had_shortage_request && (
+                              <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
+                                <Flame className="w-3 h-3" /> فرصة
+                              </Badge>
+                            )}
+                            {item.is_inactive ? (
+                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-orange-300 text-orange-700">
+                                غير مفعّل
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
+                                جديد على الفيصل
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-center">
+                            <span className="text-base font-extrabold text-emerald-700 font-mono">
+                              {item.qty}
+                            </span>
+                          </div>
+                          <div className="min-w-0" dir="ltr">
+                            <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
+                              {item.erp_id}
+                            </span>
+                          </div>
+                          <div className="min-w-0 text-right">
+                            <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                              {item.name}
                             </p>
-                          )}
+                            {item.retail_price && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               </>
@@ -510,6 +617,86 @@ export default function TodayRestockedDialog({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Admin: Add to site dialog */}
+      <Dialog open={!!addTarget} onOpenChange={(o) => !o && setAddTarget(null)}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-800">
+              <PackagePlus className="w-5 h-5" />
+              إضافة الصنف للموقع
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              اختار الماركة والتصنيف المناسبين عشان يتعرض الصنف على الموقع للعملاء.
+            </DialogDescription>
+          </DialogHeader>
+
+          {addTarget && (
+            <div className="space-y-4 py-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1">
+                <p className="text-sm font-bold text-blue-950 leading-tight">{addTarget.name}</p>
+                <div className="flex items-center gap-3 text-[11px] text-blue-800">
+                  <span className="font-mono bg-blue-100 px-2 py-0.5 rounded" dir="ltr">{addTarget.erp_id}</span>
+                  <span>الرصيد: <span className="font-bold text-emerald-700">{addTarget.qty}</span></span>
+                  {addTarget.retail_price && (
+                    <span>قطاعي: {Number(addTarget.retail_price).toLocaleString("ar-EG")} ج.م</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-bold">الماركة *</Label>
+                <Select value={addBrand} onValueChange={setAddBrand}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="اختار الماركة..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAND_OPTIONS.map((b) => (
+                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-bold">التصنيف *</Label>
+                <Select value={addCategoryId} onValueChange={setAddCategoryId}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="اختار التصنيف..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name_ar}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAddTarget(null)}
+              disabled={addSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleAddToSite}
+              disabled={!addBrand || !addCategoryId || addSubmitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+            >
+              {addSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              {addSubmitting ? "جاري الإضافة..." : "أضف الصنف"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
