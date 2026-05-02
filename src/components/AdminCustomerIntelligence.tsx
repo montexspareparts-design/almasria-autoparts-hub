@@ -5476,10 +5476,41 @@ const AdminCustomerIntelligence = () => {
               إيه اللي عملته مع العميل؟
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 py-2">
+          <div className="space-y-3 py-2">
             <p className="text-xs text-muted-foreground">
               اكتب باختصار اللي اتعمل (اتصلت — اتفقت معاه — بعتله عرض سعر — رد عليه...). الإدارة هتشوف ده في «تمت اليوم».
             </p>
+            {/* Quick templates — one click to fill the textarea */}
+            <div className="space-y-1.5">
+              <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+                <span className="text-emerald-600">⚡</span>
+                قوالب سريعة — اضغط لاختيار:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { icon: "📞", label: "اتصلت ورد", text: "اتصلت بالعميل ورد، اتكلمنا في طلبه وهيرجعلي." },
+                  { icon: "📵", label: "اتصلت مرد", text: "اتصلت بالعميل ومردش، هحاول تاني بعدين." },
+                  { icon: "💬", label: "واتساب", text: "بعتله رسالة واتساب وفي انتظار رده." },
+                  { icon: "💰", label: "عرض سعر", text: "بعتله عرض سعر بالأصناف اللي طلبها وفي انتظار قراره." },
+                  { icon: "✅", label: "اتفقنا", text: "اتفقت مع العميل على الطلب وهيدفع/يستلم قريب." },
+                  { icon: "🚫", label: "مش مهتم", text: "العميل مش مهتم حالياً، أقفل الملف." },
+                  { icon: "⏳", label: "هيفكر", text: "العميل قال هيفكر ويرجعلي، تابعت معاه." },
+                  { icon: "❌", label: "صنف ناقص", text: "الصنف اللي طلبه مش متوفر، عرضت عليه بديل." },
+                  { icon: "🔁", label: "تأجيل", text: "العميل طلب تأجيل المتابعة لوقت تاني." },
+                ].map((tpl) => (
+                  <button
+                    key={tpl.label}
+                    type="button"
+                    onClick={() => setDoneDialogNote(tpl.text)}
+                    className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-muted hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-400 hover:border-emerald-400/40 border border-border/60 font-bold transition-all hover:scale-105"
+                    title={tpl.text}
+                  >
+                    <span>{tpl.icon}</span>
+                    <span>{tpl.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
             <Textarea
               value={doneDialogNote}
               onChange={(e) => setDoneDialogNote(e.target.value)}
@@ -5488,6 +5519,11 @@ const AdminCustomerIntelligence = () => {
               className="resize-none text-sm"
               autoFocus
             />
+            {doneDialogNote.length > 0 && (
+              <p className="text-[10px] text-muted-foreground text-left">
+                {doneDialogNote.length} حرف
+              </p>
+            )}
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
