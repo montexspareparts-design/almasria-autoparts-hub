@@ -448,13 +448,21 @@ export function AdminERPCatalogBrowser() {
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
-                <Button
-                  variant={showInactive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowInactive((v) => !v)}
-                >
-                  {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
-                </Button>
+                {viewMode === "onsite" && (
+                  <Button
+                    variant={showInactive ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowInactive((v) => !v)}
+                  >
+                    {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
+                  </Button>
+                )}
+                {viewMode === "visitor" && (
+                  <Badge variant="outline" className="border-green-500/40 bg-green-50 dark:bg-green-950/30 gap-1">
+                    <Eye className="w-3 h-3 text-green-600" />
+                    is_active = true فقط
+                  </Badge>
+                )}
               </>
             )}
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
