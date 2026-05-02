@@ -564,13 +564,21 @@ export default function TeamShortagesView() {
                                 <h4 className="font-extrabold text-base sm:text-lg leading-tight text-foreground line-clamp-2">
                                   {name}
                                 </h4>
-                                {/* بارت نمبر */}
-                                {sku && (
-                                  <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
-                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">P/N</span>
-                                    <span className="text-sm font-mono font-bold text-foreground tracking-wider tabular-nums">{sku}</span>
-                                  </div>
-                                )}
+                                {/* بارت نمبر + كود الصنف */}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {partNumber && (
+                                    <div className="inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-lg px-2.5 py-1">
+                                      <span className="text-[9px] text-indigo-600 dark:text-indigo-400 uppercase tracking-wide font-semibold">P/N</span>
+                                      <span className="text-sm font-mono font-bold text-indigo-900 dark:text-indigo-200 tracking-wider tabular-nums" dir="ltr">{partNumber}</span>
+                                    </div>
+                                  )}
+                                  {sku && (
+                                    <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
+                                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">كود</span>
+                                      <span className="text-sm font-mono font-bold text-foreground tracking-wider tabular-nums" dir="ltr">{sku}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
 
                               {/* العمود الأيسر: الكمية بشكل ضخم */}
