@@ -228,9 +228,21 @@ function Stat({ label, value }: { label: string; value: any }) {
 function IndividualReports({ from, to }: { from: string; to: string }) {
   const [reporters, setReporters] = useState<any[]>([]);
   const [selected, setSelected] = useState<string>("");
-  const [reports, setReports] = useState<any[]>([]);
+  const [timeline, setTimeline] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openReport, setOpenReport] = useState<any | null>(null);
+  // فلتر مدى زمني خاص بالعرض الفردي (لحد سنة كاملة)
+  const [historyRange, setHistoryRange] = useState<"7" | "30" | "90" | "180" | "365" | "custom">("30");
+  const [statusFilter, setStatusFilter] = useState<"all" | "submitted" | "missing" | "day_off" | "justified">("all");
+
+  const histFrom = useMemo(() => {
+    if (historyRange === "custom") return from;
+    return format(subDays(new Date(), Number(historyRange) - 1), "yyyy-MM-dd");
+  }, [historyRange, from]);
+  const histTo = useMemo(() => {
+    if (historyRange === "custom") return to;
+    return format(new Date(), "yyyy-MM-dd");
+  }, [historyRange, to]);
 
   // Load reporter list
   useEffect(() => {
@@ -246,26 +258,52 @@ function IndividualReports({ from, to }: { from: string; to: string }) {
     })();
   }, []);
 
-  // Load reports for selected staff in range
+  // Load timeline (يوم بيوم) عبر الـ RPC
   useEffect(() => {
     if (!selected) return;
     (async () => {
       setLoading(true);
       try {
-        const { data } = await supabase
-          .from("reporter_daily_reports").select("*")
-          .eq("user_id", selected)
-          .gte("report_date", from).lte("report_date", to)
-          .order("report_date", { ascending: false });
-        setReports(data || []);
+        const { data, error } = await (supabase as any).rpc("get_reporter_daily_timeline", {
+          _user_id: selected, _from: histFrom, _to: histTo,
+        });
+        if (error) throw error;
+        setTimeline(data || []);
       } finally { setLoading(false); }
     })();
-  }, [selected, from, to]);
+  }, [selected, histFrom, histTo]);
+
+  // إحصائيات سريعة
+  const counts = useMemo(() => {
+    const c = { submitted: 0, day_off: 0, justified: 0, missing: 0 };
+    timeline.forEach((d) => { if (d.status in c) (c as any)[d.status] += 1; });
+    return c;
+  }, [timeline]);
+
+  const totalDays = timeline.filter((d) => d.status !== "future").length;
+  const submitRate = totalDays > 0 ? Math.round((counts.submitted / totalDays) * 100) : 0;
+
+  const filtered = useMemo(() => {
+    return timeline.filter((d) => {
+      if (d.status === "future") return false;
+      if (statusFilter === "all") return true;
+      return d.status === statusFilter;
+    });
+  }, [timeline, statusFilter]);
+
+  const openReportDetails = async (day: any) => {
+    if (!day.report_id) return;
+    const { data } = await supabase
+      .from("reporter_daily_reports").select("*").eq("id", day.report_id).maybeSingle();
+    if (data) setOpenReport(data);
+  };
 
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
-        <h3 className="font-bold flex items-center gap-2"><Users className="w-4 h-4 text-primary" />تقارير كل موظف</h3>
+        <h3 className="font-bold flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary" />تقرير كل موظف — متابعة سنوية
+        </h3>
         <Select value={selected} onValueChange={setSelected}>
           <SelectTrigger className="w-[260px] h-9"><SelectValue placeholder="اختر موظف..." /></SelectTrigger>
           <SelectContent>
@@ -278,34 +316,61 @@ function IndividualReports({ from, to }: { from: string; to: string }) {
         </Select>
       </div>
 
+      {/* فلاتر المدى والحالة */}
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <Badge variant="outline" className="text-[10px]">فترة:</Badge>
+        {[
+          { v: "7", l: "آخر 7 أيام" },
+          { v: "30", l: "آخر شهر" },
+          { v: "90", l: "آخر 3 شهور" },
+          { v: "180", l: "آخر 6 شهور" },
+          { v: "365", l: "آخر سنة" },
+          { v: "custom", l: "مخصص (من الفلتر العام)" },
+        ].map((r) => (
+          <button
+            key={r.v}
+            onClick={() => setHistoryRange(r.v as any)}
+            className={cn(
+              "px-2.5 py-1 text-[11px] rounded-full border transition-all",
+              historyRange === r.v
+                ? "bg-gradient-to-l from-indigo-500 to-violet-600 text-white border-transparent shadow-sm font-semibold"
+                : "bg-background text-muted-foreground border-border hover:border-indigo-300"
+            )}
+          >
+            {r.l}
+          </button>
+        ))}
+        <span className="text-[10px] text-muted-foreground ms-1">{histFrom} → {histTo}</span>
+      </div>
+
+      {/* لوحة ملخص */}
+      {!loading && timeline.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+          <SummaryPill label="نسبة الالتزام" value={`${submitRate}%`} cls="from-indigo-500/15 to-violet-500/15 text-indigo-700 border-indigo-300" />
+          <SummaryPill label="مُسلَّم" value={counts.submitted} cls="from-emerald-500/15 to-teal-500/15 text-emerald-700 border-emerald-300" onClick={() => setStatusFilter("submitted")} active={statusFilter === "submitted"} />
+          <SummaryPill label="إجازات" value={counts.day_off} cls="from-amber-500/15 to-orange-500/15 text-amber-700 border-amber-300" onClick={() => setStatusFilter("day_off")} active={statusFilter === "day_off"} />
+          <SummaryPill label="مبرَّر" value={counts.justified} cls="from-sky-500/15 to-blue-500/15 text-sky-700 border-sky-300" onClick={() => setStatusFilter("justified")} active={statusFilter === "justified"} />
+          <SummaryPill label="مفقود" value={counts.missing} cls="from-rose-500/15 to-red-500/15 text-rose-700 border-rose-300" onClick={() => setStatusFilter("missing")} active={statusFilter === "missing"} />
+        </div>
+      )}
+
+      {/* الحالة المختارة */}
+      {statusFilter !== "all" && (
+        <div className="mb-2 flex items-center gap-2">
+          <Badge className="bg-primary/15 text-primary border-primary/30">
+            عرض: {statusFilter === "submitted" ? "مُسلَّم" : statusFilter === "day_off" ? "إجازات" : statusFilter === "justified" ? "مبرَّر" : "مفقود"}
+          </Badge>
+          <button onClick={() => setStatusFilter("all")} className="text-[10px] text-muted-foreground underline">مسح الفلتر</button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : reports.length === 0 ? (
-        <div className="text-center py-10 text-sm text-muted-foreground">لا توجد تقارير في هذه الفترة</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-10 text-sm text-muted-foreground">لا توجد أيام تطابق الفلتر</div>
       ) : (
-        <div className="space-y-2">
-          {reports.map((r) => (
-            <button
-              key={r.id} onClick={() => setOpenReport(r)}
-              className="w-full text-right p-3 rounded-lg border hover:border-primary hover:bg-primary/5 transition flex items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <CalIcon className="w-4 h-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-bold text-sm">{r.report_date}</div>
-                  <div className="text-[10px] text-muted-foreground">
-                    عروض: {r.quotations_count} • مكالمات: {r.calls_count} • محولة: {r.offers_converted_count}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge className={r.is_submitted ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/40" : "bg-amber-500/15 text-amber-700 border-amber-500/40"}>
-                  {r.is_submitted ? "✓ مُسلَّم" : "مسودة"}
-                </Badge>
-                <Eye className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </button>
-          ))}
+        <div className="space-y-1.5 max-h-[60vh] overflow-y-auto pr-1">
+          {filtered.map((d) => <DayRow key={d.day} d={d} onOpen={() => openReportDetails(d)} />)}
         </div>
       )}
 
@@ -318,6 +383,87 @@ function IndividualReports({ from, to }: { from: string; to: string }) {
         </DialogContent>
       </Dialog>
     </Card>
+  );
+}
+
+function SummaryPill({ label, value, cls, onClick, active }: { label: string; value: any; cls: string; onClick?: () => void; active?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!onClick}
+      className={cn(
+        "rounded-xl border p-2.5 bg-gradient-to-br text-right transition-all",
+        cls,
+        onClick && "cursor-pointer hover:shadow-md hover:scale-[1.02]",
+        active && "ring-2 ring-offset-1 ring-primary scale-[1.02]"
+      )}
+    >
+      <div className="text-[10px] opacity-80 font-semibold">{label}</div>
+      <div className="text-xl font-extrabold tabular-nums leading-tight">{value}</div>
+    </button>
+  );
+}
+
+function DayRow({ d, onOpen }: { d: any; onOpen: () => void }) {
+  const isSubmitted = d.status === "submitted";
+  const isDayOff = d.status === "day_off";
+  const isJustified = d.status === "justified";
+  const isMissing = d.status === "missing";
+
+  const statusMeta: Record<string, { label: string; cls: string; icon: any }> = {
+    submitted: { label: "✓ مُسلَّم", cls: "bg-emerald-500/15 text-emerald-700 border-emerald-500/40", icon: CheckCircle2 },
+    day_off:   { label: "🌴 إجازة", cls: "bg-amber-500/15 text-amber-700 border-amber-500/40", icon: AlertCircle },
+    justified: { label: "📝 مبرَّر", cls: "bg-sky-500/15 text-sky-700 border-sky-500/40", icon: AlertCircle },
+    missing:   { label: "✗ مفقود", cls: "bg-rose-500/15 text-rose-700 border-rose-500/40", icon: XCircle },
+  };
+  const meta = statusMeta[d.status] || statusMeta.missing;
+  const justTypeLabel: Record<string, string> = {
+    sick: "مريض", forgot: "نسيت", no_work: "مفيش شغل", other: "سبب آخر",
+  };
+
+  const dayName = new Date(d.day).toLocaleDateString("ar-EG", { weekday: "short", day: "2-digit", month: "short" });
+
+  return (
+    <button
+      onClick={isSubmitted ? onOpen : undefined}
+      disabled={!isSubmitted}
+      className={cn(
+        "w-full text-right p-2.5 rounded-lg border transition-all flex items-start justify-between gap-3 flex-wrap",
+        isSubmitted && "hover:border-primary hover:bg-primary/5 cursor-pointer",
+        !isSubmitted && "cursor-default",
+        isMissing && "border-rose-200 bg-rose-50/40 dark:bg-rose-950/10"
+      )}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <CalIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="min-w-0">
+          <div className="font-bold text-sm tabular-nums">{dayName}</div>
+          {isSubmitted && (
+            <div className="text-[10px] text-muted-foreground">
+              عروض: {d.quotations_count} • مكالمات: {d.calls_count} • محولة: {d.offers_converted_count}
+              {d.self_rating ? ` • ⭐ ${d.self_rating}/10` : ""}
+            </div>
+          )}
+          {isDayOff && d.day_off_reason && (
+            <div className="text-[10px] text-amber-700 dark:text-amber-400 line-clamp-1">🌴 {d.day_off_reason}</div>
+          )}
+          {isJustified && (
+            <div className="text-[10px] text-sky-700 dark:text-sky-400 line-clamp-1">
+              📝 {justTypeLabel[d.justification_type] || "مبرّر"}
+              {d.justification_text ? `: ${d.justification_text}` : ""}
+            </div>
+          )}
+          {isMissing && (
+            <div className="text-[10px] text-rose-700 dark:text-rose-400">⚠ مفيش تقرير ولا مبرّر</div>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Badge className={cn("text-[10px]", meta.cls)}>{meta.label}</Badge>
+        {isSubmitted && <Eye className="w-4 h-4 text-muted-foreground" />}
+      </div>
+    </button>
   );
 }
 
