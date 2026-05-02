@@ -1008,12 +1008,18 @@ const AdminERPSync = () => {
       <Tabs defaultValue="actions" dir="rtl">
         <TabsList className="w-full flex-wrap">
           <TabsTrigger value="actions" className="flex-1">⚡ المزامنة</TabsTrigger>
+          <TabsTrigger value="catalog" className="flex-1">📦 كل أصناف الفيصل</TabsTrigger>
           <TabsTrigger value="mapping" className="flex-1">🔗 ربط الأصناف</TabsTrigger>
           <TabsTrigger value="unlinked" className="flex-1">⚠️ غير مربوطة</TabsTrigger>
           <TabsTrigger value="webhook" className="flex-1">📡 Webhook</TabsTrigger>
           <TabsTrigger value="config" className="flex-1">⚙️ الإعدادات</TabsTrigger>
           <TabsTrigger value="logs" className="flex-1">📋 السجلات</TabsTrigger>
         </TabsList>
+
+        {/* ─── ERP CATALOG BROWSER (items not on site) ─── */}
+        <TabsContent value="catalog" className="space-y-4 mt-4">
+          <AdminERPCatalogBrowser />
+        </TabsContent>
 
         {/* ─── SYNC ACTIONS ─── */}
         <TabsContent value="actions" className="space-y-4 mt-4">
