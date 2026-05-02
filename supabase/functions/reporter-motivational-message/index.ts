@@ -203,14 +203,18 @@ Deno.serve(async (req) => {
       source = "template";
     }
 
-    // 4) Cache it
-    await admin.from("reporter_motivational_messages").insert({
-      user_id: user.id,
-      message_date: today(),
-      message,
-      source,
-      performance_tier: tier,
-    });
+    // 4) (Optional) log it for history — non-blocking, ignore conflicts
+    admin
+      .from("reporter_motivational_messages")
+      .insert({
+        user_id: user.id,
+        message_date: today(),
+        message,
+        source,
+        performance_tier: tier,
+      })
+      .then(() => {})
+      .catch(() => {});
 
     return new Response(JSON.stringify({ message, source, tier, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
