@@ -319,3 +319,88 @@ describe("Shortage banner — مزامنة الإخفاء عبر Supabase بين
     expect(computeNewly(rows, seenC)).toHaveLength(0);
   });
 });
+
+describe("Shortage banner — حدود الحجم وأداء عدد كبير من الأصناف", () => {
+  const makeRows = (n: number, prefix = "item"): Row[] =>
+    Array.from({ length: n }, (_, i) => ({ id: `${prefix}-${i}` }));
+
+  it("سيناريو 1: 1000 صنف — markAllSeen يخفي البانر بشكل صحيح", () => {
+    const rows = makeRows(1000);
+    let seen = new Set<string>();
+    expect(computeBannerDismissed(rows, seen)).toBe(false);
+    expect(computeNewly(rows, seen)).toHaveLength(1000);
+
+    seen = markAllSeen(rows, seen);
+    expect(seen.size).toBe(1000);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+    expect(computeNewly(rows, seen)).toHaveLength(0);
+  });
+
+  it("سيناريو 2: 10,000 صنف — أداء markAllSeen + computeBannerDismissed تحت 200ms", () => {
+    const rows = makeRows(10_000);
+    const t0 = performance.now();
+    const seen = markAllSeen(rows, new Set());
+    const dismissed = computeBannerDismissed(rows, seen);
+    const elapsed = performance.now() - t0;
+
+    expect(dismissed).toBe(true);
+    expect(seen.size).toBe(10_000);
+    expect(elapsed).toBeLessThan(200);
+  });
+
+  it("سيناريو 3: 10,000 صنف معلَّم + صنف جديد واحد — يكشف الجديد بسرعة", () => {
+    const baseRows = makeRows(10_000);
+    let seen = markAllSeen(baseRows, new Set());
+
+    const rowsWithNew = [...baseRows, { id: "brand-new" }];
+    const t0 = performance.now();
+    const newly = computeNewly(rowsWithNew, seen);
+    const dismissed = computeBannerDismissed(rowsWithNew, seen);
+    const elapsed = performance.now() - t0;
+
+    expect(dismissed).toBe(false);
+    expect(newly).toEqual([{ id: "brand-new" }]);
+    expect(elapsed).toBeLessThan(50);
+  });
+
+  it("سيناريو 4: تراكم seen عبر دورات — لا تكرار وحجم متوقع", () => {
+    let seen = new Set<string>();
+    // 50 دورة × 100 صنف فريد = 5000 ID
+    for (let cycle = 0; cycle < 50; cycle++) {
+      const rows = makeRows(100, `c${cycle}`);
+      seen = markAllSeen(rows, seen);
+    }
+    expect(seen.size).toBe(5000);
+
+    // إعادة تعليم نفس الدورات لا يزيد الحجم
+    for (let cycle = 0; cycle < 50; cycle++) {
+      const rows = makeRows(100, `c${cycle}`);
+      seen = markAllSeen(rows, seen);
+    }
+    expect(seen.size).toBe(5000);
+  });
+
+  it("سيناريو 5: حد أقصى منطقي — 50,000 ID لا يكسر الـ Set", () => {
+    const rows = makeRows(50_000);
+    const seen = markAllSeen(rows, new Set());
+    expect(seen.size).toBe(50_000);
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+
+    // التحقق من O(1) lookup
+    const t0 = performance.now();
+    for (let i = 0; i < 1000; i++) {
+      seen.has(`item-${i * 50}`);
+    }
+    const elapsed = performance.now() - t0;
+    expect(elapsed).toBeLessThan(20);
+  });
+
+  it("سيناريو 6: IDs طويلة (UUIDs) لا تؤثر على الصحة", () => {
+    const uuid = (i: number) =>
+      `${i.toString(16).padStart(8, "0")}-aaaa-bbbb-cccc-dddddddddddd`;
+    const rows = Array.from({ length: 500 }, (_, i) => ({ id: uuid(i) }));
+    const seen = markAllSeen(rows, new Set());
+    expect(computeBannerDismissed(rows, seen)).toBe(true);
+    expect(seen.has(uuid(250))).toBe(true);
+  });
+});
