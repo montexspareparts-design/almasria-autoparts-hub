@@ -489,39 +489,43 @@ const AdminCustomerIntelligence = () => {
     };
   }, [todayKey]);
 
-  const markHandled = async (taskId: string, action: HandledAction) => {
+  const markHandled = async (taskId: string, action: HandledAction, note?: string | null) => {
     if (!user?.id) return;
     // Optimistic: bail if someone (including me) already claimed it locally
-    if (handledMeta[taskId]) return;
+    // EXCEPT for "done" which can upgrade an existing handling record (e.g. call → done with note)
+    if (handledMeta[taskId] && action !== "done") return;
     const staffName = (user as any).user_metadata?.full_name || user.email || "موظف";
+    const trimmedNote = note?.trim() || null;
     // Optimistic update so the UI reacts instantly
-    setHandledMeta(prev => prev[taskId] ? prev : ({
+    setHandledMeta(prev => ({
       ...prev,
-      [taskId]: { at: new Date().toISOString(), by: user.id, byName: staffName, action },
+      [taskId]: { at: new Date().toISOString(), by: user.id, byName: staffName, action, note: trimmedNote },
     }));
-    const { error } = await supabase.from("staff_task_handling").insert({
+    const { error } = await supabase.from("staff_task_handling").upsert({
       task_id: taskId,
       staff_user_id: user.id,
       staff_name: staffName,
       action,
-    });
+      note: trimmedNote,
+    } as any, { onConflict: "task_id,handled_date" });
     // If a different staff beat us to it, refresh that record from DB
     if (error) {
       const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
       const { data } = await supabase
         .from("staff_task_handling")
-        .select("task_id, staff_user_id, staff_name, action, created_at")
+        .select("task_id, staff_user_id, staff_name, action, note, created_at")
         .eq("task_id", taskId)
         .eq("handled_date", todayDate)
         .maybeSingle();
       if (data) {
         setHandledMeta(prev => ({
           ...prev,
-          [data.task_id]: {
-            at: data.created_at,
-            by: data.staff_user_id,
-            byName: data.staff_name,
-            action: data.action as HandledAction,
+          [(data as any).task_id]: {
+            at: (data as any).created_at,
+            by: (data as any).staff_user_id,
+            byName: (data as any).staff_name,
+            action: (data as any).action as HandledAction,
+            note: (data as any).note ?? null,
           },
         }));
       }
