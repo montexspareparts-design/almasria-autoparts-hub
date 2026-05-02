@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, ClipboardList, LogOut, Settings2 } from "lucide-react";
+import { ArrowRight, ClipboardList, LogOut, Settings2, PackageX, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StaffDailyReport from "@/components/staff/StaffDailyReport";
 import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
+import TeamShortagesView from "@/components/staff/TeamShortagesView";
+import { cn } from "@/lib/utils";
 
 /**
  * Dedicated page for filling out the daily staff report.
@@ -18,8 +20,9 @@ import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
  */
 export default function StaffDailyReportPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
+  const view = (searchParams.get("view") === "shortages" ? "shortages" : "report") as "report" | "shortages";
   const editMode = searchParams.get("edit") === "1" && isAdmin;
   // Force the Al-Faisal (Reporter) form when ?as=reporter is present (admin preview)
   const forceReporter = searchParams.get("as") === "reporter" && isAdmin;
@@ -118,9 +121,50 @@ export default function StaffDailyReportPage() {
         </div>
       </header>
 
-      {/* Content — reporters get the simplified Q&A form, admins/moderators get full KPI report */}
-      <main className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        {showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />}
+      {/* Tabs strip — صفحة موحّدة للجميع: تقريري | النواقص (طلبات الفريق) */}
+      <div className="border-b border-border/50 bg-background/60 backdrop-blur-sm sticky top-[57px] z-20">
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 flex items-center gap-1 overflow-x-auto">
+          {([
+            { key: "report",     label: "تقريري اليومي",     icon: FileText },
+            { key: "shortages",  label: "النواقص — طلبات الفريق", icon: PackageX },
+          ] as const).map((t) => {
+            const Icon = t.icon;
+            const active = view === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams);
+                  if (t.key === "report") next.delete("view");
+                  else next.set("view", t.key);
+                  setSearchParams(next, { replace: true });
+                }}
+                className={cn(
+                  "relative flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors",
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {t.label}
+                {active && (
+                  <span className="absolute inset-x-2 bottom-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content */}
+      <main className={cn(
+        "mx-auto px-3 sm:px-6 py-4 sm:py-6",
+        view === "shortages" ? "max-w-5xl" : "max-w-3xl"
+      )}>
+        {view === "shortages"
+          ? <TeamShortagesView />
+          : (showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />)}
       </main>
     </div>
   );
