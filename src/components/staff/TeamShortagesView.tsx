@@ -168,60 +168,19 @@ export default function TeamShortagesView() {
     return () => { supabase.removeChannel(ch); };
   }, [fetchRows]);
 
-  const dateRange = useMemo(() => {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (dateFilter === "today") {
-      return { from: startOfToday, to: null as Date | null };
-    }
-    if (dateFilter === "yesterday") {
-      const startYesterday = new Date(startOfToday); startYesterday.setDate(startYesterday.getDate() - 1);
-      return { from: startYesterday, to: startOfToday };
-    }
-    if (dateFilter === "week") {
-      const start7 = new Date(startOfToday); start7.setDate(start7.getDate() - 6);
-      return { from: start7, to: null };
-    }
-    return { from: null, to: null };
-  }, [dateFilter]);
+  const dateRange = useMemo(() => computeDateRange(dateFilter), [dateFilter]);
 
   // العدّادات بتطبّق فلتر التاريخ زي العرض، عشان الرقم يطابق الكروت اللي ظاهرة
-  const dateFilteredRows = useMemo(() => {
-    if (!dateRange.from) return rows;
-    return rows.filter(r => {
-      const ref = (r.status === "fulfilled") && r.reviewed_at
-        ? new Date(r.reviewed_at)
-        : new Date(r.created_at);
-      if (dateRange.to) return ref >= dateRange.from! && ref < dateRange.to;
-      return ref >= dateRange.from!;
-    });
-  }, [rows, dateRange]);
+  const dateFilteredRows = useMemo(
+    () => applyDateRange(rows, dateRange),
+    [rows, dateRange]
+  );
 
-  const counts = useMemo(() => {
-    const c: Record<StatusKey | "all" | "arrived", number> = { all: dateFilteredRows.length, open: 0, sourcing: 0, fulfilled: 0, rejected: 0, arrived: 0 };
-    dateFilteredRows.forEach(r => {
-      c[r.status] = (c[r.status] || 0) + 1;
-      if (r.status === "fulfilled") c.arrived += 1;
-    });
-    return c;
-  }, [dateFilteredRows]);
+  const counts = useMemo(() => computeCounts(dateFilteredRows), [dateFilteredRows]);
 
   const filtered = useMemo(() => {
-    let list: Row[];
-    if (tab === "all") list = rows;
-    else if (tab === "arrived") list = rows.filter(r => r.status === "fulfilled");
-    else list = rows.filter(r => r.status === tab);
-
-    // فلترة بالتاريخ — نستخدم reviewed_at للأصناف اللي وصلت، created_at للباقي
-    if (dateRange.from) {
-      list = list.filter(r => {
-        const ref = (tab === "arrived" || r.status === "fulfilled") && r.reviewed_at
-          ? new Date(r.reviewed_at)
-          : new Date(r.created_at);
-        if (dateRange.to) return ref >= dateRange.from! && ref < dateRange.to;
-        return ref >= dateRange.from!;
-      });
-    }
+    // فلترة بالتاريخ أولاً (نفس اللي العدّاد بيستخدمه) ثم فلترة التبويب — يضمن المطابقة
+    let list = applyTabFilter(applyDateRange(rows, dateRange), tab);
 
     if (q.trim()) {
       const s = q.trim().toLowerCase();
