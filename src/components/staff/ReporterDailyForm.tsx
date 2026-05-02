@@ -131,6 +131,7 @@ export default function ReporterDailyForm() {
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [emptyWarnOpen, setEmptyWarnOpen] = useState(false);
   const [thankYouOpen, setThankYouOpen] = useState(false);
   const [data, setData] = useState<ReportData>(EMPTY);
   const [staffName, setStaffName] = useState("");
