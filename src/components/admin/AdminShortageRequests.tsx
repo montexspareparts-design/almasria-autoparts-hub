@@ -283,15 +283,48 @@ export default function AdminShortageRequests() {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — كل كارت قابل للضغط ويعمل كفلتر */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Kpi label="أصناف مطلوبة" value={totals.items} icon={PackageX} color="from-rose-500 to-red-600" />
-        <Kpi label="إجمالي البلاغات" value={totals.reports} icon={BarChart3} color="from-amber-500 to-orange-600" />
-        <Kpi label="إجمالي الكميات" value={totals.qty} icon={ArrowUpDown} color="from-blue-500 to-indigo-600" />
-        <Kpi label="موظفين بلّغوا" value={totals.staff} icon={Users} color="from-emerald-500 to-teal-600" />
+        <Kpi
+          label="أصناف مطلوبة"
+          value={totals.items}
+          icon={PackageX}
+          color="from-rose-500 to-red-600"
+          active={activeTab === "priority"}
+          onClick={() => { setActiveTab("priority"); setStatusFilter("all"); }}
+          hint="ترتيب الأهمية"
+        />
+        <Kpi
+          label="إجمالي البلاغات"
+          value={totals.reports}
+          icon={BarChart3}
+          color="from-amber-500 to-orange-600"
+          active={activeTab === "all" && statusFilter === "all"}
+          onClick={() => { setActiveTab("all"); setStatusFilter("all"); }}
+          hint="كل البلاغات"
+        />
+        <Kpi
+          label="مفتوح + جارٍ التوفير"
+          value={details.filter(d => d.status === "open" || d.status === "sourcing").length}
+          icon={ArrowUpDown}
+          color="from-blue-500 to-indigo-600"
+          active={activeTab === "all" && (statusFilter === "open" || statusFilter === "sourcing")}
+          onClick={() => { setActiveTab("all"); setStatusFilter("open"); }}
+          hint="محتاج شغل"
+        />
+        <Kpi
+          label="تم التوفير"
+          value={details.filter(d => d.status === "fulfilled").length}
+          icon={Users}
+          color="from-emerald-500 to-teal-600"
+          active={activeTab === "all" && statusFilter === "fulfilled"}
+          onClick={() => { setActiveTab("all"); setStatusFilter("fulfilled"); }}
+          hint="اللي تم توفيره"
+        />
       </div>
 
-      <Tabs defaultValue="priority">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "priority" | "all")}>
+
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <TabsList>
             <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
