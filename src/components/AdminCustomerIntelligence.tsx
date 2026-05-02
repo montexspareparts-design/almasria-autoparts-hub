@@ -2269,71 +2269,88 @@ const AdminCustomerIntelligence = () => {
                   <ListOrdered className="w-3.5 h-3.5 text-white" />
                 </div>
                 مهام اليوم
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onlyCompletedTasks) setOnlyCompletedTasks(false);
-                    if (showCompletedTasks) setShowCompletedTasks(false);
-                    setTimeout(() => {
-                      const el = document.getElementById("today-tasks-list");
-                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }, 50);
-                  }}
-                  className="inline-flex items-center gap-1 text-[10px] h-5 px-2 mr-1 rounded-full bg-foreground/90 text-background font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-foreground/20"
-                  title="عرض المهام المتبقية فقط (إخفاء المكتمل + التمرير للقائمة)"
-                >
-                  {pendingTasksCount} متبقي
-                </button>
-                {completedTasksCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (onlyCompletedTasks) setOnlyCompletedTasks(false);
-                      const wasHidden = !showCompletedTasks;
-                      setShowCompletedTasks(v => !v);
-                      if (wasHidden) {
-                        setTimeout(() => {
-                          const el = document.getElementById("today-tasks-list");
-                          el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }, 80);
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
-                      showCompletedTasks
-                        ? "bg-emerald-600 text-white border-emerald-400/60"
-                        : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-300/30"
-                    }`}
-                    title={showCompletedTasks ? "إخفاء المهام المكتملة من القائمة" : "إظهار المهام المكتملة في القائمة"}
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                    {completedTasksCount} مكتمل{showCompletedTasks ? " ✓" : ""}
-                  </button>
-                )}
                 {(() => {
+                  // الفلتر النشط حالياً: only-done > show-all > remaining (افتراضي)
+                  const activeFilter: "remaining" | "all" | "done" =
+                    onlyCompletedTasks ? "done" : showCompletedTasks ? "all" : "remaining";
+                  const isRemaining = activeFilter === "remaining";
+                  const isAll = activeFilter === "all";
+                  const isDone = activeFilter === "done";
                   const doneCount = Object.keys(handledMeta).length;
-                  if (doneCount === 0) return null;
                   return (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !onlyCompletedTasks;
-                        setOnlyCompletedTasks(next);
-                        if (next) setShowCompletedTasks(true);
-                        setTimeout(() => {
-                          const el = document.getElementById("today-tasks-list");
-                          el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }, 80);
-                      }}
-                      className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
-                        onlyCompletedTasks
-                          ? "bg-gradient-to-l from-emerald-700 to-emerald-600 text-white border-emerald-300 ring-2 ring-emerald-400/50"
-                          : "bg-gradient-to-l from-emerald-600 to-emerald-500 text-white border-emerald-400/40"
-                      }`}
-                      title={onlyCompletedTasks ? "اضغط لإلغاء الفلتر وعرض كل المهام" : "اضغط لعرض المهام المنجزة اليوم فقط"}
-                    >
-                      <CheckCircle2 className="w-3 h-3" />
-                      {doneCount} تمت اليوم{onlyCompletedTasks ? " ✓" : ""}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        aria-pressed={isRemaining}
+                        onClick={() => {
+                          setOnlyCompletedTasks(false);
+                          setShowCompletedTasks(false);
+                          setTimeout(() => {
+                            const el = document.getElementById("today-tasks-list");
+                            el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }, 50);
+                        }}
+                        className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 mr-1 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                          isRemaining
+                            ? "bg-foreground text-background border-foreground ring-2 ring-foreground/30"
+                            : "bg-foreground/10 text-foreground border-foreground/20 opacity-70"
+                        }`}
+                        title="عرض المهام المتبقية فقط"
+                      >
+                        {pendingTasksCount} متبقي{isRemaining ? " ✓" : ""}
+                      </button>
+                      {completedTasksCount > 0 && (
+                        <button
+                          type="button"
+                          aria-pressed={isAll}
+                          onClick={() => {
+                            setOnlyCompletedTasks(false);
+                            setShowCompletedTasks(true);
+                            setTimeout(() => {
+                              const el = document.getElementById("today-tasks-list");
+                              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 80);
+                          }}
+                          className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                            isAll
+                              ? "bg-emerald-600 text-white border-emerald-400 ring-2 ring-emerald-400/50"
+                              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-300/30 opacity-70"
+                          }`}
+                          title="إظهار المكتمل ضمن القائمة الكاملة"
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          {completedTasksCount} مكتمل{isAll ? " ✓" : ""}
+                        </button>
+                      )}
+                      {doneCount > 0 && (
+                        <button
+                          type="button"
+                          aria-pressed={isDone}
+                          onClick={() => {
+                            if (isDone) {
+                              setOnlyCompletedTasks(false);
+                              setShowCompletedTasks(false);
+                            } else {
+                              setOnlyCompletedTasks(true);
+                              setShowCompletedTasks(true);
+                            }
+                            setTimeout(() => {
+                              const el = document.getElementById("today-tasks-list");
+                              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 80);
+                          }}
+                          className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                            isDone
+                              ? "bg-gradient-to-l from-emerald-700 to-emerald-600 text-white border-emerald-300 ring-2 ring-emerald-400/60"
+                              : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-300/30 opacity-70"
+                          }`}
+                          title={isDone ? "اضغط لإلغاء الفلتر" : "عرض المهام المنجزة اليوم فقط"}
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          {doneCount} تمت اليوم{isDone ? " ✓" : ""}
+                        </button>
+                      )}
+                    </>
                   );
                 })()}
               </CardTitle>
