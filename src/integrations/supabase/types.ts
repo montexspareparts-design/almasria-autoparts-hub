@@ -3636,6 +3636,22 @@ export type Database = {
           team_size: number
         }[]
       }
+      get_today_new_in_erp: {
+        Args: never
+        Returns: {
+          erp_id: string
+          fetched_at: string
+          had_shortage_request: boolean
+          in_our_system: boolean
+          is_inactive: boolean
+          name: string
+          our_product_id: string
+          qty: number
+          retail_price: number
+          shortage_requests_count: number
+          wholesale_price: number
+        }[]
+      }
       get_today_restocked_items: {
         Args: never
         Returns: {
