@@ -33,6 +33,7 @@ const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverag
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
+const AdminStaffOverview = lazy(() => import("@/components/admin/AdminStaffOverview"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
