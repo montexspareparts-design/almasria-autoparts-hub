@@ -2795,6 +2795,33 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_ui_dismissals: {
+        Row: {
+          created_at: string
+          dismissal_key: string
+          id: string
+          seen_ids: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dismissal_key: string
+          id?: string
+          seen_ids?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dismissal_key?: string
+          id?: string
+          seen_ids?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       stock_alerts: {
         Row: {
           alert_type: string
