@@ -3667,7 +3667,9 @@ export type Database = {
           base_price: number
           brand: string
           current_stock: number
+          erp_item_code: string
           name_ar: string
+          part_number: string
           product_id: string
           sku: string
           snapshot_date: string
@@ -3759,9 +3761,11 @@ export type Database = {
           current_stock: number
           days_since_zero: number
           delta: number
+          erp_item_code: string
           had_shortage_request: boolean
           last_zero_date: string
           name_ar: string
+          part_number: string
           prev_stock: number
           product_id: string
           shortage_requests_count: number
