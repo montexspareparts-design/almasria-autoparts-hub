@@ -261,10 +261,23 @@ export default function StaffShortageRequests() {
     } catch { return recentlyFulfilled; }
   }, [recentlyFulfilled, seenKey]);
 
+  // إخفاء البانر بالكامل لما الموظف يضغط "تمام شفتها" — مرتبط بآخر ID شافه
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
+      // لو كل العناصر الحالية اتشافت قبل كده → اخفي البانر
+      const allSeen = recentlyFulfilled.length > 0 && recentlyFulfilled.every(r => seen.has(r.id));
+      setBannerDismissed(allSeen);
+    } catch { setBannerDismissed(false); }
+  }, [recentlyFulfilled, seenKey]);
+
   const markAllSeen = useCallback(() => {
     if (typeof window === "undefined") return;
     const ids = recentlyFulfilled.map(r => r.id);
     localStorage.setItem(seenKey, JSON.stringify(ids));
+    setBannerDismissed(true);
   }, [recentlyFulfilled, seenKey]);
 
   const resetForm = () => {
