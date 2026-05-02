@@ -197,13 +197,15 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
               <div className="border-2 border-emerald-300 bg-emerald-50 rounded-lg p-3 flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-lg font-extrabold text-emerald-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-emerald-400 shadow-sm">
-                      {chosen.sku}
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-200/70 px-1.5 py-0.5 rounded shrink-0">بارت نمبر</span>
+                    <span dir="ltr" className="font-mono text-base font-extrabold text-emerald-950 tracking-wide bg-white px-3 py-1 rounded-md border-2 border-emerald-400 shadow-sm break-all">
+                      {chosen.name_ar}
                     </span>
                   </div>
-                  <p className="text-xs text-emerald-900/80 truncate">{chosen.name_ar}</p>
                   <p className="text-[11px] text-emerald-700 mt-0.5">رصيد حالي: {chosen.stock_quantity} • صنف على الموقع</p>
+                  <div className="flex justify-end mt-1.5">
+                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded font-mono" dir="ltr">كود: {chosen.sku}</span>
+                  </div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => { setChosen(null); setSearch(""); }}>تغيير</Button>
               </div>
