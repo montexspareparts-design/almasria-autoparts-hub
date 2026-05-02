@@ -3171,7 +3171,7 @@ const AdminCustomerIntelligence = () => {
                       <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
                     )}
                   </TabsTrigger>
-                  <TabsTrigger value="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                  <TabsTrigger value="done-today" data-tab-trigger="done-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     تمت اليوم
                     {doneTasksCount > 0 && (
