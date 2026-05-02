@@ -423,8 +423,6 @@ function TodayForm({
     <>
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <TeamBenchmarkLine todayScore={todayScore} />
-      <DailyTargetsRings userId={userId} data={data} />
-      <KPICalculatedCard data={data} />
       {warnings.length > 0 && (
         <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800/60">
           <div className="space-y-1.5">
