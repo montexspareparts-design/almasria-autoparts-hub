@@ -28,8 +28,9 @@ import {
   ClipboardList, FileSpreadsheet, ShoppingBag, Receipt, DollarSign,
   Phone, MessageCircle, FileCheck, RefreshCw, XCircle, Users,
   UserPlus, AlertTriangle, Target, Eye, History, BarChart3,
-  Sparkles, Palmtree, Trash2,
+  Sparkles, Palmtree, Trash2, Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   PersonalCompareCard,
