@@ -2314,17 +2314,23 @@ const AdminCustomerIntelligence = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!showCompletedTasks) setShowCompletedTasks(true);
+                        const next = !onlyCompletedTasks;
+                        setOnlyCompletedTasks(next);
+                        if (next) setShowCompletedTasks(true);
                         setTimeout(() => {
                           const el = document.getElementById("today-tasks-list");
                           el?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }, 80);
                       }}
-                      className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
-                      title="اضغط لعرض المهام المنجزة اليوم داخل القائمة"
+                      className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                        onlyCompletedTasks
+                          ? "bg-gradient-to-l from-emerald-700 to-emerald-600 text-white border-emerald-300 ring-2 ring-emerald-400/50"
+                          : "bg-gradient-to-l from-emerald-600 to-emerald-500 text-white border-emerald-400/40"
+                      }`}
+                      title={onlyCompletedTasks ? "اضغط لإلغاء الفلتر وعرض كل المهام" : "اضغط لعرض المهام المنجزة اليوم فقط"}
                     >
                       <CheckCircle2 className="w-3 h-3" />
-                      {doneCount} تمت اليوم
+                      {doneCount} تمت اليوم{onlyCompletedTasks ? " ✓" : ""}
                     </button>
                   );
                 })()}
