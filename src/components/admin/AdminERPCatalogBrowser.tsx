@@ -68,7 +68,7 @@ export function AdminERPCatalogBrowser() {
     try {
       const [{ data: cacheData, error: cacheErr }, { data: prodData, error: prodErr }] = await Promise.all([
         supabase.from("erp_full_catalog_cache").select("erp_id, name, qty, retail_price, wholesale_price").limit(20000),
-        supabase.from("products").select("id, sku, erp_item_code, name_ar, stock_quantity, base_price, is_active, brand"),
+        supabase.from("products").select("id, sku, erp_item_code, name_ar, stock_quantity, base_price, is_active, brand").limit(20000),
       ]);
 
       if (cacheErr) throw cacheErr;
@@ -297,7 +297,7 @@ export function AdminERPCatalogBrowser() {
           className="gap-1"
         >
           <Eye className="w-4 h-4" />
-          الموجودة على الموقع ({onsiteRows.length})
+          الموجودة في الجدول ({onsiteRows.length.toLocaleString("ar-EG")})
         </Button>
         {viewMode === "onsite" && (
           <Badge variant="outline" className="gap-1">
