@@ -101,7 +101,7 @@ export default function TeamShortagesView() {
     if (manualSyncing) return;
     setManualSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: {} });
+      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: { forceRefresh: true } });
       if (error) throw error;
       const fulfilled = Number((data as any)?.fulfilled_count ?? (data as any)?.fulfilled ?? 0);
       const checked   = Number((data as any)?.checked_count   ?? (data as any)?.checked   ?? 0);
