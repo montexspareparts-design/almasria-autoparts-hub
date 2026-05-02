@@ -403,8 +403,18 @@ export default function TeamShortagesView() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 grid place-items-center text-center gap-2 text-muted-foreground">
-            <PackageX className="w-12 h-12 opacity-30" />
-            <p className="text-sm">{q ? "مفيش نتائج للبحث ده" : "مفيش بلاغات في القسم ده"}</p>
+            {tab === "arrived" ? (
+              <>
+                <PackageCheck className="w-12 h-12 opacity-30 text-emerald-500" />
+                <p className="text-sm font-semibold text-foreground">لسه مفيش أصناف وصلت في الفترة دي</p>
+                <p className="text-[11px]">جرّب فترة تانية، أو اضغط «افحص دلوقتي» لو تأكدت إن الفيصل اتحدث</p>
+              </>
+            ) : (
+              <>
+                <PackageX className="w-12 h-12 opacity-30" />
+                <p className="text-sm">{q ? "مفيش نتائج للبحث ده" : "مفيش بلاغات في القسم ده"}</p>
+              </>
+            )}
           </div>
         ) : (
           <ScrollArea className="max-h-[65vh]">
