@@ -59,6 +59,9 @@ export function AdminERPCatalogBrowser() {
   const [refreshing, setRefreshing] = useState(false);
   const [showInactive, setShowInactive] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("qty_desc");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<null | { action: "activate" | "hide"; count: number }>(null);
 
   const loadData = async () => {
     setLoading(true);
