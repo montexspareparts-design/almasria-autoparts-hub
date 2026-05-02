@@ -62,6 +62,26 @@ export function AdminERPCatalogBrowser() {
   const [brandFilter, setBrandFilter] = useState<string>("all");
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkConfirm, setBulkConfirm] = useState<null | { action: "activate" | "hide"; count: number }>(null);
+  const [exactCounts, setExactCounts] = useState<{ total: number; active: number; inactive: number; cache: number } | null>(null);
+
+  const loadExactCounts = async () => {
+    try {
+      const [totalRes, activeRes, inactiveRes, cacheRes] = await Promise.all([
+        supabase.from("products").select("*", { count: "exact", head: true }),
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", false),
+        supabase.from("erp_full_catalog_cache").select("*", { count: "exact", head: true }),
+      ]);
+      setExactCounts({
+        total: totalRes.count ?? 0,
+        active: activeRes.count ?? 0,
+        inactive: inactiveRes.count ?? 0,
+        cache: cacheRes.count ?? 0,
+      });
+    } catch (err: any) {
+      console.error("Failed to load exact counts:", err);
+    }
+  };
 
   const fetchAllPaginated = async <T,>(
     table: "erp_full_catalog_cache" | "products",
@@ -113,6 +133,7 @@ export function AdminERPCatalogBrowser() {
 
   useEffect(() => {
     loadData();
+    loadExactCounts();
   }, []);
 
   const sortMissing = (arr: CacheRow[]) => {
@@ -219,6 +240,7 @@ export function AdminERPCatalogBrowser() {
         title: next ? `✅ تم تفعيل ${targets.length} صنف` : `🚫 تم إخفاء ${targets.length} صنف`,
         description: brandFilter !== "all" ? `العلامة: ${brandFilter}` : "كل الأصناف المُفلترة",
       });
+      loadExactCounts();
     } catch (err: any) {
       toast({ title: "فشل التحديث الجماعي", description: err.message, variant: "destructive" });
     } finally {
@@ -280,6 +302,7 @@ export function AdminERPCatalogBrowser() {
         title: next ? "✅ تم إظهار الصنف" : "🚫 تم إخفاء الصنف",
         description: row.name_ar || row.sku || "",
       });
+      loadExactCounts();
     } catch (err: any) {
       toast({ title: "فشل التحديث", description: err.message, variant: "destructive" });
     } finally {
@@ -289,12 +312,15 @@ export function AdminERPCatalogBrowser() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await loadData();
+    await Promise.all([loadData(), loadExactCounts()]);
     setRefreshing(false);
   };
 
-  const totalActive = onsiteRows.filter((p) => p.is_active).length;
-  const totalInactive = onsiteRows.length - totalActive;
+  // Use exact counts from DB when available, fallback to local list (which is paginated client-side anyway)
+  const totalProducts = exactCounts?.total ?? onsiteRows.length;
+  const totalActive = exactCounts?.active ?? onsiteRows.filter((p) => p.is_active).length;
+  const totalInactive = exactCounts?.inactive ?? (onsiteRows.length - onsiteRows.filter((p) => p.is_active).length);
+  const totalCache = exactCounts?.cache ?? rows.length;
 
   return (
     <div className="space-y-4">
@@ -316,15 +342,23 @@ export function AdminERPCatalogBrowser() {
           className="gap-1"
         >
           <Eye className="w-4 h-4" />
-          الموجودة في الجدول ({onsiteRows.length.toLocaleString("ar-EG")})
+          إجمالي الجدول ({totalProducts.toLocaleString("ar-EG")})
         </Button>
-        {viewMode === "onsite" && (
-          <Badge variant="outline" className="gap-1">
-            <span className="text-green-600">●</span> {totalActive} ظاهر
-            <span className="mx-1">·</span>
-            <span className="text-muted-foreground">●</span> {totalInactive} مخفي
-          </Badge>
-        )}
+        <Badge variant="outline" className="gap-1 border-green-500/40 bg-green-50 dark:bg-green-950/30">
+          <span className="text-green-600">●</span>
+          <span className="font-semibold">{totalActive.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">مفعّل للعملاء</span>
+        </Badge>
+        <Badge variant="outline" className="gap-1 border-muted">
+          <span className="text-muted-foreground">●</span>
+          <span className="font-semibold">{totalInactive.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">مخفي</span>
+        </Badge>
+        <Badge variant="outline" className="gap-1 border-blue-500/40 bg-blue-50 dark:bg-blue-950/30">
+          <Package className="w-3 h-3 text-blue-600" />
+          <span className="font-semibold">{totalCache.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">في كاش الفيصل</span>
+        </Badge>
       </div>
 
       <Card className="border-2 border-primary/30 bg-primary/5">
