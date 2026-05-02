@@ -251,58 +251,113 @@ export default function StaffShortageRequests() {
       .sort((a, b) => new Date(b.reviewed_at!).getTime() - new Date(a.reviewed_at!).getTime());
   }, [rows]);
 
-  // الأصناف المتوفرة الجديدة اللي الموظف لسه ما شافهاش (تتسجل في localStorage)
+  // مفتاح المزامنة (نفسه على Supabase وlocalStorage كـ cache)
+  const DISMISSAL_KEY = "shortage_recently_fulfilled_banner";
   const seenKey = user ? `shortage_seen_fulfilled_${user.id}` : "shortage_seen_fulfilled";
-  const newlyFulfilled = useMemo(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
-      return recentlyFulfilled.filter(r => !seen.has(r.id));
-    } catch { return recentlyFulfilled; }
-  }, [recentlyFulfilled, seenKey]);
 
-  // إخفاء البانر بالكامل لما الموظف يضغط "تمام شفتها" — مرتبط بآخر ID شافه
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  // مصدر الحقيقة للـ seen IDs (يبدأ من localStorage cache ثم يتحدّث من Supabase + Realtime)
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem(seenKey) || "[]")); }
+    catch { return new Set(); }
+  });
+
+  // كاش الـ localStorage بعد كل تغيير
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const seen = new Set(JSON.parse(localStorage.getItem(seenKey) || "[]"));
-      // لو كل العناصر الحالية اتشافت قبل كده → اخفي البانر
-      const allSeen = recentlyFulfilled.length > 0 && recentlyFulfilled.every(r => seen.has(r.id));
-      setBannerDismissed(allSeen);
-    } catch { setBannerDismissed(false); }
-  }, [recentlyFulfilled, seenKey]);
+    try { localStorage.setItem(seenKey, JSON.stringify(Array.from(seenIds))); } catch {}
+  }, [seenIds, seenKey]);
+
+  // اجلب الحالة من Supabase + اشترك في Realtime عشان المزامنة بين الأجهزة
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await supabase
+        .from("staff_ui_dismissals")
+        .select("seen_ids")
+        .eq("user_id", user.id)
+        .eq("dismissal_key", DISMISSAL_KEY)
+        .maybeSingle();
+      if (!cancelled && data?.seen_ids) {
+        const remote = Array.isArray(data.seen_ids) ? data.seen_ids : [];
+        setSeenIds(new Set(remote as string[]));
+      }
+    })();
+
+    const channel = supabase
+      .channel(`ui-dismissals-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "staff_ui_dismissals",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          const row = payload.new ?? payload.old;
+          if (row?.dismissal_key !== DISMISSAL_KEY) return;
+          const ids = Array.isArray(payload.new?.seen_ids) ? payload.new.seen_ids : [];
+          setSeenIds(new Set(ids as string[]));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const newlyFulfilled = useMemo(
+    () => recentlyFulfilled.filter(r => !seenIds.has(r.id)),
+    [recentlyFulfilled, seenIds]
+  );
+
+  // إخفاء البانر بالكامل لما الموظف يضغط "تمام شفتها"
+  const bannerDismissed = useMemo(
+    () => recentlyFulfilled.length > 0 && recentlyFulfilled.every(r => seenIds.has(r.id)),
+    [recentlyFulfilled, seenIds]
+  );
+
+  // حفظ على Supabase (upsert) + رجوع للقيمة السابقة لو تراجَع
+  const persistSeen = useCallback(async (ids: string[]) => {
+    if (!user) return;
+    await supabase
+      .from("staff_ui_dismissals")
+      .upsert(
+        { user_id: user.id, dismissal_key: DISMISSAL_KEY, seen_ids: ids },
+        { onConflict: "user_id,dismissal_key" }
+      );
+  }, [user?.id]);
 
   const markAllSeen = useCallback(() => {
-    if (typeof window === "undefined") return;
-    // احفظ الحالة السابقة عشان نقدر نرجّعها لو ضغط بالغلط
-    const previousSeen = localStorage.getItem(seenKey);
+    const previousIds = Array.from(seenIds);
     const ids = recentlyFulfilled.map(r => r.id);
-    localStorage.setItem(seenKey, JSON.stringify(ids));
-    setBannerDismissed(true);
+    setSeenIds(new Set(ids));
+    void persistSeen(ids);
 
     toast({
       title: "تمام، تم إخفاء البانر",
-      description: "لو ضغطت بالغلط، اضغط تراجع لاسترجاعه",
+      description: "متزامن على كل أجهزتك — اضغط تراجع لاسترجاعه",
       action: (
         <Button
           size="sm"
           variant="outline"
           className="h-8 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50"
           onClick={() => {
-            if (previousSeen === null) {
-              localStorage.removeItem(seenKey);
-            } else {
-              localStorage.setItem(seenKey, previousSeen);
-            }
-            setBannerDismissed(false);
+            setSeenIds(new Set(previousIds));
+            void persistSeen(previousIds);
           }}
         >
           تراجع
         </Button>
       ),
     });
-  }, [recentlyFulfilled, seenKey, toast]);
+  }, [recentlyFulfilled, seenIds, persistSeen, toast]);
+
 
   const resetForm = () => {
     setMode("catalog"); setSearch(""); setChosen(null); setChosenErp(null);
