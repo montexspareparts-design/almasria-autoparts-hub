@@ -2,14 +2,16 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, PackageX, Loader2, Clock, RefreshCw, CheckCircle2,
-  XCircle, User, Search, Users,
+  XCircle, User, Search, Users, Sparkles, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +41,14 @@ const STATUS_META: Record<StatusKey, { label: string; cls: string; icon: typeof 
 
 export default function TeamShortagesView() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [staffMap, setStaffMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<StatusKey | "all">("open");
   const [q, setQ] = useState("");
+  const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
+  const [manualSyncing, setManualSyncing] = useState(false);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
