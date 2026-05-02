@@ -251,7 +251,7 @@ export default function TeamShortagesView() {
                                 : "bg-muted/60 text-foreground/80 border-border"
                             )}>
                               <User className="w-3 h-3" />
-                              {isMine ? "أنت" : `زميلك ${who} طلب الصنف ده`}
+                              {isMine ? "أنت طلبت الصنف ده" : `موظف من فريق المبيعات (${who}) طلب الصنف ده`}
                             </span>
                             <Badge variant="outline" className={cn("text-[10px] gap-1 px-1.5 py-0", meta.cls)}>
                               <Icon className="w-2.5 h-2.5" />
