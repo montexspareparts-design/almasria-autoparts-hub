@@ -33,11 +33,9 @@ import {
   Clock,
   PackageCheck,
   PackagePlus,
-  AlertCircle,
   Plus,
   CheckCircle2,
 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const BRAND_OPTIONS: { value: string; label: string }[] = [
   { value: "toyota_genuine", label: "Toyota Genuine (أصلي)" },
@@ -47,34 +45,22 @@ const BRAND_OPTIONS: { value: string; label: string }[] = [
   { value: "toyota_oils", label: "Toyota Oils (زيوت)" },
 ];
 
-interface TodayRestockedItem {
-  product_id: string;
-  sku: string;
-  name_ar: string;
-  brand: string | null;
-  prev_stock: number;
-  current_stock: number;
-  delta: number;
-  was_zero: boolean;
-  had_shortage_request: boolean;
-  shortage_requests_count: number;
-  base_price: number | null;
-  baseline_at: string | null;
-  minutes_since_baseline: number | null;
-}
-
-interface NewInErpItem {
+interface ErpRestockedItem {
   erp_id: string;
   name: string;
-  qty: number;
+  prev_qty: number;
+  current_qty: number;
+  delta: number;
+  was_zero: boolean;
+  is_new: boolean;
   retail_price: number | null;
   wholesale_price: number | null;
-  fetched_at: string;
   in_our_system: boolean;
-  is_inactive: boolean;
   our_product_id: string | null;
   had_shortage_request: boolean;
   shortage_requests_count: number;
+  baseline_at: string | null;
+  minutes_since_baseline: number | null;
 }
 
 interface BaselineStatus {
@@ -82,6 +68,7 @@ interface BaselineStatus {
   last_snapshot_at: string | null;
   minutes_ago: number | null;
   items_in_baseline: number;
+  last_batch_id: string | null;
 }
 
 function fmtTime(iso: string | null): string {
@@ -110,17 +97,15 @@ export default function TodayRestockedDialog({
   const { toast } = useToast();
   const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<TodayRestockedItem[]>([]);
-  const [newInErp, setNewInErp] = useState<NewInErpItem[]>([]);
+  const [items, setItems] = useState<ErpRestockedItem[]>([]);
   const [baseline, setBaseline] = useState<BaselineStatus | null>(null);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
-  const [tab, setTab] = useState<"restocked" | "new_in_erp">("restocked");
+  const [syncing, setSyncing] = useState(false);
 
   // Add-to-site dialog state (admin only)
-  const [addTarget, setAddTarget] = useState<NewInErpItem | null>(null);
+  const [addTarget, setAddTarget] = useState<ErpRestockedItem | null>(null);
   const [addBrand, setAddBrand] = useState<string>("");
   const [addCategoryId, setAddCategoryId] = useState<string>("");
   const [addSubmitting, setAddSubmitting] = useState(false);
@@ -137,6 +122,87 @@ export default function TodayRestockedDialog({
       .then(({ data }) => setCategories((data as any) || []));
   }, [isAdmin, open, categories.length]);
 
+  const loadAll = async () => {
+    setLoading(true);
+    const [{ data: itemsData }, { data: baseData }] = await Promise.all([
+      supabase.rpc("get_today_erp_restocked_items" as any),
+      supabase.rpc("erp_intraday_baseline_status" as any),
+    ]);
+    setItems((itemsData as any) || []);
+    const b = Array.isArray(baseData) ? baseData[0] : baseData;
+    setBaseline((b as any) ?? null);
+    setLoaded(true);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (!open || loaded) return;
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // الزر الرئيسي: مزامنة كاش الفيصل + (لو مفيش baseline) ناخد أول واحدة + مقارنة
+  const handleSyncAndCheck = async () => {
+    setSyncing(true);
+    try {
+      // 1) مزامنة فعلية لكاش الفيصل
+      const { error: syncErr } = await supabase.functions.invoke("erp-search-products", {
+        body: { refresh: true },
+      });
+      if (syncErr) console.warn("ERP refresh warning:", syncErr);
+
+      // 2) لو مفيش baseline ناخد أول snapshot للفيصل
+      if (!baseline?.has_baseline) {
+        const { error: bErr } = await supabase.rpc("take_erp_intraday_baseline" as any);
+        if (bErr) throw bErr;
+        toast({
+          title: "📸 اتسجلت نقطة المقارنة",
+          description: "من اللحظة دي أي صنف رصيده يزيد في الفيصل هيظهر هنا.",
+        });
+      }
+
+      // 3) reload
+      await loadAll();
+
+      toast({
+        title: "✅ تمت المزامنة مع الفيصل",
+        description: baseline?.has_baseline
+          ? "تم تحديث الرصيد. الأصناف اللي زادت ظاهرة دلوقتي."
+          : "تم حفظ النقطة. زود رصيد أي صنف في الفيصل واضغط الزر تاني.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "⚠️ حصلت مشكلة",
+        description: e?.message ?? "جرّب تاني بعد شوية",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // إعادة تصفير نقطة المقارنة (snapshot جديد)
+  const handleResetBaseline = async () => {
+    setSyncing(true);
+    try {
+      const { error } = await supabase.rpc("take_erp_intraday_baseline" as any);
+      if (error) throw error;
+      toast({
+        title: "✅ اتسجلت نقطة مقارنة جديدة",
+        description: "هنرصد الزيادات من اللحظة دي.",
+      });
+      await loadAll();
+    } catch (e: any) {
+      toast({
+        title: "تعذّر التصفير",
+        description: e?.message ?? "حصل خطأ",
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleAddToSite = async () => {
     if (!addTarget || !addBrand || !addCategoryId) return;
     setAddSubmitting(true);
@@ -149,7 +215,7 @@ export default function TodayRestockedDialog({
         category_id: addCategoryId,
         base_price: addTarget.retail_price ?? 0,
         wholesale_price: addTarget.wholesale_price ?? addTarget.retail_price ?? 0,
-        stock_quantity: addTarget.qty,
+        stock_quantity: addTarget.current_qty,
         is_active: true,
       } as any);
       if (error) throw error;
@@ -172,113 +238,19 @@ export default function TodayRestockedDialog({
     }
   };
 
-  const loadAll = async () => {
-    setLoading(true);
-    const [{ data: itemsData }, { data: baseData }, { data: erpData }] = await Promise.all([
-      supabase.rpc("get_today_restocked_items" as any),
-      supabase.rpc("intraday_baseline_status" as any),
-      supabase.rpc("get_today_new_in_erp" as any),
-    ]);
-    setItems((itemsData as any) || []);
-    setNewInErp((erpData as any) || []);
-    const b = Array.isArray(baseData) ? baseData[0] : baseData;
-    setBaseline((b as any) ?? null);
-    setLoaded(true);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (!open || loaded) return;
-    loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  // Force restocked tab for non-admins
-  useEffect(() => {
-    if (!isAdmin && tab === "new_in_erp") setTab("restocked");
-  }, [isAdmin, tab]);
-
-  // أخذ baseline فقط
-  const handleTakeBaseline = async () => {
-    setRefreshing(true);
-    try {
-      const { error } = await supabase.rpc("take_intraday_stock_baseline" as any);
-      if (error) throw error;
-      toast({
-        title: "✅ اتسجلت نقطة المقارنة",
-        description: "هنرصد أي صنف رصيده يزيد من اللحظة دي.",
-      });
-      await loadAll();
-    } catch (e: any) {
-      toast({ title: "تعذّر التسجيل", description: e?.message ?? "حصل خطأ", variant: "destructive" });
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  // الزر الرئيسي: مزامنة فعلية من الفيصل + مقارنة
-  const [syncing, setSyncing] = useState(false);
-  const handleSyncAndCheck = async () => {
-    setSyncing(true);
-    try {
-      // 1) لو مفيش baseline، ناخد واحدة الأول
-      if (!baseline?.has_baseline) {
-        const { error: bErr } = await supabase.rpc("take_intraday_stock_baseline" as any);
-        if (bErr) throw bErr;
-        toast({ title: "📸 اتسجلت نقطة المقارنة", description: "جاري المزامنة مع الفيصل..." });
-      }
-
-      // 2) مزامنة فعلية من الفيصل: refresh كاش + sync رصيد الموقع
-      const { error: syncErr } = await supabase.functions.invoke("erp-search-products", {
-        body: { refresh: true, compareSample: true, applyStockSync: true, sampleSize: 50 },
-      });
-      if (syncErr) {
-        console.warn("ERP sync warning:", syncErr);
-      }
-
-      // 3) reload البيانات عشان نشوف الزيادات
-      await loadAll();
-
-      toast({
-        title: "✅ تمت المزامنة",
-        description: "تم تحديث الرصيد من الفيصل. الأصناف اللي زادت ظاهرة دلوقتي.",
-      });
-    } catch (e: any) {
-      toast({
-        title: "⚠️ حصل مشكلة في المزامنة",
-        description: e?.message ?? "جرّب تاني بعد شوية",
-        variant: "destructive",
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter(
       (i) =>
-        i.name_ar?.toLowerCase().includes(q) ||
-        i.sku?.toLowerCase().includes(q) ||
-        i.brand?.toLowerCase().includes(q)
-    );
-  }, [items, search]);
-
-  const filteredErp = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return newInErp;
-    return newInErp.filter(
-      (i) =>
         i.name?.toLowerCase().includes(q) ||
         i.erp_id?.toLowerCase().includes(q)
     );
-  }, [newInErp, search]);
+  }, [items, search]);
 
   const total = items.length;
-  const erpTotal = newInErp.length;
   const shortageCount = items.filter((i) => i.had_shortage_request).length;
-  const erpShortageCount = newInErp.filter((i) => i.had_shortage_request).length;
+  const newCount = items.filter((i) => i.is_new).length;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -301,325 +273,219 @@ export default function TodayRestockedDialog({
         <DialogHeader className="p-4 border-b bg-gradient-to-l from-amber-50 to-white">
           <DialogTitle className="flex items-center gap-2 text-amber-900">
             <Sparkles className="w-5 h-5 text-amber-600" />
-            وصل النهاردة (مزامنة لحظية)
+            وصل النهاردة من الفيصل
           </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-1">
+            مقارنة لحظية مع كتالوج الفيصل — الأصناف اللي رصيدها زاد بعد آخر نقطة مقارنة.
+          </DialogDescription>
           {baseline?.has_baseline && (
             <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1.5">
               <Clock className="w-3 h-3" />
-              نقطة المقارنة الحالية: {fmtTime(baseline.last_snapshot_at)}
+              نقطة المقارنة: {fmtTime(baseline.last_snapshot_at)}
               {typeof baseline.minutes_ago === "number" && baseline.minutes_ago >= 0 && (
                 <span className="text-amber-700">
                   (من {baseline.minutes_ago === 0 ? "أقل من دقيقة" : `${baseline.minutes_ago} دقيقة`})
                 </span>
               )}
               {" • "}
-              {baseline.items_in_baseline} صنف في الـ baseline
+              {baseline.items_in_baseline.toLocaleString("ar-EG")} صنف في الفيصل
             </p>
           )}
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b bg-amber-50/30 h-auto p-0 gap-0">
-            <TabsTrigger
-              value="restocked"
-              className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
-            >
+        {/* شريط الإجراءات */}
+        <div className="p-3 border-b bg-amber-50/40 flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            onClick={handleSyncAndCheck}
+            disabled={syncing}
+            className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+          >
+            {syncing ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
               <Sparkles className="w-3.5 h-3.5" />
-              زاد رصيدها على الموقع
-              {total > 0 && (
-                <Badge className="bg-amber-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{total}</Badge>
-              )}
-              {shortageCount > 0 && (
-                <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
-                  <Flame className="w-2.5 h-2.5" />{shortageCount}
-                </Badge>
-              )}
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger
-                value="new_in_erp"
-                className="gap-1.5 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 rounded-none border-b-2 border-transparent data-[state=active]:border-amber-600 px-4 py-2.5"
-              >
-                <PackagePlus className="w-3.5 h-3.5" />
-                في الفيصل (مش على الموقع)
-                <Badge className="bg-purple-600 text-white text-[9px] px-1 ms-0.5 h-4">إدارة</Badge>
-                {erpTotal > 0 && (
-                  <Badge className="bg-blue-600 text-white font-mono ms-1 h-5 px-1.5 text-[10px]">{erpTotal}</Badge>
-                )}
-                {erpShortageCount > 0 && (
-                  <Badge className="bg-rose-600 text-white gap-0.5 ms-1 h-5 px-1.5 text-[10px]">
-                    <Flame className="w-2.5 h-2.5" />{erpShortageCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
             )}
-          </TabsList>
+            {syncing ? "جاري المزامنة..." : "🔄 عرفني إيه اللي زاد دلوقتي"}
+          </Button>
 
-          {/* شريط الإجراءات */}
-          <div className="p-3 border-b bg-amber-50/40 flex flex-wrap items-center gap-2">
-            {/* الزر الرئيسي: مزامنة فعلية مع الفيصل */}
+          {baseline?.has_baseline && (
             <Button
               size="sm"
-              onClick={handleSyncAndCheck}
+              variant="outline"
+              onClick={handleResetBaseline}
               disabled={syncing}
-              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-            >
-              {syncing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5" />
-              )}
-              {syncing ? "جاري المزامنة..." : "🔄 عرفني إيه اللي زاد دلوقتي"}
-            </Button>
-
-            {tab === "restocked" && baseline?.has_baseline && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleTakeBaseline}
-                disabled={refreshing}
-                className="gap-1.5 border-amber-300 text-amber-900 hover:bg-amber-100"
-              >
-                {refreshing ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCcw className="w-3.5 h-3.5" />
-                )}
-                صفّر نقطة المقارنة
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={loadAll}
-              disabled={loading}
-              className="gap-1.5"
+              className="gap-1.5 border-amber-300 text-amber-900 hover:bg-amber-100"
             >
               <RefreshCcw className="w-3.5 h-3.5" />
-              تحديث
+              صفّر نقطة المقارنة
             </Button>
+          )}
 
-            <div className="relative flex-1 min-w-[180px] ms-auto">
-              <Search className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث باسم الصنف، البارت نمبر..."
-                className="pr-9 pl-8 h-9 text-sm"
-              />
-              {search && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="مسح"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+          {total > 0 && (
+            <div className="flex items-center gap-1.5 ms-1">
+              <Badge className="bg-amber-600 text-white font-mono h-6 px-2">
+                {total} صنف زاد
+              </Badge>
+              {newCount > 0 && (
+                <Badge variant="outline" className="border-blue-400 text-blue-700 h-6 px-2">
+                  {newCount} جديد
+                </Badge>
+              )}
+              {shortageCount > 0 && (
+                <Badge className="bg-rose-600 text-white gap-0.5 h-6 px-2">
+                  <Flame className="w-3 h-3" />
+                  {shortageCount} فرصة
+                </Badge>
               )}
             </div>
-          </div>
+          )}
 
-          {/* TAB: Restocked على الموقع */}
-          <TabsContent value="restocked" className="m-0">
-            {loading ? (
-              <div className="p-10 flex flex-col items-center gap-2 text-muted-foreground text-sm">
-                <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
-                جاري التحميل...
-              </div>
-            ) : !baseline?.has_baseline ? (
-              <div className="p-8 text-center text-sm">
-                <PackageCheck className="w-10 h-10 text-amber-500 mx-auto mb-2" />
-                <p className="font-bold text-amber-900 mb-1">لسه مفيش نقطة مقارنة</p>
-                <p className="text-muted-foreground text-xs leading-relaxed max-w-md mx-auto">
-                  اضغط <span className="font-bold text-amber-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span> فوق عشان نسجّل صورة لرصيد كل الأصناف ونجيب أحدث رصيد من الفيصل.
-                  بعد كده، أي صنف رصيده يزيد هيظهر هنا فوراً باسمه والبارت نمبر والكمية.
-                </p>
-                {isAdmin && (
-                  <p className="text-[11px] text-blue-700 mt-3">
-                    💡 لو الصنف لسه مش على الموقع، شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span>
-                  </p>
-                )}
-              </div>
-            ) : items.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                <p className="mb-2">مفيش أصناف رصيدها زاد بعد آخر نقطة مقارنة.</p>
-                <p className="text-xs">دوس <span className="font-bold text-emerald-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span> عشان نجيب أحدث رصيد من الفيصل.</p>
-                {isAdmin && (
-                  <p className="text-[11px] text-blue-700 mt-3">
-                    💡 شوف تبويب <span className="font-bold">"في الفيصل (مش على الموقع)"</span> لو ضفت صنف جديد على الفيصل
-                  </p>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="hidden sm:grid grid-cols-[90px_110px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
-                  <div className="text-center">الحالة</div>
-                  <div className="text-center">الرصيد الجديد</div>
-                  <div>البارت نمبر</div>
-                  <div className="text-right">اسم الصنف</div>
-                </div>
-                <ScrollArea className="h-[420px]">
-                  <div className="divide-y divide-amber-100">
-                    {filtered.map((item) => (
-                      <div
-                        key={item.product_id}
-                        className={`grid grid-cols-1 sm:grid-cols-[90px_110px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
-                          item.had_shortage_request
-                            ? "bg-rose-50/50 hover:bg-rose-100/60"
-                            : "bg-white hover:bg-amber-50/60"
-                        }`}
-                      >
-                        <div className="flex sm:justify-center">
-                          {item.had_shortage_request ? (
-                            <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
-                              <Flame className="w-3 h-3" /> فرصة
-                            </Badge>
-                          ) : item.was_zero ? (
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 h-auto">
-                              رجع متاح
+          <div className="relative flex-1 min-w-[180px] ms-auto">
+            <Search className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ابحث باسم الصنف أو كود الفيصل..."
+              className="pr-9 pl-8 h-9 text-sm"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="مسح"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* محتوى */}
+        {loading ? (
+          <div className="p-10 flex flex-col items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="w-6 h-6 animate-spin text-amber-600" />
+            جاري التحميل...
+          </div>
+        ) : !baseline?.has_baseline ? (
+          <div className="p-8 text-center text-sm">
+            <PackageCheck className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+            <p className="font-bold text-amber-900 mb-1">لسه مفيش نقطة مقارنة للفيصل</p>
+            <p className="text-muted-foreground text-xs leading-relaxed max-w-md mx-auto">
+              اضغط <span className="font-bold text-emerald-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span> فوق
+              عشان نسحب آخر رصيد من الفيصل ونسجّل نقطة بداية. بعد كده أي صنف رصيده يزيد في الفيصل هيظهر هنا
+              باسمه + كود الفيصل + الكمية.
+            </p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            <PackageCheck className="w-10 h-10 text-emerald-500 mx-auto mb-2 opacity-60" />
+            <p className="mb-2 font-semibold text-foreground">مفيش أصناف رصيدها زاد في الفيصل بعد آخر نقطة مقارنة.</p>
+            <p className="text-xs">
+              لو ضفت أصناف للفيصل دلوقتي، دوس{" "}
+              <span className="font-bold text-emerald-700">"🔄 عرفني إيه اللي زاد دلوقتي"</span>
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="hidden sm:grid grid-cols-[120px_120px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
+              <div className="text-center">{isAdmin ? "إجراء / حالة" : "الحالة"}</div>
+              <div className="text-center">الرصيد</div>
+              <div>كود الفيصل</div>
+              <div className="text-right">اسم الصنف</div>
+            </div>
+            <ScrollArea className="h-[440px]">
+              <div className="divide-y divide-amber-100">
+                {filtered.map((item) => {
+                  const alreadyAdded = addedSkus.has(item.erp_id);
+                  return (
+                    <div
+                      key={item.erp_id}
+                      className={`grid grid-cols-1 sm:grid-cols-[120px_120px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
+                        item.had_shortage_request
+                          ? "bg-rose-50/50 hover:bg-rose-100/60"
+                          : "bg-white hover:bg-amber-50/60"
+                      }`}
+                    >
+                      {/* عمود الإجراء/الحالة */}
+                      <div className="flex sm:justify-center gap-1 flex-wrap">
+                        {item.had_shortage_request && (
+                          <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
+                            <Flame className="w-3 h-3" /> فرصة
+                          </Badge>
+                        )}
+                        {item.is_new ? (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-400 text-blue-700">
+                            جديد على الفيصل
+                          </Badge>
+                        ) : item.was_zero ? (
+                          <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 h-auto">
+                            رجع متاح
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto">
+                            +{item.delta}
+                          </Badge>
+                        )}
+                        {/* زر إضافة للموقع — للأدمن فقط لو مش موجود عندنا */}
+                        {isAdmin && !item.in_our_system && (
+                          alreadyAdded ? (
+                            <Badge className="bg-emerald-600 text-white text-[10px] gap-0.5 px-2 py-0.5 h-auto">
+                              <CheckCircle2 className="w-3 h-3" /> اتضاف
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto">
-                              +{item.delta}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          <span className="text-base font-extrabold text-emerald-700 font-mono">
-                            {item.current_stock}
-                          </span>
-                          <div className="text-[10px] text-muted-foreground mt-0.5">
-                            من <span className="font-bold text-rose-600">{item.prev_stock}</span>
-                            <span className="mx-0.5">+{item.delta}</span>
-                          </div>
-                        </div>
-                        <div className="min-w-0" dir="ltr">
-                          <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
-                            {item.sku}
-                          </span>
-                        </div>
-                        <div className="min-w-0 text-right">
-                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                            {item.name_ar}
-                          </p>
-                          {item.brand && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</p>
-                          )}
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setAddTarget(item);
+                                setAddBrand("");
+                                setAddCategoryId("");
+                              }}
+                              className="h-6 px-1.5 gap-0.5 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              <Plus className="w-3 h-3" />
+                              للموقع
+                            </Button>
+                          )
+                        )}
+                      </div>
+
+                      {/* عمود الرصيد */}
+                      <div className="text-center">
+                        <span className="text-base font-extrabold text-emerald-700 font-mono">
+                          {item.current_qty.toLocaleString("ar-EG")}
+                        </span>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          من <span className="font-bold text-rose-600">{item.prev_qty.toLocaleString("ar-EG")}</span>
+                          <span className="mx-0.5 text-emerald-600 font-bold">+{item.delta.toLocaleString("ar-EG")}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </>
-            )}
-          </TabsContent>
 
-          {/* TAB: New in ERP */}
-          <TabsContent value="new_in_erp" className="m-0">
-            {loading ? (
-              <div className="p-10 flex flex-col items-center gap-2 text-muted-foreground text-sm">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                جاري التحميل...
+                      {/* عمود كود الفيصل */}
+                      <div className="min-w-0" dir="ltr">
+                        <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
+                          {item.erp_id}
+                        </span>
+                      </div>
+
+                      {/* عمود اسم الصنف */}
+                      <div className="min-w-0 text-right">
+                        <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                          {item.name}
+                        </p>
+                        {item.retail_price && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : newInErp.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                <PackagePlus className="w-10 h-10 text-blue-400 mx-auto mb-2" />
-                <p className="font-bold text-blue-900 mb-1">كل أصناف الفيصل المتاحة موجودة على الموقع</p>
-                <p className="text-xs">مفيش أصناف جديدة في الفيصل لسه مش مضافة عندنا.</p>
-              </div>
-            ) : (
-              <>
-                <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-[11px] text-blue-900 flex items-start gap-2">
-                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                  <span>
-                    دي أصناف موجودة في الفيصل برصيد متاح، بس <span className="font-bold">لسه مش معروضة على الموقع</span> (محتاجة إضافة من الإدارة). لو فيه عميل بيطلبها، سجّل بلاغ نقص.
-                  </span>
-                </div>
-                <div className="hidden sm:grid grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
-                  <div className="text-center">إجراء</div>
-                  <div className="text-center">الحالة</div>
-                  <div className="text-center">الرصيد</div>
-                  <div>كود الفيصل</div>
-                  <div className="text-right">اسم الصنف</div>
-                </div>
-                <ScrollArea className="h-[400px]">
-                  <div className="divide-y divide-blue-100">
-                    {filteredErp.map((item) => {
-                      const alreadyAdded = addedSkus.has(item.erp_id);
-                      return (
-                        <div
-                          key={item.erp_id}
-                          className={`grid grid-cols-1 sm:grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
-                            item.had_shortage_request
-                              ? "bg-rose-50/50 hover:bg-rose-100/60"
-                              : "bg-white hover:bg-blue-50/60"
-                          }`}
-                        >
-                          <div className="flex sm:justify-center">
-                            {alreadyAdded ? (
-                              <Badge className="bg-emerald-600 text-white text-[10px] gap-0.5 px-2 py-1">
-                                <CheckCircle2 className="w-3 h-3" /> تمت الإضافة
-                              </Badge>
-                            ) : (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setAddTarget(item);
-                                  setAddBrand("");
-                                  setAddCategoryId("");
-                                }}
-                                className="h-7 px-2 gap-1 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
-                              >
-                                <Plus className="w-3 h-3" />
-                                أضف للموقع
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex sm:justify-center gap-1 flex-wrap">
-                            {item.had_shortage_request && (
-                              <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
-                                <Flame className="w-3 h-3" /> فرصة
-                              </Badge>
-                            )}
-                            {item.is_inactive ? (
-                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-orange-300 text-orange-700">
-                                غير مفعّل
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
-                                جديد على الفيصل
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-center">
-                            <span className="text-base font-extrabold text-emerald-700 font-mono">
-                              {item.qty}
-                            </span>
-                          </div>
-                          <div className="min-w-0" dir="ltr">
-                            <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
-                              {item.erp_id}
-                            </span>
-                          </div>
-                          <div className="min-w-0 text-right">
-                            <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                              {item.name}
-                            </p>
-                            {item.retail_price && (
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+            </ScrollArea>
+          </>
+        )}
       </DialogContent>
 
       {/* Admin: Add to site dialog */}
@@ -641,7 +507,7 @@ export default function TodayRestockedDialog({
                 <p className="text-sm font-bold text-blue-950 leading-tight">{addTarget.name}</p>
                 <div className="flex items-center gap-3 text-[11px] text-blue-800">
                   <span className="font-mono bg-blue-100 px-2 py-0.5 rounded" dir="ltr">{addTarget.erp_id}</span>
-                  <span>الرصيد: <span className="font-bold text-emerald-700">{addTarget.qty}</span></span>
+                  <span>الرصيد: <span className="font-bold text-emerald-700">{addTarget.current_qty}</span></span>
                   {addTarget.retail_price && (
                     <span>قطاعي: {Number(addTarget.retail_price).toLocaleString("ar-EG")} ج.م</span>
                   )}
