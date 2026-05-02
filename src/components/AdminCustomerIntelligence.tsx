@@ -2562,7 +2562,7 @@ const AdminCustomerIntelligence = () => {
                             {handledRec && (() => {
                               const h = handledRec;
                               const mine = h.by === user?.id;
-                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : "تعامل";
+                              const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : h.action === "done" ? "أنجز" : "تعامل";
                               const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
                               const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
                               return (
@@ -2573,7 +2573,7 @@ const AdminCustomerIntelligence = () => {
                                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40"
                                       : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40"
                                   )}
-                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}`}
+                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}${h.note ? `\nالملاحظة: ${h.note}` : ""}`}
                                 >
                                   ✋ {mine ? "أنت" : (h.byName || "موظف")} • {actionLabel} {ago}
                                 </span>
@@ -2582,9 +2582,19 @@ const AdminCustomerIntelligence = () => {
                           </div>
                           <p className={cn("text-xs font-black text-foreground", isDone && "line-through text-muted-foreground", handledByOther && "text-muted-foreground")}>{task.title}</p>
                           <p className={cn("text-[10px] text-muted-foreground mt-0.5 line-clamp-2", (isDone || handledByOther) && "opacity-70")}>{task.reason}</p>
+                          {/* Show what the staff did with the customer (note from "تم" dialog) */}
+                          {handledRec?.note && (
+                            <div className="mt-1.5 rounded-md bg-emerald-500/10 border border-emerald-400/40 px-2 py-1.5">
+                              <div className="text-[9px] font-black text-emerald-700 dark:text-emerald-400 mb-0.5 flex items-center gap-1">
+                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                ما تم مع العميل
+                              </div>
+                              <p className="text-[10px] text-emerald-900 dark:text-emerald-200 leading-snug whitespace-pre-wrap">{handledRec.note}</p>
+                            </div>
+                          )}
                           {handledByOther && (() => {
                             const h = handledRec!;
-                            const actionLabel = h.action === "call" ? "📞 اتصل" : h.action === "whatsapp" ? "💬 راسل واتساب" : h.action === "note" ? "📝 أضاف ملاحظة" : h.action === "outcome" ? "🎯 سجّل نتيجة" : "✋ تعامل";
+                            const actionLabel = h.action === "call" ? "📞 اتصل" : h.action === "whatsapp" ? "💬 راسل واتساب" : h.action === "note" ? "📝 أضاف ملاحظة" : h.action === "outcome" ? "🎯 سجّل نتيجة" : h.action === "done" ? "✅ أنجز" : "✋ تعامل";
                             const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
                             const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
                             return (
