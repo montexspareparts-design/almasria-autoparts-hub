@@ -73,6 +73,7 @@ export default function AdminShortageRequests() {
   const [toDate, setToDate] = useState<Date>(() => { const d = new Date(); d.setHours(23,59,59,999); return d; });
   const [statusFilter, setStatusFilter] = useState<StatusKey | "all">("all");
   const [showFulfilled, setShowFulfilled] = useState(false);
+  const [activeTab, setActiveTab] = useState<"priority" | "all">("priority");
 
   // Detail dialog
   const [openGroup, setOpenGroup] = useState<PriorityRow | null>(null);
@@ -282,15 +283,48 @@ export default function AdminShortageRequests() {
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPIs — كل كارت قابل للضغط ويعمل كفلتر */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Kpi label="أصناف مطلوبة" value={totals.items} icon={PackageX} color="from-rose-500 to-red-600" />
-        <Kpi label="إجمالي البلاغات" value={totals.reports} icon={BarChart3} color="from-amber-500 to-orange-600" />
-        <Kpi label="إجمالي الكميات" value={totals.qty} icon={ArrowUpDown} color="from-blue-500 to-indigo-600" />
-        <Kpi label="موظفين بلّغوا" value={totals.staff} icon={Users} color="from-emerald-500 to-teal-600" />
+        <Kpi
+          label="أصناف مطلوبة"
+          value={totals.items}
+          icon={PackageX}
+          color="from-rose-500 to-red-600"
+          active={activeTab === "priority"}
+          onClick={() => { setActiveTab("priority"); setStatusFilter("all"); }}
+          hint="ترتيب الأهمية"
+        />
+        <Kpi
+          label="إجمالي البلاغات"
+          value={totals.reports}
+          icon={BarChart3}
+          color="from-amber-500 to-orange-600"
+          active={activeTab === "all" && statusFilter === "all"}
+          onClick={() => { setActiveTab("all"); setStatusFilter("all"); }}
+          hint="كل البلاغات"
+        />
+        <Kpi
+          label="مفتوح + جارٍ التوفير"
+          value={details.filter(d => d.status === "open" || d.status === "sourcing").length}
+          icon={ArrowUpDown}
+          color="from-blue-500 to-indigo-600"
+          active={activeTab === "all" && (statusFilter === "open" || statusFilter === "sourcing")}
+          onClick={() => { setActiveTab("all"); setStatusFilter("open"); }}
+          hint="محتاج شغل"
+        />
+        <Kpi
+          label="تم التوفير"
+          value={details.filter(d => d.status === "fulfilled").length}
+          icon={Users}
+          color="from-emerald-500 to-teal-600"
+          active={activeTab === "all" && statusFilter === "fulfilled"}
+          onClick={() => { setActiveTab("all"); setStatusFilter("fulfilled"); }}
+          hint="اللي تم توفيره"
+        />
       </div>
 
-      <Tabs defaultValue="priority">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "priority" | "all")}>
+
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <TabsList>
             <TabsTrigger value="priority" className="gap-1.5"><Flame className="w-4 h-4" />الأهمية</TabsTrigger>
@@ -451,12 +485,25 @@ export default function AdminShortageRequests() {
   );
 }
 
-function Kpi({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+function Kpi({ label, value, icon: Icon, color, active, onClick, hint }: { label: string; value: number; icon: any; color: string; active?: boolean; onClick?: () => void; hint?: string }) {
+  const clickable = !!onClick;
   return (
-    <div className={cn("rounded-xl p-3 text-white bg-gradient-to-br shadow-sm", color)}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!clickable}
+      className={cn(
+        "rounded-xl p-3 text-white bg-gradient-to-br shadow-sm text-right transition-all",
+        color,
+        clickable && "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+        active && "ring-2 ring-offset-2 ring-foreground/40 scale-[1.02]"
+      )}
+      title={hint}
+    >
       <div className="flex items-center gap-1.5 text-[11px] opacity-90"><Icon className="w-3.5 h-3.5" />{label}</div>
       <p className="text-2xl font-bold mt-1 tabular-nums">{value}</p>
-    </div>
+      {hint && <p className="text-[10px] opacity-75 mt-0.5">{active ? "✓ مفعّل" : hint}</p>}
+    </button>
   );
 }
 
