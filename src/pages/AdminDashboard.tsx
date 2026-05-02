@@ -33,6 +33,7 @@ const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverag
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
+const AdminStaffOverview = lazy(() => import("@/components/admin/AdminStaffOverview"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
@@ -112,7 +113,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // ← أسفل الطلبات: مدمج (Checklist + تقرير اليوم) — يلمع طول ما لم يُقدَّم
       // ملاحظة: تبويب "التقرير اليومي" المنفصل اتدمج مع "مهامي اليومية" — للأدمن لوحة التقارير الجماعية موجودة في "التنبيهات والربط" → "التقارير اليومية للموظفين"
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
-      { id: "staff-activity", label: "نشاط الموظفين اليومي", icon: Activity },        // أدمن فقط: مين دخل النهاردة
+      { id: "staff-overview", label: "متابعة الموظفين (نشاط + تقارير)", icon: Activity }, // أدمن فقط: نشاط اليوم + التقارير اليومية في صفحة واحدة
     ],
   },
   {
@@ -159,7 +160,7 @@ const sidebarGroups: SidebarGroup[] = [
          { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
         { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
         { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
-        { id: "reporter-reports", label: "📋 تقارير موظفي الفيصل", icon: FileText },
+        // ملاحظة: "📋 تقارير موظفي الفيصل" اتدمجت مع "نشاط الموظفين اليومي" في تبويب واحد: "متابعة الموظفين"
         { id: "shortage-requests", label: "🚨 الأصناف الناقصة المطلوبة", icon: FileText },
         { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
         { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
@@ -786,8 +787,10 @@ const AdminDashboard = () => {
         );
       case "staff-performance":
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
-      case "staff-activity":
-        return <Suspense fallback={<SectionLoader />}><AdminStaffActivity /></Suspense>;
+      case "staff-overview":
+      case "staff-activity":      // legacy alias
+      case "reporter-reports":    // legacy alias
+        return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "visitor-leads":
@@ -895,8 +898,7 @@ const AdminDashboard = () => {
         return isAdmin ? <Suspense fallback={<SectionLoader />}><AdminRolePermissions /></Suspense> : <Suspense fallback={<SectionLoader />}><AdminAnalytics /></Suspense>;
       case "daily-reports":
         return <Suspense fallback={<SectionLoader />}><AdminDailyReports /></Suspense>;
-      case "reporter-reports":
-        return <Suspense fallback={<SectionLoader />}><AdminReporterReports /></Suspense>;
+      // "reporter-reports" handled above as part of staff-overview
       case "shortage-requests":
         return <Suspense fallback={<SectionLoader />}><AdminShortageRequests /></Suspense>;
       case "daily-report-editor":
