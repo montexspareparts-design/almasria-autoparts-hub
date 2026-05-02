@@ -86,7 +86,13 @@ export default function TeamShortagesView() {
   useEffect(() => {
     (async () => {
       const { data } = await supabase
-        .from("erp_stock_cache" as any)
+        .from("erp_full_catalog_meta" as any)
+        .select("last_synced_at")
+        .eq("id", 1)
+        .maybeSingle()
+        .then(({ data }) => ({ data: data ? [{ fetched_at: (data as any).last_synced_at }] : [] }));
+      const _unused = await supabase
+        .from("erp_full_catalog_cache" as any)
         .select("fetched_at")
         .order("fetched_at", { ascending: false })
         .limit(1);
