@@ -302,6 +302,7 @@ export function AdminERPCatalogBrowser() {
         title: next ? "✅ تم إظهار الصنف" : "🚫 تم إخفاء الصنف",
         description: row.name_ar || row.sku || "",
       });
+      loadExactCounts();
     } catch (err: any) {
       toast({ title: "فشل التحديث", description: err.message, variant: "destructive" });
     } finally {
