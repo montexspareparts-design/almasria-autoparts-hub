@@ -21,6 +21,14 @@ import { computeDateRange, applyDateRange, computeCounts, applyTabFilter } from 
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
+type ResultFilter = "all" | "arrived" | "fulfilled" | "rejected";
+
+const RESULT_FILTER_META: Record<ResultFilter, { label: string; icon: typeof Clock; cls: string }> = {
+  all:       { label: "كل النتائج", icon: Sparkles,     cls: "from-slate-500 to-slate-700" },
+  arrived:   { label: "وصلت المخزن", icon: PackageCheck, cls: "from-emerald-500 to-teal-600" },
+  fulfilled: { label: "مقبول",       icon: CheckCircle2, cls: "from-green-500 to-emerald-600" },
+  rejected:  { label: "مرفوض",       icon: XCircle,      cls: "from-rose-500 to-red-600" },
+};
 
 const DATE_FILTER_META: Record<DateFilter, { label: string; icon: typeof Calendar }> = {
   all:       { label: "كل الفترات", icon: Calendar },
@@ -59,6 +67,7 @@ export default function TeamShortagesView() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<StatusKey | "all" | "arrived">("open");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [resultFilter, setResultFilter] = useState<ResultFilter>("all");
   const [q, setQ] = useState("");
   const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
   const [manualSyncing, setManualSyncing] = useState(false);
@@ -183,6 +192,13 @@ export default function TeamShortagesView() {
     // فلترة بالتاريخ أولاً (نفس اللي العدّاد بيستخدمه) ثم فلترة التبويب — يضمن المطابقة
     let list = applyTabFilter(applyDateRange(rows, dateRange), tab);
 
+    // فلتر النتيجة السريع — يقصر العرض على نوع نتيجة واحدة فقط
+    if (resultFilter !== "all") {
+      // arrived و fulfilled كلاهما = الأصناف اللي وصلت (status=fulfilled)
+      const wantStatus: StatusKey = resultFilter === "rejected" ? "rejected" : "fulfilled";
+      list = list.filter(r => r.status === wantStatus);
+    }
+
     if (q.trim()) {
       const s = q.trim().toLowerCase();
       list = list.filter(r => {
@@ -193,7 +209,7 @@ export default function TeamShortagesView() {
       });
     }
     return list;
-  }, [rows, tab, q, staffMap, dateRange]);
+  }, [rows, tab, q, staffMap, dateRange, resultFilter]);
 
   const uniqueStaff = useMemo(() => new Set(rows.map(r => r.staff_user_id)).size, [rows]);
   const arrivedToday = useMemo(() => {
@@ -400,6 +416,44 @@ export default function TeamShortagesView() {
               </button>
             );
           })}
+        </div>
+
+        {/* فلتر النتيجة — اعرض «وصلت المخزن» أو «مقبول» أو «مرفوض» فقط */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 font-semibold ms-1">
+            <CheckCircle2 className="w-3 h-3" /> النتيجة:
+          </span>
+          {(Object.keys(RESULT_FILTER_META) as ResultFilter[]).map((key) => {
+            const m = RESULT_FILTER_META[key];
+            const Icon = m.icon;
+            const active = resultFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setResultFilter(key)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
+                  active
+                    ? `bg-gradient-to-l ${m.cls} text-white border-transparent shadow-sm font-semibold scale-[1.02]`
+                    : "bg-background text-muted-foreground border-border hover:border-emerald-300 hover:text-emerald-700"
+                )}
+                aria-pressed={active}
+              >
+                <Icon className="w-3 h-3" />
+                {m.label}
+              </button>
+            );
+          })}
+          {resultFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setResultFilter("all")}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline ms-1"
+            >
+              مسح
+            </button>
+          )}
         </div>
 
         <div className="relative">
