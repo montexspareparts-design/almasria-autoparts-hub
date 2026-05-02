@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, PackageX, Loader2, Clock, RefreshCw, CheckCircle2,
   XCircle, User, Search, Users, Sparkles, Star, PackageCheck,
-  Trophy, TrendingUp, Calendar, Zap,
+  Trophy, TrendingUp, Calendar, Zap, Eye, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
