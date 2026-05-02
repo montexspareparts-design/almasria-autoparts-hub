@@ -35,6 +35,15 @@ interface RestockedItem {
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
+type SortMode = "stock_desc" | "newest" | "oldest" | "part_asc" | "name_asc";
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: "stock_desc", label: "الرصيد (الأكبر أولاً)" },
+  { value: "newest",     label: "الأحدث وصولاً" },
+  { value: "oldest",     label: "الأقدم وصولاً" },
+  { value: "part_asc",   label: "البارت نمبر (أبجدي)" },
+  { value: "name_asc",   label: "اسم الصنف (أبجدي)" },
+];
 
 function formatZeroDate(iso: string | null): string {
   if (!iso) return "—";
@@ -65,6 +74,7 @@ export default function RestockedYesterdayCard() {
   const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<PeriodDays>(1);
+  const [sort, setSort] = useState<SortMode>("stock_desc");
 
   useEffect(() => {
     const load = async () => {
@@ -92,8 +102,31 @@ export default function RestockedYesterdayCard() {
           i.brand?.toLowerCase().includes(q)
       );
     }
-    return list;
-  }, [items, filter, search]);
+    // Sorting
+    const sorted = [...list];
+    const arCmp = (a: string, b: string) =>
+      (a || "").localeCompare(b || "", "ar-EG", { numeric: true, sensitivity: "base" });
+    const dateOf = (x: RestockedItem) =>
+      x.baseline_date ? new Date(x.baseline_date).getTime() : 0;
+    switch (sort) {
+      case "stock_desc":
+        sorted.sort((a, b) => (b.current_stock ?? 0) - (a.current_stock ?? 0));
+        break;
+      case "newest":
+        sorted.sort((a, b) => dateOf(b) - dateOf(a));
+        break;
+      case "oldest":
+        sorted.sort((a, b) => dateOf(a) - dateOf(b));
+        break;
+      case "part_asc":
+        sorted.sort((a, b) => arCmp(a.sku, b.sku));
+        break;
+      case "name_asc":
+        sorted.sort((a, b) => arCmp(a.name_ar, b.name_ar));
+        break;
+    }
+    return sorted;
+  }, [items, filter, search, sort]);
 
   const visibleItems = expanded ? filtered : filtered.slice(0, 8);
 
@@ -192,6 +225,24 @@ export default function RestockedYesterdayCard() {
                 رجع من 0 ({wasZeroCount})
               </FilterPill>
             )}
+          </div>
+
+          {/* Sort dropdown */}
+          <div dir="rtl" className="flex items-center gap-1.5 shrink-0">
+            <label className="text-[11px] font-semibold text-emerald-900/80 whitespace-nowrap">
+              ترتيب:
+            </label>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortMode)}
+              className="h-9 text-xs bg-white border border-emerald-200 rounded-md px-2 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
