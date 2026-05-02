@@ -787,8 +787,10 @@ const AdminDashboard = () => {
         );
       case "staff-performance":
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
-      case "staff-activity":
-        return <Suspense fallback={<SectionLoader />}><AdminStaffActivity /></Suspense>;
+      case "staff-overview":
+      case "staff-activity":      // legacy alias
+      case "reporter-reports":    // legacy alias
+        return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "visitor-leads":
