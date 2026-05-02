@@ -233,6 +233,8 @@ const AdminDashboard = () => {
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [fetchingApproveErpName, setFetchingApproveErpName] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // حالة طي/فتح كل مجموعة في السايدبار. لو المستخدم لم يلمس المجموعة → نفتح المجموعة اللي فيها التبويب النشط فقط.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const canAccess = isAdmin || isModerator;
 
@@ -1090,7 +1092,7 @@ const AdminDashboard = () => {
           className={`
             ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
             fixed lg:static inset-y-0 right-0 top-14 z-40
-            w-60 lg:w-52 xl:w-60
+            w-64 lg:w-60 xl:w-64
             bg-card/95 backdrop-blur-sm border-l border-border/50
             transition-transform duration-200 ease-out
             overflow-y-auto
@@ -1105,82 +1107,107 @@ const AdminDashboard = () => {
             />
           )}
 
-          <nav className="p-2.5 space-y-1">
-            {filteredSidebarGroups.map((group, gi) => (
-              <div key={group.label}>
-                {gi > 0 && <div className="h-px bg-border/40 mx-3 my-2" />}
-                <div className="px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/40">
-                  {group.label}
+          <nav className="p-2 space-y-1">
+            {filteredSidebarGroups.map((group) => {
+              const groupHasActive = group.items.some(it => it.id === activeSection);
+              const isOpen = openGroups[group.label] ?? groupHasActive;
+              // Aggregate badge for the whole group when collapsed
+              const groupPending =
+                (group.items.some(it => it.id === "dealers") ? pendingCount : 0);
+              return (
+                <div key={group.label} className="rounded-xl bg-muted/20 border border-border/40 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setOpenGroups(prev => ({ ...prev, [group.label]: !isOpen }))}
+                    className={`
+                      w-full flex items-center gap-2 px-3 py-2.5 text-[12px] font-extrabold tracking-wide
+                      transition-colors text-foreground/80 hover:bg-muted/40
+                      ${groupHasActive ? "bg-primary/[0.06]" : ""}
+                    `}
+                    aria-expanded={isOpen}
+                  >
+                    <span className="truncate flex-1 text-right">{group.label}</span>
+                    {!isOpen && groupPending > 0 && (
+                      <span className="bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[18px] h-4 flex items-center justify-center px-1">
+                        {groupPending}
+                      </span>
+                    )}
+                    <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground/60 transition-transform duration-200 ${isOpen ? "-rotate-90" : "rotate-180"}`} />
+                  </button>
+
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="p-1.5 pt-0.5 space-y-0.5">
+                        {group.items.map((section) => {
+                          const Icon = section.icon;
+                          const isActive = activeSection === section.id;
+                          const isReportReminder = section.id === "my-daily-tasks" && reportPhase !== "off" && !isActive && !hasSubmittedTodayReport;
+                          const isReportEarly = isReportReminder && reportPhase === "early";
+                          return (
+                            <button
+                              key={section.id}
+                              onClick={() => {
+                                setActiveSection(section.id);
+                                setSidebarOpen(false);
+                              }}
+                              className={`
+                                w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 relative group
+                                ${isActive
+                                  ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+                                  : isReportReminder
+                                    ? isReportEarly
+                                      ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
+                                      : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
+                                    : "text-foreground/75 hover:text-foreground hover:bg-muted/60"
+                                }
+                              `}
+                              title={
+                                isReportEarly
+                                  ? "تذكير مبكر — باقي 30 دقيقة على موعد التقرير اليومي"
+                                  : isReportReminder
+                                    ? "موعد التقرير اليومي — قدّم تقريرك دلوقتي"
+                                    : undefined
+                              }
+                            >
+                              <div className={`
+                                w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                                ${isActive
+                                  ? "bg-primary-foreground/15 text-primary-foreground"
+                                  : isReportReminder
+                                    ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300"
+                                    : "bg-muted/60 text-muted-foreground group-hover:bg-muted group-hover:text-foreground"
+                                }
+                              `}>
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <span className="truncate flex-1 text-right">{section.label}</span>
+                              {isReportReminder && (
+                                <span className={`text-[9px] font-extrabold rounded-md px-1.5 py-0.5 ${
+                                  isReportEarly
+                                    ? "bg-amber-200 text-amber-800 dark:bg-amber-800/60 dark:text-amber-100"
+                                    : "bg-amber-500 text-white animate-pulse"
+                                }`}>
+                                  {isReportEarly ? "قريب" : "الآن"}
+                                </span>
+                              )}
+                              {section.id === "dealers" && pendingCount > 0 && (
+                                <span className={`text-[10px] font-bold rounded-md min-w-[20px] h-5 flex items-center justify-center px-1.5 ${
+                                  isActive ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"
+                                }`}>
+                                  {pendingCount}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-0.5 space-y-px">
-                  {group.items.map((section) => {
-                    const Icon = section.icon;
-                    const isActive = activeSection === section.id;
-                    // اللمعان والتذكير ينتقلوا لتبويب "مهامي اليومية" (لأنه فيه فورم التقديم)،
-                    // ويختفي اللمعان فور تقديم تقرير اليوم.
-                    const isReportReminder = section.id === "my-daily-tasks" && reportPhase !== "off" && !isActive && !hasSubmittedTodayReport;
-                    const isReportEarly = isReportReminder && reportPhase === "early";
-                    return (
-                      <button
-                        key={section.id}
-                        onClick={() => {
-                          setActiveSection(section.id);
-                          setSidebarOpen(false);
-                        }}
-                        className={`
-                          w-full flex items-center gap-2 px-2.5 py-[7px] rounded-lg text-[12.5px] font-medium transition-all duration-150 relative group
-                          ${isActive
-                            ? "bg-primary/10 text-primary font-bold shadow-sm shadow-primary/5"
-                            : isReportReminder
-                              ? isReportEarly
-                                ? "bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-bold"
-                                : "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 font-bold report-reminder-glow"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                          }
-                        `}
-                        title={
-                          isReportEarly
-                            ? "تذكير مبكر — باقي 30 دقيقة على موعد التقرير اليومي"
-                            : isReportReminder
-                              ? "موعد التقرير اليومي — قدّم تقريرك دلوقتي"
-                              : undefined
-                        }
-                      >
-                        {isActive && (
-                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 bg-primary rounded-l-full" />
-                        )}
-                        <div className={`
-                          w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-colors
-                          ${isActive
-                            ? "bg-primary/15 text-primary"
-                            : isReportReminder
-                              ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-300"
-                              : "text-muted-foreground/60 group-hover:text-foreground/60"
-                          }
-                        `}>
-                          <Icon className="w-3.5 h-3.5" />
-                        </div>
-                        <span className="truncate">{section.label}</span>
-                        {isReportReminder && (
-                          <span className={`mr-auto text-[9px] font-extrabold rounded-md px-1.5 py-0.5 ${
-                            isReportEarly
-                              ? "bg-amber-200 text-amber-800 dark:bg-amber-800/60 dark:text-amber-100"
-                              : "bg-amber-500 text-white animate-pulse"
-                          }`}>
-                            {isReportEarly ? "قريب" : "الآن"}
-                          </span>
-                        )}
-                        {section.id === "dealers" && pendingCount > 0 && (
-                          <span className="mr-auto bg-destructive text-destructive-foreground text-[9px] font-bold rounded-md min-w-[18px] h-4.5 flex items-center justify-center px-1">
-                            {pendingCount}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
         </aside>
 
