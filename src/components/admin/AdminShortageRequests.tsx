@@ -462,8 +462,8 @@ function Kpi({ label, value, icon: Icon, color }: { label: string; value: number
 
 function DetailCard({ row, isEditing, editStatus, editResponse, setEditStatus, setEditResponse, onStartEdit, onCancel, onSave, saving }: any) {
   const M = STATUS_META[row.status as StatusKey];
-  const name = row.manual_name || "—";
-  const sku = row.manual_sku || "—";
+  const name = row.product?.name_ar || row.manual_name || "—";
+  const sku = row.product?.sku || row.manual_sku || "—";
   return (
     <div className="border rounded-lg p-3 bg-card">
       <div className="flex items-start justify-between gap-3 mb-2">
@@ -474,6 +474,9 @@ function DetailCard({ row, isEditing, editStatus, editResponse, setEditStatus, s
             <span className="text-xs text-muted-foreground">{new Date(row.created_at).toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
           </div>
           <div className="text-xs text-muted-foreground mt-1 flex gap-2 flex-wrap">
+            <span className="font-medium text-foreground">{name}</span>
+            {sku !== "—" && <><span>•</span><span dir="ltr" className="font-mono">{sku}</span></>}
+            <span>•</span>
             <span>كمية: <b className="text-foreground">{row.requested_quantity}</b></span>
             {row.customer_note && <><span>•</span><span>عميل: {row.customer_note}</span></>}
           </div>
