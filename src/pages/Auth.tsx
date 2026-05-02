@@ -76,10 +76,18 @@ const Auth = () => {
       ]);
       const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
       const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+      const hasReporter = roles?.some((r) => r.role === "reporter") ?? false;
       const hasDealer = !!dealer;
+      const isReporterOnly = hasReporter && !hasAdmin && !hasModerator;
 
       if (!mounted) return;
       markSessionActive();
+
+      // Reporter-only (Al-Faisal staff) → locked to daily report page, no site access
+      if (isReporterOnly) {
+        navigate("/admin/daily-report", { replace: true });
+        return;
+      }
 
       // Both roles → check saved preference or show dialog via AuthContext
       if (hasDealer && hasAdmin) {
