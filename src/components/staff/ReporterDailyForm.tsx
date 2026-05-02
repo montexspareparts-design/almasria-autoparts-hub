@@ -484,7 +484,6 @@ function TodayForm({
   const warnings = !locked ? buildConsistencyWarnings(data, autoStats) : [];
   return (
     <>
-      <RestockedYesterdayCard />
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <TeamBenchmarkLine todayScore={todayScore} />
       {/* Focus strip — تذكير أن كل الأرقام بتتدخل يدوي من الموظف */}
