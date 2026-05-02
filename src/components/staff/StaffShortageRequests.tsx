@@ -140,6 +140,42 @@ export default function StaffShortageRequests() {
     })();
   }, [rows]);
 
+  // مزامنة يدوية: الموظف يقدر يدوس "افحص دلوقتي" بدل ما يستنى الساعة الجاية
+  const [manualSyncing, setManualSyncing] = useState(false);
+  const runManualSync = useCallback(async () => {
+    if (manualSyncing) return;
+    setManualSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: {} });
+      if (error) throw error;
+      const fulfilled = Number((data as any)?.fulfilled_count ?? (data as any)?.fulfilled ?? 0);
+      const checked   = Number((data as any)?.checked_count   ?? (data as any)?.checked   ?? 0);
+      if (fulfilled > 0) {
+        toast({
+          title: `🎉 تم توفير ${fulfilled} صنف!`,
+          description: "البلاغات اتنقلت لـ«تم التوفير» — اتفرج على القائمة.",
+        });
+      } else {
+        toast({
+          title: "✓ تمت المزامنة",
+          description: checked > 0
+            ? `اتفحص ${checked} بلاغ — لسه مفيش رصيد كافي في الفيصل.`
+            : "مفيش بلاغات مفتوحة محتاجة فحص دلوقتي.",
+        });
+      }
+      // أعِد جلب البلاغات وكاش الفيصل
+      await fetchRows();
+    } catch (e: any) {
+      toast({
+        title: "تعذّر تشغيل المزامنة",
+        description: e?.message || "حاول تاني بعد شوية",
+        variant: "destructive",
+      });
+    } finally {
+      setManualSyncing(false);
+    }
+  }, [manualSyncing, toast, fetchRows]);
+
   // Search products (debounced) — يبحث بالتوازي في:
   //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
   //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
