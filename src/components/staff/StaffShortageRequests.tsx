@@ -632,6 +632,22 @@ export default function StaffShortageRequests() {
         )}
       </div>
 
+      {/* Auto-sync info banner */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-center gap-2.5 text-xs">
+        <RefreshCw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 animate-[spin_4s_linear_infinite]" />
+        <div className="flex-1 leading-relaxed">
+          <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
+          <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«تم التوفير»</span>
+          <span className="text-muted-foreground"> وهيوصلك إشعار فوري.</span>
+          {erpStockFetchedAt && (
+            <span className="block text-[10px] text-muted-foreground mt-0.5">
+              آخر مزامنة: {new Date(erpStockFetchedAt).toLocaleString("ar-EG", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short" })}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Tabs by status */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="w-full grid grid-cols-5 h-auto">
