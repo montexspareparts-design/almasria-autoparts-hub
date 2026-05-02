@@ -242,20 +242,19 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                           onClick={() => { setChosen(s); setChosenErp(null); setSearch(s.name_ar); setSuggestions([]); setErpSuggestions([]); }}
                           className="w-full text-right p-2.5 rounded-lg hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-200"
                         >
-                          <div className="flex items-center justify-between gap-2 mb-1.5" dir="ltr">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">PART №</span>
-                              <span className="font-mono text-lg font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-md shadow-sm tracking-wider leading-none">
-                                {s.sku}
+                          <div className="flex items-start justify-between gap-2 mb-1.5" dir="ltr">
+                            <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded shrink-0 mt-0.5">بارت نمبر</span>
+                              <span className="font-mono text-sm font-extrabold text-emerald-950 break-all leading-tight">
+                                {s.name_ar}
                               </span>
                             </div>
-                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.stock_quantity > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded shrink-0 ${s.stock_quantity > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                               {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground leading-snug truncate">{s.name_ar}</p>
-                          <div className="flex justify-end mt-1">
-                            <span className="text-[10px] text-muted-foreground/70 font-mono" dir="ltr">ID: {s.id.slice(0, 8)}</span>
+                          <div className="flex justify-end">
+                            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded font-mono" dir="ltr">كود: {s.sku}</span>
                           </div>
                         </button>
                       ))}
