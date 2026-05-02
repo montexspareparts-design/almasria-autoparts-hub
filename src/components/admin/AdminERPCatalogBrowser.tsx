@@ -353,13 +353,26 @@ export function AdminERPCatalogBrowser() {
                 />
               </div>
             ) : (
-              <Button
-                variant={showInactive ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowInactive((v) => !v)}
-              >
-                {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
-              </Button>
+              <>
+                <select
+                  value={brandFilter}
+                  onChange={(e) => setBrandFilter(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  title="فلترة العلامة"
+                >
+                  <option value="all">كل العلامات</option>
+                  {availableBrands.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+                <Button
+                  variant={showInactive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowInactive((v) => !v)}
+                >
+                  {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
+                </Button>
+              </>
             )}
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
               {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
