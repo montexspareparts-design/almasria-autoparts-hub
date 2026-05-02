@@ -490,7 +490,7 @@ export default function TeamShortagesView() {
             )}
           </div>
         ) : (
-          <ScrollArea className="max-h-[65vh]">
+          <div>
             <ul className="divide-y divide-border">
               <AnimatePresence initial={false}>
                 {filtered.map((r) => {
@@ -730,7 +730,7 @@ export default function TeamShortagesView() {
                 })}
               </AnimatePresence>
             </ul>
-          </ScrollArea>
+          </div>
         )}
       </Card>
     </div>
