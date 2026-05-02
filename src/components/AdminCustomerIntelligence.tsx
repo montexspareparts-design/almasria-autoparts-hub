@@ -276,6 +276,7 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [onlyCompletedTasks, setOnlyCompletedTasks] = useState(false);
   const [expandedScoreTasks, setExpandedScoreTasks] = useState<Set<string>>(new Set());
   const toggleScoreExpanded = (taskId: string) => {
     setExpandedScoreTasks(prev => {
