@@ -213,16 +213,18 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
               <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-3 flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] font-bold text-blue-700 bg-blue-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-lg font-extrabold text-blue-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-blue-400 shadow-sm">
-                      {chosenErp.erp_id}
+                    <span className="text-[9px] font-bold text-blue-700 bg-blue-200/70 px-1.5 py-0.5 rounded shrink-0">بارت نمبر</span>
+                    <span dir="ltr" className="font-mono text-base font-extrabold text-blue-950 tracking-wide bg-white px-3 py-1 rounded-md border-2 border-blue-400 shadow-sm break-all">
+                      {chosenErp.name}
                     </span>
                   </div>
-                  <p className="text-xs text-blue-900/80 truncate">{chosenErp.name}</p>
                   <p className="text-[11px] text-blue-700 mt-0.5">
                     من الفيصل • رصيد: {chosenErp.qty}
                     {chosenErp.in_our_system ? " • مربوط بصنف موجود على الموقع" : " • غير معروض على الموقع"}
                   </p>
+                  <div className="flex justify-end mt-1.5">
+                    <span className="text-[10px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded font-mono" dir="ltr">كود: {chosenErp.erp_id}</span>
+                  </div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => { setChosenErp(null); setSearch(""); }}>تغيير</Button>
               </div>
