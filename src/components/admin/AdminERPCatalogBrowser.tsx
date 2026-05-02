@@ -192,12 +192,31 @@ export function AdminERPCatalogBrowser() {
     return Array.from(set).sort();
   }, [onsiteRows]);
 
+  // ✨ ما يراه الزائر فعلياً = is_active = true (نفس فلتر useProductListing)
+  const filteredVisitor = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = onsiteRows.filter((r) => {
+      if (!r.is_active) return false;
+      if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (!q) return true;
+      return (
+        (r.sku ?? "").toLowerCase().includes(q) ||
+        (r.erp_item_code ?? "").toLowerCase().includes(q) ||
+        (r.name_ar ?? "").toLowerCase().includes(q)
+      );
+    });
+    return sortOnsite(filtered);
+  }, [onsiteRows, search, sortMode, brandFilter]);
 
-  const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
+  const activeList: CacheRow[] | OnsiteRow[] =
+    viewMode === "missing" ? filteredMissing : viewMode === "visitor" ? filteredVisitor : filteredOnsite;
   const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
-  const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+  const pageOnsite = (viewMode === "visitor" ? filteredVisitor : filteredOnsite).slice(
+    safePage * PAGE_SIZE,
+    safePage * PAGE_SIZE + PAGE_SIZE
+  );
 
   useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
 
