@@ -14,6 +14,7 @@ import {
   Loader2,
   Search,
   X,
+  CalendarRange,
 } from "lucide-react";
 
 interface RestockedItem {
@@ -28,9 +29,18 @@ interface RestockedItem {
   had_shortage_request: boolean;
   shortage_requests_count: number;
   base_price: number | null;
+  baseline_date: string | null;
 }
 
 type FilterMode = "all" | "shortages" | "was_zero";
+type PeriodDays = 1 | 7 | 14 | 30;
+
+const PERIOD_OPTIONS: { value: PeriodDays; label: string; shortLabel: string }[] = [
+  { value: 1,  label: "امبارح",        shortLabel: "1 يوم" },
+  { value: 7,  label: "آخر 7 أيام",   shortLabel: "7 أيام" },
+  { value: 14, label: "آخر 14 يوم",   shortLabel: "14 يوم" },
+  { value: 30, label: "آخر 30 يوم",   shortLabel: "30 يوم" },
+];
 
 export default function RestockedYesterdayCard() {
   const [items, setItems] = useState<RestockedItem[]>([]);
@@ -38,16 +48,17 @@ export default function RestockedYesterdayCard() {
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState<FilterMode>("all");
   const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState<PeriodDays>(1);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.rpc("get_restocked_items" as any, { _days_back: 1 });
+      const { data } = await supabase.rpc("get_restocked_items" as any, { _days_back: period });
       setItems((data as any) || []);
       setLoading(false);
     };
     load();
-  }, []);
+  }, [period]);
 
   const shortageCount = items.filter((i) => i.had_shortage_request).length;
   const wasZeroCount = items.filter((i) => i.was_zero).length;
