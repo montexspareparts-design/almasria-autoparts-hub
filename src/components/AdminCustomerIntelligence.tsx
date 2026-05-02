@@ -2336,7 +2336,13 @@ const AdminCustomerIntelligence = () => {
                             }
                             setTimeout(() => {
                               const el = document.getElementById("today-tasks-list");
-                              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                              if (!el) return;
+                              el.scrollIntoView({ behavior: "smooth", block: "start" });
+                              // Soft highlight pulse to draw attention to the filtered list
+                              el.classList.add("ring-2", "ring-emerald-400/60", "ring-offset-2", "rounded-xl", "transition-all", "duration-700");
+                              window.setTimeout(() => {
+                                el.classList.remove("ring-2", "ring-emerald-400/60", "ring-offset-2");
+                              }, 1400);
                             }, 80);
                           }}
                           className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
