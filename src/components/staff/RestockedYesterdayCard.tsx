@@ -209,9 +209,13 @@ export default function RestockedYesterdayCard() {
           </div>
           <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
+
+        {/* لستة احترافية: الأصناف اللي وصلت النهاردة من الفيصل (مقارنة لحظية) */}
+        <TodayErpRestockedInline />
       </Card>
     );
   }
+
 
   // === Zero State #2: في baseline لكن مفيش أصناف رصيدها زاد ===
   if (items.length === 0) {
