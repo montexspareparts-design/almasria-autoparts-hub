@@ -2288,6 +2288,7 @@ const AdminCustomerIntelligence = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      if (onlyCompletedTasks) setOnlyCompletedTasks(false);
                       const wasHidden = !showCompletedTasks;
                       setShowCompletedTasks(v => !v);
                       if (wasHidden) {
