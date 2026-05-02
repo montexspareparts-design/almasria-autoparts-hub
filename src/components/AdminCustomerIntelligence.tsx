@@ -2272,6 +2272,7 @@ const AdminCustomerIntelligence = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    if (onlyCompletedTasks) setOnlyCompletedTasks(false);
                     if (showCompletedTasks) setShowCompletedTasks(false);
                     setTimeout(() => {
                       const el = document.getElementById("today-tasks-list");
