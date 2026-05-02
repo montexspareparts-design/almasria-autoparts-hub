@@ -531,7 +531,8 @@ export default function TodayRestockedDialog({
                     دي أصناف موجودة في الفيصل برصيد متاح، بس <span className="font-bold">لسه مش معروضة على الموقع</span> (محتاجة إضافة من الإدارة). لو فيه عميل بيطلبها، سجّل بلاغ نقص.
                   </span>
                 </div>
-                <div className="hidden sm:grid grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
+                <div className="hidden sm:grid grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
+                  <div className="text-center">إجراء</div>
                   <div className="text-center">الحالة</div>
                   <div className="text-center">الرصيد</div>
                   <div>كود الفيصل</div>
@@ -539,53 +540,76 @@ export default function TodayRestockedDialog({
                 </div>
                 <ScrollArea className="h-[400px]">
                   <div className="divide-y divide-blue-100">
-                    {filteredErp.map((item) => (
-                      <div
-                        key={item.erp_id}
-                        className={`grid grid-cols-1 sm:grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-3 items-center transition-colors ${
-                          item.had_shortage_request
-                            ? "bg-rose-50/50 hover:bg-rose-100/60"
-                            : "bg-white hover:bg-blue-50/60"
-                        }`}
-                      >
-                        <div className="flex sm:justify-center gap-1 flex-wrap">
-                          {item.had_shortage_request && (
-                            <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
-                              <Flame className="w-3 h-3" /> فرصة
-                            </Badge>
-                          )}
-                          {item.is_inactive ? (
-                            <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-orange-300 text-orange-700">
-                              غير مفعّل
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
-                              جديد على الفيصل
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-center">
-                          <span className="text-base font-extrabold text-emerald-700 font-mono">
-                            {item.qty}
-                          </span>
-                        </div>
-                        <div className="min-w-0" dir="ltr">
-                          <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
-                            {item.erp_id}
-                          </span>
-                        </div>
-                        <div className="min-w-0 text-right">
-                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                            {item.name}
-                          </p>
-                          {item.retail_price && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                    {filteredErp.map((item) => {
+                      const alreadyAdded = addedSkus.has(item.erp_id);
+                      return (
+                        <div
+                          key={item.erp_id}
+                          className={`grid grid-cols-1 sm:grid-cols-[140px_140px_80px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
+                            item.had_shortage_request
+                              ? "bg-rose-50/50 hover:bg-rose-100/60"
+                              : "bg-white hover:bg-blue-50/60"
+                          }`}
+                        >
+                          <div className="flex sm:justify-center">
+                            {alreadyAdded ? (
+                              <Badge className="bg-emerald-600 text-white text-[10px] gap-0.5 px-2 py-1">
+                                <CheckCircle2 className="w-3 h-3" /> تمت الإضافة
+                              </Badge>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setAddTarget(item);
+                                  setAddBrand("");
+                                  setAddCategoryId("");
+                                }}
+                                className="h-7 px-2 gap-1 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                              >
+                                <Plus className="w-3 h-3" />
+                                أضف للموقع
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex sm:justify-center gap-1 flex-wrap">
+                            {item.had_shortage_request && (
+                              <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
+                                <Flame className="w-3 h-3" /> فرصة
+                              </Badge>
+                            )}
+                            {item.is_inactive ? (
+                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-orange-300 text-orange-700">
+                                غير مفعّل
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
+                                جديد على الفيصل
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-center">
+                            <span className="text-base font-extrabold text-emerald-700 font-mono">
+                              {item.qty}
+                            </span>
+                          </div>
+                          <div className="min-w-0" dir="ltr">
+                            <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
+                              {item.erp_id}
+                            </span>
+                          </div>
+                          <div className="min-w-0 text-right">
+                            <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                              {item.name}
                             </p>
-                          )}
+                            {item.retail_price && (
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               </>
