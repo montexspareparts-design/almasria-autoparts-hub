@@ -1092,7 +1092,7 @@ const AdminDashboard = () => {
           className={`
             ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
             fixed lg:static inset-y-0 right-0 top-14 z-40
-            w-64 lg:w-60 xl:w-64
+            w-72 lg:w-64 xl:w-72
             bg-card/95 backdrop-blur-sm border-l border-border/50
             transition-transform duration-200 ease-out
             overflow-y-auto
