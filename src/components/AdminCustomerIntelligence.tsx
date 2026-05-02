@@ -3171,14 +3171,47 @@ const AdminCustomerIntelligence = () => {
                   .sort((a, b) => new Date(b.rec.at).getTime() - new Date(a.rec.at).getTime());
 
                 if (entries.length === 0) {
+                  const todayLabel = new Date().toLocaleDateString("ar-EG", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    timeZone: "Africa/Cairo",
+                  });
                   return (
-                    <div className="rounded-2xl border-2 border-dashed border-emerald-300/40 bg-emerald-500/5 p-8 text-center">
-                      <CheckCircle2 className="w-10 h-10 text-emerald-500/50 mx-auto mb-3" />
-                      <p className="text-sm font-bold text-foreground">لا توجد مهام منجزة اليوم بعد</p>
-                      <p className="text-xs text-muted-foreground mt-1">لما الموظف يخلص مهمة من «كل العملاء» هتظهر هنا تلقائياً.</p>
+                    <div className="rounded-2xl border-2 border-dashed border-emerald-300/50 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent p-8 text-center">
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4 ring-4 ring-emerald-500/10">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                      </div>
+                      <p className="text-base font-black text-foreground mb-1">لا توجد مهام منجزة اليوم بعد</p>
+                      <p className="text-xs text-muted-foreground mb-4">{todayLabel}</p>
+                      <div className="max-w-md mx-auto rounded-xl bg-card/80 border border-border/60 p-3 text-right space-y-2">
+                        <p className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                          <span className="text-emerald-600">✨</span>
+                          إزاي تظهر مهمة هنا؟
+                        </p>
+                        <ul className="text-[11px] text-muted-foreground space-y-1.5 leading-relaxed">
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-black mt-0.5">١.</span>
+                            <span>افتح تبويب «كل العملاء» أو «يحتاجون متابعة الآن».</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-black mt-0.5">٢.</span>
+                            <span>اضغط <strong className="text-foreground">«اتصال»</strong> أو <strong className="text-foreground">«واتساب»</strong> أو <strong className="text-foreground">«نتيجة»</strong> أو <strong className="text-foreground">«تم»</strong> على المهمة.</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-black mt-0.5">٣.</span>
+                            <span>المهمة هتنتقل هنا تلقائياً وكل الموظفين والإدارة هيشوفوها.</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70 mt-4">
+                        🔄 التحديث فوري — مفيش حاجة تعملها لتظهر المهام
+                      </p>
                     </div>
                   );
                 }
+
 
                 // Group by staff for clearer admin overview
                 const byStaff = new Map<string, typeof entries>();
