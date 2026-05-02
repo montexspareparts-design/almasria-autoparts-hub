@@ -1,17 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import {
   Sparkles,
   Search,
@@ -23,8 +34,18 @@ import {
   PackageCheck,
   PackagePlus,
   AlertCircle,
+  Plus,
+  CheckCircle2,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+const BRAND_OPTIONS: { value: string; label: string }[] = [
+  { value: "toyota_genuine", label: "Toyota Genuine (أصلي)" },
+  { value: "denso", label: "DENSO" },
+  { value: "aisin", label: "AISIN" },
+  { value: "fbk", label: "FBK" },
+  { value: "toyota_oils", label: "Toyota Oils (زيوت)" },
+];
 
 interface TodayRestockedItem {
   product_id: string;
