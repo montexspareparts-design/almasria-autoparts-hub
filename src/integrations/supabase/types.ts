@@ -2086,6 +2086,30 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_badges: {
+        Row: {
+          awarded_at: string
+          badge_code: string
+          id: string
+          metadata: Json
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_code: string
+          id?: string
+          metadata?: Json
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_code?: string
+          id?: string
+          metadata?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       reporter_daily_reports: {
         Row: {
           auto_invoices_count: number
@@ -2173,6 +2197,48 @@ export type Database = {
           user_id?: string
           whatsapp_count?: number
           why_good_day?: string | null
+        }
+        Relationships: []
+      }
+      reporter_daily_targets: {
+        Row: {
+          calls_target: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          new_customers_target: number
+          offers_converted_target: number
+          quotations_target: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          calls_target?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          new_customers_target?: number
+          offers_converted_target?: number
+          quotations_target?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          calls_target?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          new_customers_target?: number
+          offers_converted_target?: number
+          quotations_target?: number
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3344,6 +3410,16 @@ export type Database = {
         Returns: string[]
       }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
+      get_effective_targets: {
+        Args: { _user_id: string }
+        Returns: {
+          calls_target: number
+          is_custom: boolean
+          new_customers_target: number
+          offers_converted_target: number
+          quotations_target: number
+        }[]
+      }
       get_reporter_aggregate: {
         Args: { _from: string; _to: string; _user_id: string }
         Returns: {
@@ -3402,6 +3478,18 @@ export type Database = {
           leads_count: number
           orders_count: number
           total_sales: number
+        }[]
+      }
+      get_submit_streak: { Args: { _user_id: string }; Returns: number }
+      get_team_avg_today: {
+        Args: never
+        Returns: {
+          avg_calls: number
+          avg_new_customers: number
+          avg_offers_converted: number
+          avg_quotations: number
+          avg_score: number
+          team_size: number
         }[]
       }
       has_role: {
