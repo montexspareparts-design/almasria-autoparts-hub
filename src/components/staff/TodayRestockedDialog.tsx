@@ -21,7 +21,10 @@ import {
   Flame,
   Clock,
   PackageCheck,
+  PackagePlus,
+  AlertCircle,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface TodayRestockedItem {
   product_id: string;
@@ -37,6 +40,20 @@ interface TodayRestockedItem {
   base_price: number | null;
   baseline_at: string | null;
   minutes_since_baseline: number | null;
+}
+
+interface NewInErpItem {
+  erp_id: string;
+  name: string;
+  qty: number;
+  retail_price: number | null;
+  wholesale_price: number | null;
+  fetched_at: string;
+  in_our_system: boolean;
+  is_inactive: boolean;
+  our_product_id: string | null;
+  had_shortage_request: boolean;
+  shortage_requests_count: number;
 }
 
 interface BaselineStatus {
