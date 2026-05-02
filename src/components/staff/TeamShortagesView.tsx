@@ -436,88 +436,177 @@ export default function TeamShortagesView() {
                       exit={{ opacity: 0 }}
                       className={cn(
                         "p-3 sm:p-4 transition-colors relative",
-                        isMine
-                          ? "bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-r-4 border-primary hover:from-primary/15"
-                          : "hover:bg-muted/30"
+                        // الأصناف اللي وصلت بتاخد تصميم احتفالي خاص
+                        r.status === "fulfilled"
+                          ? "bg-gradient-to-l from-emerald-50/80 via-emerald-50/30 to-transparent dark:from-emerald-950/20 dark:via-emerald-950/10 hover:from-emerald-100/60"
+                          : isMine
+                            ? "bg-gradient-to-l from-primary/10 via-primary/5 to-transparent border-r-4 border-primary hover:from-primary/15"
+                            : "hover:bg-muted/30"
                       )}
                     >
                       {/* "بتاعي" ribbon */}
-                      {isMine && (
+                      {isMine && r.status !== "fulfilled" && (
                         <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                           <Star className="w-2.5 h-2.5 fill-current" />
                           بلاغك
                         </div>
                       )}
 
-                      <div className="flex items-start gap-3">
-                        {/* Status dot */}
-                        <div className={cn("w-2 h-2 rounded-full mt-2 shrink-0 ring-2 ring-background", meta.dot)} />
-
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          {/* Top row: name + qty */}
-                          <div className="flex items-start justify-between gap-2 flex-wrap">
-                            <h4 className={cn(
-                              "font-semibold text-sm leading-tight line-clamp-2",
-                              isMine ? "text-primary" : "text-foreground"
-                            )}>
-                              {name}
-                            </h4>
-                            <Badge variant="outline" className="shrink-0 text-[11px] gap-1">
-                              <Package className="w-3 h-3" />
-                              {r.requested_quantity}
-                            </Badge>
+                      {/* === تصميم خاص: صنف وصل المخزن === */}
+                      {r.status === "fulfilled" ? (
+                        <div className="space-y-2.5">
+                          {/* شريط علوي: شارة "وصل" + الموظف + التاريخ */}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <motion.div
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              className="inline-flex items-center gap-1.5 bg-gradient-to-l from-emerald-500 to-teal-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md"
+                            >
+                              <PackageCheck className="w-3.5 h-3.5" />
+                              وصل المخزن
+                            </motion.div>
+                            <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80 tabular-nums font-semibold">
+                              {r.reviewed_at
+                                ? new Date(r.reviewed_at).toLocaleString("ar-EG", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+                                : new Date(r.created_at).toLocaleString("ar-EG", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </span>
                           </div>
 
-                          {/* SKU */}
-                          {sku && (
-                            <div className="text-[11px] font-mono text-muted-foreground">
-                              SKU: {sku}
+                          {/* الكارت الرئيسي: اسم + SKU + كمية */}
+                          <div className="rounded-2xl bg-white dark:bg-emerald-950/30 border-2 border-emerald-200 dark:border-emerald-800/60 p-3.5 shadow-sm">
+                            <div className="grid grid-cols-[1fr_auto] gap-3 items-center">
+                              {/* العمود الأيمن: اسم + SKU */}
+                              <div className="min-w-0 space-y-2">
+                                {/* اسم الصنف — كبير وواضح */}
+                                <h4 className="font-extrabold text-base sm:text-lg leading-tight text-foreground line-clamp-2">
+                                  {name}
+                                </h4>
+                                {/* بارت نمبر */}
+                                {sku && (
+                                  <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1">
+                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">P/N</span>
+                                    <span className="text-sm font-mono font-bold text-foreground tracking-wider tabular-nums">{sku}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* العمود الأيسر: الكمية بشكل ضخم */}
+                              <motion.div
+                                initial={{ scale: 0.85, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.05 }}
+                                className="relative shrink-0"
+                              >
+                                <div className="w-[88px] sm:w-[100px] rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-800 p-2 grid place-items-center text-center">
+                                  <div className="text-[9px] font-bold opacity-90 leading-none mb-0.5">الكمية وصلت</div>
+                                  <div className="text-3xl sm:text-4xl font-black leading-none tabular-nums drop-shadow-sm">
+                                    {r.requested_quantity}
+                                  </div>
+                                  <div className="text-[9px] opacity-90 leading-none mt-0.5">قطعة جاهزة</div>
+                                </div>
+                                {/* نقطة نبض */}
+                                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white animate-ping" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-white" />
+                              </motion.div>
                             </div>
-                          )}
 
-                          {/* Note */}
-                          {r.customer_note && (
-                            <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-2 py-1 line-clamp-2">
-                              💬 {r.customer_note}
-                            </p>
-                          )}
+                            {/* ملاحظة الأدمن لو موجودة */}
+                            {r.admin_response && (
+                              <p className="mt-3 text-xs text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg px-2.5 py-1.5 line-clamp-2">
+                                📌 {r.admin_response}
+                              </p>
+                            )}
 
-                          {/* Admin response */}
-                          {r.admin_response && (
-                            <p className={cn(
-                              "text-xs rounded-md px-2 py-1 line-clamp-2 border",
-                              r.status === "fulfilled" && "bg-emerald-50 text-emerald-700 border-emerald-200",
-                              r.status === "rejected"  && "bg-rose-50 text-rose-700 border-rose-200",
-                              r.status === "sourcing"  && "bg-sky-50 text-sky-700 border-sky-200",
-                              r.status === "open"      && "bg-amber-50 text-amber-700 border-amber-200",
-                            )}>
-                              📌 {r.admin_response}
-                            </p>
-                          )}
-
-                          {/* Footer: who + when + status */}
-                          <div className="flex items-center gap-2 flex-wrap pt-1">
-                            <span className={cn(
-                              "inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border",
-                              isMine
-                                ? "bg-primary/10 text-primary border-primary/30 font-semibold"
-                                : "bg-muted/60 text-foreground/80 border-border"
-                            )}>
-                              <User className="w-3 h-3" />
-                              {isMine ? "أنت طلبت الصنف ده" : `موظف من فريق المبيعات (${who}) طلب الصنف ده`}
-                            </span>
-                            <Badge variant="outline" className={cn("text-[10px] gap-1 px-1.5 py-0", meta.cls)}>
-                              <Icon className="w-2.5 h-2.5" />
-                              {meta.label}
-                            </Badge>
-                            <span className="text-[10px] text-muted-foreground tabular-nums ms-auto">
-                              {new Date(r.created_at).toLocaleDateString("ar-EG", { day: "2-digit", month: "short" })}
-                              {" • "}
-                              {new Date(r.created_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
+                            {/* فوتر: مين طلب الصنف */}
+                            <div className="mt-3 pt-2.5 border-t border-emerald-100 dark:border-emerald-800/40 flex items-center gap-1.5 flex-wrap">
+                              <span className={cn(
+                                "inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full",
+                                isMine
+                                  ? "bg-primary/15 text-primary border border-primary/30 font-bold"
+                                  : "bg-slate-100 dark:bg-slate-800/60 text-foreground/70 border border-slate-200 dark:border-slate-700"
+                              )}>
+                                <User className="w-3 h-3" />
+                                {isMine ? "🎉 صنف بلّغت عنه — جاهز للبيع!" : `طلبه: ${who}`}
+                              </span>
+                              {r.customer_note && (
+                                <span className="text-[10px] text-muted-foreground bg-muted/40 rounded-md px-2 py-0.5 line-clamp-1 flex-1 min-w-0">
+                                  💬 {r.customer_note}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        /* === التصميم العادي للحالات الأخرى === */
+                        <div className="flex items-start gap-3">
+                          {/* Status dot */}
+                          <div className={cn("w-2 h-2 rounded-full mt-2 shrink-0 ring-2 ring-background", meta.dot)} />
+
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            {/* Top row: name + qty */}
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <h4 className={cn(
+                                "font-semibold text-sm leading-tight line-clamp-2",
+                                isMine ? "text-primary" : "text-foreground"
+                              )}>
+                                {name}
+                              </h4>
+                              <Badge variant="outline" className="shrink-0 text-[11px] gap-1">
+                                <Package className="w-3 h-3" />
+                                {r.requested_quantity}
+                              </Badge>
+                            </div>
+
+                            {/* SKU */}
+                            {sku && (
+                              <div className="text-[11px] font-mono text-muted-foreground">
+                                SKU: {sku}
+                              </div>
+                            )}
+
+                            {/* Note */}
+                            {r.customer_note && (
+                              <p className="text-xs text-muted-foreground bg-muted/40 rounded-md px-2 py-1 line-clamp-2">
+                                💬 {r.customer_note}
+                              </p>
+                            )}
+
+                            {/* Admin response */}
+                            {r.admin_response && (
+                              <p className={cn(
+                                "text-xs rounded-md px-2 py-1 line-clamp-2 border",
+                                r.status === "rejected"  && "bg-rose-50 text-rose-700 border-rose-200",
+                                r.status === "sourcing"  && "bg-sky-50 text-sky-700 border-sky-200",
+                                r.status === "open"      && "bg-amber-50 text-amber-700 border-amber-200",
+                              )}>
+                                📌 {r.admin_response}
+                              </p>
+                            )}
+
+                            {/* Footer: who + when + status */}
+                            <div className="flex items-center gap-2 flex-wrap pt-1">
+                              <span className={cn(
+                                "inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border",
+                                isMine
+                                  ? "bg-primary/10 text-primary border-primary/30 font-semibold"
+                                  : "bg-muted/60 text-foreground/80 border-border"
+                              )}>
+                                <User className="w-3 h-3" />
+                                {isMine ? "أنت طلبت الصنف ده" : `موظف من فريق المبيعات (${who}) طلب الصنف ده`}
+                              </span>
+                              <Badge variant="outline" className={cn("text-[10px] gap-1 px-1.5 py-0", meta.cls)}>
+                                <Icon className="w-2.5 h-2.5" />
+                                {meta.label}
+                              </Badge>
+                              <span className="text-[10px] text-muted-foreground tabular-nums ms-auto">
+                                {new Date(r.created_at).toLocaleDateString("ar-EG", { day: "2-digit", month: "short" })}
+                                {" • "}
+                                {new Date(r.created_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </motion.li>
                   );
                 })}
