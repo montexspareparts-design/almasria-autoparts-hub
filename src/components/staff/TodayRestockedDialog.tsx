@@ -172,6 +172,7 @@ export default function TodayRestockedDialog({
     }
   };
 
+  const loadAll = async () => {
     setLoading(true);
     const [{ data: itemsData }, { data: baseData }, { data: erpData }] = await Promise.all([
       supabase.rpc("get_today_restocked_items" as any),
