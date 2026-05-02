@@ -170,18 +170,7 @@ Deno.serve(async (req) => {
     // Use service role for DB writes/reads bypassing RLS where needed
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // 1) Check cache for today
-    const { data: cached } = await admin
-      .from("reporter_motivational_messages")
-      .select("message, source, performance_tier")
-      .eq("user_id", user.id)
-      .eq("message_date", today())
-      .maybeSingle();
-    if (cached) {
-      return new Response(JSON.stringify({ message: cached.message, source: cached.source, tier: cached.performance_tier, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // No cache — generate fresh message every time so the employee sees a new one on each open
 
     // 2) Gather performance data
     const { data: prof } = await admin.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle();
