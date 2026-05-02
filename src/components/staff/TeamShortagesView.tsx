@@ -418,6 +418,44 @@ export default function TeamShortagesView() {
           })}
         </div>
 
+        {/* فلتر النتيجة — اعرض «وصلت المخزن» أو «مقبول» أو «مرفوض» فقط */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1 font-semibold ms-1">
+            <CheckCircle2 className="w-3 h-3" /> النتيجة:
+          </span>
+          {(Object.keys(RESULT_FILTER_META) as ResultFilter[]).map((key) => {
+            const m = RESULT_FILTER_META[key];
+            const Icon = m.icon;
+            const active = resultFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setResultFilter(key)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] border transition-all",
+                  active
+                    ? `bg-gradient-to-l ${m.cls} text-white border-transparent shadow-sm font-semibold scale-[1.02]`
+                    : "bg-background text-muted-foreground border-border hover:border-emerald-300 hover:text-emerald-700"
+                )}
+                aria-pressed={active}
+              >
+                <Icon className="w-3 h-3" />
+                {m.label}
+              </button>
+            );
+          })}
+          {resultFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setResultFilter("all")}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline ms-1"
+            >
+              مسح
+            </button>
+          )}
+        </div>
+
         <div className="relative">
           <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
