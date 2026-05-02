@@ -342,15 +342,23 @@ export function AdminERPCatalogBrowser() {
           className="gap-1"
         >
           <Eye className="w-4 h-4" />
-          الموجودة في الجدول ({onsiteRows.length.toLocaleString("ar-EG")})
+          إجمالي الجدول ({totalProducts.toLocaleString("ar-EG")})
         </Button>
-        {viewMode === "onsite" && (
-          <Badge variant="outline" className="gap-1">
-            <span className="text-green-600">●</span> {totalActive} ظاهر
-            <span className="mx-1">·</span>
-            <span className="text-muted-foreground">●</span> {totalInactive} مخفي
-          </Badge>
-        )}
+        <Badge variant="outline" className="gap-1 border-green-500/40 bg-green-50 dark:bg-green-950/30">
+          <span className="text-green-600">●</span>
+          <span className="font-semibold">{totalActive.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">مفعّل للعملاء</span>
+        </Badge>
+        <Badge variant="outline" className="gap-1 border-muted">
+          <span className="text-muted-foreground">●</span>
+          <span className="font-semibold">{totalInactive.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">مخفي</span>
+        </Badge>
+        <Badge variant="outline" className="gap-1 border-blue-500/40 bg-blue-50 dark:bg-blue-950/30">
+          <Package className="w-3 h-3 text-blue-600" />
+          <span className="font-semibold">{totalCache.toLocaleString("ar-EG")}</span>
+          <span className="text-xs text-muted-foreground">في كاش الفيصل</span>
+        </Badge>
       </div>
 
       <Card className="border-2 border-primary/30 bg-primary/5">
