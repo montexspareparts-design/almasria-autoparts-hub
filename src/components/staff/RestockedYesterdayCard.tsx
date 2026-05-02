@@ -601,11 +601,11 @@ function TodayErpRestockedInline() {
     if (skus.length > 0) {
       const { data: prodRows } = await supabase
         .from("products")
-        .select("sku,name_ar")
+        .select("sku,part_number")
         .in("sku", skus);
       const map: Record<string, string> = {};
       (prodRows || []).forEach((p: any) => {
-        if (p?.sku && p?.name_ar) map[p.sku] = p.name_ar;
+        if (p?.sku && p?.part_number) map[p.sku] = p.part_number;
       });
       setPartNumberMap(map);
     } else {
