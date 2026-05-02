@@ -82,24 +82,26 @@ export default function TeamShortagesView() {
 
   useEffect(() => { fetchRows(); }, [fetchRows]);
 
-  // اجلب آخر وقت مزامنة من كاش الفيصل
+  // اجلب آخر وقت مزامنة من ميتا كاش الفيصل
   useEffect(() => {
     (async () => {
       const { data } = await supabase
-        .from("erp_stock_cache" as any)
-        .select("fetched_at")
-        .order("fetched_at", { ascending: false })
-        .limit(1);
-      if (data && data[0]) setErpStockFetchedAt((data[0] as any).fetched_at);
+        .from("erp_full_catalog_meta" as any)
+        .select("last_synced_at")
+        .eq("id", 1)
+        .maybeSingle();
+      if (data && (data as any).last_synced_at) {
+        setErpStockFetchedAt((data as any).last_synced_at);
+      }
     })();
-  }, [rows.length]);
+  }, [rows.length, manualSyncing]);
 
   // مزامنة يدوية: الموظف يدوس "افحص دلوقتي" بدل ما يستنى الساعة الجاية
   const runManualSync = useCallback(async () => {
     if (manualSyncing) return;
     setManualSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: {} });
+      const { data, error } = await supabase.functions.invoke("auto-fulfill-shortages-from-erp", { body: { forceRefresh: true } });
       if (error) throw error;
       const fulfilled = Number((data as any)?.fulfilled_count ?? (data as any)?.fulfilled ?? 0);
       const checked   = Number((data as any)?.checked_count   ?? (data as any)?.checked   ?? 0);
