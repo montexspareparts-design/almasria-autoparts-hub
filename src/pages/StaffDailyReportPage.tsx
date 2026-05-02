@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, ClipboardList, LogOut, Settings2 } from "lucide-react";
+import { ArrowRight, ClipboardList, LogOut, Settings2, PackageX, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StaffDailyReport from "@/components/staff/StaffDailyReport";
 import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
+import TeamShortagesView from "@/components/staff/TeamShortagesView";
+import { cn } from "@/lib/utils";
 
 /**
  * Dedicated page for filling out the daily staff report.
