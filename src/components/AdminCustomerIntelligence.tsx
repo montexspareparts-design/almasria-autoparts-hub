@@ -3159,7 +3159,7 @@ const AdminCustomerIntelligence = () => {
               const doneTasksCount = doneEntries.length;
               const doneStaffCount = new Set(doneEntries.map((r) => r.by)).size;
               return (
-                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/40 rounded-xl mb-3">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl mb-3">
                   <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
                     <Users className="w-3.5 h-3.5" />
                     كل العملاء
@@ -3186,6 +3186,10 @@ const AdminCustomerIntelligence = () => {
                         )}
                       </Badge>
                     )}
+                  </TabsTrigger>
+                  <TabsTrigger value="interactions" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                    <History className="w-3.5 h-3.5 text-primary" />
+                    سجل التفاعلات
                   </TabsTrigger>
                 </TabsList>
               );
