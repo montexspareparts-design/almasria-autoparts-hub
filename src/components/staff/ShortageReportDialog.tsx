@@ -198,7 +198,7 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[9px] font-bold text-emerald-700 bg-emerald-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-base font-extrabold text-emerald-950 tracking-wide bg-white px-2.5 py-1 rounded border-2 border-emerald-400 shadow-sm">
+                    <span dir="ltr" className="font-mono text-lg font-extrabold text-emerald-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-emerald-400 shadow-sm">
                       {chosen.sku}
                     </span>
                   </div>
@@ -212,7 +212,7 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[9px] font-bold text-blue-700 bg-blue-200/70 px-1.5 py-0.5 rounded">PART №</span>
-                    <span dir="ltr" className="font-mono text-base font-extrabold text-blue-950 tracking-wide bg-white px-2.5 py-1 rounded border-2 border-blue-400 shadow-sm">
+                    <span dir="ltr" className="font-mono text-lg font-extrabold text-blue-950 tracking-wider bg-white px-3 py-1 rounded-md border-2 border-blue-400 shadow-sm">
                       {chosenErp.erp_id}
                     </span>
                   </div>
@@ -239,9 +239,12 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                           className="w-full text-right p-2.5 rounded-lg hover:bg-emerald-50 transition-colors border border-transparent hover:border-emerald-200"
                         >
                           <div className="flex items-center justify-between gap-2 mb-1.5" dir="ltr">
-                            <span className="font-mono text-sm font-extrabold bg-emerald-600 text-white px-2.5 py-1 rounded shadow-sm tracking-wide">
-                              {s.sku}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">PART №</span>
+                              <span className="font-mono text-lg font-extrabold bg-emerald-600 text-white px-3 py-1 rounded-md shadow-sm tracking-wider leading-none">
+                                {s.sku}
+                              </span>
+                            </div>
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.stock_quantity > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                               {s.stock_quantity > 0 ? `متاح: ${s.stock_quantity}` : "غير متوفر"}
                             </span>
@@ -267,9 +270,12 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
                           className="w-full text-right p-2.5 rounded-lg hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-200"
                         >
                           <div className="flex items-center justify-between gap-2 mb-1.5" dir="ltr">
-                            <span className="font-mono text-sm font-extrabold bg-blue-600 text-white px-2.5 py-1 rounded shadow-sm tracking-wide">
-                              {s.erp_id}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[9px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">PART №</span>
+                              <span className="font-mono text-lg font-extrabold bg-blue-600 text-white px-3 py-1 rounded-md shadow-sm tracking-wider leading-none">
+                                {s.erp_id}
+                              </span>
+                            </div>
                             <div className="flex items-center gap-1">
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.qty > 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
                                 {s.qty > 0 ? `فيصل: ${s.qty}` : "نافد"}
