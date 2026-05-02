@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, PackageX, Loader2, Clock, RefreshCw, CheckCircle2,
   XCircle, User, Search, Users, Sparkles, Star, PackageCheck,
-  Trophy, TrendingUp, Calendar, Zap,
+  Trophy, TrendingUp, Calendar, Zap, Eye, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +59,23 @@ export default function TeamShortagesView() {
   const [q, setQ] = useState("");
   const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
   const [manualSyncing, setManualSyncing] = useState(false);
+
+  // الأصناف اللي الموظف شافها وأقرّ إنه استلم الإشعار (محلي لكل موظف)
+  const ackKey = user?.id ? `shortages_ack_${user.id}` : "shortages_ack_anon";
+  const [acknowledgedIds, setAcknowledgedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(ackKey) : null;
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
+  const acknowledgeRow = useCallback((id: string) => {
+    setAcknowledgedIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      try { localStorage.setItem(ackKey, JSON.stringify(Array.from(next))); } catch {}
+      return next;
+    });
+  }, [ackKey]);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
@@ -454,7 +471,16 @@ export default function TeamShortagesView() {
 
                       {/* === تصميم خاص: صنف وصل المخزن === */}
                       {r.status === "fulfilled" ? (
-                        <div className="space-y-2.5">
+                        <div className={cn(
+                          "space-y-2.5 transition-all duration-500",
+                          acknowledgedIds.has(r.id) && "opacity-50 grayscale-[60%] hover:opacity-75"
+                        )}>
+                          {acknowledgedIds.has(r.id) && (
+                            <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-slate-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
+                              <Check className="w-2.5 h-2.5" />
+                              شفته
+                            </div>
+                          )}
                           {/* شريط علوي: شارة "وصل" + الموظف + التاريخ */}
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <motion.div
@@ -534,6 +560,42 @@ export default function TeamShortagesView() {
                                 </span>
                               )}
                             </div>
+
+                            {/* زر "شفته / تمام" — يبهت الكارت ويعلّمه كمستلم */}
+                            {!acknowledgedIds.has(r.id) ? (
+                              <motion.div
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-3 flex justify-end"
+                              >
+                                <Button
+                                  size="sm"
+                                  onClick={() => acknowledgeRow(r.id)}
+                                  className="h-8 gap-1.5 bg-gradient-to-l from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg transition-all text-xs font-bold rounded-full px-3.5"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  شفته — تمام ✓
+                                </Button>
+                              </motion.div>
+                            ) : (
+                              <div className="mt-3 flex justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    // إلغاء الـ ack لو ضغط تاني
+                                    setAcknowledgedIds(prev => {
+                                      const next = new Set(prev);
+                                      next.delete(r.id);
+                                      try { localStorage.setItem(ackKey, JSON.stringify(Array.from(next))); } catch {}
+                                      return next;
+                                    });
+                                  }}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground underline decoration-dotted underline-offset-2"
+                                >
+                                  تراجع
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
