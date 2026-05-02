@@ -187,3 +187,135 @@ describe("Shortage banner — تغيرات القائمة في نفس الجلس
   });
 });
 
+
+/**
+ * محاكاة المزامنة عبر Supabase بين جهازين لنفس الموظف:
+ * - "الـ DB" عبارة عن مصدر مشترك (sharedDB) يحفظ seen IDs لكل (user, item).
+ * - كل جهاز عنده نسخة محلية (localSeen) يقرأها من الـ DB عند التحميل/الـ realtime.
+ */
+
+type DBRow = { user_id: string; item_id: string };
+
+class FakeSupabaseSync {
+  private rows: DBRow[] = [];
+  private listeners: Array<(rows: DBRow[]) => void> = [];
+
+  upsert(user_id: string, item_ids: string[]) {
+    item_ids.forEach((item_id) => {
+      if (!this.rows.find((r) => r.user_id === user_id && r.item_id === item_id)) {
+        this.rows.push({ user_id, item_id });
+      }
+    });
+    this.listeners.forEach((fn) => fn([...this.rows]));
+  }
+
+  fetch(user_id: string): Set<string> {
+    return new Set(this.rows.filter((r) => r.user_id === user_id).map((r) => r.item_id));
+  }
+
+  subscribe(fn: (rows: DBRow[]) => void) {
+    this.listeners.push(fn);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== fn);
+    };
+  }
+
+  reset() {
+    this.rows = [];
+    this.listeners = [];
+  }
+}
+
+describe("Shortage banner — مزامنة الإخفاء عبر Supabase بين جهازين", () => {
+  it("سيناريو 1: جهاز A يعلّم → جهاز B يستلم تحديث realtime → البانر يختفي عنده", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-1";
+    const rows = [{ id: "x" }, { id: "y" }];
+
+    // جهاز A وجهاز B يفتحان نفس اللحظة — لا شيء معلَّم
+    let seenA = db.fetch(userId);
+    let seenB = db.fetch(userId);
+    expect(computeBannerDismissed(rows, seenA)).toBe(false);
+    expect(computeBannerDismissed(rows, seenB)).toBe(false);
+
+    // B يشترك في الـ realtime
+    db.subscribe(() => {
+      seenB = db.fetch(userId);
+    });
+
+    // A يضغط "تمام شفتها" → upsert للـ DB
+    db.upsert(userId, rows.map((r) => r.id));
+    seenA = db.fetch(userId);
+
+    expect(computeBannerDismissed(rows, seenA)).toBe(true);
+    expect(computeBannerDismissed(rows, seenB)).toBe(true); // ← اتزامن
+  });
+
+  it("سيناريو 2: B يعلّم بعد A — لا تكرار في الـ DB (idempotent upsert)", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-2";
+    const rows = [{ id: "a" }, { id: "b" }];
+
+    db.upsert(userId, rows.map((r) => r.id)); // من A
+    db.upsert(userId, rows.map((r) => r.id)); // من B (نفس العناصر)
+
+    expect(db.fetch(userId).size).toBe(2);
+  });
+
+  it("سيناريو 3: صنف جديد يظهر بعد الإخفاء — يظهر البانر على الجهازين", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-3";
+    let rows = [{ id: "a" }];
+
+    db.upsert(userId, ["a"]);
+    let seenA = db.fetch(userId);
+    let seenB = db.fetch(userId);
+    expect(computeBannerDismissed(rows, seenA)).toBe(true);
+    expect(computeBannerDismissed(rows, seenB)).toBe(true);
+
+    // وصل صنف جديد للقائمة (من ERP sync)
+    rows = [...rows, { id: "b" }];
+    expect(computeBannerDismissed(rows, seenA)).toBe(false);
+    expect(computeBannerDismissed(rows, seenB)).toBe(false);
+    expect(computeNewly(rows, seenA)).toEqual([{ id: "b" }]);
+  });
+
+  it("سيناريو 4: عزل بين موظفين — staff-1 يعلّم لا يؤثر على staff-2", () => {
+    const db = new FakeSupabaseSync();
+    const rows = [{ id: "a" }, { id: "b" }];
+
+    db.upsert("staff-1", ["a", "b"]);
+
+    expect(computeBannerDismissed(rows, db.fetch("staff-1"))).toBe(true);
+    expect(computeBannerDismissed(rows, db.fetch("staff-2"))).toBe(false);
+  });
+
+  it("سيناريو 5: A و B يعلّمان أصناف مختلفة بالتوازي — الاتحاد يُحفظ", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-5";
+    const rows = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+    // A شاف a, b فقط (الـ realtime لسه ما وصلش لـ B)
+    db.upsert(userId, ["a", "b"]);
+    // B في نفس اللحظة كان شايف c كمان وضغط (عنده snapshot أحدث)
+    db.upsert(userId, ["c"]);
+
+    const finalSeen = db.fetch(userId);
+    expect(finalSeen.size).toBe(3);
+    expect(computeBannerDismissed(rows, finalSeen)).toBe(true);
+  });
+
+  it("سيناريو 6: جهاز جديد يفتح الصفحة → يقرأ الحالة من DB ولا يظهر البانر", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-6";
+    const rows = [{ id: "a" }, { id: "b" }];
+
+    // جهاز A علّم من قبل
+    db.upsert(userId, ["a", "b"]);
+
+    // جهاز C يفتح أول مرة — initial fetch
+    const seenC = db.fetch(userId);
+    expect(computeBannerDismissed(rows, seenC)).toBe(true);
+    expect(computeNewly(rows, seenC)).toHaveLength(0);
+  });
+});
