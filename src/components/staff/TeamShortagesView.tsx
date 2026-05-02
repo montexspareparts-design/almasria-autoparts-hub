@@ -471,7 +471,16 @@ export default function TeamShortagesView() {
 
                       {/* === تصميم خاص: صنف وصل المخزن === */}
                       {r.status === "fulfilled" ? (
-                        <div className="space-y-2.5">
+                        <div className={cn(
+                          "space-y-2.5 transition-all duration-500",
+                          acknowledgedIds.has(r.id) && "opacity-50 grayscale-[60%] hover:opacity-75"
+                        )}>
+                          {acknowledgedIds.has(r.id) && (
+                            <div className="absolute top-2 left-2 inline-flex items-center gap-1 bg-slate-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
+                              <Check className="w-2.5 h-2.5" />
+                              شفته
+                            </div>
+                          )}
                           {/* شريط علوي: شارة "وصل" + الموظف + التاريخ */}
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <motion.div
