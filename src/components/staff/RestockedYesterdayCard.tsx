@@ -342,3 +342,34 @@ function FilterPill({
     </button>
   );
 }
+
+function PeriodSwitcher({
+  period,
+  onChange,
+}: {
+  period: PeriodDays;
+  onChange: (p: PeriodDays) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 p-0.5 rounded-md bg-white border border-emerald-200 shrink-0">
+      <CalendarRange className="w-3.5 h-3.5 text-emerald-700 mx-1.5 shrink-0" />
+      {PERIOD_OPTIONS.map((opt) => {
+        const active = period === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`text-[11px] font-semibold px-2.5 py-1.5 rounded whitespace-nowrap transition-colors ${
+              active
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-emerald-700 hover:bg-emerald-100"
+            }`}
+            title={opt.label}
+          >
+            {opt.shortLabel}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
