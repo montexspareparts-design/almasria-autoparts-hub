@@ -529,7 +529,7 @@ function TodayForm({
           <NumField icon={<XCircle className="w-3.5 h-3.5 text-rose-600" />} label="طلبات لم تكتمل" required value={data.incomplete_orders_count} onChange={setNum("incomplete_orders_count")} disabled={locked} hint="طلبات بدأها العميل ووقفت أو اتلغت لأي سبب (سعر/تأخير/مشكلة) — اللي محتاجة متابعة." />
           <NumField icon={<Users className="w-3.5 h-3.5 text-teal-600" />} label="عملاء تمت متابعتهم" required value={data.followups_count} onChange={setNum("followups_count")} disabled={locked} hint="عملاء قدام عرض/طلب قديم رجعت كلّمتهم النهارده عشان تقفل الصفقة أو تطمن على الحالة." />
           <NumField icon={<UserPlus className="w-3.5 h-3.5 text-emerald-600" />} label="عملاء جدد تم إضافتهم" required value={data.new_customers_count} onChange={setNum("new_customers_count")} disabled={locked} hint="عملاء جداد بالكامل دخلوا قاعدة البيانات لأول مرة على إيدك النهارده — مش عملاء قدام." />
-          <NumField icon={<Target className="w-3.5 h-3.5 text-orange-600" />} label="مهتمين ولم يتم إغلاقهم" required value={data.lost_opportunities_count} onChange={setNum("lost_opportunities_count")} disabled={locked} hint="فرص بيع كان فيها عميل مهتم فعلاً بس الصفقة ما اتقفلتش (السبب يتسجّل تحت في الأسئلة)." />
+          
         </div>
 
         <div className="mt-5 pt-5 border-t">
