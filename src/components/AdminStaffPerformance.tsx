@@ -386,19 +386,47 @@ export default function AdminStaffPerformance() {
 
       {/* Detailed Table */}
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="w-4 h-4" />
-              مقارنة تفصيلية ({filtered.length})
+              مقارنة تفصيلية ({filtered.length}{filtered.length !== staff.length ? ` / ${staff.length}` : ""})
             </CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Input
-                placeholder="بحث باسم الموظف..."
+                placeholder="بحث باسم الموظف أو الإيميل..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 w-48 text-xs"
+                className="h-8 w-56 text-xs"
               />
+              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={exportCsv} disabled={!filtered.length}>
+                <Download className="w-3.5 h-3.5" />
+                تصدير CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Advanced filters */}
+          <div className="flex items-center gap-4 flex-wrap pt-2 border-t border-border/50">
+            <div className="flex items-center gap-2 text-xs">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground" />
+              <Label htmlFor="active-only" className="cursor-pointer">نشطين فقط</Label>
+              <Switch id="active-only" checked={activeOnly} onCheckedChange={setActiveOnly} />
+            </div>
+            <div className="flex items-center gap-2 text-xs flex-1 min-w-[200px] max-w-sm">
+              <span className="text-muted-foreground whitespace-nowrap">حد أدنى للنقاط:</span>
+              <Slider
+                min={0}
+                max={Math.max(maxScore, 10)}
+                step={1}
+                value={[minScore]}
+                onValueChange={(v) => setMinScore(v[0] || 0)}
+                className="flex-1"
+              />
+              <Badge variant="outline" className="font-mono w-12 justify-center">{minScore}</Badge>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              فرز: <span className="font-bold text-foreground">{String(sortBy)}</span> ({sortDir === "desc" ? "تنازلي ↓" : "تصاعدي ↑"})
             </div>
           </div>
         </CardHeader>
