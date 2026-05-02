@@ -49,10 +49,11 @@ export default function AdminReporterReports() {
         return { from: fmt(y), to: fmt(y), label: "أمس" };
       }
       case "week":
+        // آخر 7 أيام (rolling) — مش ISO week، علشان لو النهاردة سبت يبقى الخميس والجمعة داخلين
         return {
-          from: fmt(startOfWeek(today, { weekStartsOn: 6 })),
-          to: fmt(endOfWeek(today, { weekStartsOn: 6 })),
-          label: "الأسبوع",
+          from: fmt(subDays(today, 6)),
+          to: fmt(today),
+          label: "آخر 7 أيام",
         };
       case "month":
         return {
