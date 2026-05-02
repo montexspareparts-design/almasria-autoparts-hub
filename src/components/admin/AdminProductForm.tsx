@@ -26,6 +26,8 @@ const brandLabels: Record<ProductBrand, string> = {
   denso: "DENSO",
   aisin: "AISIN",
   fbk: "FBK Brake Pads",
+  ibk: "IBK",
+  other: "أخرى",
 };
 
 interface Props {
