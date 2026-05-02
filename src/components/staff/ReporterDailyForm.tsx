@@ -123,6 +123,27 @@ function emptyFieldsRatio(d: ReportData): number {
   return empties / fields.length;
 }
 
+// التحقق الذكي من الحقول الإلزامية — يرجّع قائمة بأسماء الحقول الناقصة (= 0 أو فاضية)
+function getMissingRequiredFields(d: ReportData): string[] {
+  const required: { key: keyof ReportData; label: string }[] = [
+    { key: "quotations_count",        label: "عدد عروض الأسعار" },
+    { key: "calls_count",             label: "عدد المكالمات" },
+    { key: "whatsapp_count",          label: "عملاء واتساب" },
+    { key: "offers_sent_count",       label: "عروض/كشوف مُرسلة" },
+    { key: "offers_converted_count",  label: "عروض اتحولت لطلبات" },
+    { key: "incomplete_orders_count", label: "طلبات لم تكتمل" },
+    { key: "followups_count",         label: "عملاء تمت متابعتهم" },
+    { key: "new_customers_count",     label: "عملاء جدد" },
+    { key: "lost_opportunities_count",label: "مهتمين ولم يتم إغلاقهم" },
+  ];
+  return required
+    .filter(({ key }) => {
+      const v = (d as any)[key];
+      return v === null || v === undefined || v === "" || Number(v) === 0;
+    })
+    .map(({ label }) => label);
+}
+
 export default function ReporterDailyForm() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -307,8 +328,9 @@ export default function ReporterDailyForm() {
             saving={saving} autoStats={autoStats}
             onSaveDraft={saveDraft}
             onPreview={() => {
-              // Smart guard: لو أكتر من 60% من الحقول = 0 → نسأل قبل ما نفتح المعاينة
-              if (emptyFieldsRatio(data) >= 0.6) {
+              // Smart guard: لو فيه حقول إلزامية ناقصة → افتح dialog ذكي يحدد إيه اللي ناقص
+              const missing = getMissingRequiredFields(data);
+              if (missing.length > 0 || emptyFieldsRatio(data) >= 0.6) {
                 setEmptyWarnOpen(true);
               } else {
                 setPreviewOpen(true);
@@ -387,25 +409,61 @@ export default function ReporterDailyForm() {
         staffName={staffName}
       />
 
-      {/* Smart guard: تحذير لو التقرير شبه فاضي */}
+      {/* Smart guard: تحذير ذكي يحدد الحقول الناقصة بالتفصيل */}
       <AlertDialog open={emptyWarnOpen} onOpenChange={setEmptyWarnOpen}>
-        <AlertDialogContent dir="rtl">
+        <AlertDialogContent dir="rtl" className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              التقرير شبه فاضي
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+              {(() => {
+                const m = getMissingRequiredFields(data);
+                if (m.length === 0) return "التقرير شبه فاضي";
+                if (m.length >= 7) return "التقرير لسه فاضي تقريباً";
+                return `فيه ${m.length} حقل لسه ناقص`;
+              })()}
             </AlertDialogTitle>
-            <AlertDialogDescription className="leading-relaxed">
-              معظم الحقول لسه مكتوب فيها <strong>0</strong>. هل أنت متأكد إن ده يومك فعلاً وعايز تكمل المعاينة؟
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 leading-relaxed text-foreground/80">
+                {(() => {
+                  const missing = getMissingRequiredFields(data);
+                  if (missing.length === 0) {
+                    return (
+                      <p className="text-sm">
+                        كل الحقول الإلزامية مليانة، بس معظمها <strong>0</strong>. هل ده فعلاً يومك؟
+                      </p>
+                    );
+                  }
+                  return (
+                    <>
+                      <p className="text-sm">
+                        قبل ما تكمّل، الحقول دي لسه قيمتها <strong className="text-amber-600">0</strong> أو فاضية:
+                      </p>
+                      <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/60 dark:bg-amber-950/20 p-3 max-h-48 overflow-y-auto">
+                        <ul className="space-y-1.5">
+                          {missing.map((label) => (
+                            <li key={label} className="flex items-center gap-2 text-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              <span>{label}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        💡 لو يومك كان هادي فعلاً وما اشتغلتش على الحقول دي، تقدر تكمّل عادي — بس تأكد إن الأرقام بتعكس شغل يومك بأمانة.
+                      </p>
+                    </>
+                  );
+                })()}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>رجوع للتعديل</AlertDialogCancel>
+            <AlertDialogCancel>رجوع وأكمّل الحقول</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { setEmptyWarnOpen(false); setPreviewOpen(true); }}
               className="bg-amber-600 hover:bg-amber-700"
             >
-              نعم، يومي كان هادي
+              يومي كان كده فعلاً، كمّل
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
