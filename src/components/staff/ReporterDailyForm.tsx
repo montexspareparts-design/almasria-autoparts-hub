@@ -36,8 +36,6 @@ import {
   PersonalCompareCard,
   MoodShoutoutSection,
   performanceScore,
-  KPICalculatedCard,
-  DailyTargetsRings,
   StreakBadge,
   TeamBenchmarkLine,
 } from "./ReporterEnhancements";
@@ -484,8 +482,6 @@ function TodayForm({
     <>
       <PersonalCompareCard userId={userId} todayScore={todayScore} />
       <TeamBenchmarkLine todayScore={todayScore} />
-      <DailyTargetsRings userId={userId} data={data} />
-      <KPICalculatedCard data={data} />
       {/* Focus strip — تذكير أن كل الأرقام بتتدخل يدوي من الموظف */}
       <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-l from-primary/5 via-background to-amber-500/5 px-4 py-3">
         <div className="flex items-center gap-3">
