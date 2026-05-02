@@ -75,9 +75,9 @@ const TEMPLATES: Record<string, string[]> = {
 
 function pickTemplate(tier: string, name: string, score: number, monthScore: number): string {
   const list = TEMPLATES[tier] || TEMPLATES.new;
-  // اختيار حتمي حسب اليوم + الـ user عشان كل موظف ياخد رسالة مختلفة عن التاني
-  const seed = Math.abs(hash(name + today())) % list.length;
-  return list[seed]
+  // اختيار عشوائي في كل استدعاء — رسالة مختلفة في كل فتح
+  const idx = Math.floor(Math.random() * list.length);
+  return list[idx]
     .replaceAll("{name}", name.split(" ")[0] || name)
     .replaceAll("{score}", String(score))
     .replaceAll("{month_score}", String(monthScore));
@@ -170,18 +170,7 @@ Deno.serve(async (req) => {
     // Use service role for DB writes/reads bypassing RLS where needed
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // 1) Check cache for today
-    const { data: cached } = await admin
-      .from("reporter_motivational_messages")
-      .select("message, source, performance_tier")
-      .eq("user_id", user.id)
-      .eq("message_date", today())
-      .maybeSingle();
-    if (cached) {
-      return new Response(JSON.stringify({ message: cached.message, source: cached.source, tier: cached.performance_tier, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // No cache — generate fresh message every time so the employee sees a new one on each open
 
     // 2) Gather performance data
     const { data: prof } = await admin.from("profiles").select("full_name, email").eq("user_id", user.id).maybeSingle();
@@ -214,14 +203,18 @@ Deno.serve(async (req) => {
       source = "template";
     }
 
-    // 4) Cache it
-    await admin.from("reporter_motivational_messages").insert({
-      user_id: user.id,
-      message_date: today(),
-      message,
-      source,
-      performance_tier: tier,
-    });
+    // 4) (Optional) log it for history — non-blocking, ignore conflicts
+    admin
+      .from("reporter_motivational_messages")
+      .insert({
+        user_id: user.id,
+        message_date: today(),
+        message,
+        source,
+        performance_tier: tier,
+      })
+      .then(() => {})
+      .catch(() => {});
 
     return new Response(JSON.stringify({ message, source, tier, cached: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
