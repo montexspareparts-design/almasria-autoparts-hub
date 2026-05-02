@@ -485,12 +485,25 @@ export default function AdminShortageRequests() {
   );
 }
 
-function Kpi({ label, value, icon: Icon, color }: { label: string; value: number; icon: any; color: string }) {
+function Kpi({ label, value, icon: Icon, color, active, onClick, hint }: { label: string; value: number; icon: any; color: string; active?: boolean; onClick?: () => void; hint?: string }) {
+  const clickable = !!onClick;
   return (
-    <div className={cn("rounded-xl p-3 text-white bg-gradient-to-br shadow-sm", color)}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={!clickable}
+      className={cn(
+        "rounded-xl p-3 text-white bg-gradient-to-br shadow-sm text-right transition-all",
+        color,
+        clickable && "cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+        active && "ring-2 ring-offset-2 ring-foreground/40 scale-[1.02]"
+      )}
+      title={hint}
+    >
       <div className="flex items-center gap-1.5 text-[11px] opacity-90"><Icon className="w-3.5 h-3.5" />{label}</div>
       <p className="text-2xl font-bold mt-1 tabular-nums">{value}</p>
-    </div>
+      {hint && <p className="text-[10px] opacity-75 mt-0.5">{active ? "✓ مفعّل" : hint}</p>}
+    </button>
   );
 }
 
