@@ -297,7 +297,7 @@ export function AdminERPCatalogBrowser() {
           className="gap-1"
         >
           <Eye className="w-4 h-4" />
-          الموجودة على الموقع ({onsiteRows.length})
+          الموجودة في الجدول ({onsiteRows.length.toLocaleString("ar-EG")})
         </Button>
         {viewMode === "onsite" && (
           <Badge variant="outline" className="gap-1">
