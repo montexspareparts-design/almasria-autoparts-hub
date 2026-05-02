@@ -53,6 +53,7 @@ export function AdminERPCatalogBrowser() {
   const [onsiteRows, setOnsiteRows] = useState<OnsiteRow[]>([]);
   const [existingSkus, setExistingSkus] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
+  const [partNumberFilter, setPartNumberFilter] = useState("");
   const [page, setPage] = useState(0);
   const [adding, setAdding] = useState<Record<string, boolean>>({});
   const [added, setAdded] = useState<Set<string>>(new Set());
@@ -160,38 +161,40 @@ export function AdminERPCatalogBrowser() {
     return copy;
   };
 
-  // Missing items (not on site, filtered by min qty + search)
+  // Missing items (not on site, filtered by min qty + search + part number)
   const filteredMissing = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = rows.filter((r) => {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         r.erp_id.toLowerCase().includes(q) ||
-        (r.name ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q)
+        (r.name ?? "").toLowerCase().includes(q)
       );
     });
     return sortMissing(filtered);
-  }, [rows, existingSkus, search, minQty, sortMode]);
+  }, [rows, existingSkus, search, partNumberFilter, minQty, sortMode]);
 
-  // Onsite items (with optional inactive + search + brand filter)
+  // Onsite items (with optional inactive + search + brand filter + part number)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
       if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, showInactive, sortMode, brandFilter]);
+  }, [onsiteRows, search, partNumberFilter, showInactive, sortMode, brandFilter]);
 
   const availableBrands = useMemo(() => {
     const set = new Set<string>();
@@ -202,19 +205,20 @@ export function AdminERPCatalogBrowser() {
   // ✨ ما يراه الزائر فعلياً = is_active = true (نفس فلتر useProductListing)
   const filteredVisitor = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const pn = partNumberFilter.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!r.is_active) return false;
       if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
+      if (pn && !(r.part_number ?? "").toLowerCase().includes(pn)) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
-        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, sortMode, brandFilter]);
+  }, [onsiteRows, search, partNumberFilter, sortMode, brandFilter]);
 
   const activeList: CacheRow[] | OnsiteRow[] =
     viewMode === "missing" ? filteredMissing : viewMode === "visitor" ? filteredVisitor : filteredOnsite;
@@ -226,7 +230,7 @@ export function AdminERPCatalogBrowser() {
     safePage * PAGE_SIZE + PAGE_SIZE
   );
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
+  useEffect(() => { setPage(0); }, [search, partNumberFilter, minQty, viewMode, showInactive, sortMode, brandFilter]);
 
   const handleBulkToggle = async (action: "activate" | "hide") => {
     const targets = filteredOnsite.filter((p) => (action === "activate" ? !p.is_active : p.is_active));
@@ -417,8 +421,18 @@ export function AdminERPCatalogBrowser() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث بالكود أو البارت نمبر أو الاسم..."
+                placeholder="ابحث بالكود أو الاسم..."
                 className="pr-10"
+              />
+            </div>
+            <div className="relative flex-1 min-w-[180px] max-w-[260px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={partNumberFilter}
+                onChange={(e) => setPartNumberFilter(e.target.value)}
+                placeholder="بارت نمبر / Part Number"
+                className="pr-10 font-mono"
+                title="فلتر مستقل بالبارت نمبر فقط"
               />
             </div>
             <select
