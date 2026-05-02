@@ -159,7 +159,54 @@ export function AdminERPCatalogBrowser() {
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode]);
+  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
+
+  const handleBulkToggle = async (action: "activate" | "hide") => {
+    const targets = filteredOnsite.filter((p) => (action === "activate" ? !p.is_active : p.is_active));
+    if (targets.length === 0) {
+      toast({ title: "لا يوجد أصناف للتطبيق", description: "كل الأصناف المعروضة في الحالة المطلوبة بالفعل." });
+      return;
+    }
+    setBulkRunning(true);
+    try {
+      const next = action === "activate";
+      const ids = targets.map((p) => p.id);
+      // Update in chunks to avoid URL length limits
+      const chunkSize = 200;
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const slice = ids.slice(i, i + chunkSize);
+        const { error } = await supabase
+          .from("products")
+          .update({ is_active: next } as any)
+          .in("id", slice);
+        if (error) throw error;
+      }
+
+      // Update local state
+      const idSet = new Set(ids);
+      setOnsiteRows((list) => list.map((p) => (idSet.has(p.id) ? { ...p, is_active: next } : p)));
+      setExistingSkus((s) => {
+        const n = new Set(s);
+        targets.forEach((p) => {
+          const code = p.sku || p.erp_item_code;
+          if (!code) return;
+          if (next) n.add(code);
+          else n.delete(code);
+        });
+        return n;
+      });
+
+      toast({
+        title: next ? `✅ تم تفعيل ${targets.length} صنف` : `🚫 تم إخفاء ${targets.length} صنف`,
+        description: brandFilter !== "all" ? `العلامة: ${brandFilter}` : "كل الأصناف المُفلترة",
+      });
+    } catch (err: any) {
+      toast({ title: "فشل التحديث الجماعي", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkRunning(false);
+      setBulkConfirm(null);
+    }
+  };
 
   const handleAdd = async (row: CacheRow) => {
     setAdding((s) => ({ ...s, [row.erp_id]: true }));
