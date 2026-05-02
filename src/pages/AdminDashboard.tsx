@@ -98,31 +98,33 @@ interface SidebarGroup {
 }
 
 const sidebarGroups: SidebarGroup[] = [
+  // 1) الشغل اليومي — أهم حاجة الأدمن بيفتحها كل يوم
   {
-    // الرئيسية = نقطة البداية اليومية للموظف.
-    // الترتيب حسب طلب المستخدم: رئيسية → ذكاء العملاء → ليدز الزوار → ملف العملاء → التحليلات → ليدز
-    label: "الرئيسية",
+    label: "🏠 الشغل اليومي",
     items: [
-      { id: "daily-dashboard", label: "🏠 الرئيسية", icon: BarChart3 },              // 1) نقطة البداية
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },                    // 2) تحليلات سلوك العملاء
-      { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },   // 3) أرقام الزوار غير المسجلين
-      { id: "customers", label: "ملف العملاء", icon: Users },                        // 4) البحث عن عميل / تسجيل تواصل
-      { id: "analytics", label: "التحليلات", icon: BarChart3 },                      // 5) KPIs عامة
-      { id: "leads", label: "Leads", icon: Users },                                   // 6) متابعة العملاء المحتملين
-      { id: "orders", label: "الطلبات", icon: ShoppingBag },                          // تنفيذ يومي
-      { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // ← أسفل الطلبات: مدمج (Checklist + تقرير اليوم) — يلمع طول ما لم يُقدَّم
-      // ملاحظة: تبويب "التقرير اليومي" المنفصل اتدمج مع "مهامي اليومية" — للأدمن لوحة التقارير الجماعية موجودة في "التنبيهات والربط" → "التقارير اليومية للموظفين"
-      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
-      { id: "staff-overview", label: "متابعة الموظفين (نشاط + تقارير)", icon: Activity }, // أدمن فقط: نشاط اليوم + التقارير اليومية في صفحة واحدة
+      { id: "daily-dashboard", label: "الرئيسية", icon: BarChart3 },
+      { id: "orders", label: "الطلبات", icon: ShoppingBag },
+      { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },
+      { id: "shortage-requests", label: "🚨 الأصناف الناقصة", icon: FileText },
     ],
   },
+  // 2) العملاء والمبيعات — كل اللي ليه علاقة بالعميل
   {
-    label: "المنتجات والطلبات",
+    label: "👥 العملاء والمبيعات",
+    items: [
+      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      { id: "customers", label: "ملف العملاء", icon: Users },
+      { id: "leads", label: "Leads (عملاء محتملين)", icon: Users },
+      { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },
+      { id: "analytics", label: "التحليلات و KPIs", icon: BarChart3 },
+    ],
+  },
+  // 3) المنتجات والكتالوج
+  {
+    label: "📦 المنتجات والكتالوج",
     items: [
       { id: "products", label: "إدارة المنتجات", icon: Package },
       { id: "bulk-import", label: "استيراد جماعي", icon: ArrowLeftRight },
-      { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
-      // ملاحظة: "إدارة الطلبات" نُقلت إلى مجموعة "الرئيسية" لأنها مهمة الموظف اليومية الأساسية.
       { id: "coupons", label: "الكوبونات", icon: Tag },
       { id: "qty-discounts", label: "خصومات الكمية", icon: Layers },
       { id: "price-lists", label: "عروض الأسعار", icon: FileText },
@@ -130,8 +132,43 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "bundles", label: "باقات الصيانة", icon: Package },
     ],
   },
+  // 4) الموظفين والصلاحيات
   {
-    label: "المحتوى والوسائط",
+    label: "👨‍💼 الموظفين",
+    items: [
+      { id: "staff-overview", label: "متابعة الموظفين (نشاط + تقارير)", icon: Activity },
+      { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },
+      { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
+      { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
+      { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
+      { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
+    ],
+  },
+  // 5) التنبيهات والمدفوعات
+  {
+    label: "💬 التنبيهات والمدفوعات",
+    items: [
+      { id: "whatsapp-inbox", label: "صندوق الواتساب", icon: MessageCircle },
+      { id: "whatsapp-delivery", label: "حالة إرسال الواتساب", icon: MessageCircle },
+      { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
+      { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
+      { id: "push-notifications", label: "إشعارات Push", icon: Bell },
+      { id: "notification-phones", label: "أرقام تنبيه الطلبات", icon: Phone },
+    ],
+  },
+  // 6) ربط ERP / الفيصل
+  {
+    label: "🔗 ربط الفيصل (ERP)",
+    items: [
+      { id: "erp-status", label: "حالة مزامنة ERP", icon: Activity },
+      { id: "faisal-health", label: "🩺 صحة كتالوج الفيصل", icon: Activity },
+      { id: "erp", label: "ربط ERP", icon: Zap },
+      { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
+    ],
+  },
+  // 7) المحتوى والوسائط
+  {
+    label: "🎬 المحتوى والوسائط",
     items: [
       { id: "hero-video", label: "فيديو الرئيسية", icon: Video },
       { id: "youtube", label: "إعدادات YouTube", icon: ListVideo },
@@ -139,42 +176,29 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "image-verifier", label: "مراجعة الصور (AI)", icon: Brain },
     ],
   },
-    {
-      label: "التنبيهات والربط",
-      items: [
-        { id: "whatsapp-inbox", label: "صندوق الواتساب", icon: MessageCircle },
-        { id: "whatsapp-delivery", label: "حالة إرسال الواتساب", icon: MessageCircle },
-        { id: "instapay-receipts", label: "إيصالات InstaPay", icon: Banknote },
-        { id: "payment-reminders", label: "متابعة التذكيرات", icon: Clock },
-        { id: "push-notifications", label: "إشعارات Push", icon: Bell },
-        { id: "notification-phones", label: "أرقام تنبيه الطلبات", icon: Phone },
-        { id: "erp-status", label: "حالة مزامنة ERP", icon: Activity },
-        { id: "faisal-health", label: "🩺 صحة كتالوج الفيصل", icon: Activity },
-        { id: "erp", label: "ربط ERP", icon: Zap },
-        { id: "erp-customers", label: "ربط عملاء الفيصل", icon: Users },
-        { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
-        { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
-        { id: "staff-roles", label: "إدارة الموظفين", icon: Users },
-        { id: "audit-log", label: "سجل المراجعة", icon: Shield },
-        { id: "account-attempts", label: "محاولات إنشاء/إعادة تعيين الحسابات", icon: KeyRound },
-         { id: "permission-requests", label: "طلبات الصلاحيات", icon: ShieldCheck },
-        { id: "role-permissions", label: "صلاحيات الأدوار", icon: ShieldCheck },
-        { id: "daily-reports", label: "التقارير اليومية للموظفين", icon: FileText },
-        // ملاحظة: "📋 تقارير موظفي الفيصل" اتدمجت مع "نشاط الموظفين اليومي" في تبويب واحد: "متابعة الموظفين"
-        { id: "shortage-requests", label: "🚨 الأصناف الناقصة المطلوبة", icon: FileText },
-        { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
-        { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
-        { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
-        { id: "responsive-preview", label: "معاينة الأجهزة (موبايل/تابلت)", icon: Smartphone },
-        { id: "mobile-error-report", label: "تقرير أخطاء الجوال", icon: Smartphone },
-      ],
-    },
-    {
-      label: "حسابي",
-      items: [
-        { id: "account-settings", label: "إعدادات حسابي", icon: UserIcon },
-      ],
-    },
+  // 8) إعدادات متقدمة — حاجات نادرة الاستخدام
+  {
+    label: "⚙️ إعدادات متقدمة",
+    items: [
+      { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
+      { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
+      { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
+      { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
+      { id: "translations", label: "إدارة الترجمات (AR/EN)", icon: FileText },
+      { id: "seo-preview", label: "معاينة SEO قبل النشر", icon: Eye },
+      { id: "responsive-preview", label: "معاينة الأجهزة", icon: Smartphone },
+      { id: "mobile-error-report", label: "تقرير أخطاء الجوال", icon: Smartphone },
+      { id: "audit-log", label: "سجل المراجعة (Audit)", icon: Shield },
+      { id: "account-attempts", label: "محاولات إنشاء/استرجاع الحسابات", icon: KeyRound },
+    ],
+  },
+  // 9) حسابي
+  {
+    label: "👤 حسابي",
+    items: [
+      { id: "account-settings", label: "إعدادات حسابي", icon: UserIcon },
+    ],
+  },
 ];
 
 // Sections accessible by moderators (employees) — single source of truth.
