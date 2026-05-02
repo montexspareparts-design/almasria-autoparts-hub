@@ -3133,8 +3133,6 @@ const AdminCustomerIntelligence = () => {
         };
 
         return (
-          {/* Done-today metrics — counted once after applying same logic as the tab content */}
-          {(() => { return null; })()}
           <Tabs defaultValue="all" className="w-full">
             {(() => {
               const doneEntries = Object.values(handledMeta);
