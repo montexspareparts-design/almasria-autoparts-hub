@@ -21,6 +21,14 @@ import { computeDateRange, applyDateRange, computeCounts, applyTabFilter } from 
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
+type ResultFilter = "all" | "arrived" | "fulfilled" | "rejected";
+
+const RESULT_FILTER_META: Record<ResultFilter, { label: string; icon: typeof Clock; cls: string }> = {
+  all:       { label: "كل النتائج", icon: Sparkles,     cls: "from-slate-500 to-slate-700" },
+  arrived:   { label: "وصلت المخزن", icon: PackageCheck, cls: "from-emerald-500 to-teal-600" },
+  fulfilled: { label: "مقبول",       icon: CheckCircle2, cls: "from-green-500 to-emerald-600" },
+  rejected:  { label: "مرفوض",       icon: XCircle,      cls: "from-rose-500 to-red-600" },
+};
 
 const DATE_FILTER_META: Record<DateFilter, { label: string; icon: typeof Calendar }> = {
   all:       { label: "كل الفترات", icon: Calendar },
