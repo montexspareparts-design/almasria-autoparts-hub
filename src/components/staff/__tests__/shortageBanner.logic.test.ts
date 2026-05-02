@@ -209,6 +209,13 @@ class FakeSupabaseSync {
     this.listeners.forEach((fn) => fn([...this.rows]));
   }
 
+  // يحاكي سلوك upsert على jsonb seen_ids: استبدال كامل (مثل persistSeen في الكود الحقيقي)
+  replace(user_id: string, item_ids: string[]) {
+    this.rows = this.rows.filter((r) => r.user_id !== user_id);
+    item_ids.forEach((item_id) => this.rows.push({ user_id, item_id }));
+    this.listeners.forEach((fn) => fn([...this.rows]));
+  }
+
   fetch(user_id: string): Set<string> {
     return new Set(this.rows.filter((r) => r.user_id === user_id).map((r) => r.item_id));
   }
