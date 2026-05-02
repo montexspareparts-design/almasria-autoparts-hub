@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, RefreshCw, Package, CheckCircle2 } from "lucide-react";
+import { Loader2, Plus, Search, RefreshCw, Package, CheckCircle2, EyeOff, Eye } from "lucide-react";
+
+type ViewMode = "missing" | "onsite";
 
 type CacheRow = {
   erp_id: string;
