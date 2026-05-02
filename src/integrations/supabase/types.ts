@@ -3463,6 +3463,18 @@ export type Database = {
         Args: { _limit?: number }
         Returns: string[]
       }
+      get_currently_in_stock_items: {
+        Args: never
+        Returns: {
+          base_price: number
+          brand: string
+          current_stock: number
+          name_ar: string
+          product_id: string
+          sku: string
+          snapshot_date: string
+        }[]
+      }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
       get_effective_targets: {
         Args: { _user_id: string }
