@@ -5,7 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, RefreshCw, Package, CheckCircle2, EyeOff, Eye } from "lucide-react";
+import { Loader2, Plus, Search, RefreshCw, Package, CheckCircle2, EyeOff, Eye, Zap } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type CacheRow = {
   erp_id: string;
@@ -49,6 +59,9 @@ export function AdminERPCatalogBrowser() {
   const [refreshing, setRefreshing] = useState(false);
   const [showInactive, setShowInactive] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>("qty_desc");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState<null | { action: "activate" | "hide"; count: number }>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -117,11 +130,12 @@ export function AdminERPCatalogBrowser() {
     return sortMissing(filtered);
   }, [rows, existingSkus, search, minQty, sortMode]);
 
-  // Onsite items (with optional inactive + search filter)
+  // Onsite items (with optional inactive + search + brand filter)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
     const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
+      if (brandFilter !== "all" && (r.brand ?? "other") !== brandFilter) return false;
       if (!q) return true;
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
@@ -130,7 +144,13 @@ export function AdminERPCatalogBrowser() {
       );
     });
     return sortOnsite(filtered);
-  }, [onsiteRows, search, showInactive, sortMode]);
+  }, [onsiteRows, search, showInactive, sortMode, brandFilter]);
+
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>();
+    onsiteRows.forEach((p) => set.add(p.brand ?? "other"));
+    return Array.from(set).sort();
+  }, [onsiteRows]);
 
 
   const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
@@ -139,7 +159,54 @@ export function AdminERPCatalogBrowser() {
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode]);
+  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode, brandFilter]);
+
+  const handleBulkToggle = async (action: "activate" | "hide") => {
+    const targets = filteredOnsite.filter((p) => (action === "activate" ? !p.is_active : p.is_active));
+    if (targets.length === 0) {
+      toast({ title: "لا يوجد أصناف للتطبيق", description: "كل الأصناف المعروضة في الحالة المطلوبة بالفعل." });
+      return;
+    }
+    setBulkRunning(true);
+    try {
+      const next = action === "activate";
+      const ids = targets.map((p) => p.id);
+      // Update in chunks to avoid URL length limits
+      const chunkSize = 200;
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const slice = ids.slice(i, i + chunkSize);
+        const { error } = await supabase
+          .from("products")
+          .update({ is_active: next } as any)
+          .in("id", slice);
+        if (error) throw error;
+      }
+
+      // Update local state
+      const idSet = new Set(ids);
+      setOnsiteRows((list) => list.map((p) => (idSet.has(p.id) ? { ...p, is_active: next } : p)));
+      setExistingSkus((s) => {
+        const n = new Set(s);
+        targets.forEach((p) => {
+          const code = p.sku || p.erp_item_code;
+          if (!code) return;
+          if (next) n.add(code);
+          else n.delete(code);
+        });
+        return n;
+      });
+
+      toast({
+        title: next ? `✅ تم تفعيل ${targets.length} صنف` : `🚫 تم إخفاء ${targets.length} صنف`,
+        description: brandFilter !== "all" ? `العلامة: ${brandFilter}` : "كل الأصناف المُفلترة",
+      });
+    } catch (err: any) {
+      toast({ title: "فشل التحديث الجماعي", description: err.message, variant: "destructive" });
+    } finally {
+      setBulkRunning(false);
+      setBulkConfirm(null);
+    }
+  };
 
   const handleAdd = async (row: CacheRow) => {
     setAdding((s) => ({ ...s, [row.erp_id]: true }));
@@ -286,19 +353,60 @@ export function AdminERPCatalogBrowser() {
                 />
               </div>
             ) : (
-              <Button
-                variant={showInactive ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowInactive((v) => !v)}
-              >
-                {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
-              </Button>
+              <>
+                <select
+                  value={brandFilter}
+                  onChange={(e) => setBrandFilter(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  title="فلترة العلامة"
+                >
+                  <option value="all">كل العلامات</option>
+                  {availableBrands.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+                <Button
+                  variant={showInactive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowInactive((v) => !v)}
+                >
+                  {showInactive ? "إخفاء المخفية" : "إظهار المخفية"}
+                </Button>
+              </>
             )}
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
               {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               تحديث
             </Button>
           </div>
+
+          {viewMode === "onsite" && filteredOnsite.length > 0 && (
+            <div className="flex flex-wrap gap-2 items-center p-3 rounded-lg border bg-muted/30">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">إجراء جماعي على {filteredOnsite.length} صنف مُفلتر:</span>
+              <Button
+                size="sm"
+                variant="default"
+                disabled={bulkRunning}
+                onClick={() => setBulkConfirm({ action: "activate", count: filteredOnsite.filter((p) => !p.is_active).length })}
+                className="gap-1 bg-green-600 hover:bg-green-700"
+              >
+                <Eye className="w-3 h-3" />
+                تفعيل الكل
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={bulkRunning}
+                onClick={() => setBulkConfirm({ action: "hide", count: filteredOnsite.filter((p) => p.is_active).length })}
+                className="gap-1"
+              >
+                <EyeOff className="w-3 h-3" />
+                إخفاء الكل
+              </Button>
+              {bulkRunning && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -456,6 +564,32 @@ export function AdminERPCatalogBrowser() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!bulkConfirm} onOpenChange={(o) => !o && setBulkConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkConfirm?.action === "activate" ? "تفعيل جماعي" : "إخفاء جماعي"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم {bulkConfirm?.action === "activate" ? "تفعيل" : "إخفاء"} <strong>{bulkConfirm?.count}</strong> صنف
+              {brandFilter !== "all" && <> من العلامة <strong>{brandFilter}</strong></>}
+              {search && <> مطابقين للبحث "<strong>{search}</strong>"</>}.
+              <br />
+              هل أنت متأكد؟
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkConfirm && handleBulkToggle(bulkConfirm.action)}
+              className={bulkConfirm?.action === "hide" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              تأكيد
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
