@@ -617,6 +617,86 @@ export default function TodayRestockedDialog({
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      {/* Admin: Add to site dialog */}
+      <Dialog open={!!addTarget} onOpenChange={(o) => !o && setAddTarget(null)}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-800">
+              <PackagePlus className="w-5 h-5" />
+              إضافة الصنف للموقع
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed">
+              اختار الماركة والتصنيف المناسبين عشان يتعرض الصنف على الموقع للعملاء.
+            </DialogDescription>
+          </DialogHeader>
+
+          {addTarget && (
+            <div className="space-y-4 py-2">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-1">
+                <p className="text-sm font-bold text-blue-950 leading-tight">{addTarget.name}</p>
+                <div className="flex items-center gap-3 text-[11px] text-blue-800">
+                  <span className="font-mono bg-blue-100 px-2 py-0.5 rounded" dir="ltr">{addTarget.erp_id}</span>
+                  <span>الرصيد: <span className="font-bold text-emerald-700">{addTarget.qty}</span></span>
+                  {addTarget.retail_price && (
+                    <span>قطاعي: {Number(addTarget.retail_price).toLocaleString("ar-EG")} ج.م</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-bold">الماركة *</Label>
+                <Select value={addBrand} onValueChange={setAddBrand}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="اختار الماركة..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BRAND_OPTIONS.map((b) => (
+                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-bold">التصنيف *</Label>
+                <Select value={addCategoryId} onValueChange={setAddCategoryId}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="اختار التصنيف..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name_ar}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAddTarget(null)}
+              disabled={addSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleAddToSite}
+              disabled={!addBrand || !addCategoryId || addSubmitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+            >
+              {addSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              {addSubmitting ? "جاري الإضافة..." : "أضف الصنف"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
