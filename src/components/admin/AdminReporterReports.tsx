@@ -1040,3 +1040,33 @@ function DayOffPanel({ profilesMap }: { profilesMap: Record<string, any> }) {
     </Card>
   );
 }
+
+function SortTh({
+  label, k, current, dir, onSort, center,
+}: {
+  label: string;
+  k: string;
+  current: string;
+  dir: "asc" | "desc";
+  onSort: (k: any) => void;
+  center?: boolean;
+}) {
+  const active = current === k;
+  const Icon = active ? (dir === "desc" ? ArrowDown : ArrowUp) : ArrowUpDown;
+  return (
+    <th
+      className={cn(
+        "p-2 cursor-pointer select-none hover:text-primary transition-colors",
+        center && "text-center",
+        active && "text-primary font-bold"
+      )}
+      onClick={() => onSort(k)}
+      title={active ? `اضغط لعكس الفرز (${dir === "desc" ? "تنازلي" : "تصاعدي"})` : "اضغط للفرز"}
+    >
+      <span className={cn("inline-flex items-center gap-1", center && "justify-center")}>
+        {label}
+        <Icon className={cn("w-3 h-3", active ? "text-primary" : "opacity-30")} />
+      </span>
+    </th>
+  );
+}
