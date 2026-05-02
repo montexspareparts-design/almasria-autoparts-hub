@@ -316,45 +316,23 @@ export default function TodayRestockedDialog({
               </div>
             ) : (
               <>
-                <div className="hidden sm:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_90px] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
-                  <div>اسم الصنف</div>
-                  <div>البارت نمبر</div>
-                  <div className="text-center">الرصيد الجديد</div>
+                <div className="hidden sm:grid grid-cols-[90px_110px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
                   <div className="text-center">الحالة</div>
+                  <div className="text-center">الرصيد الجديد</div>
+                  <div>البارت نمبر</div>
+                  <div className="text-right">اسم الصنف</div>
                 </div>
                 <ScrollArea className="h-[420px]">
                   <div className="divide-y divide-amber-100">
                     {filtered.map((item) => (
                       <div
                         key={item.product_id}
-                        className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_110px_90px] gap-3 px-4 py-3 items-center transition-colors ${
+                        className={`grid grid-cols-1 sm:grid-cols-[90px_110px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
                           item.had_shortage_request
                             ? "bg-rose-50/50 hover:bg-rose-100/60"
                             : "bg-white hover:bg-amber-50/60"
                         }`}
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                            {item.name_ar}
-                          </p>
-                          {item.brand && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</p>
-                          )}
-                        </div>
-                        <div className="min-w-0" dir="ltr">
-                          <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
-                            {item.sku}
-                          </span>
-                        </div>
-                        <div className="text-center">
-                          <span className="text-base font-extrabold text-emerald-700 font-mono">
-                            {item.current_stock}
-                          </span>
-                          <div className="text-[10px] text-muted-foreground mt-0.5">
-                            من <span className="font-bold text-rose-600">{item.prev_stock}</span>
-                            <span className="mx-0.5">+{item.delta}</span>
-                          </div>
-                        </div>
                         <div className="flex sm:justify-center">
                           {item.had_shortage_request ? (
                             <Badge className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
@@ -368,6 +346,28 @@ export default function TodayRestockedDialog({
                             <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto">
                               +{item.delta}
                             </Badge>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <span className="text-base font-extrabold text-emerald-700 font-mono">
+                            {item.current_stock}
+                          </span>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                            من <span className="font-bold text-rose-600">{item.prev_stock}</span>
+                            <span className="mx-0.5">+{item.delta}</span>
+                          </div>
+                        </div>
+                        <div className="min-w-0" dir="ltr">
+                          <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
+                            {item.sku}
+                          </span>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                            {item.name_ar}
+                          </p>
+                          {item.brand && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</p>
                           )}
                         </div>
                       </div>
@@ -399,43 +399,23 @@ export default function TodayRestockedDialog({
                     دي أصناف موجودة في الفيصل برصيد متاح، بس <span className="font-bold">لسه مش معروضة على الموقع</span> (محتاجة إضافة من الإدارة). لو فيه عميل بيطلبها، سجّل بلاغ نقص.
                   </span>
                 </div>
-                <div className="hidden sm:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_90px_120px] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
-                  <div>اسم الصنف</div>
-                  <div>كود الفيصل</div>
-                  <div className="text-center">الرصيد</div>
+                <div className="hidden sm:grid grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-2 text-[11px] font-bold text-blue-900/80 bg-blue-100/60 border-b border-blue-200">
                   <div className="text-center">الحالة</div>
+                  <div className="text-center">الرصيد</div>
+                  <div>كود الفيصل</div>
+                  <div className="text-right">اسم الصنف</div>
                 </div>
                 <ScrollArea className="h-[400px]">
                   <div className="divide-y divide-blue-100">
                     {filteredErp.map((item) => (
                       <div
                         key={item.erp_id}
-                        className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_90px_120px] gap-3 px-4 py-3 items-center transition-colors ${
+                        className={`grid grid-cols-1 sm:grid-cols-[120px_90px_minmax(0,1fr)_minmax(0,1.8fr)] gap-3 px-4 py-3 items-center transition-colors ${
                           item.had_shortage_request
                             ? "bg-rose-50/50 hover:bg-rose-100/60"
                             : "bg-white hover:bg-blue-50/60"
                         }`}
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                            {item.name}
-                          </p>
-                          {item.retail_price && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
-                            </p>
-                          )}
-                        </div>
-                        <div className="min-w-0" dir="ltr">
-                          <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
-                            {item.erp_id}
-                          </span>
-                        </div>
-                        <div className="text-center">
-                          <span className="text-base font-extrabold text-emerald-700 font-mono">
-                            {item.qty}
-                          </span>
-                        </div>
                         <div className="flex sm:justify-center gap-1 flex-wrap">
                           {item.had_shortage_request && (
                             <Badge className="bg-rose-600 text-white text-[10px] px-2 py-0.5 h-auto gap-0.5">
@@ -450,6 +430,26 @@ export default function TodayRestockedDialog({
                             <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-300 text-blue-700">
                               جديد على الفيصل
                             </Badge>
+                          )}
+                        </div>
+                        <div className="text-center">
+                          <span className="text-base font-extrabold text-emerald-700 font-mono">
+                            {item.qty}
+                          </span>
+                        </div>
+                        <div className="min-w-0" dir="ltr">
+                          <span className="inline-block font-mono text-xs font-bold text-blue-950 bg-blue-100/70 px-2 py-1 rounded break-all tracking-wide">
+                            {item.erp_id}
+                          </span>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                            {item.name}
+                          </p>
+                          {item.retail_price && (
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                            </p>
                           )}
                         </div>
                       </div>
