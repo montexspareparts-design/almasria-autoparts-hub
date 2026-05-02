@@ -16,6 +16,8 @@ import { Boxes, Search, X, Loader2, PackageCheck } from "lucide-react";
 interface InStockItem {
   product_id: string;
   sku: string;
+  erp_item_code: string | null;
+  part_number: string | null;
   name_ar: string;
   brand: string | null;
   current_stock: number;
