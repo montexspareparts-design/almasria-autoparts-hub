@@ -471,150 +471,148 @@ export default function ActiveVisitorsPage() {
             </p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[70vh]">
-            <div className="divide-y">
-              {filtered.map((v) => {
-                const phoneNorm = normalizeEgyptianPhone(v.phone);
-                const wpUrl = phoneNorm
-                  ? `https://wa.me/${phoneNorm}?text=${encodeURIComponent("السلام عليكم 👋 معك المصرية جروب — تحب نساعدك في إيه؟")}`
-                  : null;
-                const handled = recentlyHandled.has(v.user_id);
-                return (
-                  <div
-                    key={v.user_id}
-                    className={cn(
-                      "p-4 hover:bg-muted/30 transition-all duration-700",
-                      handled && "opacity-40 grayscale bg-muted/40"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      {/* User info */}
-                      <div className="flex-1 min-w-[220px]">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                          <h3 className="font-bold text-sm text-foreground">
-                            {v.name || "زائر بدون اسم"}
-                          </h3>
-                          <Badge variant="outline" className="text-[10px] h-5">
-                            {fmtSinceLast(v.last_seen_at)}
+          <div className="divide-y">
+            {filtered.map((v) => {
+              const phoneNorm = normalizeEgyptianPhone(v.phone);
+              const wpUrl = phoneNorm
+                ? `https://wa.me/${phoneNorm}?text=${encodeURIComponent("السلام عليكم 👋 معك المصرية جروب — تحب نساعدك في إيه؟")}`
+                : null;
+              const handled = recentlyHandled.has(v.user_id);
+              return (
+                <div
+                  key={v.user_id}
+                  className={cn(
+                    "p-4 hover:bg-muted/30 transition-all duration-700",
+                    handled && "opacity-40 grayscale bg-muted/40"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    {/* User info */}
+                    <div className="flex-1 min-w-[220px]">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                        <h3 className="font-bold text-sm text-foreground">
+                          {v.name || "زائر بدون اسم"}
+                        </h3>
+                        <Badge variant="outline" className="text-[10px] h-5">
+                          {fmtSinceLast(v.last_seen_at)}
+                        </Badge>
+                        {isOverdue(v) && (
+                          <Badge variant="destructive" className="text-[10px] h-5 gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            متأخر
                           </Badge>
-                          {isOverdue(v) && (
-                            <Badge variant="destructive" className="text-[10px] h-5 gap-1">
-                              <AlertTriangle className="w-3 h-3" />
-                              متأخر
-                            </Badge>
-                          )}
-                          {v.has_open_reminder && (
-                            <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300/40">
-                              <Clock className="w-3 h-3" />
-                              تذكير معلّق
-                            </Badge>
-                          )}
-                          {handled && (
-                            <Badge className="text-[10px] h-5 gap-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300/40">
-                              <CheckCircle2 className="w-3 h-3" />
-                              تم التعامل
-                            </Badge>
-                          )}
-                        </div>
-
-                        {v.phone && (
-                          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
-                            <Phone className="w-3 h-3" />
-                            <span className="font-mono">{v.phone}</span>
-                          </div>
                         )}
-
-                        {/* Times */}
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap mb-1.5">
-                          <span className="flex items-center gap-1">
+                        {v.has_open_reminder && (
+                          <Badge variant="secondary" className="text-[10px] h-5 gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-300/40">
                             <Clock className="w-3 h-3" />
-                            دخل: <span className="font-mono font-bold">{fmtTime(v.entry_at)}</span>
+                            تذكير معلّق
+                          </Badge>
+                        )}
+                        {handled && (
+                          <Badge className="text-[10px] h-5 gap-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-300/40">
+                            <CheckCircle2 className="w-3 h-3" />
+                            تم التعامل
+                          </Badge>
+                        )}
+                      </div>
+
+                      {v.phone && (
+                        <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                          <Phone className="w-3 h-3" />
+                          <span className="font-mono">{v.phone}</span>
+                        </div>
+                      )}
+
+                      {/* Times */}
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap mb-1.5">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          دخل: <span className="font-mono font-bold">{fmtTime(v.entry_at)}</span>
+                        </span>
+                        <span className="opacity-50">·</span>
+                        <span>
+                          مدة الجلسة:{" "}
+                          <span className="font-bold text-foreground">
+                            {fmtDuration(v.entry_at, v.last_seen_at)}
                           </span>
-                          <span className="opacity-50">·</span>
-                          <span>
-                            مدة الجلسة:{" "}
-                            <span className="font-bold text-foreground">
-                              {fmtDuration(v.entry_at, v.last_seen_at)}
-                            </span>
-                          </span>
-                          <span className="opacity-50">·</span>
-                          <span>
-                            <span className="font-bold text-foreground">{v.page_views}</span> صفحة
+                        </span>
+                        <span className="opacity-50">·</span>
+                        <span>
+                          <span className="font-bold text-foreground">{v.page_views}</span> صفحة
+                        </span>
+                      </div>
+
+                      {/* Last interaction */}
+                      {v.last_path && (
+                        <div className="flex items-center gap-1.5 text-[11px] mt-1 p-1.5 rounded bg-muted/50">
+                          <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
+                          <span className="text-muted-foreground">آخر تفاعل:</span>
+                          <span className="font-medium text-foreground truncate" dir="ltr">
+                            {v.last_page_title || v.last_path}
                           </span>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Last interaction */}
-                        {v.last_path && (
-                          <div className="flex items-center gap-1.5 text-[11px] mt-1 p-1.5 rounded bg-muted/50">
-                            <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
-                            <span className="text-muted-foreground">آخر تفاعل:</span>
-                            <span className="font-medium text-foreground truncate" dir="ltr">
-                              {v.last_page_title || v.last_path}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Quick actions */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {v.phone && (
-                          <a
-                            href={`tel:${v.phone}`}
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
-                              "bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
-                            )}
-                            title="اتصال"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            اتصال
-                          </a>
-                        )}
-                        {wpUrl && (
-                          <a
-                            href={wpUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
-                              "bg-[#25D366] hover:bg-[#1ebe57] text-white transition-colors"
-                            )}
-                            title="واتساب"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            واتساب
-                          </a>
-                        )}
-                        <button
-                          onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
+                    {/* Quick actions */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {v.phone && (
+                        <a
+                          href={`tel:${v.phone}`}
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
-                            "bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                            "bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
                           )}
-                          title="سجّل إجراء التواصل (يُخفي الكارت تدريجياً)"
+                          title="اتصال"
                         >
-                          <PenLine className="w-3.5 h-3.5" />
-                          سجّل إجراء
-                        </button>
-                        <Link
-                          to={`/admin/visitor/${v.user_id}`}
+                          <Phone className="w-3.5 h-3.5" />
+                          اتصال
+                        </a>
+                      )}
+                      {wpUrl && (
+                        <a
+                          href={wpUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
-                            "bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
+                            "bg-[#25D366] hover:bg-[#1ebe57] text-white transition-colors"
                           )}
-                          title="ملف الزائر التفصيلي"
+                          title="واتساب"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          الملف
-                        </Link>
-                      </div>
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          واتساب
+                        </a>
+                      )}
+                      <button
+                        onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
+                          "bg-amber-500 hover:bg-amber-600 text-white transition-colors"
+                        )}
+                        title="سجّل إجراء التواصل (يُخفي الكارت تدريجياً)"
+                      >
+                        <PenLine className="w-3.5 h-3.5" />
+                        سجّل إجراء
+                      </button>
+                      <Link
+                        to={`/admin/visitor/${v.user_id}`}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
+                          "bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
+                        )}
+                        title="ملف الزائر التفصيلي"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        الملف
+                      </Link>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
+                </div>
+              );
+            })}
+          </div>
         )}
       </Card>
 
