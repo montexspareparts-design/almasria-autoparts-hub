@@ -380,6 +380,34 @@ export function AdminERPCatalogBrowser() {
             </Button>
           </div>
 
+          {viewMode === "onsite" && filteredOnsite.length > 0 && (
+            <div className="flex flex-wrap gap-2 items-center p-3 rounded-lg border bg-muted/30">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">إجراء جماعي على {filteredOnsite.length} صنف مُفلتر:</span>
+              <Button
+                size="sm"
+                variant="default"
+                disabled={bulkRunning}
+                onClick={() => setBulkConfirm({ action: "activate", count: filteredOnsite.filter((p) => !p.is_active).length })}
+                className="gap-1 bg-green-600 hover:bg-green-700"
+              >
+                <Eye className="w-3 h-3" />
+                تفعيل الكل
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={bulkRunning}
+                onClick={() => setBulkConfirm({ action: "hide", count: filteredOnsite.filter((p) => p.is_active).length })}
+                className="gap-1"
+              >
+                <EyeOff className="w-3 h-3" />
+                إخفاء الكل
+              </Button>
+              {bulkRunning && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
