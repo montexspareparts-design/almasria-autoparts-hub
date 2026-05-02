@@ -749,12 +749,29 @@ function ReportSummaryCard({ report }: { report: ReportData }) {
 }
 
 /* ------------------------ Helpers ------------------------ */
-function NumField({ icon, label, required, value, onChange, disabled }: any) {
+function NumField({ icon, label, required, value, onChange, disabled, hint }: any) {
   return (
     <div>
       <Label className="text-xs font-bold mb-1.5 flex items-center gap-1.5 text-foreground">
         {icon}<span>{label}</span>
         {required && <span className="text-rose-500">*</span>}
+        {hint && (
+          <Tooltip delayDuration={150}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label="توضيح"
+                className="ms-auto text-muted-foreground hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-full"
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" align="end" className="max-w-[260px] text-[11px] leading-relaxed">
+              {hint}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </Label>
       <Input
         type="number" inputMode="numeric" min={0}
