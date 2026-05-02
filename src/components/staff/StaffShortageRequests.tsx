@@ -556,7 +556,7 @@ export default function StaffShortageRequests() {
       </div>
 
       {/* 🎉 بانر الأصناف اللي تم توفيرها حديثاً (آخر 14 يوم) — يظهر بشكل بارز فوق التبويبات */}
-      {recentlyFulfilled.length > 0 && (
+      {recentlyFulfilled.length > 0 && !bannerDismissed && (
         <motion.div
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 shadow-sm"
