@@ -240,6 +240,7 @@ export function AdminERPCatalogBrowser() {
         title: next ? `✅ تم تفعيل ${targets.length} صنف` : `🚫 تم إخفاء ${targets.length} صنف`,
         description: brandFilter !== "all" ? `العلامة: ${brandFilter}` : "كل الأصناف المُفلترة",
       });
+      loadExactCounts();
     } catch (err: any) {
       toast({ title: "فشل التحديث الجماعي", description: err.message, variant: "destructive" });
     } finally {
