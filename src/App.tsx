@@ -168,6 +168,8 @@ const App = () => (
                     <Route path="/admin/staff-home" element={<Navigate to="/admin?section=my-daily-tasks" replace />} />
                     <Route path="/admin/daily-report" element={<StaffDailyReportPage />} />
                     <Route path="/staff/daily-report" element={<StaffDailyReportPage />} />
+                    <Route path="/admin/restocked" element={<StaffRestockedPage />} />
+                    <Route path="/staff/restocked" element={<StaffRestockedPage />} />
                     <Route path="/admin/reporter-sections-editor" element={<ReporterSectionsEditor />} />
                     <Route path="/admin/daily-brief" element={<StaffDailyBriefPage />} />
                     <Route path="/staff/daily-brief" element={<StaffDailyBriefPage />} />
