@@ -82,23 +82,19 @@ export default function TeamShortagesView() {
 
   useEffect(() => { fetchRows(); }, [fetchRows]);
 
-  // اجلب آخر وقت مزامنة من كاش الفيصل
+  // اجلب آخر وقت مزامنة من ميتا كاش الفيصل
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("erp_full_catalog_meta" as any)
         .select("last_synced_at")
         .eq("id", 1)
-        .maybeSingle()
-        .then(({ data }) => ({ data: data ? [{ fetched_at: (data as any).last_synced_at }] : [] }));
-      const _unused = await supabase
-        .from("erp_full_catalog_cache" as any)
-        .select("fetched_at")
-        .order("fetched_at", { ascending: false })
-        .limit(1);
-      if (data && data[0]) setErpStockFetchedAt((data[0] as any).fetched_at);
+        .maybeSingle();
+      if (data && (data as any).last_synced_at) {
+        setErpStockFetchedAt((data as any).last_synced_at);
+      }
     })();
-  }, [rows.length]);
+  }, [rows.length, manualSyncing]);
 
   // مزامنة يدوية: الموظف يدوس "افحص دلوقتي" بدل ما يستنى الساعة الجاية
   const runManualSync = useCallback(async () => {
