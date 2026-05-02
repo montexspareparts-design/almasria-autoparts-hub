@@ -27,8 +27,11 @@ type OnsiteRow = {
 };
 
 type ViewMode = "missing" | "onsite";
+type SortMode = "qty_desc" | "qty_asc" | "name_asc" | "name_desc";
 
 const PAGE_SIZE = 50;
+
+const arabicCollator = new Intl.Collator("ar-EG", { sensitivity: "base", numeric: true });
 
 export function AdminERPCatalogBrowser() {
   const { toast } = useToast();
