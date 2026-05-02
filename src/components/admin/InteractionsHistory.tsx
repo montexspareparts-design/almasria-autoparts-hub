@@ -345,6 +345,18 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
               {r.label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => setHideEmpty((v) => !v)}
+            className={`h-6 px-2 rounded-md text-[10px] font-black border transition-all ${
+              hideEmpty
+                ? "bg-emerald-500/15 border-emerald-400/50 text-emerald-700 dark:text-emerald-400"
+                : "bg-amber-500/15 border-amber-400/50 text-amber-700 dark:text-amber-400"
+            }`}
+            title={hideEmpty ? "إخفاء التفاعلات الفاضية شغّال — اضغط لعرضها" : "عرض كل التفاعلات حتى الفاضية — اضغط للإخفاء"}
+          >
+            {hideEmpty ? "✓ بدون الفاضية" : "⚠️ يعرض الفاضية"}
+          </button>
           {(actionFilter !== "all" || staffFilter !== "all" || search) && (
             <Button
               type="button"
@@ -359,6 +371,21 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
           )}
         </div>
       </div>
+
+      {/* Empty interactions warning for management */}
+      {emptyCount > 0 && (
+        <div className="rounded-lg border-2 border-amber-400/60 bg-amber-500/10 dark:bg-amber-500/5 p-2.5 flex items-start gap-2">
+          <span className="text-base">⚠️</span>
+          <div className="flex-1 text-[11px]">
+            <p className="font-black text-amber-900 dark:text-amber-200">
+              فيه <strong>{emptyCount}</strong> تفاعل بدون تفاصيل في المدى ده
+            </p>
+            <p className="text-[10px] text-amber-800 dark:text-amber-300/80 mt-0.5">
+              الموظف ضغط زر (اتصال / واتساب / نتيجة) من غير ما يكتب اللي حصل. راجع معاهم وذكّرهم باستخدام زر «تم» مع كتابة ملحوظة.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Result count */}
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
