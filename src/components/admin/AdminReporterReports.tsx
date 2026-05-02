@@ -435,11 +435,26 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
       if (filterStaff !== "all" && r.user_id !== filterStaff) return false;
       if (filterStatus === "submitted" && !r.is_submitted) return false;
       if (filterStatus === "draft" && r.is_submitted) return false;
+      if (filterDate && r.report_date !== filterDate) return false;
       return true;
     });
-  }, [rows, filterStaff, filterStatus]);
+  }, [rows, filterStaff, filterStatus, filterDate]);
 
-  const hasActiveFilter = filterStaff !== "all" || filterStatus !== "all";
+  // Available dates (unique, sorted desc) — used for quick chips
+  const availableDates = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => r.report_date && set.add(r.report_date));
+    return Array.from(set).sort((a, b) => (a < b ? 1 : -1));
+  }, [rows]);
+
+  // Clear date filter automatically if it falls outside the loaded range
+  useEffect(() => {
+    if (filterDate && (filterDate < from || filterDate > to)) {
+      setFilterDate(null);
+    }
+  }, [from, to, filterDate]);
+
+  const hasActiveFilter = filterStaff !== "all" || filterStatus !== "all" || filterDate !== null;
 
   return (
     <div className="space-y-4">
