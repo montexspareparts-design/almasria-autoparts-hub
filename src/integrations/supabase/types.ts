@@ -2705,6 +2705,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_session_activity: {
+        Row: {
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          page_views: number
+          paths: string[]
+          session_date: string
+          user_id: string
+        }
+        Insert: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          page_views?: number
+          paths?: string[]
+          session_date?: string
+          user_id: string
+        }
+        Update: {
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          page_views?: number
+          paths?: string[]
+          session_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       staff_task_handling: {
         Row: {
           action: string
@@ -3672,6 +3702,36 @@ export type Database = {
           unique_staff_count: number
         }[]
       }
+      get_staff_activity_report: {
+        Args: { _target_date?: string }
+        Returns: {
+          email: string
+          first_seen_at: string
+          full_name: string
+          last_seen_at: string
+          page_views: number
+          role: Database["public"]["Enums"]["app_role"]
+          session_minutes: number
+          top_path: string
+          unique_paths: number
+          user_id: string
+        }[]
+      }
+      get_staff_activity_today: {
+        Args: { _target_date?: string }
+        Returns: {
+          email: string
+          first_seen_at: string
+          full_name: string
+          last_seen_at: string
+          page_views: number
+          paths_count: number
+          role: Database["public"]["Enums"]["app_role"]
+          session_minutes: number
+          top_paths: string[]
+          user_id: string
+        }[]
+      }
       get_staff_auto_metrics: {
         Args: { _date: string; _staff_user_id: string }
         Returns: {
@@ -3866,6 +3926,7 @@ export type Database = {
           snapshot_at: string
         }[]
       }
+      tick_staff_session: { Args: { _path: string }; Returns: undefined }
       user_team_ids: { Args: { _user_id: string }; Returns: string[] }
       validate_coupon: {
         Args: { _code: string }
