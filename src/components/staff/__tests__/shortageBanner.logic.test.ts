@@ -485,6 +485,70 @@ describe("اختبار تكاملي: زر 'تمام شفتها' + المزامن
     expect(db.fetch("staff-x").size).toBe(3);
   });
 
+  it("زر 'تمام شفتها': upsert فوري على Supabase + إخفاء البانر بدون انتظار", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-mark";
+    const rows = [{ id: "i1" }, { id: "i2" }, { id: "i3" }, { id: "i4" }];
+
+    // تتبع كل استدعاءات الـ DB
+    const dbWrites: number[] = [];
+    db.subscribe(() => dbWrites.push(db.fetch(userId).size));
+
+    const A = makeDevice(db, userId);
+    const B = makeDevice(db, userId);
+
+    // قبل الضغط: DB فاضي + البانر ظاهر على الجهازين
+    expect(db.fetch(userId).size).toBe(0);
+    expect(A.bannerDismissed(rows)).toBe(false);
+    expect(B.bannerDismissed(rows)).toBe(false);
+
+    // ⏱️ الضغط على الزر — لازم synchronous (مفيش await)
+    A.clickMarkAllSeen(rows);
+
+    // ✅ 1) إخفاء فوري على A (state محلي اتحدث في نفس الـ tick)
+    expect(A.bannerDismissed(rows)).toBe(true);
+    expect(A.newly(rows)).toHaveLength(0);
+
+    // ✅ 2) upsert اتعمل على Supabase بكل الـ IDs الـ4
+    expect(db.fetch(userId).size).toBe(4);
+    expect(db.fetch(userId).has("i1")).toBe(true);
+    expect(db.fetch(userId).has("i2")).toBe(true);
+    expect(db.fetch(userId).has("i3")).toBe(true);
+    expect(db.fetch(userId).has("i4")).toBe(true);
+
+    // ✅ 3) كتابة واحدة فقط للـ DB (مش متعددة)
+    expect(dbWrites).toEqual([4]);
+
+    // ✅ 4) B استلم realtime → البانر اختفى من غير ما يضغط
+    expect(B.bannerDismissed(rows)).toBe(true);
+  });
+
+  it("upsert تراكمي: ضغطات متتالية بتضيف الجداد بدون مسح القديم", () => {
+    const db = new FakeSupabaseSync();
+    const userId = "staff-cumulative";
+    const A = makeDevice(db, userId);
+
+    // ضغطة 1: علّم i1
+    A.clickMarkAllSeen([{ id: "i1" }]);
+    expect(db.fetch(userId).size).toBe(1);
+    expect(db.fetch(userId).has("i1")).toBe(true);
+
+    // ضغطة 2: وصل i2 جديد، علّم القائمة كلها
+    A.clickMarkAllSeen([{ id: "i1" }, { id: "i2" }]);
+    expect(db.fetch(userId).size).toBe(2);
+    expect(db.fetch(userId).has("i1")).toBe(true); // مازال موجود
+    expect(db.fetch(userId).has("i2")).toBe(true);
+
+    // ضغطة 3: i1 خرج من النافذة، فضل i2 + وصل i3
+    A.clickMarkAllSeen([{ id: "i2" }, { id: "i3" }]);
+    // i1 اتمسح من الـ DB لأن persistSeen بيكتب القائمة الكاملة الحالية
+    // (نفس سلوك الكود الحقيقي اللي بيكتب Array.from(seenIds))
+    expect(db.fetch(userId).size).toBe(3);
+    expect(db.fetch(userId).has("i1")).toBe(true); // seenIds local لسه شايلاه
+    expect(db.fetch(userId).has("i2")).toBe(true);
+    expect(db.fetch(userId).has("i3")).toBe(true);
+  });
+
   it("زر 'تراجع' من toast على A يرجّع البانر + يتزامن مع B", () => {
     const db = new FakeSupabaseSync();
     const rows = [{ id: "p1" }, { id: "p2" }];
