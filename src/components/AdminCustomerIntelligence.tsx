@@ -276,6 +276,7 @@ const AdminCustomerIntelligence = () => {
     } catch { return new Set(); }
   });
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
+  const [onlyCompletedTasks, setOnlyCompletedTasks] = useState(false);
   const [expandedScoreTasks, setExpandedScoreTasks] = useState<Set<string>>(new Set());
   const toggleScoreExpanded = (taskId: string) => {
     setExpandedScoreTasks(prev => {
@@ -1541,7 +1542,10 @@ const AdminCustomerIntelligence = () => {
   }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
   const visibleTasks = todayTasks
-    .filter((t) => handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id))
+    .filter((t) => {
+      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id);
+      return handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id);
+    })
     .sort((a, b) => {
       const aHandled = handledMeta[a.id] ? 1 : 0;
       const bHandled = handledMeta[b.id] ? 1 : 0;
@@ -2268,6 +2272,7 @@ const AdminCustomerIntelligence = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    if (onlyCompletedTasks) setOnlyCompletedTasks(false);
                     if (showCompletedTasks) setShowCompletedTasks(false);
                     setTimeout(() => {
                       const el = document.getElementById("today-tasks-list");
@@ -2283,6 +2288,7 @@ const AdminCustomerIntelligence = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      if (onlyCompletedTasks) setOnlyCompletedTasks(false);
                       const wasHidden = !showCompletedTasks;
                       setShowCompletedTasks(v => !v);
                       if (wasHidden) {
@@ -2310,17 +2316,23 @@ const AdminCustomerIntelligence = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!showCompletedTasks) setShowCompletedTasks(true);
+                        const next = !onlyCompletedTasks;
+                        setOnlyCompletedTasks(next);
+                        if (next) setShowCompletedTasks(true);
                         setTimeout(() => {
                           const el = document.getElementById("today-tasks-list");
                           el?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }, 80);
                       }}
-                      className="inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full bg-gradient-to-l from-emerald-600 to-emerald-500 text-white font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border border-emerald-400/40"
-                      title="اضغط لعرض المهام المنجزة اليوم داخل القائمة"
+                      className={`inline-flex items-center gap-1 text-[10px] h-5 px-2 rounded-full font-black shadow-sm hover:shadow-md hover:scale-105 transition-all border ${
+                        onlyCompletedTasks
+                          ? "bg-gradient-to-l from-emerald-700 to-emerald-600 text-white border-emerald-300 ring-2 ring-emerald-400/50"
+                          : "bg-gradient-to-l from-emerald-600 to-emerald-500 text-white border-emerald-400/40"
+                      }`}
+                      title={onlyCompletedTasks ? "اضغط لإلغاء الفلتر وعرض كل المهام" : "اضغط لعرض المهام المنجزة اليوم فقط"}
                     >
                       <CheckCircle2 className="w-3 h-3" />
-                      {doneCount} تمت اليوم
+                      {doneCount} تمت اليوم{onlyCompletedTasks ? " ✓" : ""}
                     </button>
                   );
                 })()}
