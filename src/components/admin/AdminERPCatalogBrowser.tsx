@@ -27,8 +27,11 @@ type OnsiteRow = {
 };
 
 type ViewMode = "missing" | "onsite";
+type SortMode = "qty_desc" | "qty_asc" | "name_asc" | "name_desc";
 
 const PAGE_SIZE = 50;
+
+const arabicCollator = new Intl.Collator("ar-EG", { sensitivity: "base", numeric: true });
 
 export function AdminERPCatalogBrowser() {
   const { toast } = useToast();
@@ -45,6 +48,7 @@ export function AdminERPCatalogBrowser() {
   const [minQty, setMinQty] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [showInactive, setShowInactive] = useState(true);
+  const [sortMode, setSortMode] = useState<SortMode>("qty_desc");
 
   const loadData = async () => {
     setLoading(true);
@@ -79,21 +83,44 @@ export function AdminERPCatalogBrowser() {
     loadData();
   }, []);
 
+  const sortMissing = (arr: CacheRow[]) => {
+    const copy = [...arr];
+    switch (sortMode) {
+      case "qty_desc": copy.sort((a, b) => (b.qty ?? 0) - (a.qty ?? 0)); break;
+      case "qty_asc": copy.sort((a, b) => (a.qty ?? 0) - (b.qty ?? 0)); break;
+      case "name_asc": copy.sort((a, b) => arabicCollator.compare(a.name ?? "", b.name ?? "")); break;
+      case "name_desc": copy.sort((a, b) => arabicCollator.compare(b.name ?? "", a.name ?? "")); break;
+    }
+    return copy;
+  };
+
+  const sortOnsite = (arr: OnsiteRow[]) => {
+    const copy = [...arr];
+    switch (sortMode) {
+      case "qty_desc": copy.sort((a, b) => (b.stock_quantity ?? 0) - (a.stock_quantity ?? 0)); break;
+      case "qty_asc": copy.sort((a, b) => (a.stock_quantity ?? 0) - (b.stock_quantity ?? 0)); break;
+      case "name_asc": copy.sort((a, b) => arabicCollator.compare(a.name_ar ?? "", b.name_ar ?? "")); break;
+      case "name_desc": copy.sort((a, b) => arabicCollator.compare(b.name_ar ?? "", a.name_ar ?? "")); break;
+    }
+    return copy;
+  };
+
   // Missing items (not on site, filtered by min qty + search)
   const filteredMissing = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const filtered = rows.filter((r) => {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
       if (!q) return true;
       return r.erp_id.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q);
     });
-  }, [rows, existingSkus, search, minQty]);
+    return sortMissing(filtered);
+  }, [rows, existingSkus, search, minQty, sortMode]);
 
   // Onsite items (with optional inactive + search filter)
   const filteredOnsite = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return onsiteRows.filter((r) => {
+    const filtered = onsiteRows.filter((r) => {
       if (!showInactive && !r.is_active) return false;
       if (!q) return true;
       return (
@@ -102,7 +129,9 @@ export function AdminERPCatalogBrowser() {
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
-  }, [onsiteRows, search, showInactive]);
+    return sortOnsite(filtered);
+  }, [onsiteRows, search, showInactive, sortMode]);
+
 
   const activeList: CacheRow[] | OnsiteRow[] = viewMode === "missing" ? filteredMissing : filteredOnsite;
   const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
@@ -110,7 +139,7 @@ export function AdminERPCatalogBrowser() {
   const pageMissing = filteredMissing.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const pageOnsite = filteredOnsite.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
 
-  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive]);
+  useEffect(() => { setPage(0); }, [search, minQty, viewMode, showInactive, sortMode]);
 
   const handleAdd = async (row: CacheRow) => {
     setAdding((s) => ({ ...s, [row.erp_id]: true }));
@@ -224,8 +253,8 @@ export function AdminERPCatalogBrowser() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2 items-center">
-            <div className="relative">
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={search}
@@ -234,6 +263,17 @@ export function AdminERPCatalogBrowser() {
                 className="pr-10"
               />
             </div>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              title="ترتيب"
+            >
+              <option value="qty_desc">الأعلى رصيداً</option>
+              <option value="qty_asc">الأقل رصيداً</option>
+              <option value="name_asc">أبجدي (أ → ي)</option>
+              <option value="name_desc">أبجدي (ي → أ)</option>
+            </select>
             {viewMode === "missing" ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">حد أدنى للرصيد:</span>
