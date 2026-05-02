@@ -58,14 +58,15 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
   const [customerNote, setCustomerNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // بحث متوازي (السيستم + الفيصل) مع debounce 350ms
+  // بحث متوازي (السيستم + الفيصل) مع debounce سريع — يبدأ من حرفين أو رقم واحد
   useEffect(() => {
-    if (!user || !open || mode !== "catalog" || search.trim().length < 2) {
+    const q = search.trim();
+    const minLen = /^\d+$/.test(q) ? 1 : 2;
+    if (!user || !open || mode !== "catalog" || q.length < minLen) {
       setSuggestions([]); setErpSuggestions([]); setSearchingErp(false); setErpSearchError(null);
       return;
     }
     const t = setTimeout(async () => {
-      const q = search.trim();
       setSearchingErp(true);
       setErpSearchError(null);
 
@@ -93,7 +94,7 @@ export default function ShortageReportDialog({ trigger, onSuccess }: Props) {
         setErpSearchError(erpRes.error?.message || erpRes.data?.error || "تعذر تحميل نتائج كتالوج الفيصل حالياً");
       }
       setSearchingErp(false);
-    }, 350);
+    }, 220);
     return () => clearTimeout(t);
   }, [search, mode, user, open]);
 
