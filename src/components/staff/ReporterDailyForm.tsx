@@ -123,6 +123,27 @@ function emptyFieldsRatio(d: ReportData): number {
   return empties / fields.length;
 }
 
+// التحقق الذكي من الحقول الإلزامية — يرجّع قائمة بأسماء الحقول الناقصة (= 0 أو فاضية)
+function getMissingRequiredFields(d: ReportData): string[] {
+  const required: { key: keyof ReportData; label: string }[] = [
+    { key: "quotations_count",        label: "عدد عروض الأسعار" },
+    { key: "calls_count",             label: "عدد المكالمات" },
+    { key: "whatsapp_count",          label: "عملاء واتساب" },
+    { key: "offers_sent_count",       label: "عروض/كشوف مُرسلة" },
+    { key: "offers_converted_count",  label: "عروض اتحولت لطلبات" },
+    { key: "incomplete_orders_count", label: "طلبات لم تكتمل" },
+    { key: "followups_count",         label: "عملاء تمت متابعتهم" },
+    { key: "new_customers_count",     label: "عملاء جدد" },
+    { key: "lost_opportunities_count",label: "مهتمين ولم يتم إغلاقهم" },
+  ];
+  return required
+    .filter(({ key }) => {
+      const v = (d as any)[key];
+      return v === null || v === undefined || v === "" || Number(v) === 0;
+    })
+    .map(({ label }) => label);
+}
+
 export default function ReporterDailyForm() {
   const { user } = useAuth();
   const { toast } = useToast();
