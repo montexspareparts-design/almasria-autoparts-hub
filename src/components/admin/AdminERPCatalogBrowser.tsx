@@ -167,7 +167,11 @@ export function AdminERPCatalogBrowser() {
       if (existingSkus.has(r.erp_id)) return false;
       if ((r.qty ?? 0) < minQty) return false;
       if (!q) return true;
-      return r.erp_id.toLowerCase().includes(q) || (r.name ?? "").toLowerCase().includes(q);
+      return (
+        r.erp_id.toLowerCase().includes(q) ||
+        (r.name ?? "").toLowerCase().includes(q) ||
+        (r.part_number ?? "").toLowerCase().includes(q)
+      );
     });
     return sortMissing(filtered);
   }, [rows, existingSkus, search, minQty, sortMode]);
