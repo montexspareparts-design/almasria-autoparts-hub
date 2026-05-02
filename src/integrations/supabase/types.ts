@@ -3526,6 +3526,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cron_take_daily_erp_baseline: { Args: never; Returns: undefined }
       erp_intraday_baseline_status: {
         Args: never
         Returns: {
@@ -3565,6 +3566,22 @@ export type Database = {
           new_customers_target: number
           offers_converted_target: number
           quotations_target: number
+        }[]
+      }
+      get_erp_restocked_items_period: {
+        Args: { _period?: string }
+        Returns: {
+          baseline_at: string
+          current_at: string
+          current_qty: number
+          delta: number
+          erp_id: string
+          had_shortage_request: boolean
+          is_new: boolean
+          name: string
+          prev_qty: number
+          retail_price: number
+          was_zero: boolean
         }[]
       }
       get_reporter_aggregate: {
