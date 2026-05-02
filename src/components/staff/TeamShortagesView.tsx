@@ -12,10 +12,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Package, PackageX, Loader2, Clock, RefreshCw, CheckCircle2,
   XCircle, User, Search, Users, Sparkles, Star, PackageCheck,
-  Trophy, TrendingUp, Calendar, Zap, Eye, Check,
+  Trophy, TrendingUp, Calendar, Zap, Eye, Check, FileSpreadsheet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ShortageReportDialog from "./ShortageReportDialog";
+import ShortageBulkImportDialog from "./ShortageBulkImportDialog";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
