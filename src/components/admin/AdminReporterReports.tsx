@@ -499,16 +499,93 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
                 <SelectItem value="draft">مسودة فقط</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Date filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "h-9 gap-1.5 text-xs font-normal",
+                    filterDate && "border-primary text-primary bg-primary/5"
+                  )}
+                >
+                  <CalIcon className="w-3.5 h-3.5" />
+                  {filterDate
+                    ? format(parseISO(filterDate), "EEEE dd/MM", { locale: ar })
+                    : "كل التواريخ"}
+                  {filterDate && (
+                    <XCircle
+                      className="w-3.5 h-3.5 mr-1 hover:text-destructive"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFilterDate(null);
+                      }}
+                    />
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={filterDate ? parseISO(filterDate) : undefined}
+                  onSelect={(d) => d && setFilterDate(fmt(d))}
+                  disabled={(d) => fmt(d) < from || fmt(d) > to}
+                  defaultMonth={filterDate ? parseISO(filterDate) : parseISO(to)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
             {hasActiveFilter && (
               <Button
                 variant="ghost" size="sm" className="h-9 gap-1 text-xs"
-                onClick={() => { setFilterStaff("all"); setFilterStatus("all"); }}
+                onClick={() => { setFilterStaff("all"); setFilterStatus("all"); setFilterDate(null); }}
               >
                 <XCircle className="w-3.5 h-3.5" />مسح الفلتر
               </Button>
             )}
           </div>
         </div>
+
+        {/* Quick date chips */}
+        {availableDates.length > 1 && (
+          <div className="flex items-center gap-1.5 flex-wrap mb-3 pb-3 border-b border-border/50">
+            <span className="text-[11px] text-muted-foreground ml-1">تواريخ سريعة:</span>
+            {availableDates.slice(0, 7).map((d) => {
+              const count = rows.filter((r) => r.report_date === d).length;
+              const active = filterDate === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setFilterDate(active ? null : d)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] border transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-muted/40 hover:bg-muted border-border text-foreground"
+                  )}
+                >
+                  <span>{format(parseISO(d), "EEEE", { locale: ar })}</span>
+                  <span className="opacity-70">{format(parseISO(d), "dd/MM")}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-4 text-[9px] px-1.5",
+                      active && "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30"
+                    )}
+                  >
+                    {count}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
