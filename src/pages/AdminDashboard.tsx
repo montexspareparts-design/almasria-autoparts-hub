@@ -32,6 +32,7 @@ const AdminProducts = lazy(() => import("@/components/AdminProducts"));
 const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverage"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
+const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
 const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfile"));
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
@@ -111,6 +112,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },  // ← أسفل الطلبات: مدمج (Checklist + تقرير اليوم) — يلمع طول ما لم يُقدَّم
       // ملاحظة: تبويب "التقرير اليومي" المنفصل اتدمج مع "مهامي اليومية" — للأدمن لوحة التقارير الجماعية موجودة في "التنبيهات والربط" → "التقارير اليومية للموظفين"
       { id: "staff-performance", label: "أداء الموظفين", icon: TrendingUp },         // أدمن فقط
+      { id: "staff-activity", label: "نشاط الموظفين اليومي", icon: Activity },        // أدمن فقط: مين دخل النهاردة
     ],
   },
   {
@@ -784,6 +786,8 @@ const AdminDashboard = () => {
         );
       case "staff-performance":
         return <Suspense fallback={<SectionLoader />}><AdminStaffPerformance /></Suspense>;
+      case "staff-activity":
+        return <Suspense fallback={<SectionLoader />}><AdminStaffActivity /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
       case "visitor-leads":
