@@ -186,6 +186,7 @@ export function AdminERPCatalogBrowser() {
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
+        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
@@ -208,6 +209,7 @@ export function AdminERPCatalogBrowser() {
       return (
         (r.sku ?? "").toLowerCase().includes(q) ||
         (r.erp_item_code ?? "").toLowerCase().includes(q) ||
+        (r.part_number ?? "").toLowerCase().includes(q) ||
         (r.name_ar ?? "").toLowerCase().includes(q)
       );
     });
@@ -415,7 +417,7 @@ export function AdminERPCatalogBrowser() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ابحث بالكود أو الاسم..."
+                placeholder="ابحث بالكود أو البارت نمبر أو الاسم..."
                 className="pr-10"
               />
             </div>
