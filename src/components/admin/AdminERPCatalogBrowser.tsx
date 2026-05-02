@@ -20,6 +20,7 @@ import {
 type CacheRow = {
   erp_id: string;
   name: string;
+  part_number: string | null;
   qty: number | null;
   retail_price: number | null;
   wholesale_price: number | null;
