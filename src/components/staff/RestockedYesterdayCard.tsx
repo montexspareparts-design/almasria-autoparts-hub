@@ -175,42 +175,14 @@ export default function RestockedYesterdayCard() {
 
   const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label ?? "";
 
-  // === Zero State #1: مفيش baseline سنابشوت سابق — أهم حالة ===
+  // === Zero State #1: مفيش baseline سنابشوت سابق ===
+  // (تم حذف بانر "لسه بنجمع بيانات المخزون" بناءً على طلب المستخدم)
   if (baseline && !baseline.has_baseline) {
-    const firstSnap = baseline.earliest_snapshot;
     return (
-      <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50/70 via-white to-emerald-50/40">
-        <div className="p-4 flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-2.5 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center shrink-0 shadow">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-base text-sky-900">
-                لسه بنجمع بيانات المخزون
-              </h3>
-              <p className="text-xs text-sky-800 mt-1 leading-relaxed">
-                عشان نقدر نقولك "وصل خلال {periodLabel}" لازم يكون عندنا
-                صورة (Snapshot) للمخزون قبل {formatDate(baseline.baseline_target_date)} على الأقل.
-              </p>
-              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-sky-700 bg-sky-100/70 rounded px-2 py-1 w-fit">
-                <Info className="w-3.5 h-3.5" />
-                {firstSnap
-                  ? <>أول Snapshot اتسجل: <span className="font-bold">{formatDate(firstSnap)}</span> — استنى للسنابشوت الجاي عشان نبدأ المقارنة.</>
-                  : <>لسه مفيش أي Snapshot للمخزون. السنابشوت الأول بيتسجل تلقائياً 6 صباحاً.</>}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <TodayRestockedDialog triggerLabel="🔄 عرفني إيه اللي وصل النهاردة" />
-                
-              </div>
-              <p className="text-[10px] text-sky-700/70 mt-1.5">
-                "وصل النهاردة" بيقارن الرصيد الحالي بنقطة مقارنة لحظية تقدر تأخذها بضغطة زر — مفيد لو ضفت صنف لتوّك من الفيصل.
-              </p>
-            </div>
-          </div>
+      <Card className="border bg-card">
+        <div className="p-4 flex items-center justify-end">
           <PeriodSwitcher period={period} onChange={setPeriod} />
         </div>
-
         {/* لستة احترافية: الأصناف اللي وصلت النهاردة من الفيصل (مقارنة لحظية) */}
         <TodayErpRestockedInline />
       </Card>
