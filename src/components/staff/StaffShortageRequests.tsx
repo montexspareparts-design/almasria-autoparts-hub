@@ -114,6 +114,32 @@ export default function StaffShortageRequests() {
     return () => { supabase.removeChannel(ch); };
   }, [user, fetchRows]);
 
+  // جلب رصيد الفيصل الحالي للأصناف اللي عندها بلاغات مفتوحة (open/sourcing)
+  const [erpStockMap, setErpStockMap] = useState<Record<string, number>>({});
+  const [erpStockFetchedAt, setErpStockFetchedAt] = useState<string | null>(null);
+  useEffect(() => {
+    const openRows = rows.filter(r => r.status === "open" || r.status === "sourcing");
+    if (openRows.length === 0) { setErpStockMap({}); return; }
+    const skus = Array.from(new Set(
+      openRows.map(r => (r.manual_sku || r.product?.sku || "").trim()).filter(Boolean)
+    ));
+    if (skus.length === 0) return;
+    (async () => {
+      const { data } = await supabase
+        .from("erp_full_catalog_cache" as any)
+        .select("erp_id, qty, fetched_at")
+        .in("erp_id", skus);
+      const map: Record<string, number> = {};
+      let latest: string | null = null;
+      (data || []).forEach((r: any) => {
+        map[r.erp_id] = Number(r.qty || 0);
+        if (!latest || r.fetched_at > latest) latest = r.fetched_at;
+      });
+      setErpStockMap(map);
+      setErpStockFetchedAt(latest);
+    })();
+  }, [rows]);
+
   // Search products (debounced) — يبحث بالتوازي في:
   //   1) أصناف السيستم (الـ 422 المعروضين للتجار) عبر RPC
   //   2) كل أصناف الفيصل (~12 ألف) عبر edge function مع كاش ساعة
@@ -606,6 +632,22 @@ export default function StaffShortageRequests() {
         )}
       </div>
 
+      {/* Auto-sync info banner */}
+      <div className="rounded-lg border border-sky-200 dark:border-sky-800/60 bg-gradient-to-l from-sky-50 to-emerald-50 dark:from-sky-950/30 dark:to-emerald-950/20 p-2.5 flex items-center gap-2.5 text-xs">
+        <RefreshCw className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0 animate-[spin_4s_linear_infinite]" />
+        <div className="flex-1 leading-relaxed">
+          <span className="font-semibold text-sky-800 dark:text-sky-300">مزامنة تلقائية كل ساعة من الفيصل</span>
+          <span className="text-muted-foreground"> — لما رصيد الصنف يزيد في الفيصل، البلاغ ينتقل لـ </span>
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">«تم التوفير»</span>
+          <span className="text-muted-foreground"> وهيوصلك إشعار فوري.</span>
+          {erpStockFetchedAt && (
+            <span className="block text-[10px] text-muted-foreground mt-0.5">
+              آخر مزامنة: {new Date(erpStockFetchedAt).toLocaleString("ar-EG", { hour: "numeric", minute: "2-digit", day: "numeric", month: "short" })}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Tabs by status */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="w-full grid grid-cols-5 h-auto">
@@ -691,6 +733,23 @@ export default function StaffShortageRequests() {
                             <span>•</span>
                             <span>{new Date(row.created_at).toLocaleDateString("ar-EG", { day: "numeric", month: "short" })}</span>
                           </div>
+                          {/* رصيد الفيصل الحالي للبلاغات اللي لسه قيد التوفير */}
+                          {(row.status === "open" || row.status === "sourcing") && sku in erpStockMap && (() => {
+                            const av = erpStockMap[sku];
+                            const ok = av >= row.requested_quantity;
+                            return (
+                              <div className={cn(
+                                "mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium",
+                                ok
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
+                              )}>
+                                <Package className="w-3 h-3" />
+                                رصيد الفيصل الآن: <span className="font-bold">{av}</span>
+                                {ok ? " ✓ كافي — هيتم التحديث في المزامنة القادمة" : ` (المتبقي ${row.requested_quantity - av})`}
+                              </div>
+                            );
+                          })()}
                           {row.admin_response && (
                             <div className="mt-2 text-xs bg-muted/50 rounded p-2 border-r-2 border-primary">
                               <span className="font-semibold">رد الإدارة:</span> {row.admin_response}
