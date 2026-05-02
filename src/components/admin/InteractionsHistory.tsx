@@ -444,9 +444,13 @@ export const InteractionsHistory = ({ customerUserId }: Props) => {
                         {staffName}
                       </span>
                     </div>
-                    {r.note && (
+                    {r.note && r.note.trim().length > 0 ? (
                       <p className="text-[12px] text-foreground/90 leading-relaxed bg-card/60 rounded-md p-2 border border-border/40 mt-1">
                         {r.note}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-400/40 rounded-md px-2 py-1 mt-1 inline-flex items-center gap-1">
+                        ⚠️ تفاعل بدون تفاصيل — الموظف ضغط الزر بس مكتبش اللي حصل
                       </p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1.5">
