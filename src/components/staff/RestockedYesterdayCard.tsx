@@ -581,6 +581,20 @@ const ERP_PERIOD_OPTIONS: { value: ErpPeriod; label: string; short: string }[] =
   { value: "month",     label: "آخر 30 يوم",     short: "30 يوم" },
 ];
 
+/**
+ * يرجّع تسمية موعد التشغيل الجاي للـ cron اليومي (الساعة 6 صباحاً بتوقيت القاهرة).
+ * بعد الساعة 6 ص → التشغيل الجاي = بكرة الساعة 6 ص.
+ * قبل الساعة 6 ص → التشغيل الجاي = النهاردة الساعة 6 ص.
+ */
+function nextCronRunLabel(now: Date = new Date()): string {
+  const next = new Date(now);
+  next.setHours(6, 0, 0, 0);
+  if (now.getHours() >= 6) next.setDate(next.getDate() + 1);
+  const isTomorrow = next.getDate() !== now.getDate();
+  const dayLabel = isTomorrow ? "بكرة" : "النهاردة";
+  return `${dayLabel} الساعة 6 صباحاً`;
+}
+
 function TodayErpRestockedInline() {
   const [items, setItems] = useState<ErpItem[]>([]);
   const [partNumberMap, setPartNumberMap] = useState<Record<string, string>>({});
