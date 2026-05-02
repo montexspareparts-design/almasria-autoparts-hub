@@ -36,7 +36,7 @@ type OnsiteRow = {
   brand: string | null;
 };
 
-type ViewMode = "missing" | "onsite";
+type ViewMode = "missing" | "onsite" | "visitor";
 type SortMode = "qty_desc" | "qty_asc" | "name_asc" | "name_desc";
 
 const PAGE_SIZE = 50;
