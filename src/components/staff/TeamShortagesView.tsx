@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import ShortageReportDialog from "./ShortageReportDialog";
 import ShortageBulkImportDialog from "./ShortageBulkImportDialog";
+import { computeDateRange, applyDateRange, computeCounts, applyTabFilter } from "./teamShortagesFilters";
 
 type StatusKey = "open" | "sourcing" | "fulfilled" | "rejected";
 type DateFilter = "all" | "today" | "yesterday" | "week";
