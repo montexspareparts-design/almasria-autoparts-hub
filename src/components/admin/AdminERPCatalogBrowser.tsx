@@ -133,6 +133,7 @@ export function AdminERPCatalogBrowser() {
 
   useEffect(() => {
     loadData();
+    loadExactCounts();
   }, []);
 
   const sortMissing = (arr: CacheRow[]) => {
