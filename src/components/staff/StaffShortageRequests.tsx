@@ -733,6 +733,23 @@ export default function StaffShortageRequests() {
                             <span>•</span>
                             <span>{new Date(row.created_at).toLocaleDateString("ar-EG", { day: "numeric", month: "short" })}</span>
                           </div>
+                          {/* رصيد الفيصل الحالي للبلاغات اللي لسه قيد التوفير */}
+                          {(row.status === "open" || row.status === "sourcing") && sku in erpStockMap && (() => {
+                            const av = erpStockMap[sku];
+                            const ok = av >= row.requested_quantity;
+                            return (
+                              <div className={cn(
+                                "mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium",
+                                ok
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
+                              )}>
+                                <Package className="w-3 h-3" />
+                                رصيد الفيصل الآن: <span className="font-bold">{av}</span>
+                                {ok ? " ✓ كافي — هيتم التحديث في المزامنة القادمة" : ` (المتبقي ${row.requested_quantity - av})`}
+                              </div>
+                            );
+                          })()}
                           {row.admin_response && (
                             <div className="mt-2 text-xs bg-muted/50 rounded p-2 border-r-2 border-primary">
                               <span className="font-semibold">رد الإدارة:</span> {row.admin_response}
