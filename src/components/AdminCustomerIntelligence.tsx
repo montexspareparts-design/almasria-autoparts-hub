@@ -846,6 +846,12 @@ const AdminCustomerIntelligence = () => {
       toast({ title: "فشل حفظ الملاحظة", description: error.message, variant: "destructive" });
       return;
     }
+    setContactedUserIds(prev => {
+      if (prev.has(customerUserId)) return prev;
+      const next = new Set(prev);
+      next.add(customerUserId);
+      return next;
+    });
     setQuickNoteDraft(prev => ({ ...prev, [customerUserId]: "" }));
     toast({ title: "✅ تم حفظ ملاحظة المتابعة" });
     queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
@@ -1662,6 +1668,28 @@ const AdminCustomerIntelligence = () => {
     });
     return map;
   }, [handledMeta, contactedUserIds]);
+
+  type TaskTouchRecord = HandledRecord & { source: TouchSource; customerLevel: boolean };
+  const getTaskCustomerId = useCallback((taskId: string) => String(taskId).split(":")[0], []);
+  const getTaskTouchRecord = useCallback((taskId: string): TaskTouchRecord | null => {
+    const directRecord = handledMeta[taskId];
+    if (directRecord) {
+      return { ...directRecord, source: "task_handling", customerLevel: false };
+    }
+
+    const customerTouch = customerTouchedToday.get(getTaskCustomerId(taskId));
+    if (!customerTouch) return null;
+
+    return {
+      at: customerTouch.at,
+      by: "",
+      byName: customerTouch.byName,
+      action: customerTouch.source === "communication" ? "manual" : (customerTouch.action as HandledAction),
+      note: null,
+      source: customerTouch.source,
+      customerLevel: true,
+    };
+  }, [customerTouchedToday, getTaskCustomerId, handledMeta]);
 
   const visibleTasks = todayTasks
     .filter((t) => {
@@ -2659,9 +2687,9 @@ const AdminCustomerIntelligence = () => {
             ) : (
               (() => {
                 // Group tasks by day bucket based on freshestDays
-                // Tasks already handled by any staff (call/whatsapp/note/outcome) move to a dedicated "تمت اليوم" group
-                const handledTasks = visibleTasks.filter((t) => handledMeta[t.id]);
-                const unhandledTasks = visibleTasks.filter((t) => !handledMeta[t.id]);
+                // Tasks already handled by any staff (or any touch on the same customer) move to a dedicated handled bucket
+                const handledTasks = visibleTasks.filter((t) => !!getTaskTouchRecord(t.id));
+                const unhandledTasks = visibleTasks.filter((t) => !getTaskTouchRecord(t.id));
                 const limited = [...handledTasks, ...unhandledTasks].slice(0, 30);
                 const groups: { key: string; label: string; icon: string; items: typeof limited }[] = [
                   { key: "today", label: "اليوم", icon: "📅", items: [] },
@@ -2673,7 +2701,7 @@ const AdminCustomerIntelligence = () => {
                 ];
                 limited.forEach((t) => {
                   // Any task already touched by a staff member (me or someone else) goes to the handled bucket
-                  if (handledMeta[t.id]) {
+                  if (getTaskTouchRecord(t.id)) {
                     groups[5].items.push(t);
                     return;
                   }
@@ -2700,9 +2728,9 @@ const AdminCustomerIntelligence = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                           {group.items.map((task) => {
                   const isDone = completedTasks.has(task.id);
-                  const handledRec = handledMeta[task.id];
-                  const handledByOther = !!handledRec && handledRec.by !== user?.id;
-                  const handledByMe = !!handledRec && handledRec.by === user?.id;
+                  const handledRec = getTaskTouchRecord(task.id);
+                  const handledByOther = !!handledRec && (!!handledRec.customerLevel || handledRec.by !== user?.id);
+                  const handledByMe = !!handledRec && !handledRec.customerLevel && handledRec.by === user?.id;
                   const phoneDigits = task.phone?.replace(/\D/g, "") || "";
                   const waNumber = phoneDigits.startsWith("0") ? "20" + phoneDigits.slice(1) : phoneDigits;
                   const priorityColor =
@@ -2775,7 +2803,7 @@ const AdminCustomerIntelligence = () => {
                             )}
                             {handledRec && (() => {
                               const h = handledRec;
-                              const mine = h.by === user?.id;
+                              const mine = !h.customerLevel && h.by === user?.id;
                               const actionLabel = h.action === "call" ? "اتصل" : h.action === "whatsapp" ? "راسل واتساب" : h.action === "note" ? "أضاف ملاحظة" : h.action === "outcome" ? "سجّل نتيجة" : h.action === "done" ? "أنجز" : "تعامل";
                               const mins = Math.max(0, Math.floor((Date.now() - new Date(h.at).getTime()) / 60000));
                               const ago = mins < 1 ? "الآن" : mins < 60 ? `منذ ${mins}د` : mins < 1440 ? `منذ ${Math.floor(mins/60)}س` : `منذ ${Math.floor(mins/1440)}ي`;
@@ -2787,7 +2815,7 @@ const AdminCustomerIntelligence = () => {
                                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-400/40"
                                       : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-400/40"
                                   )}
-                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}${h.note ? `\nالملاحظة: ${h.note}` : ""}`}
+                                  title={`${actionLabel} بواسطة ${h.byName || "موظف"} — ${new Date(h.at).toLocaleString("ar-EG")}${h.customerLevel ? "\nتم إخفاء كل مهام هذا العميل بناءً على تعامل مسجل اليوم" : ""}${h.note ? `\nالملاحظة: ${h.note}` : ""}`}
                                 >
                                   ✋ {mine ? "أنت" : (h.byName || "موظف")} • {actionLabel} {ago}
                                 </span>
@@ -5514,6 +5542,12 @@ const AdminCustomerIntelligence = () => {
                   toast({ title: "فشل حفظ الإجراء", description: error.message, variant: "destructive" });
                   return;
                 }
+                setContactedUserIds(prev => {
+                  if (prev.has(actionDialogUser)) return prev;
+                  const next = new Set(prev);
+                  next.add(actionDialogUser);
+                  return next;
+                });
                 toast({ title: "✅ تم تسجيل الإجراء بنجاح" });
                 queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
                 setActionDialogUser(null);
