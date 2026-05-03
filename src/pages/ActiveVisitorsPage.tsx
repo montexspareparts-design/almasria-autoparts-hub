@@ -96,8 +96,9 @@ export default function ActiveVisitorsPage() {
   const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d" | "all">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
-  // التبويب الحالي: "new" = زوار جدد بدون أي إجراء | أو نوع إجراء = جاري المتابعة
-  const [activeTab, setActiveTab] = useState<"new" | CommType>("new");
+  // الصفحة دي بتعرض «الزوار الجدد فقط» — أي زائر اتعمل عليه إجراء بيختفي تلقائياً
+  // ويظهر في قسم «متابعة العملاء» داخل لوحة الموظف. ده لمنع تكرار العمل بين موظفين.
+  const activeTab: "new" = "new";
 
   // Dialog لتسجيل إجراء التواصل من نفس الكارت (يبدأ تأثير fade فور الحفظ)
   const [actionFor, setActionFor] = useState<ActiveVisitor | null>(null);
@@ -438,23 +439,17 @@ export default function ActiveVisitorsPage() {
     return list;
   }, [visitors, search, range, overdueOnly]);
 
-  // عدّاد لكل تبويب — يعيد حسابه أوتوماتيك مع كل تغيير
-  const tabCounts = useMemo(() => {
-    const counts: Record<"new" | CommType, number> = {
-      new: 0, phone: 0, whatsapp: 0, no_answer: 0, visit: 0, note: 0,
-    };
-    inWindow.forEach((v) => {
-      if (!v.last_contact_type) counts.new++;
-      else counts[v.last_contact_type] = (counts[v.last_contact_type] || 0) + 1;
-    });
-    return counts;
-  }, [inWindow]);
+  // عدّاد الزوار اللي اتعمل عليهم إجراء داخل النافذة (للعرض في البانر التحويلي)
+  const handledInWindowCount = useMemo(
+    () => inWindow.filter((v) => !!v.last_contact_type).length,
+    [inWindow],
+  );
 
-  // الـ filtered النهائي = inWindow + تبويب الإجراء
-  const filtered = useMemo(() => {
-    if (activeTab === "new") return inWindow.filter((v) => !v.last_contact_type);
-    return inWindow.filter((v) => v.last_contact_type === activeTab);
-  }, [inWindow, activeTab]);
+  // الـ filtered = زوار جدد فقط (بدون أي إجراء سابق)
+  const filtered = useMemo(
+    () => inWindow.filter((v) => !v.last_contact_type),
+    [inWindow],
+  );
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
@@ -599,46 +594,29 @@ export default function ActiveVisitorsPage() {
         />
       </div>
 
-      {/* Tabs: زوار جدد + جاري المتابعة (مقسوم حسب نوع الإجراء) */}
-      {(() => {
-        const TABS: Array<{ key: "new" | CommType; label: string; icon: string; activeCls: string }> = [
-          { key: "new",       label: "زوار جدد",     icon: "🆕", activeCls: "bg-emerald-600 border-emerald-600 text-white" },
-          { key: "phone",     label: "اتصال",         icon: "📞", activeCls: "bg-blue-600 border-blue-600 text-white" },
-          { key: "whatsapp",  label: "واتساب",        icon: "💬", activeCls: "bg-[#25D366] border-[#25D366] text-white" },
-          { key: "no_answer", label: "لم يردّ",       icon: "🚫", activeCls: "bg-red-600 border-red-600 text-white" },
-          { key: "visit",     label: "زيارة فرع",     icon: "🏬", activeCls: "bg-purple-600 border-purple-600 text-white" },
-          { key: "note",      label: "ملاحظة",        icon: "📝", activeCls: "bg-amber-600 border-amber-600 text-white" },
-        ];
-        return (
-          <div className="flex items-center gap-1.5 flex-wrap bg-muted/30 p-1.5 rounded-lg border border-border/40">
-            {TABS.map((t) => {
-              const active = activeTab === t.key;
-              const count = tabCounts[t.key] || 0;
-              return (
-                <button
-                  key={t.key}
-                  onClick={() => setActiveTab(t.key)}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition",
-                    active
-                      ? cn(t.activeCls, "shadow-sm")
-                      : "bg-background border-border text-foreground hover:bg-muted"
-                  )}
-                >
-                  <span>{t.icon}</span>
-                  <span>{t.label}</span>
-                  <Badge
-                    variant={active ? "secondary" : "outline"}
-                    className={cn("h-4 px-1 text-[10px]", active && "bg-white/25 text-white border-0")}
-                  >
-                    {count}
-                  </Badge>
-                </button>
-              );
-            })}
+      {/* بانر تحويلي: العملاء اللي اتعمل لهم إجراء انتقلوا لمتابعة العملاء */}
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 rounded-lg p-3">
+        <div className="flex items-center gap-2 text-[12px] text-emerald-900 dark:text-emerald-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div>
+            <span className="font-bold">هنا تظهر الزوار الجدد فقط</span>
+            <span className="opacity-80"> — أي عميل اتعمل عليه إجراء (اتصال/واتساب/ملاحظة…) بيختفي تلقائياً ويتنقل لقسم </span>
+            <Link to="/admin?section=customer-intelligence" className="font-bold underline underline-offset-2 hover:text-emerald-700">
+              متابعة العملاء
+            </Link>
+            <span className="opacity-80"> — عشان متشتغلش مرتين على نفس العميل.</span>
           </div>
-        );
-      })()}
+        </div>
+        {handledInWindowCount > 0 && (
+          <Link
+            to="/admin?section=customer-intelligence"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm shrink-0"
+          >
+            <Activity className="w-3.5 h-3.5" />
+            {handledInWindowCount} عميل بيتم متابعته
+          </Link>
+        )}
+      </div>
 
       {/* List */}
       <Card className="overflow-hidden">
