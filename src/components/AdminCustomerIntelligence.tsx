@@ -137,6 +137,7 @@ import {
   Settings2, RotateCcw, History,
 } from "lucide-react";
 import { InteractionsHistory } from "@/components/admin/InteractionsHistory";
+import { TaskActionHistoryDialog } from "@/components/admin/TaskActionHistoryDialog";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
