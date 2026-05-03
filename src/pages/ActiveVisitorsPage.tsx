@@ -34,6 +34,8 @@ import {
   Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter, CheckCircle2, PenLine,
 } from "lucide-react";
 
+type CommType = "phone" | "whatsapp" | "no_answer" | "visit" | "note";
+
 interface ActiveVisitor {
   user_id: string;
   name: string | null;
@@ -44,6 +46,9 @@ interface ActiveVisitor {
   last_path: string | null;
   last_page_title: string | null;
   last_contacted_at: string | null; // آخر تواصل مسجّل لهذا الزائر
+  last_contact_type: CommType | null; // نوع آخر إجراء
+  last_contact_by: string | null;     // اسم الموظف اللي عمل آخر إجراء
+  last_contact_note: string | null;   // ملاحظة آخر إجراء
   has_open_reminder: boolean;       // عنده تذكير معلّق غير منفّذ
 }
 
