@@ -1653,12 +1653,13 @@ const AdminCustomerIntelligence = () => {
   type TouchSource = "task_handling" | "communication";
   type CustomerTouch = { at: string; byName?: string | null; source: TouchSource; action: string };
   const customerTouchedToday = useMemo(() => {
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    const todayStart = new Date(`${todayDate}T00:00:00`).getTime();
+    // SINGLE SOURCE for "today" — Cairo TZ via shared helper. Previously this used
+    // `new Date(\`${day}T00:00:00\`)` which is local-time of the BROWSER, not Cairo,
+    // and could shift the cutoff by hours on UTC/non-Egypt machines.
     const map = new Map<string, CustomerTouch>();
-    // Source 1: task_handling — extract customer id from "<userId>:<kind>"
+    // Source 1: task_handling — keep only records dated TODAY in Cairo
     Object.entries(handledMeta).forEach(([taskId, rec]) => {
-      if (new Date(rec.at).getTime() < todayStart) return;
+      if (!isWithinCairoToday(rec.at)) return;
       const customerId = String(taskId).split(":")[0];
       if (!customerId) return;
       const prev = map.get(customerId);
@@ -1666,8 +1667,8 @@ const AdminCustomerIntelligence = () => {
         map.set(customerId, { at: rec.at, byName: rec.byName, source: "task_handling", action: rec.action });
       }
     });
-    // Source 2: customer_communications — already stored as Set; we don't have full meta locally,
-    // so mark as a generic "comm" touch dated to "now" (only matters that we have an entry).
+    // Source 2: customer_communications — already filtered to Cairo-today
+    // upstream by the fetch (see useEffect using cairoDayBoundsUTC).
     contactedUserIds.forEach((customerId) => {
       if (map.has(customerId)) return; // task_handling has richer meta — keep it
       map.set(customerId, { at: new Date().toISOString(), byName: null, source: "communication", action: "comm" });
