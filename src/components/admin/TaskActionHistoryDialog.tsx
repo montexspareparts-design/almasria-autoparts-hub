@@ -84,6 +84,64 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
     };
   }, [open, taskId]);
 
+  // Reset filters when dialog reopens
+  useEffect(() => {
+    if (!open) {
+      setFilterStaff("all");
+      setFilterAction("all");
+      setDateFrom("");
+      setDateTo("");
+      setSortDir("desc");
+      setFiltersOpen(false);
+    }
+  }, [open]);
+
+  // Distinct staff options from the loaded rows
+  const staffOptions = useMemo(() => {
+    const m = new Map<string, string>();
+    rows.forEach((r) => {
+      if (r.staff_user_id) m.set(r.staff_user_id, r.staff_name || "موظف");
+    });
+    return Array.from(m.entries()).map(([id, name]) => ({ id, name }));
+  }, [rows]);
+
+  // Distinct action types from the loaded rows
+  const actionOptions = useMemo(() => {
+    const s = new Set<string>();
+    rows.forEach((r) => s.add(r.action));
+    return Array.from(s);
+  }, [rows]);
+
+  // Apply filters + sort
+  const visibleRows = useMemo(() => {
+    const fromTs = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : null;
+    const toTs = dateTo ? new Date(`${dateTo}T23:59:59.999`).getTime() : null;
+    const filtered = rows.filter((r) => {
+      if (filterStaff !== "all" && r.staff_user_id !== filterStaff) return false;
+      if (filterAction !== "all" && r.action !== filterAction) return false;
+      const t = new Date(r.created_at).getTime();
+      if (fromTs !== null && t < fromTs) return false;
+      if (toTs !== null && t > toTs) return false;
+      return true;
+    });
+    filtered.sort((a, b) => {
+      const ta = new Date(a.created_at).getTime();
+      const tb = new Date(b.created_at).getTime();
+      return sortDir === "desc" ? tb - ta : ta - tb;
+    });
+    return filtered;
+  }, [rows, filterStaff, filterAction, dateFrom, dateTo, sortDir]);
+
+  const hasActiveFilters =
+    filterStaff !== "all" || filterAction !== "all" || !!dateFrom || !!dateTo;
+
+  const clearFilters = () => {
+    setFilterStaff("all");
+    setFilterAction("all");
+    setDateFrom("");
+    setDateTo("");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" dir="rtl">
@@ -110,10 +168,115 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
           </div>
         ) : (
           <div className="space-y-2 mt-2">
-            <div className="text-[11px] text-muted-foreground font-semibold mb-2">
-              إجمالي {rows.length} إجراء — الأحدث أولاً
+            {/* Filters & sort bar */}
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-2 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((v) => !v)}
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-foreground hover:text-primary transition-colors"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  فلاتر وفرز
+                  {hasActiveFilters && (
+                    <span className="text-[9px] bg-primary text-primary-foreground rounded-full px-1.5 py-0.5">
+                      نشط
+                    </span>
+                  )}
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+                  className="h-7 text-[10px] gap-1 px-2"
+                  title={sortDir === "desc" ? "الأحدث أولاً — اضغط لعكس الترتيب" : "الأقدم أولاً — اضغط لعكس الترتيب"}
+                >
+                  {sortDir === "desc" ? (
+                    <ArrowDownWideNarrow className="w-3 h-3" />
+                  ) : (
+                    <ArrowUpNarrowWide className="w-3 h-3" />
+                  )}
+                  {sortDir === "desc" ? "الأحدث أولاً" : "الأقدم أولاً"}
+                </Button>
+              </div>
+
+              {filtersOpen && (
+                <div className="space-y-2 pt-1 border-t border-border/40">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground block mb-1">الموظف</label>
+                      <Select value={filterStaff} onValueChange={setFilterStaff}>
+                        <SelectTrigger className="h-7 text-[11px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="z-[120] bg-popover">
+                          <SelectItem value="all">الكل</SelectItem>
+                          {staffOptions.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground block mb-1">نوع الإجراء</label>
+                      <Select value={filterAction} onValueChange={setFilterAction}>
+                        <SelectTrigger className="h-7 text-[11px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="z-[120] bg-popover">
+                          <SelectItem value="all">الكل</SelectItem>
+                          {actionOptions.map((a) => (
+                            <SelectItem key={a} value={a}>{ACTION_META[a]?.label || a}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground block mb-1">من تاريخ</label>
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        max={dateTo || undefined}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground block mb-1">إلى تاريخ</label>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        min={dateFrom || undefined}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="h-7 text-[11px]"
+                      />
+                    </div>
+                  </div>
+                  {hasActiveFilters && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-6 text-[10px] gap-1 w-full"
+                    >
+                      <X className="w-3 h-3" />
+                      مسح الفلاتر
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
-            {rows.map((row, idx) => {
+
+            <div className="text-[11px] text-muted-foreground font-semibold mb-2">
+              عرض {visibleRows.length} من {rows.length} إجراء — {sortDir === "desc" ? "الأحدث أولاً" : "الأقدم أولاً"}
+            </div>
+            {visibleRows.length === 0 ? (
+              <div className="text-center py-8 text-xs text-muted-foreground border border-dashed border-border/60 rounded-lg">
+                لا توجد إجراءات تطابق الفلاتر الحالية.
+              </div>
+            ) : visibleRows.map((row, idx) => {
               const meta = ACTION_META[row.action] || { label: row.action, icon: CheckCircle2, cls: "bg-muted text-muted-foreground border-border" };
               const Icon = meta.icon;
               const isLatest = idx === 0;
