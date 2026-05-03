@@ -536,8 +536,10 @@ const AdminCustomerIntelligence = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    const fromTs = `${todayDate}T00:00:00.000Z`;
+    // Cairo-correct day bounds — `T00:00:00Z` would have meant midnight UTC
+    // (02:00 Cairo), shifting the "today" window by 2h. We use the helper.
+    const { startMs: cairoTodayStartMs } = cairoDayBoundsUTC();
+    const fromTs = new Date(cairoTodayStartMs).toISOString();
 
     const fetchAll = async () => {
       const { data } = await supabase
@@ -559,8 +561,8 @@ const AdminCustomerIntelligence = () => {
         (payload: any) => {
           const r = payload.new;
           if (!r?.customer_user_id) return;
-          // Client-side date guard (in case event is for a stale day)
-          if (r.created_at && new Date(r.created_at).getTime() < new Date(fromTs).getTime()) return;
+          // Same Cairo-day check used everywhere else
+          if (!isWithinCairoToday(r.created_at)) return;
           setContactedUserIds(prev => {
             if (prev.has(r.customer_user_id)) return prev;
             const next = new Set(prev);
