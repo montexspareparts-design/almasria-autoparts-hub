@@ -634,7 +634,7 @@ const AdminCustomerIntelligence = () => {
 
   const unmarkHandled = async (taskId: string) => {
     if (!user?.id) return;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const todayDate = cairoToday();
     setHandledMeta(prev => {
       if (!prev[taskId]) return prev;
       const next = { ...prev };
