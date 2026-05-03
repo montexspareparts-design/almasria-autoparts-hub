@@ -43,12 +43,10 @@ export default function PageVisitTracker() {
   // Track every navigation
   useEffect(() => {
     const fullPath = location.pathname + location.search;
-    // Use a small delay so document.title gets a chance to update,
-    // but the visit is queued synchronously inside trackPageVisit so it survives a fast close.
-    const t = setTimeout(() => {
-      trackPageVisit(fullPath, document.title);
-      trackCustomerSession();
-    }, 150);
+    // Track immediately so fast bounces (esp. from FB in-app browser) don't get lost.
+    // Run title-dependent metadata enrichment in a microtask but the visit itself is queued sync.
+    trackPageVisit(fullPath, document.title || "");
+    trackCustomerSession();
 
     const heartbeat = window.setInterval(() => {
       if (document.visibilityState === "visible") {
@@ -58,7 +56,6 @@ export default function PageVisitTracker() {
     }, 20000);
 
     return () => {
-      clearTimeout(t);
       clearInterval(heartbeat);
     };
   }, [location.pathname, location.search]);
