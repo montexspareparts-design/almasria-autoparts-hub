@@ -2555,6 +2555,65 @@ const AdminCustomerIntelligence = () => {
                           {doneCount} تمت اليوم{isDone ? " ✓" : ""}
                         </button>
                       )}
+                      {doneCount > 0 && (
+                        <UITooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label="شرح طريقة احتساب عدد (تمت اليوم)"
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Info className="w-3 h-3" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" align="start" className="max-w-[320px] text-[11px] leading-relaxed">
+                            <div className="space-y-2 text-right" dir="rtl">
+                              <p className="font-bold text-foreground">
+                                إزاي بنحسب «{doneCount} تمت اليوم»؟
+                              </p>
+                              <ul className="space-y-1 list-disc pr-4 marker:text-emerald-500">
+                                <li>
+                                  <span className="font-semibold">{doneTodayBreakdown.directHandled}</span>{" "}
+                                  مهمة عليها سجل مباشر (اتصال/واتساب/تم) من موظف اليوم.
+                                </li>
+                                {doneTodayBreakdown.customerLevelOnly > 0 && (
+                                  <li>
+                                    <span className="font-semibold">{doneTodayBreakdown.customerLevelOnly}</span>{" "}
+                                    مهمة بتُحسب لأن نفس العميل اتلمس في مهمة تانية أو محادثة اليوم
+                                    <span className="text-muted-foreground"> (قاعدة customerTouchedToday — بنحسب لمسة واحدة لكل عميل)</span>.
+                                  </li>
+                                )}
+                              </ul>
+                              {(doneTodayBreakdown.outsideWindowHandled > 0 || doneTodayBreakdown.staleHandled > 0) && (
+                                <div className="pt-2 mt-2 border-t border-border/40 space-y-1">
+                                  <p className="font-bold text-amber-600 dark:text-amber-400">
+                                    ليه ممكن ترقام تانية تختلف؟
+                                  </p>
+                                  {doneTodayBreakdown.outsideWindowHandled > 0 && (
+                                    <p>
+                                      • فيه{" "}
+                                      <span className="font-semibold">{doneTodayBreakdown.outsideWindowHandled}</span>{" "}
+                                      سجل لعملاء/مهام برّه نافذة «
+                                      {taskWindowDays === 1 ? "آخر 24 ساعة" : `آخر ${taskWindowDays} يوم`}
+                                      » — مش بتظهر هنا. وسّع النافذة عشان تشوفها.
+                                    </p>
+                                  )}
+                                  {doneTodayBreakdown.staleHandled > 0 && (
+                                    <p>
+                                      • فيه{" "}
+                                      <span className="font-semibold">{doneTodayBreakdown.staleHandled}</span>{" "}
+                                      سجل من أيام سابقة (مش من اليوم بتوقيت القاهرة) — بيظهر بس في «سجل الإجراءات».
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                              <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/30">
+                                التطابق مضمون: العداد = عدد الكروت في تبويب «تمت اليوم».
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </UITooltip>
+                      )}
                     </>
                   );
                 })()}
