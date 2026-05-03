@@ -140,7 +140,7 @@ import {
   Package, Calendar as CalendarIcon, Filter, X, Download,
   MessageCircle, Send, Copy, ExternalLink, Briefcase,
   Star, Activity, AlertTriangle, AlertCircle, CheckCircle2, ListOrdered, FileText, RefreshCw, Zap,
-  Settings2, RotateCcw, History,
+  Settings2, RotateCcw, History, Info,
 } from "lucide-react";
 import { InteractionsHistory } from "@/components/admin/InteractionsHistory";
 import { TaskActionHistoryDialog } from "@/components/admin/TaskActionHistoryDialog";
