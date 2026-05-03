@@ -96,6 +96,8 @@ export default function ActiveVisitorsPage() {
   const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d" | "all">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
+  // التبويب الحالي: "new" = زوار جدد بدون أي إجراء | أو نوع إجراء = جاري المتابعة
+  const [activeTab, setActiveTab] = useState<"new" | CommType>("new");
 
   // Dialog لتسجيل إجراء التواصل من نفس الكارت (يبدأ تأثير fade فور الحفظ)
   const [actionFor, setActionFor] = useState<ActiveVisitor | null>(null);
