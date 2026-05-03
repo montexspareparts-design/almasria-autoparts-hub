@@ -37,6 +37,8 @@ const ACTION_META: Record<string, { label: string; icon: any; cls: string }> = {
 export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open, onOpenChange }: Props) {
   const [rows, setRows] = useState<ActionLogRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string | null } | null>(null);
 
   useEffect(() => {
     if (!open || !taskId) return;
