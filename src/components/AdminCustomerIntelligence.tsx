@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import TouchedTodayPanel from "@/components/admin/TouchedTodayPanel";
+import { useTouchedTodayUserIds } from "@/hooks/useTouchedTodayUserIds";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
@@ -207,6 +209,8 @@ const AdminCustomerIntelligence = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  // عدد العملاء اللي اتعمل عليهم إجراء اليوم (موحّد عبر كل الشاشات) — للبادج في تبويب «تمت اليوم»
+  const { touchedIds: touchedTodayIds } = useTouchedTodayUserIds();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
@@ -3532,7 +3536,7 @@ const AdminCustomerIntelligence = () => {
 
         return (
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/40 rounded-xl mb-3">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 bg-muted/40 rounded-xl mb-3">
               <TabsTrigger value="all" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
                 <Users className="w-3.5 h-3.5" />
                 كل العملاء
@@ -3545,11 +3549,24 @@ const AdminCustomerIntelligence = () => {
                   <Badge className="text-[10px] h-5 mr-1 bg-orange-500 hover:bg-orange-600 text-white">{followUpList.length}</Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="touched-today" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                تمت اليوم
+                {touchedTodayIds.size > 0 && (
+                  <Badge className="text-[10px] h-5 mr-1 bg-emerald-600 hover:bg-emerald-700 text-white">{touchedTodayIds.size}</Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="interactions" className="text-[12px] font-bold gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-2.5">
                 <History className="w-3.5 h-3.5 text-primary" />
                 سجل التفاعلات
               </TabsTrigger>
             </TabsList>
+
+            {/* ===== Tab: تمت اليوم — العملاء المخفيين من باقي الشاشات ===== */}
+            <TabsContent value="touched-today" className="mt-0 focus-visible:outline-none">
+              <TouchedTodayPanel />
+            </TabsContent>
+
 
 
 
