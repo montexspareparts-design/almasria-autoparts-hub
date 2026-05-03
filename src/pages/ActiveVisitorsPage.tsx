@@ -34,6 +34,8 @@ import {
   Clock, MapPin, ArrowLeft, Activity, Loader2, AlertTriangle, Filter, CheckCircle2, PenLine,
 } from "lucide-react";
 
+type CommType = "phone" | "whatsapp" | "no_answer" | "visit" | "note";
+
 interface ActiveVisitor {
   user_id: string;
   name: string | null;
@@ -44,6 +46,9 @@ interface ActiveVisitor {
   last_path: string | null;
   last_page_title: string | null;
   last_contacted_at: string | null; // آخر تواصل مسجّل لهذا الزائر
+  last_contact_type: CommType | null; // نوع آخر إجراء
+  last_contact_by: string | null;     // اسم الموظف اللي عمل آخر إجراء
+  last_contact_note: string | null;   // ملاحظة آخر إجراء
   has_open_reminder: boolean;       // عنده تذكير معلّق غير منفّذ
 }
 
@@ -91,6 +96,8 @@ export default function ActiveVisitorsPage() {
   const [hoursFilter, setHoursFilter] = useState<"30m" | "1h" | "3h" | "6h" | "24h" | "yesterday" | "7d" | "all">("30m");
   // فلتر "متأخر" — يعرض فقط الزوار النشطين اللي مفيش معاهم تواصل في آخر OVERDUE_HOURS ساعة
   const [overdueOnly, setOverdueOnly] = useState(false);
+  // التبويب الحالي: "new" = زوار جدد بدون أي إجراء | أو نوع إجراء = جاري المتابعة
+  const [activeTab, setActiveTab] = useState<"new" | CommType>("new");
 
   // Dialog لتسجيل إجراء التواصل من نفس الكارت (يبدأ تأثير fade فور الحفظ)
   const [actionFor, setActionFor] = useState<ActiveVisitor | null>(null);
@@ -184,18 +191,50 @@ export default function ActiveVisitorsPage() {
     }
 
     // 5) سجلات التواصل لكل المستخدمين النشطين — لتحديد "متأخر" + إخفاء من تم التواصل معه مؤخراً
-    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + أي تذكير معلّق غير منفّذ.
+    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + نوعه + الموظف + أي تذكير معلّق غير منفّذ.
     const commsSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: commsRows } = await supabase
       .from("customer_communications")
-      .select("customer_user_id, created_at, reminder_at, is_done")
+      .select("customer_user_id, created_at, reminder_at, is_done, comm_type, note, staff_user_id")
       .in("customer_user_id", userIds)
-      .gte("created_at", commsSince);
-    const commsByUser = new Map<string, { last_contacted_at: string | null; has_open_reminder: boolean }>();
+      .gte("created_at", commsSince)
+      .order("created_at", { ascending: false });
+
+    // اسماء الموظفين (للعرض في بادج "اتصل به: أحمد")
+    const staffIds = Array.from(new Set((commsRows || []).map((c: any) => c.staff_user_id).filter(Boolean)));
+    const staffNameMap = new Map<string, string>();
+    if (staffIds.length > 0) {
+      const { data: staffProfs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", staffIds);
+      (staffProfs || []).forEach((p: any) => {
+        if (p.full_name) staffNameMap.set(p.user_id, p.full_name);
+      });
+    }
+
+    type CommSummary = {
+      last_contacted_at: string | null;
+      last_contact_type: CommType | null;
+      last_contact_by: string | null;
+      last_contact_note: string | null;
+      has_open_reminder: boolean;
+    };
+    const commsByUser = new Map<string, CommSummary>();
     (commsRows || []).forEach((c: any) => {
-      const cur = commsByUser.get(c.customer_user_id) || { last_contacted_at: null, has_open_reminder: false };
-      if (!cur.last_contacted_at || c.created_at > cur.last_contacted_at) {
+      const cur: CommSummary = commsByUser.get(c.customer_user_id) || {
+        last_contacted_at: null,
+        last_contact_type: null,
+        last_contact_by: null,
+        last_contact_note: null,
+        has_open_reminder: false,
+      };
+      // commsRows مرتبة DESC، فأول صف لكل user هو الأحدث
+      if (!cur.last_contacted_at) {
         cur.last_contacted_at = c.created_at;
+        cur.last_contact_type = (c.comm_type as CommType) || null;
+        cur.last_contact_by = c.staff_user_id ? (staffNameMap.get(c.staff_user_id) || null) : null;
+        cur.last_contact_note = c.note || null;
       }
       if (c.reminder_at && !c.is_done) cur.has_open_reminder = true;
       commsByUser.set(c.customer_user_id, cur);
@@ -217,6 +256,9 @@ export default function ActiveVisitorsPage() {
         last_path: ent?.last_path || null,
         last_page_title: ent?.last_page_title || null,
         last_contacted_at: cc?.last_contacted_at || null,
+        last_contact_type: cc?.last_contact_type || null,
+        last_contact_by: cc?.last_contact_by || null,
+        last_contact_note: cc?.last_contact_note || null,
         has_open_reminder: cc?.has_open_reminder || false,
       };
     });
@@ -280,7 +322,8 @@ export default function ActiveVisitorsPage() {
     return visitors.filter((v) => inRange(v.last_seen_at) && isOverdue(v)).length;
   }, [visitors, range]);
 
-  const filtered = useMemo(() => {
+  // قائمة الزوار داخل النافذة الزمنية + بحث + فلتر المتأخر (قبل تبويب الإجراء)
+  const inWindow = useMemo(() => {
     let list = visitors.filter((v) => inRange(v.last_seen_at));
     if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
@@ -293,6 +336,24 @@ export default function ActiveVisitorsPage() {
     }
     return list;
   }, [visitors, search, range, overdueOnly]);
+
+  // عدّاد لكل تبويب — يعيد حسابه أوتوماتيك مع كل تغيير
+  const tabCounts = useMemo(() => {
+    const counts: Record<"new" | CommType, number> = {
+      new: 0, phone: 0, whatsapp: 0, no_answer: 0, visit: 0, note: 0,
+    };
+    inWindow.forEach((v) => {
+      if (!v.last_contact_type) counts.new++;
+      else counts[v.last_contact_type] = (counts[v.last_contact_type] || 0) + 1;
+    });
+    return counts;
+  }, [inWindow]);
+
+  // الـ filtered النهائي = inWindow + تبويب الإجراء
+  const filtered = useMemo(() => {
+    if (activeTab === "new") return inWindow.filter((v) => !v.last_contact_type);
+    return inWindow.filter((v) => v.last_contact_type === activeTab);
+  }, [inWindow, activeTab]);
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
@@ -328,15 +389,29 @@ export default function ActiveVisitorsPage() {
         next.add(actionFor.user_id);
         return next;
       });
-      // حدّث last_contacted_at في الذاكرة فوراً (بدل ما ننتظر refetch)
+      // حدّث آخر تواصل + النوع + الموظف فوراً → الكارت ينتقل تلقائياً للتبويب الصحيح
+      const { data: { user: me } } = await supabase.auth.getUser();
+      const myName = me?.user_metadata?.full_name || me?.email || null;
       setVisitors((prev) =>
         prev.map((v) =>
           v.user_id === actionFor.user_id
-            ? { ...v, last_contacted_at: new Date().toISOString() }
+            ? {
+                ...v,
+                last_contacted_at: new Date().toISOString(),
+                last_contact_type: actionType,
+                last_contact_by: myName,
+                last_contact_note: actionNote.trim() || null,
+              }
             : v
         )
       );
-      toast({ title: "✅ تم تسجيل الإجراء", description: "الكارت سيختفي تدريجياً." });
+      const tabLabels: Record<CommType, string> = {
+        phone: "📞 اتصال", whatsapp: "💬 واتساب", no_answer: "🚫 لم يردّ", visit: "🏬 زيارة", note: "📝 ملاحظة",
+      };
+      toast({
+        title: "✅ تم تسجيل الإجراء",
+        description: `الزائر انتقل لتبويب "${tabLabels[actionType]}" — جاري المتابعة.`,
+      });
       setActionFor(null);
       setActionNote("");
       setActionType("phone");
@@ -456,6 +531,47 @@ export default function ActiveVisitorsPage() {
         />
       </div>
 
+      {/* Tabs: زوار جدد + جاري المتابعة (مقسوم حسب نوع الإجراء) */}
+      {(() => {
+        const TABS: Array<{ key: "new" | CommType; label: string; icon: string; activeCls: string }> = [
+          { key: "new",       label: "زوار جدد",     icon: "🆕", activeCls: "bg-emerald-600 border-emerald-600 text-white" },
+          { key: "phone",     label: "اتصال",         icon: "📞", activeCls: "bg-blue-600 border-blue-600 text-white" },
+          { key: "whatsapp",  label: "واتساب",        icon: "💬", activeCls: "bg-[#25D366] border-[#25D366] text-white" },
+          { key: "no_answer", label: "لم يردّ",       icon: "🚫", activeCls: "bg-red-600 border-red-600 text-white" },
+          { key: "visit",     label: "زيارة فرع",     icon: "🏬", activeCls: "bg-purple-600 border-purple-600 text-white" },
+          { key: "note",      label: "ملاحظة",        icon: "📝", activeCls: "bg-amber-600 border-amber-600 text-white" },
+        ];
+        return (
+          <div className="flex items-center gap-1.5 flex-wrap bg-muted/30 p-1.5 rounded-lg border border-border/40">
+            {TABS.map((t) => {
+              const active = activeTab === t.key;
+              const count = tabCounts[t.key] || 0;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition",
+                    active
+                      ? cn(t.activeCls, "shadow-sm")
+                      : "bg-background border-border text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span>{t.icon}</span>
+                  <span>{t.label}</span>
+                  <Badge
+                    variant={active ? "secondary" : "outline"}
+                    className={cn("h-4 px-1 text-[10px]", active && "bg-white/25 text-white border-0")}
+                  >
+                    {count}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* List */}
       <Card className="overflow-hidden">
         {loading ? (
@@ -467,7 +583,11 @@ export default function ActiveVisitorsPage() {
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
             <Users className="w-10 h-10 opacity-40" />
             <p className="text-sm">
-              {visitors.length === 0 ? "لا يوجد زوار نشطون الآن" : "لا نتائج مطابقة للبحث"}
+              {visitors.length === 0
+                ? "لا يوجد زوار نشطون الآن"
+                : activeTab === "new"
+                  ? "🎉 مفيش زوار جدد بدون إجراء — كله متابع!"
+                  : "لا توجد متابعات في هذا التبويب"}
             </p>
           </div>
         ) : (
@@ -516,6 +636,37 @@ export default function ActiveVisitorsPage() {
                           </Badge>
                         )}
                       </div>
+
+                      {/* بانل آخر إجراء — شفافية كاملة لمنع تكرار التواصل */}
+                      {v.last_contact_type && v.last_contacted_at && (() => {
+                        const typeMeta: Record<CommType, { label: string; icon: string; cls: string }> = {
+                          phone:     { label: "اتصال",   icon: "📞", cls: "bg-blue-50 dark:bg-blue-950/30 border-blue-300/50 text-blue-800 dark:text-blue-300" },
+                          whatsapp:  { label: "واتساب",  icon: "💬", cls: "bg-green-50 dark:bg-green-950/30 border-green-300/50 text-green-800 dark:text-green-300" },
+                          no_answer: { label: "لم يردّ",  icon: "🚫", cls: "bg-red-50 dark:bg-red-950/30 border-red-300/50 text-red-800 dark:text-red-300" },
+                          visit:     { label: "زيارة",    icon: "🏬", cls: "bg-purple-50 dark:bg-purple-950/30 border-purple-300/50 text-purple-800 dark:text-purple-300" },
+                          note:      { label: "ملاحظة",   icon: "📝", cls: "bg-amber-50 dark:bg-amber-950/30 border-amber-300/50 text-amber-800 dark:text-amber-300" },
+                        };
+                        const m = typeMeta[v.last_contact_type];
+                        const sinceMin = Math.max(0, Math.round((Date.now() - new Date(v.last_contacted_at).getTime()) / 60000));
+                        const sinceLabel = sinceMin < 1 ? "الآن" : sinceMin < 60 ? `من ${sinceMin}د` : sinceMin < 1440 ? `من ${Math.floor(sinceMin/60)}س` : `من ${Math.floor(sinceMin/1440)} يوم`;
+                        return (
+                          <div className={cn("text-[11px] flex items-center gap-1.5 mb-1.5 p-1.5 rounded border flex-wrap", m.cls)}>
+                            <span>{m.icon}</span>
+                            <span className="font-bold">آخر إجراء: {m.label}</span>
+                            {v.last_contact_by && (
+                              <>
+                                <span className="opacity-60">·</span>
+                                <span>بواسطة <span className="font-bold">{v.last_contact_by}</span></span>
+                              </>
+                            )}
+                            <span className="opacity-60">·</span>
+                            <span className="tabular-nums">{sinceLabel}</span>
+                            {v.last_contact_note && (
+                              <span className="truncate opacity-80 max-w-[200px]">— {v.last_contact_note}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {v.phone && (
                         <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
