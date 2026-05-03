@@ -209,6 +209,8 @@ const AdminCustomerIntelligence = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  // عدد العملاء اللي اتعمل عليهم إجراء اليوم (موحّد عبر كل الشاشات) — للبادج في تبويب «تمت اليوم»
+  const { touchedIds: touchedTodayIds } = useTouchedTodayUserIds();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
