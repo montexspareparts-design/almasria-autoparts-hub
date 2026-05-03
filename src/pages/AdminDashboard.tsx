@@ -842,7 +842,13 @@ const AdminDashboard = () => {
       case "reporter-reports":    // legacy alias → tab=reports
         return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
-        return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
+      case "customer-intelligence":
+        // أُعيد توجيهه أوتوماتيكياً عبر useEffect لـ daily-dashboard?tab=intel — fallback آمن:
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <AdminCustomerIntelligence />
+          </Suspense>
+        );
       case "task-audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminTaskActionAuditLog /></Suspense>;
       case "visitor-leads":
