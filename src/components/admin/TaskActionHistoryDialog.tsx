@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { History, Phone, MessageCircle, CheckCircle2, StickyNote, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StaffInfoDialog } from "./StaffInfoDialog";
 
 interface ActionLogRow {
   id: string;
