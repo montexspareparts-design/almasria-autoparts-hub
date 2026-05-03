@@ -505,6 +505,55 @@ const AdminCustomerIntelligence = () => {
     };
   }, [todayKey]);
 
+  // === Customer-level contact tracking ===
+  // Even if a staff member uses the quick CRM bar / ActiveVisitorsPage / StaffInfoDialog
+  // (which writes to `customer_communications` instead of `staff_task_handling`),
+  // we want the related customer's pending tasks to disappear automatically so the
+  // staff doesn't see them again and re-contact the same person.
+  const [contactedUserIds, setContactedUserIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const fromTs = `${todayDate}T00:00:00.000Z`;
+
+    const load = async () => {
+      const { data } = await supabase
+        .from("customer_communications")
+        .select("customer_user_id")
+        .gte("created_at", fromTs);
+      if (cancelled || !data) return;
+      const s = new Set<string>();
+      data.forEach((r: any) => r.customer_user_id && s.add(r.customer_user_id));
+      setContactedUserIds(s);
+    };
+    load();
+
+    const ch = supabase
+      .channel("aci_customer_comms_today")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "customer_communications" },
+        (payload: any) => {
+          const r = payload.new;
+          if (r?.customer_user_id) {
+            setContactedUserIds(prev => {
+              if (prev.has(r.customer_user_id)) return prev;
+              const next = new Set(prev);
+              next.add(r.customer_user_id);
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+    };
+  }, [todayKey]);
+
   const markHandled = async (taskId: string, action: HandledAction, note?: string | null) => {
     if (!user?.id) return;
     // Optimistic: bail if someone (including me) already claimed it locally
@@ -1557,16 +1606,22 @@ const AdminCustomerIntelligence = () => {
 
   const visibleTasks = todayTasks
     .filter((t) => {
-      // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت
-      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id);
-      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة → تختفي تلقائياً
+      const customerId = (t.id as string).split(":")[0];
+      const contactedToday = contactedUserIds.has(customerId);
+      // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت أو اتواصل مع العميل
+      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedToday;
+      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة أو اتواصل مع العميل → تختفي تلقائياً
       // إلا لو الموظف ضغط "إظهار المكتمل" يدوياً
       if (showCompletedTasks) return true;
-      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن
+      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن على المهمة نفسها
+      if (contactedToday) return false; // ← إصلاح إضافي: إخفاء كل مهام العميل لو اتسجل تواصل معاه النهارده
       return !completedTasks.has(t.id);
     })
     .sort((a, b) => b.score - a.score || a.priority - b.priority);
-  const handledOrCompletedCount = todayTasks.filter(t => !!handledMeta[t.id] || completedTasks.has(t.id)).length;
+  const handledOrCompletedCount = todayTasks.filter(t => {
+    const customerId = (t.id as string).split(":")[0];
+    return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedUserIds.has(customerId);
+  }).length;
   const pendingTasksCount = todayTasks.length - handledOrCompletedCount;
   const completedTasksCount = handledOrCompletedCount;
 
