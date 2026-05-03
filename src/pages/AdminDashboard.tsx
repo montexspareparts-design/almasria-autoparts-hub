@@ -372,6 +372,17 @@ const AdminDashboard = () => {
     }
   }, [searchParams, setSearchParams, defaultSection]);
 
+  // Redirect: ذكاء العملاء أصبح تبويب داخل الرئيسية → حوّل الروابط القديمة تلقائياً
+  useEffect(() => {
+    const sec = searchParams.get("section");
+    if (sec === "customer-intel" || sec === "customer-intelligence") {
+      const next = new URLSearchParams(searchParams);
+      next.set("section", "daily-dashboard");
+      next.set("tab", "intel");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
     // Reporter-only accounts (Al-Faisal staff): UI is locked to /admin/daily-report.
