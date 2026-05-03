@@ -11,6 +11,7 @@ import {
   Search, UserX, MessageCircle, UserPlus, Shield, Eye, Phone
 } from "lucide-react";
 import WhatsAppQuickChat from "./WhatsAppQuickChat";
+import { useTouchedTodayUserIds } from "@/hooks/useTouchedTodayUserIds";
 
 interface DashboardStats {
   pendingOrders: number;
