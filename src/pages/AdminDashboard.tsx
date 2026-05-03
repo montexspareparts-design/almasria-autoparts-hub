@@ -113,7 +113,7 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "👥 العملاء والمبيعات",
     items: [
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      // ذكاء العملاء تم دمجه داخل «الرئيسية» كتبويب — راجع case "daily-dashboard".
       { id: "task-audit-log", label: "سجل تدقيق الإجراءات", icon: ClipboardList },
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "Leads (عملاء محتملين)", icon: Users },
@@ -348,13 +348,20 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // الأدمن يبدأ من "ذكاء العملاء"، والموظف يبدأ من "مهامي اليومية وتقرير اليوم"
-  // حتى يرى مباشرة الواجهة الجديدة بدل لوحة staff-home القديمة.
-  const defaultSection = isModerator && !isAdmin ? "my-daily-tasks" : "customer-intel";
+  // الكل يبدأ من «الرئيسية» المدموجة (تحتوي ذكاء العملاء كتبويب)
+  const defaultSection = isModerator && !isAdmin ? "my-daily-tasks" : "daily-dashboard";
   const activeSection = searchParams.get("section") || defaultSection;
+  const activeTab = searchParams.get("tab") || "home";
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
+  };
+
+  const setActiveTab = (tab: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("section", "daily-dashboard");
+    next.set("tab", tab);
+    setSearchParams(next);
   };
 
   // إعادة توجيه تلقائي فوري لما يدخل /admin بدون ?section → القسم الافتراضي حسب الدور
@@ -364,6 +371,17 @@ const AdminDashboard = () => {
       setSearchParams({ section: defaultSection }, { replace: true });
     }
   }, [searchParams, setSearchParams, defaultSection]);
+
+  // Redirect: ذكاء العملاء أصبح تبويب داخل الرئيسية → حوّل الروابط القديمة تلقائياً
+  useEffect(() => {
+    const sec = searchParams.get("section");
+    if (sec === "customer-intel" || sec === "customer-intelligence") {
+      const next = new URLSearchParams(searchParams);
+      next.set("section", "daily-dashboard");
+      next.set("tab", "intel");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/auth"); return; }
@@ -732,7 +750,7 @@ const AdminDashboard = () => {
     // Graceful fallback: لو الـ section غير موجود في القائمة المسموحة للمستخدم،
     // اعرض رسالة واضحة بدل ما نعرض تحليلات بصمت أو شاشة فاضية.
     const sectionExists = filteredSidebarSections.some(s => s.id === activeSection);
-    if (!sectionExists && activeSection !== "customer-intel" && activeSection !== "daily-dashboard") {
+    if (!sectionExists && activeSection !== "customer-intel" && activeSection !== "customer-intelligence" && activeSection !== "daily-dashboard") {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
@@ -758,10 +776,27 @@ const AdminDashboard = () => {
 
     switch (activeSection) {
       case "daily-dashboard":
-        // الموظف والأدمن يشوفون نفس اللوحة (StaffDailyDashboard) — نفس التحديثات لكليهما.
+        // الرئيسية المدموجة: تبويب «الرئيسية» (StaffDailyDashboard) + تبويب «ذكاء العملاء».
         return (
           <Suspense fallback={<SectionLoader />}>
-            <StaffDailyDashboard onNavigate={setActiveSection} />
+            <Tabs value={activeTab === "intel" ? "intel" : "home"} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-4 grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="home" className="gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  الرئيسية
+                </TabsTrigger>
+                <TabsTrigger value="intel" className="gap-2">
+                  <Eye className="w-4 h-4" />
+                  ذكاء العملاء
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="home" className="mt-0 focus-visible:outline-none">
+                <StaffDailyDashboard onNavigate={setActiveSection} />
+              </TabsContent>
+              <TabsContent value="intel" className="mt-0 focus-visible:outline-none">
+                <AdminCustomerIntelligence />
+              </TabsContent>
+            </Tabs>
           </Suspense>
         );
       case "my-daily-tasks":
@@ -818,7 +853,13 @@ const AdminDashboard = () => {
       case "reporter-reports":    // legacy alias → tab=reports
         return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
-        return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
+      case "customer-intelligence":
+        // أُعيد توجيهه أوتوماتيكياً عبر useEffect لـ daily-dashboard?tab=intel — fallback آمن:
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <AdminCustomerIntelligence />
+          </Suspense>
+        );
       case "task-audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminTaskActionAuditLog /></Suspense>;
       case "visitor-leads":
