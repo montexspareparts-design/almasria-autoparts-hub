@@ -455,12 +455,8 @@ const AdminCustomerIntelligence = () => {
   //  - Realtime channel errors / times out (as a safety net)
   useEffect(() => {
     let cancelled = false;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    // Build YYYY-MM-DD for 30 days ago
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
+    // Single source of truth for "today" semantics — Cairo timezone, helper-driven.
     const todayDate = cairoToday();
-    // Build YYYY-MM-DD for 30 days ago (Cairo TZ — single source via helper)
     const cutoffDate = cairoDaysAgo(30);
 
     const fetchAll = async () => {
