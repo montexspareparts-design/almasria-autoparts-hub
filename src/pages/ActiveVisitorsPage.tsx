@@ -796,8 +796,16 @@ export default function ActiveVisitorsPage() {
                     {/* Quick actions */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {v.phone && (
-                        <a
-                          href={`tel:${v.phone}`}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await recordVisitorAction(v, "phone", "");
+                              window.location.href = `tel:${v.phone}`;
+                            } catch (e: any) {
+                              toast({ title: "فشل تسجيل الاتصال", description: e.message, variant: "destructive" });
+                            }
+                          }}
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
                             "bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
@@ -806,13 +814,19 @@ export default function ActiveVisitorsPage() {
                         >
                           <Phone className="w-3.5 h-3.5" />
                           اتصال
-                        </a>
+                        </button>
                       )}
                       {wpUrl && (
-                        <a
-                          href={wpUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await recordVisitorAction(v, "whatsapp", "");
+                              window.open(wpUrl, "_blank", "noopener,noreferrer");
+                            } catch (e: any) {
+                              toast({ title: "فشل تسجيل الواتساب", description: e.message, variant: "destructive" });
+                            }
+                          }}
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
                             "bg-[#25D366] hover:bg-[#1ebe57] text-white transition-colors"
@@ -821,7 +835,7 @@ export default function ActiveVisitorsPage() {
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           واتساب
-                        </a>
+                        </button>
                       )}
                       <button
                         onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
