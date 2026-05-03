@@ -2932,7 +2932,7 @@ const AdminCustomerIntelligence = () => {
                           setHistoryDialog({
                             taskId: task.id,
                             taskTitle: task.title,
-                            customerName: task.customerName,
+                            customerName: task.userName,
                           });
                         }}
                         className={cn(
