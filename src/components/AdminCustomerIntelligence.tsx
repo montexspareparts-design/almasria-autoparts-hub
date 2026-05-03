@@ -1604,23 +1604,51 @@ const AdminCustomerIntelligence = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles, ordersMap, cartByUser, userSearchMap, dealerUserIds, lastVisitByUser, priorityWeights, taskWindowDays, callOutcomes]);
 
+  // === Unified "touched today" tracking ===
+  // Single source of truth merging both `staff_task_handling` (per-task) and
+  // `customer_communications` (per-customer). If a customer was touched today by
+  // ANY staff via ANY channel, all their pending tasks disappear automatically.
+  // This prevents duplicate calls and keeps a consistent view across the team.
+  type TouchSource = "task_handling" | "communication";
+  type CustomerTouch = { at: string; byName?: string | null; source: TouchSource; action: string };
+  const customerTouchedToday = useMemo(() => {
+    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const todayStart = new Date(`${todayDate}T00:00:00`).getTime();
+    const map = new Map<string, CustomerTouch>();
+    // Source 1: task_handling — extract customer id from "<userId>:<kind>"
+    Object.entries(handledMeta).forEach(([taskId, rec]) => {
+      if (new Date(rec.at).getTime() < todayStart) return;
+      const customerId = String(taskId).split(":")[0];
+      if (!customerId) return;
+      const prev = map.get(customerId);
+      if (!prev || new Date(prev.at).getTime() < new Date(rec.at).getTime()) {
+        map.set(customerId, { at: rec.at, byName: rec.byName, source: "task_handling", action: rec.action });
+      }
+    });
+    // Source 2: customer_communications — already stored as Set; we don't have full meta locally,
+    // so mark as a generic "comm" touch dated to "now" (only matters that we have an entry).
+    contactedUserIds.forEach((customerId) => {
+      if (map.has(customerId)) return; // task_handling has richer meta — keep it
+      map.set(customerId, { at: new Date().toISOString(), byName: null, source: "communication", action: "comm" });
+    });
+    return map;
+  }, [handledMeta, contactedUserIds]);
+
   const visibleTasks = todayTasks
     .filter((t) => {
       const customerId = (t.id as string).split(":")[0];
-      const contactedToday = contactedUserIds.has(customerId);
+      const touched = customerTouchedToday.has(customerId);
       // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت أو اتواصل مع العميل
-      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedToday;
-      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة أو اتواصل مع العميل → تختفي تلقائياً
-      // إلا لو الموظف ضغط "إظهار المكتمل" يدوياً
+      if (onlyCompletedTasks) return touched || completedTasks.has(t.id);
+      // التبويبات العادية: لو العميل اتلمس النهارده (من أي مصدر) أو متقفلة → تختفي تلقائياً
       if (showCompletedTasks) return true;
-      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن على المهمة نفسها
-      if (contactedToday) return false; // ← إصلاح إضافي: إخفاء كل مهام العميل لو اتسجل تواصل معاه النهارده
+      if (touched) return false;
       return !completedTasks.has(t.id);
     })
     .sort((a, b) => b.score - a.score || a.priority - b.priority);
   const handledOrCompletedCount = todayTasks.filter(t => {
     const customerId = (t.id as string).split(":")[0];
-    return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedUserIds.has(customerId);
+    return customerTouchedToday.has(customerId) || completedTasks.has(t.id);
   }).length;
   const pendingTasksCount = todayTasks.length - handledOrCompletedCount;
   const completedTasksCount = handledOrCompletedCount;
