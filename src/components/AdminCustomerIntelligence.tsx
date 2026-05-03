@@ -610,7 +610,7 @@ const AdminCustomerIntelligence = () => {
     } as any, { onConflict: "task_id,handled_date" });
     // If a different staff beat us to it, refresh that record from DB
     if (error) {
-      const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+      const todayDate = cairoToday();
       const { data } = await supabase
         .from("staff_task_handling")
         .select("task_id, staff_user_id, staff_name, action, note, created_at")
