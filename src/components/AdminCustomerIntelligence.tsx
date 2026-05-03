@@ -1721,6 +1721,38 @@ const AdminCustomerIntelligence = () => {
   // ومش بيعدّ سجلات قديمة من staff_task_handling لمهام مش ضمن نافذة اليوم.
   const doneTodayCount = todayTasks.filter(t => !!getTaskTouchRecord(t.id)).length;
 
+  // تشخيص فرق العداد — يُعرض في Tooltip بجوار البادج لشرح أي تباين:
+  //   • directHandled: المهام في نافذة اليوم اللي عليها سجل مباشر في handledMeta.
+  //   • customerLevelOnly: مهام بتظهر "تمت" لأن العميل اتلمس في مهمة تانية أو
+  //     عبر customer_communications (مش نفس المهمة) — مصدر شائع للحيرة.
+  //   • outsideWindowHandled: سجلات handledMeta لمهام برّه نافذة taskWindowDays
+  //     أو لعملاء مش موجودين أصلاً في todayTasks (مش بتتعد).
+  //   • staleHandled: سجلات handledMeta قديمة (مش من اليوم في توقيت القاهرة) —
+  //     مش بتأثر على customerTouchedToday لكن بتظهر في "سجل الإجراءات".
+  const doneTodayBreakdown = useMemo(() => {
+    let directHandled = 0;
+    let customerLevelOnly = 0;
+    todayTasks.forEach(t => {
+      const rec = getTaskTouchRecord(t.id);
+      if (!rec) return;
+      if (rec.customerLevel) customerLevelOnly++;
+      else directHandled++;
+    });
+    const todayTaskIds = new Set(todayTasks.map(t => t.id));
+    const todayCustomerIds = new Set(todayTasks.map(t => (t.id as string).split(":")[0]));
+    let outsideWindowHandled = 0;
+    let staleHandled = 0;
+    Object.entries(handledMeta).forEach(([taskId, rec]) => {
+      const isToday = isWithinCairoToday(rec.at);
+      if (!isToday) { staleHandled++; return; }
+      const customerId = String(taskId).split(":")[0];
+      if (!todayTaskIds.has(taskId) && !todayCustomerIds.has(customerId)) {
+        outsideWindowHandled++;
+      }
+    });
+    return { directHandled, customerLevelOnly, outsideWindowHandled, staleHandled };
+  }, [todayTasks, handledMeta, getTaskTouchRecord]);
+
   // Build a ready-to-use call/whatsapp script based on customer behavior
   const buildCallScript = (userId: string): string => {
     const profile = profiles?.find(p => p.user_id === userId);
