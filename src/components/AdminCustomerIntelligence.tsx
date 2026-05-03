@@ -846,6 +846,12 @@ const AdminCustomerIntelligence = () => {
       toast({ title: "فشل حفظ الملاحظة", description: error.message, variant: "destructive" });
       return;
     }
+    setContactedUserIds(prev => {
+      if (prev.has(customerUserId)) return prev;
+      const next = new Set(prev);
+      next.add(customerUserId);
+      return next;
+    });
     setQuickNoteDraft(prev => ({ ...prev, [customerUserId]: "" }));
     toast({ title: "✅ تم حفظ ملاحظة المتابعة" });
     queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
@@ -1662,6 +1668,28 @@ const AdminCustomerIntelligence = () => {
     });
     return map;
   }, [handledMeta, contactedUserIds]);
+
+  type TaskTouchRecord = HandledRecord & { source: TouchSource; customerLevel: boolean };
+  const getTaskCustomerId = useCallback((taskId: string) => String(taskId).split(":")[0], []);
+  const getTaskTouchRecord = useCallback((taskId: string): TaskTouchRecord | null => {
+    const directRecord = handledMeta[taskId];
+    if (directRecord) {
+      return { ...directRecord, source: "task_handling", customerLevel: false };
+    }
+
+    const customerTouch = customerTouchedToday.get(getTaskCustomerId(taskId));
+    if (!customerTouch) return null;
+
+    return {
+      at: customerTouch.at,
+      by: "",
+      byName: customerTouch.byName,
+      action: customerTouch.source === "communication" ? "manual" : (customerTouch.action as HandledAction),
+      note: null,
+      source: customerTouch.source,
+      customerLevel: true,
+    };
+  }, [customerTouchedToday, getTaskCustomerId, handledMeta]);
 
   const visibleTasks = todayTasks
     .filter((t) => {
