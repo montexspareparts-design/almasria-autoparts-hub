@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { History, Phone, MessageCircle, CheckCircle2, StickyNote, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StaffInfoDialog } from "./StaffInfoDialog";
 
 interface ActionLogRow {
   id: string;
@@ -36,6 +37,8 @@ const ACTION_META: Record<string, { label: string; icon: any; cls: string }> = {
 export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open, onOpenChange }: Props) {
   const [rows, setRows] = useState<ActionLogRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string | null } | null>(null);
 
   useEffect(() => {
     if (!open || !taskId) return;
@@ -132,7 +135,17 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5 text-xs">
                       <User className="w-3 h-3 text-muted-foreground" />
-                      <span className="font-semibold text-foreground">{row.staff_name || "موظف"}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedStaff({ id: row.staff_user_id, name: row.staff_name });
+                          setStaffOpen(true);
+                        }}
+                        className="font-semibold text-primary hover:underline underline-offset-2 transition-colors"
+                      >
+                        {row.staff_name || "موظف"}
+                      </button>
+                      <span className="text-[10px] text-muted-foreground">(اضغط للتفاصيل)</span>
                     </div>
                     {row.note && (
                       <div className="mt-2 text-xs text-foreground bg-muted/40 rounded p-2 whitespace-pre-wrap leading-relaxed">
@@ -146,6 +159,13 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
           </div>
         )}
       </DialogContent>
+
+      <StaffInfoDialog
+        staffUserId={selectedStaff?.id || null}
+        fallbackName={selectedStaff?.name || null}
+        open={staffOpen}
+        onOpenChange={setStaffOpen}
+      />
     </Dialog>
   );
 }
