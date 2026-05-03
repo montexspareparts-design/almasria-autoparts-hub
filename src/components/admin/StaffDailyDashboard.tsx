@@ -325,13 +325,25 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
     { label: "عملاء محتملين جدد", count: resolvedStats.newLeads, icon: Users, color: "text-emerald-600", bg: "bg-emerald-50", section: "leads" },
   ].filter((task) => task.count > 0);
 
-  const highSearchAlerts = alerts.filter((alert) => alert.type === "high_search");
-  const inactiveAlerts = alerts.filter((alert) => alert.type === "inactive");
+  // ========================================================================
+  // 🔇 منع تكرار العمل: نخفي أي عميل اتعمل عليه إجراء اليوم (أي موظف، أي شاشة)
+  // المصدر: customer_communications + staff_task_handling — عبر useTouchedTodayUserIds
+  // ========================================================================
+  const { touchedIds: touchedTodayIds } = useTouchedTodayUserIds();
+
+  const visibleSearchContacts = searchContacts.filter((c) => !touchedTodayIds.has(c.userId));
+  const hiddenSearchCount = searchContacts.length - visibleSearchContacts.length;
+
+  const visibleAlerts = alerts.filter((a) => !touchedTodayIds.has(a.userId));
+  const hiddenAlertsCount = alerts.length - visibleAlerts.length;
+
+  const highSearchAlerts = visibleAlerts.filter((alert) => alert.type === "high_search");
+  const inactiveAlerts = visibleAlerts.filter((alert) => alert.type === "inactive");
   const totalUrgent = urgentTasks.reduce((sum, task) => sum + task.count, 0);
   const totalAlerts = highSearchAlerts.length + inactiveAlerts.length;
   const priorityOpen =
     totalUrgent > 0 ? "urgent"
-    : searchContacts.length > 0 ? "contacts"
+    : visibleSearchContacts.length > 0 ? "contacts"
     : totalAlerts > 0 ? "alerts"
     : "performance";
 
