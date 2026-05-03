@@ -651,9 +651,21 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
               {totalAlerts > 0 && (
                 <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">{totalAlerts}</Badge>
               )}
+              {hiddenAlertsCount > 0 && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-emerald-300/60 text-emerald-700">
+                  <CheckCircle className="w-3 h-3" />
+                  +{hiddenAlertsCount} بيتم متابعتهم
+                </Badge>
+              )}
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4 space-y-4">
+            {hiddenAlertsCount > 0 && (
+              <div className="text-[11px] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 rounded-md px-2.5 py-1.5 text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" />
+                تم إخفاء <span className="font-bold">{hiddenAlertsCount}</span> تنبيه لأن زميلك تواصل مع العميل اليوم.
+              </div>
+            )}
             {highSearchAlerts.length > 0 && (
               <AlertGroup
                 title={`بيبحث كتير ومش بيطلب (${highSearchAlerts.length})`}
