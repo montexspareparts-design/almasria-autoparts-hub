@@ -137,19 +137,24 @@ describe("multi-staff concurrent task handling", () => {
       expect(snap.doneCount).toBe(3);
     }
 
-    // The acting staff (Ahmed) sees 2 fewer cards in his All tab.
-    const ahmedAll = snapshotFor(world, ahmed.id).visibleAllTab.map(
-      (t) => t.id,
-    );
-    expect(ahmedAll).not.toContain("cust-1:cart_abandoned");
-    expect(ahmedAll).not.toContain("cust-2:price_viewed");
+    // Documented contract of `isTaskVisibleInAllTab`: a task with a
+    // `handledMeta` record stays visible for EVERYONE (so admins/teammates
+    // can see what was just done). The "hide completed" filter only hides
+    // tasks that were locally marked completed WITHOUT a handled record.
+    for (const s of allStaff) {
+      const all = snapshotFor(world, s.id).visibleAllTab.map((t) => t.id);
+      expect(all).toContain("cust-1:cart_abandoned");
+      expect(all).toContain("cust-2:price_viewed");
+      expect(all).toContain("cust-3:no_buy");
+    }
 
-    // BUT — handled tasks remain visible to OTHER staff (handledMeta override),
-    // so an admin can see what colleagues did. This is the documented behavior
-    // of isTaskVisibleInAllTab: handledMeta entry forces visibility.
+    // A locally-completed task WITHOUT a handled record IS hidden for the
+    // staff who marked it (and only them), proving the per-session filter still works.
+    world.sessions.get(omar.id)!.completedTasks.add("cust-4:cart_abandoned");
     const omarAll = snapshotFor(world, omar.id).visibleAllTab.map((t) => t.id);
-    expect(omarAll).toContain("cust-1:cart_abandoned");
-    expect(omarAll).toContain("cust-3:no_buy");
+    expect(omarAll).not.toContain("cust-4:cart_abandoned");
+    const ahmedAll = snapshotFor(world, ahmed.id).visibleAllTab.map((t) => t.id);
+    expect(ahmedAll).toContain("cust-4:cart_abandoned");
   });
 
   it("keeps counters in sync when two staff handle different tasks at the SAME millisecond (race)", () => {
