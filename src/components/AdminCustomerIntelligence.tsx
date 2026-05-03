@@ -1606,16 +1606,22 @@ const AdminCustomerIntelligence = () => {
 
   const visibleTasks = todayTasks
     .filter((t) => {
-      // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت
-      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id);
-      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة → تختفي تلقائياً
+      const customerId = (t.id as string).split(":")[0];
+      const contactedToday = contactedUserIds.has(customerId);
+      // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت أو اتواصل مع العميل
+      if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedToday;
+      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة أو اتواصل مع العميل → تختفي تلقائياً
       // إلا لو الموظف ضغط "إظهار المكتمل" يدوياً
       if (showCompletedTasks) return true;
-      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن
+      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن على المهمة نفسها
+      if (contactedToday) return false; // ← إصلاح إضافي: إخفاء كل مهام العميل لو اتسجل تواصل معاه النهارده
       return !completedTasks.has(t.id);
     })
     .sort((a, b) => b.score - a.score || a.priority - b.priority);
-  const handledOrCompletedCount = todayTasks.filter(t => !!handledMeta[t.id] || completedTasks.has(t.id)).length;
+  const handledOrCompletedCount = todayTasks.filter(t => {
+    const customerId = (t.id as string).split(":")[0];
+    return !!handledMeta[t.id] || completedTasks.has(t.id) || contactedUserIds.has(customerId);
+  }).length;
   const pendingTasksCount = todayTasks.length - handledOrCompletedCount;
   const completedTasksCount = handledOrCompletedCount;
 
