@@ -52,13 +52,14 @@ describe("Cairo-day helpers (single source of truth for 'today')", () => {
     expect(isWithinCairoToday("not-a-date")).toBe(false);
   });
 
-  it("BUG REGRESSION: 01:30 Cairo (= 23:30 UTC prev day) counts as TODAY", () => {
-    // The old code used `new Date(\`${todayDate}T00:00:00.000Z\`)` which would
-    // exclude anything before 02:00 Cairo. Verify the new helper includes it.
-    const cairoNow = new Date("2026-05-03T03:00:00Z"); // 05:00 Cairo on 2026-05-03
+  it("BUG REGRESSION: 01:30 Cairo counts as TODAY (old code excluded it)", () => {
+    // Old code: `new Date(\`${todayDate}T00:00:00.000Z\`)` = midnight UTC,
+    // which is 02:00 Cairo (winter) or 03:00 Cairo (summer DST).
+    // Anything between 00:00 and that cutoff was wrongly excluded from "today".
+    // In summer (May), 01:30 Cairo = 22:30 UTC of the previous day.
+    const cairoNow = new Date("2026-05-03T05:00:00Z"); // 08:00 Cairo (DST)
     expect(cairoToday(cairoNow)).toBe("2026-05-03");
-    // 01:30 Cairo on 2026-05-03 = 23:30 UTC on 2026-05-02
-    const earlyMorningCairo = "2026-05-02T23:30:00.000Z";
+    const earlyMorningCairo = "2026-05-02T22:30:00.000Z"; // 01:30 Cairo summer
     expect(isWithinCairoToday(earlyMorningCairo, cairoNow)).toBe(true);
   });
 });
