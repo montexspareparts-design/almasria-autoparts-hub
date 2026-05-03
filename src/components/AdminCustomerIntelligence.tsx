@@ -2566,49 +2566,65 @@ const AdminCustomerIntelligence = () => {
                               <Info className="w-3 h-3" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent side="bottom" align="start" className="max-w-[320px] text-[11px] leading-relaxed">
+                          <TooltipContent side="bottom" align="start" className="max-w-[380px] text-[11px] leading-relaxed">
                             <div className="space-y-2 text-right" dir="rtl">
                               <p className="font-bold text-foreground">
                                 إزاي بنحسب «{doneCount} تمت اليوم»؟
                               </p>
-                              <ul className="space-y-1 list-disc pr-4 marker:text-emerald-500">
+                              <ul className="space-y-1.5 list-disc pr-4 marker:text-emerald-500">
                                 <li>
                                   <span className="font-semibold">{doneTodayBreakdown.directHandled}</span>{" "}
                                   مهمة عليها سجل مباشر (اتصال/واتساب/تم) من موظف اليوم.
+                                  <div className="mt-0.5 text-[10px] text-muted-foreground bg-muted/40 rounded px-1.5 py-0.5">
+                                    مثال: أحمد ضغط «اتصلت» على مهمة العميل «محمد علي» الساعة 11ص → بتتعدّ مرة واحدة.
+                                  </div>
                                 </li>
                                 {doneTodayBreakdown.customerLevelOnly > 0 && (
                                   <li>
                                     <span className="font-semibold">{doneTodayBreakdown.customerLevelOnly}</span>{" "}
-                                    مهمة بتُحسب لأن نفس العميل اتلمس في مهمة تانية أو محادثة اليوم
-                                    <span className="text-muted-foreground"> (قاعدة customerTouchedToday — بنحسب لمسة واحدة لكل عميل)</span>.
+                                    مهمة بتُحسب لأن نفس العميل اتلمس في مهمة/محادثة تانية اليوم
+                                    <span className="text-muted-foreground"> (قاعدة <code className="text-[10px]">customerTouchedToday</code>)</span>.
+                                    <div className="mt-0.5 text-[10px] text-muted-foreground bg-muted/40 rounded px-1.5 py-0.5">
+                                      مثال: العميل «سارة» عندها مهمتين (سلة متروكة + استفسار). سارة اتصلت بيها مرة واحدة → المهمتين الاتنين بيتحسبوا «تمت» (لأن العميل اتلمس فعلاً)، وبتظهر لمسة واحدة لكل عميل.
+                                    </div>
                                   </li>
                                 )}
                               </ul>
                               {(doneTodayBreakdown.outsideWindowHandled > 0 || doneTodayBreakdown.staleHandled > 0) && (
-                                <div className="pt-2 mt-2 border-t border-border/40 space-y-1">
+                                <div className="pt-2 mt-2 border-t border-border/40 space-y-1.5">
                                   <p className="font-bold text-amber-600 dark:text-amber-400">
-                                    ليه ممكن ترقام تانية تختلف؟
+                                    ليه ممكن ترقام تانية (زي «سجل الإجراءات») تختلف؟
                                   </p>
                                   {doneTodayBreakdown.outsideWindowHandled > 0 && (
-                                    <p>
-                                      • فيه{" "}
-                                      <span className="font-semibold">{doneTodayBreakdown.outsideWindowHandled}</span>{" "}
-                                      سجل لعملاء/مهام برّه نافذة «
-                                      {taskWindowDays === 1 ? "آخر 24 ساعة" : `آخر ${taskWindowDays} يوم`}
-                                      » — مش بتظهر هنا. وسّع النافذة عشان تشوفها.
-                                    </p>
+                                    <div>
+                                      <p>
+                                        • فيه{" "}
+                                        <span className="font-semibold">{doneTodayBreakdown.outsideWindowHandled}</span>{" "}
+                                        سجل برّه نافذة «
+                                        {taskWindowDays === 1 ? "آخر 24 ساعة" : `آخر ${taskWindowDays} يوم`}
+                                        » (قاعدة <code className="text-[10px]">taskWindowDays</code>).
+                                      </p>
+                                      <div className="mt-0.5 text-[10px] text-muted-foreground bg-amber-500/10 rounded px-1.5 py-0.5">
+                                        مثال: عميل آخر زيارة ليه من 10 أيام، والنافذة 7 أيام → اتصال موظف بيه النهاردة بيتسجّل في «سجل الإجراءات» بس مش بيظهر هنا. وسّع النافذة عشان تشوفه.
+                                      </div>
+                                    </div>
                                   )}
                                   {doneTodayBreakdown.staleHandled > 0 && (
-                                    <p>
-                                      • فيه{" "}
-                                      <span className="font-semibold">{doneTodayBreakdown.staleHandled}</span>{" "}
-                                      سجل من أيام سابقة (مش من اليوم بتوقيت القاهرة) — بيظهر بس في «سجل الإجراءات».
-                                    </p>
+                                    <div>
+                                      <p>
+                                        • فيه{" "}
+                                        <span className="font-semibold">{doneTodayBreakdown.staleHandled}</span>{" "}
+                                        سجل من أيام سابقة (مش من اليوم بتوقيت القاهرة).
+                                      </p>
+                                      <div className="mt-0.5 text-[10px] text-muted-foreground bg-amber-500/10 rounded px-1.5 py-0.5">
+                                        مثال: اتصال اتعمل امبارح 11م → بيظهر في «سجل الإجراءات» بس مش في عدّاد اليوم.
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               )}
-                              <p className="text-[10px] text-muted-foreground pt-1 border-t border-border/30">
-                                التطابق مضمون: العداد = عدد الكروت في تبويب «تمت اليوم».
+                              <p className="text-[10px] text-muted-foreground pt-1.5 border-t border-border/30">
+                                ✓ التطابق مضمون: العدد = عدد الكروت في تبويب «تمت اليوم».
                               </p>
                             </div>
                           </TooltipContent>
