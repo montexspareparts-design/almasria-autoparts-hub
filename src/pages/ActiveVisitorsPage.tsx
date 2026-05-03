@@ -189,18 +189,50 @@ export default function ActiveVisitorsPage() {
     }
 
     // 5) سجلات التواصل لكل المستخدمين النشطين — لتحديد "متأخر" + إخفاء من تم التواصل معه مؤخراً
-    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + أي تذكير معلّق غير منفّذ.
+    //    نجلب آخر 30 يوم فقط ونحتفظ بأحدث تواصل + نوعه + الموظف + أي تذكير معلّق غير منفّذ.
     const commsSince = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: commsRows } = await supabase
       .from("customer_communications")
-      .select("customer_user_id, created_at, reminder_at, is_done")
+      .select("customer_user_id, created_at, reminder_at, is_done, comm_type, note, staff_user_id")
       .in("customer_user_id", userIds)
-      .gte("created_at", commsSince);
-    const commsByUser = new Map<string, { last_contacted_at: string | null; has_open_reminder: boolean }>();
+      .gte("created_at", commsSince)
+      .order("created_at", { ascending: false });
+
+    // اسماء الموظفين (للعرض في بادج "اتصل به: أحمد")
+    const staffIds = Array.from(new Set((commsRows || []).map((c: any) => c.staff_user_id).filter(Boolean)));
+    const staffNameMap = new Map<string, string>();
+    if (staffIds.length > 0) {
+      const { data: staffProfs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", staffIds);
+      (staffProfs || []).forEach((p: any) => {
+        if (p.full_name) staffNameMap.set(p.user_id, p.full_name);
+      });
+    }
+
+    type CommSummary = {
+      last_contacted_at: string | null;
+      last_contact_type: CommType | null;
+      last_contact_by: string | null;
+      last_contact_note: string | null;
+      has_open_reminder: boolean;
+    };
+    const commsByUser = new Map<string, CommSummary>();
     (commsRows || []).forEach((c: any) => {
-      const cur = commsByUser.get(c.customer_user_id) || { last_contacted_at: null, has_open_reminder: false };
-      if (!cur.last_contacted_at || c.created_at > cur.last_contacted_at) {
+      const cur: CommSummary = commsByUser.get(c.customer_user_id) || {
+        last_contacted_at: null,
+        last_contact_type: null,
+        last_contact_by: null,
+        last_contact_note: null,
+        has_open_reminder: false,
+      };
+      // commsRows مرتبة DESC، فأول صف لكل user هو الأحدث
+      if (!cur.last_contacted_at) {
         cur.last_contacted_at = c.created_at;
+        cur.last_contact_type = (c.comm_type as CommType) || null;
+        cur.last_contact_by = c.staff_user_id ? (staffNameMap.get(c.staff_user_id) || null) : null;
+        cur.last_contact_note = c.note || null;
       }
       if (c.reminder_at && !c.is_done) cur.has_open_reminder = true;
       commsByUser.set(c.customer_user_id, cur);
@@ -222,6 +254,9 @@ export default function ActiveVisitorsPage() {
         last_path: ent?.last_path || null,
         last_page_title: ent?.last_page_title || null,
         last_contacted_at: cc?.last_contacted_at || null,
+        last_contact_type: cc?.last_contact_type || null,
+        last_contact_by: cc?.last_contact_by || null,
+        last_contact_note: cc?.last_contact_note || null,
         has_open_reminder: cc?.has_open_reminder || false,
       };
     });
