@@ -628,10 +628,10 @@ export default function ActiveVisitorsPage() {
             <div>
               <label className="text-xs font-bold text-muted-foreground mb-1 block">نوع الإجراء</label>
               <Select value={actionType} onValueChange={(v: any) => setActionType(v)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="z-[100] bg-popover">
                   <SelectItem value="phone">📞 اتصال هاتفي</SelectItem>
                   <SelectItem value="whatsapp">💬 واتساب</SelectItem>
                   <SelectItem value="no_answer">🚫 لم يردّ</SelectItem>
