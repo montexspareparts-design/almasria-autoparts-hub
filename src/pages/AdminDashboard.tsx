@@ -38,6 +38,7 @@ const AdminCustomerProfile = lazy(() => import("@/components/AdminCustomerProfil
 const AdminCoupons = lazy(() => import("@/components/AdminCoupons"));
 const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDiscounts"));
 const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerIntelligence"));
+const AdminTaskActionAuditLog = lazy(() => import("@/components/AdminTaskActionAuditLog"));
 const AdminProductInsights = lazy(() => import("@/components/AdminProductInsights"));
 const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
 const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentReminders"));
@@ -113,6 +114,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "👥 العملاء والمبيعات",
     items: [
       { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      { id: "task-audit-log", label: "سجل تدقيق الإجراءات", icon: ClipboardList },
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "Leads (عملاء محتملين)", icon: Users },
       { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },
@@ -817,6 +819,8 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
         return <Suspense fallback={<SectionLoader />}><AdminCustomerIntelligence /></Suspense>;
+      case "task-audit-log":
+        return <Suspense fallback={<SectionLoader />}><AdminTaskActionAuditLog /></Suspense>;
       case "visitor-leads":
         return (
           <Suspense fallback={<SectionLoader />}>
