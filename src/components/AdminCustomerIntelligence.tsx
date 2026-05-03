@@ -21,6 +21,12 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx-js-style";
+import {
+  cairoToday,
+  cairoDaysAgo,
+  cairoDayBoundsUTC,
+  isWithinCairoToday,
+} from "@/lib/handledTasks";
 
 const addCompanyHeader = (ws: XLSX.WorkSheet, colCount: number, reportTitle?: string) => {
   const shiftRows = 5; // company + subtitle + contact + report info + separator
@@ -449,11 +455,9 @@ const AdminCustomerIntelligence = () => {
   //  - Realtime channel errors / times out (as a safety net)
   useEffect(() => {
     let cancelled = false;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    // Build YYYY-MM-DD for 30 days ago
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-    const cutoffDate = cutoff.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    // Single source of truth for "today" semantics — Cairo timezone, helper-driven.
+    const todayDate = cairoToday();
+    const cutoffDate = cairoDaysAgo(30);
 
     const fetchAll = async () => {
       const { data, error } = await supabase
@@ -532,8 +536,10 @@ const AdminCustomerIntelligence = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    const fromTs = `${todayDate}T00:00:00.000Z`;
+    // Cairo-correct day bounds — `T00:00:00Z` would have meant midnight UTC
+    // (02:00 Cairo), shifting the "today" window by 2h. We use the helper.
+    const { startMs: cairoTodayStartMs } = cairoDayBoundsUTC();
+    const fromTs = new Date(cairoTodayStartMs).toISOString();
 
     const fetchAll = async () => {
       const { data } = await supabase
@@ -555,8 +561,8 @@ const AdminCustomerIntelligence = () => {
         (payload: any) => {
           const r = payload.new;
           if (!r?.customer_user_id) return;
-          // Client-side date guard (in case event is for a stale day)
-          if (r.created_at && new Date(r.created_at).getTime() < new Date(fromTs).getTime()) return;
+          // Same Cairo-day check used everywhere else
+          if (!isWithinCairoToday(r.created_at)) return;
           setContactedUserIds(prev => {
             if (prev.has(r.customer_user_id)) return prev;
             const next = new Set(prev);
@@ -604,7 +610,7 @@ const AdminCustomerIntelligence = () => {
     } as any, { onConflict: "task_id,handled_date" });
     // If a different staff beat us to it, refresh that record from DB
     if (error) {
-      const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+      const todayDate = cairoToday();
       const { data } = await supabase
         .from("staff_task_handling")
         .select("task_id, staff_user_id, staff_name, action, note, created_at")
@@ -628,7 +634,7 @@ const AdminCustomerIntelligence = () => {
 
   const unmarkHandled = async (taskId: string) => {
     if (!user?.id) return;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const todayDate = cairoToday();
     setHandledMeta(prev => {
       if (!prev[taskId]) return prev;
       const next = { ...prev };
@@ -1647,12 +1653,13 @@ const AdminCustomerIntelligence = () => {
   type TouchSource = "task_handling" | "communication";
   type CustomerTouch = { at: string; byName?: string | null; source: TouchSource; action: string };
   const customerTouchedToday = useMemo(() => {
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    const todayStart = new Date(`${todayDate}T00:00:00`).getTime();
+    // SINGLE SOURCE for "today" — Cairo TZ via shared helper. Previously this used
+    // `new Date(\`${day}T00:00:00\`)` which is local-time of the BROWSER, not Cairo,
+    // and could shift the cutoff by hours on UTC/non-Egypt machines.
     const map = new Map<string, CustomerTouch>();
-    // Source 1: task_handling — extract customer id from "<userId>:<kind>"
+    // Source 1: task_handling — keep only records dated TODAY in Cairo
     Object.entries(handledMeta).forEach(([taskId, rec]) => {
-      if (new Date(rec.at).getTime() < todayStart) return;
+      if (!isWithinCairoToday(rec.at)) return;
       const customerId = String(taskId).split(":")[0];
       if (!customerId) return;
       const prev = map.get(customerId);
@@ -1660,8 +1667,8 @@ const AdminCustomerIntelligence = () => {
         map.set(customerId, { at: rec.at, byName: rec.byName, source: "task_handling", action: rec.action });
       }
     });
-    // Source 2: customer_communications — already stored as Set; we don't have full meta locally,
-    // so mark as a generic "comm" touch dated to "now" (only matters that we have an entry).
+    // Source 2: customer_communications — already filtered to Cairo-today
+    // upstream by the fetch (see useEffect using cairoDayBoundsUTC).
     contactedUserIds.forEach((customerId) => {
       if (map.has(customerId)) return; // task_handling has richer meta — keep it
       map.set(customerId, { at: new Date().toISOString(), byName: null, source: "communication", action: "comm" });

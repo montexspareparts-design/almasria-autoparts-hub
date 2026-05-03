@@ -1,0 +1,65 @@
+import { describe, it, expect } from "vitest";
+import {
+  cairoToday,
+  cairoDaysAgo,
+  cairoDayBoundsUTC,
+  isWithinCairoToday,
+} from "./handledTasks";
+
+describe("Cairo-day helpers (single source of truth for 'today')", () => {
+  it("cairoToday returns YYYY-MM-DD shape", () => {
+    expect(cairoToday()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("cairoDaysAgo returns an earlier or equal date", () => {
+    const today = cairoToday();
+    const ago30 = cairoDaysAgo(30);
+    expect(ago30).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(ago30 <= today).toBe(true);
+  });
+
+  it("cairoDayBoundsUTC: a known Cairo date starts at 22:00 UTC the previous day", () => {
+    // Cairo currently observes DST in summer (UTC+3 May–Oct since 2023).
+    // 2026-05-03 in Cairo = 2026-05-02T21:00:00Z .. 2026-05-03T21:00:00Z
+    const { startMs, endMs } = cairoDayBoundsUTC("2026-05-03");
+    expect(new Date(startMs).toISOString()).toBe("2026-05-02T21:00:00.000Z");
+    expect(new Date(endMs).toISOString()).toBe("2026-05-03T21:00:00.000Z");
+    expect(endMs - startMs).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it("winter date (no DST) is UTC+2 — 2026-01-15 starts at 22:00 UTC prev day", () => {
+    const { startMs } = cairoDayBoundsUTC("2026-01-15");
+    expect(new Date(startMs).toISOString()).toBe("2026-01-14T22:00:00.000Z");
+  });
+
+  it("isWithinCairoToday picks today and rejects yesterday/tomorrow", () => {
+    const now = new Date();
+    const today = cairoToday(now);
+    const { startMs, endMs } = cairoDayBoundsUTC(today);
+    // Inside the window
+    expect(isWithinCairoToday(new Date(startMs).toISOString(), now)).toBe(true);
+    expect(isWithinCairoToday(new Date(startMs + 5 * 3600_000).toISOString(), now)).toBe(true);
+    expect(isWithinCairoToday(new Date(endMs - 1).toISOString(), now)).toBe(true);
+    // Just before / just after
+    expect(isWithinCairoToday(new Date(startMs - 1).toISOString(), now)).toBe(false);
+    expect(isWithinCairoToday(new Date(endMs).toISOString(), now)).toBe(false);
+  });
+
+  it("isWithinCairoToday handles malformed/empty input", () => {
+    expect(isWithinCairoToday(null)).toBe(false);
+    expect(isWithinCairoToday(undefined)).toBe(false);
+    expect(isWithinCairoToday("")).toBe(false);
+    expect(isWithinCairoToday("not-a-date")).toBe(false);
+  });
+
+  it("BUG REGRESSION: 01:30 Cairo counts as TODAY (old code excluded it)", () => {
+    // Old code: `new Date(\`${todayDate}T00:00:00.000Z\`)` = midnight UTC,
+    // which is 02:00 Cairo (winter) or 03:00 Cairo (summer DST).
+    // Anything between 00:00 and that cutoff was wrongly excluded from "today".
+    // In summer (May), 01:30 Cairo = 22:30 UTC of the previous day.
+    const cairoNow = new Date("2026-05-03T05:00:00Z"); // 08:00 Cairo (DST)
+    expect(cairoToday(cairoNow)).toBe("2026-05-03");
+    const earlyMorningCairo = "2026-05-02T22:30:00.000Z"; // 01:30 Cairo summer
+    expect(isWithinCairoToday(earlyMorningCairo, cairoNow)).toBe(true);
+  });
+});
