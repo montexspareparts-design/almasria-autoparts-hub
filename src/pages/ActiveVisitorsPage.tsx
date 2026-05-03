@@ -531,6 +531,47 @@ export default function ActiveVisitorsPage() {
         />
       </div>
 
+      {/* Tabs: زوار جدد + جاري المتابعة (مقسوم حسب نوع الإجراء) */}
+      {(() => {
+        const TABS: Array<{ key: "new" | CommType; label: string; icon: string; activeCls: string }> = [
+          { key: "new",       label: "زوار جدد",     icon: "🆕", activeCls: "bg-emerald-600 border-emerald-600 text-white" },
+          { key: "phone",     label: "اتصال",         icon: "📞", activeCls: "bg-blue-600 border-blue-600 text-white" },
+          { key: "whatsapp",  label: "واتساب",        icon: "💬", activeCls: "bg-[#25D366] border-[#25D366] text-white" },
+          { key: "no_answer", label: "لم يردّ",       icon: "🚫", activeCls: "bg-red-600 border-red-600 text-white" },
+          { key: "visit",     label: "زيارة فرع",     icon: "🏬", activeCls: "bg-purple-600 border-purple-600 text-white" },
+          { key: "note",      label: "ملاحظة",        icon: "📝", activeCls: "bg-amber-600 border-amber-600 text-white" },
+        ];
+        return (
+          <div className="flex items-center gap-1.5 flex-wrap bg-muted/30 p-1.5 rounded-lg border border-border/40">
+            {TABS.map((t) => {
+              const active = activeTab === t.key;
+              const count = tabCounts[t.key] || 0;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition",
+                    active
+                      ? cn(t.activeCls, "shadow-sm")
+                      : "bg-background border-border text-foreground hover:bg-muted"
+                  )}
+                >
+                  <span>{t.icon}</span>
+                  <span>{t.label}</span>
+                  <Badge
+                    variant={active ? "secondary" : "outline"}
+                    className={cn("h-4 px-1 text-[10px]", active && "bg-white/25 text-white border-0")}
+                  >
+                    {count}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
+
       {/* List */}
       <Card className="overflow-hidden">
         {loading ? (
