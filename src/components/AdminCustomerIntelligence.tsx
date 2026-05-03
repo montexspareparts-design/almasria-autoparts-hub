@@ -444,6 +444,9 @@ const AdminCustomerIntelligence = () => {
   // Load handling records (last 30 days) so any task already actioned
   // by ANY staff stays hidden — even if the admin's view spans older tasks.
   // Subscribe to realtime updates for today.
+  // Re-fetches automatically when:
+  //  - Tab becomes visible again (in case events were missed while hidden)
+  //  - Realtime channel errors / times out (as a safety net)
   useEffect(() => {
     let cancelled = false;
     const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
@@ -451,14 +454,14 @@ const AdminCustomerIntelligence = () => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
     const cutoffDate = cutoff.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
-    (async () => {
+
+    const fetchAll = async () => {
       const { data, error } = await supabase
         .from("staff_task_handling")
-        .select("task_id, staff_user_id, staff_name, action, note, created_at")
+        .select("task_id, staff_user_id, staff_name, action, note, created_at, handled_date")
         .gte("handled_date", cutoffDate);
       if (cancelled || error || !data) return;
       const map: Record<string, HandledRecord> = {};
-      // Keep the most recent record per task_id
       data
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .forEach((row: any) => {
@@ -473,13 +476,16 @@ const AdminCustomerIntelligence = () => {
           }
         });
       setHandledMeta(map);
-    })();
+    };
+    fetchAll();
 
+    // Subscribe WITHOUT a server-side date filter to avoid timezone-edge misses;
+    // we filter client-side instead.
     const channel = supabase
       .channel("staff_task_handling_realtime")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "staff_task_handling", filter: `handled_date=eq.${todayDate}` },
+        { event: "*", schema: "public", table: "staff_task_handling" },
         (payload: any) => {
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const r = payload.new;
@@ -497,10 +503,22 @@ const AdminCustomerIntelligence = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Safety net: if the channel errors out, refresh from the server
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          fetchAll();
+        }
+      });
+
+    // Re-fetch when the tab regains focus (catches events missed while backgrounded)
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchAll();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
       supabase.removeChannel(channel);
     };
   }, [todayKey]);
@@ -517,17 +535,17 @@ const AdminCustomerIntelligence = () => {
     const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
     const fromTs = `${todayDate}T00:00:00.000Z`;
 
-    const load = async () => {
+    const fetchAll = async () => {
       const { data } = await supabase
         .from("customer_communications")
-        .select("customer_user_id")
+        .select("customer_user_id, created_at")
         .gte("created_at", fromTs);
       if (cancelled || !data) return;
       const s = new Set<string>();
       data.forEach((r: any) => r.customer_user_id && s.add(r.customer_user_id));
       setContactedUserIds(s);
     };
-    load();
+    fetchAll();
 
     const ch = supabase
       .channel("aci_customer_comms_today")
@@ -536,20 +554,31 @@ const AdminCustomerIntelligence = () => {
         { event: "INSERT", schema: "public", table: "customer_communications" },
         (payload: any) => {
           const r = payload.new;
-          if (r?.customer_user_id) {
-            setContactedUserIds(prev => {
-              if (prev.has(r.customer_user_id)) return prev;
-              const next = new Set(prev);
-              next.add(r.customer_user_id);
-              return next;
-            });
-          }
+          if (!r?.customer_user_id) return;
+          // Client-side date guard (in case event is for a stale day)
+          if (r.created_at && new Date(r.created_at).getTime() < new Date(fromTs).getTime()) return;
+          setContactedUserIds(prev => {
+            if (prev.has(r.customer_user_id)) return prev;
+            const next = new Set(prev);
+            next.add(r.customer_user_id);
+            return next;
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          fetchAll();
+        }
+      });
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchAll();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
       supabase.removeChannel(ch);
     };
   }, [todayKey]);
