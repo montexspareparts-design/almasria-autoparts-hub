@@ -583,7 +583,11 @@ export default function ActiveVisitorsPage() {
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
             <Users className="w-10 h-10 opacity-40" />
             <p className="text-sm">
-              {visitors.length === 0 ? "لا يوجد زوار نشطون الآن" : "لا نتائج مطابقة للبحث"}
+              {visitors.length === 0
+                ? "لا يوجد زوار نشطون الآن"
+                : activeTab === "new"
+                  ? "🎉 مفيش زوار جدد بدون إجراء — كله متابع!"
+                  : "لا توجد متابعات في هذا التبويب"}
             </p>
           </div>
         ) : (
