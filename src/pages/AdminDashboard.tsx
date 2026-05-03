@@ -765,10 +765,27 @@ const AdminDashboard = () => {
 
     switch (activeSection) {
       case "daily-dashboard":
-        // الموظف والأدمن يشوفون نفس اللوحة (StaffDailyDashboard) — نفس التحديثات لكليهما.
+        // الرئيسية المدموجة: تبويب «الرئيسية» (StaffDailyDashboard) + تبويب «ذكاء العملاء».
         return (
           <Suspense fallback={<SectionLoader />}>
-            <StaffDailyDashboard onNavigate={setActiveSection} />
+            <Tabs value={activeTab === "intel" ? "intel" : "home"} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-4 grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="home" className="gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  الرئيسية
+                </TabsTrigger>
+                <TabsTrigger value="intel" className="gap-2">
+                  <Eye className="w-4 h-4" />
+                  ذكاء العملاء
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="home" className="mt-0 focus-visible:outline-none">
+                <StaffDailyDashboard onNavigate={setActiveSection} />
+              </TabsContent>
+              <TabsContent value="intel" className="mt-0 focus-visible:outline-none">
+                <AdminCustomerIntelligence />
+              </TabsContent>
+            </Tabs>
           </Suspense>
         );
       case "my-daily-tasks":
