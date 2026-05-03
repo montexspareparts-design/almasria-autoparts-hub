@@ -43,6 +43,14 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
   const [staffOpen, setStaffOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<{ id: string; name: string | null } | null>(null);
 
+  // Filters & sort
+  const [filterStaff, setFilterStaff] = useState<string>("all");
+  const [filterAction, setFilterAction] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   useEffect(() => {
     if (!open || !taskId) return;
     let cancelled = false;
