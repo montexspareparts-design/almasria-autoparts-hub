@@ -2924,6 +2924,26 @@ const AdminCustomerIntelligence = () => {
                           </div>
                         );
                       })()}
+                      {/* History button — opens dialog with full action log for this task */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHistoryDialog({
+                            taskId: task.id,
+                            taskTitle: task.title,
+                            customerName: task.customerName,
+                          });
+                        }}
+                        className={cn(
+                          "inline-flex items-center justify-center gap-1.5 w-full text-[10px] font-bold px-2 py-1 rounded-md border border-border/50 bg-muted/20 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors",
+                          isDone && "opacity-60"
+                        )}
+                        title="عرض كل الإجراءات اللي اتعملت على المهمة دي"
+                      >
+                        <History className="w-3 h-3" />
+                        سجل الإجراءات
+                      </button>
                       {/* Toggle button for score breakdown panel */}
                       {(() => {
                         const isScoreOpen = expandedScoreTasks.has(task.id);
