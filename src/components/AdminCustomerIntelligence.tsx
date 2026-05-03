@@ -459,7 +459,9 @@ const AdminCustomerIntelligence = () => {
     // Build YYYY-MM-DD for 30 days ago
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
-    const cutoffDate = cutoff.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    const todayDate = cairoToday();
+    // Build YYYY-MM-DD for 30 days ago (Cairo TZ — single source via helper)
+    const cutoffDate = cairoDaysAgo(30);
 
     const fetchAll = async () => {
       const { data, error } = await supabase
