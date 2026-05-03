@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 
 type CommType = "phone" | "whatsapp" | "no_answer" | "visit" | "note";
+type AuditAction = "call" | "whatsapp" | "no_answer" | "visit" | "note";
 
 interface ActiveVisitor {
   user_id: string;
@@ -86,6 +87,14 @@ const normalizeEgyptianPhone = (raw: string | null | undefined) => {
   return digits;
 };
 
+const COMM_TO_AUDIT_ACTION: Record<CommType, AuditAction> = {
+  phone: "call",
+  whatsapp: "whatsapp",
+  no_answer: "no_answer",
+  visit: "visit",
+  note: "note",
+};
+
 export default function ActiveVisitorsPage() {
   const { toast } = useToast();
   const [visitors, setVisitors] = useState<ActiveVisitor[]>([]);
@@ -106,6 +115,70 @@ export default function ActiveVisitorsPage() {
   const [savingAction, setSavingAction] = useState(false);
   // user_ids تم تسجيل إجراء لها للتو في هذه الجلسة — لإظهار تأثير "بهتان اللون"
   const [recentlyHandled, setRecentlyHandled] = useState<Set<string>>(new Set());
+
+  const applyActionLocally = (visitorId: string, type: CommType, note: string | null, staffName: string | null, createdAt: string) => {
+    setRecentlyHandled((prev) => {
+      if (prev.has(visitorId)) return prev;
+      const next = new Set(prev);
+      next.add(visitorId);
+      return next;
+    });
+
+    setVisitors((prev) =>
+      prev.map((v) =>
+        v.user_id === visitorId
+          ? {
+              ...v,
+              last_contacted_at: createdAt,
+              last_contact_type: type,
+              last_contact_by: staffName,
+              last_contact_note: note,
+            }
+          : v,
+      ),
+    );
+  };
+
+  const recordVisitorAction = async (visitor: ActiveVisitor, type: CommType, note?: string | null) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return false;
+    }
+
+    const trimmedNote = note?.trim() || null;
+    const createdAt = new Date().toISOString();
+    const staffName = user.user_metadata?.full_name || user.email || "موظف";
+
+    applyActionLocally(visitor.user_id, type, trimmedNote, staffName, createdAt);
+
+    const [{ error: communicationError }, { error: auditError }] = await Promise.all([
+      supabase.from("customer_communications").insert({
+        customer_user_id: visitor.user_id,
+        staff_user_id: user.id,
+        comm_type: type,
+        note: trimmedNote,
+      } as any),
+      supabase.from("staff_task_action_log" as any).insert({
+        task_id: `${visitor.user_id}:active_visitor`,
+        staff_user_id: user.id,
+        staff_name: staffName,
+        action: COMM_TO_AUDIT_ACTION[type],
+        note: trimmedNote ? `[الزوار النشطون] ${trimmedNote}` : "[الزوار النشطون] إجراء سريع",
+        created_at: createdAt,
+      }),
+    ]);
+
+    if (communicationError || auditError) {
+      await fetchActive();
+      throw communicationError || auditError;
+    }
+
+    return true;
+  };
 
   const fetchActive = async () => {
     // نافذة الجلب تتوسّع لو المستخدم اختار "كل الأيام" (حتى 90 يوم) عشان يشوف كل الزوار
