@@ -358,6 +358,53 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoursFilter]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("active_visitors_customer_communications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "customer_communications" },
+        async (payload: any) => {
+          const row = payload.new;
+          if (!row?.customer_user_id) return;
+
+          let staffName: string | null = null;
+          if (row.staff_user_id) {
+            const { data: staffProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", row.staff_user_id)
+              .maybeSingle();
+            staffName = (staffProfile as any)?.full_name || null;
+          }
+
+          applyActionLocally(
+            row.customer_user_id,
+            (row.comm_type as CommType) || "note",
+            row.note || null,
+            staffName,
+            row.created_at || new Date().toISOString(),
+          );
+        },
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          fetchActive();
+        }
+      });
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchActive();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // نطاق زمني [from, to] بناءً على الفلتر — يدعم "أمس" كنافذة محدودة وليس "آخر X"
   const range = useMemo(() => {
     const now = Date.now();
@@ -442,42 +489,9 @@ export default function ActiveVisitorsPage() {
   // حفظ إجراء التواصل من نفس الكارت (يخفي الكارت تدريجياً ويسجل في customer_communications)
   const saveAction = async () => {
     if (!actionFor) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
-      return;
-    }
     setSavingAction(true);
     try {
-      const { error } = await supabase.from("customer_communications").insert({
-        customer_user_id: actionFor.user_id,
-        staff_user_id: user.id,
-        comm_type: actionType,
-        note: actionNote.trim() || null,
-      });
-      if (error) throw error;
-      // علّم الكارت كـ "تم التعامل" — يبدأ تأثير fade
-      setRecentlyHandled((prev) => {
-        const next = new Set(prev);
-        next.add(actionFor.user_id);
-        return next;
-      });
-      // حدّث آخر تواصل + النوع + الموظف فوراً → الكارت ينتقل تلقائياً للتبويب الصحيح
-      const { data: { user: me } } = await supabase.auth.getUser();
-      const myName = me?.user_metadata?.full_name || me?.email || null;
-      setVisitors((prev) =>
-        prev.map((v) =>
-          v.user_id === actionFor.user_id
-            ? {
-                ...v,
-                last_contacted_at: new Date().toISOString(),
-                last_contact_type: actionType,
-                last_contact_by: myName,
-                last_contact_note: actionNote.trim() || null,
-              }
-            : v
-        )
-      );
+      await recordVisitorAction(actionFor, actionType, actionNote);
       const tabLabels: Record<CommType, string> = {
         phone: "📞 اتصال", whatsapp: "💬 واتساب", no_answer: "🚫 لم يردّ", visit: "🏬 زيارة", note: "📝 ملاحظة",
       };
