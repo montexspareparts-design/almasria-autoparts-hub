@@ -389,15 +389,29 @@ export default function ActiveVisitorsPage() {
         next.add(actionFor.user_id);
         return next;
       });
-      // حدّث last_contacted_at في الذاكرة فوراً (بدل ما ننتظر refetch)
+      // حدّث آخر تواصل + النوع + الموظف فوراً → الكارت ينتقل تلقائياً للتبويب الصحيح
+      const { data: { user: me } } = await supabase.auth.getUser();
+      const myName = me?.user_metadata?.full_name || me?.email || null;
       setVisitors((prev) =>
         prev.map((v) =>
           v.user_id === actionFor.user_id
-            ? { ...v, last_contacted_at: new Date().toISOString() }
+            ? {
+                ...v,
+                last_contacted_at: new Date().toISOString(),
+                last_contact_type: actionType,
+                last_contact_by: myName,
+                last_contact_note: actionNote.trim() || null,
+              }
             : v
         )
       );
-      toast({ title: "✅ تم تسجيل الإجراء", description: "الكارت سيختفي تدريجياً." });
+      const tabLabels: Record<CommType, string> = {
+        phone: "📞 اتصال", whatsapp: "💬 واتساب", no_answer: "🚫 لم يردّ", visit: "🏬 زيارة", note: "📝 ملاحظة",
+      };
+      toast({
+        title: "✅ تم تسجيل الإجراء",
+        description: `الزائر انتقل لتبويب "${tabLabels[actionType]}" — جاري المتابعة.`,
+      });
       setActionFor(null);
       setActionNote("");
       setActionType("phone");
