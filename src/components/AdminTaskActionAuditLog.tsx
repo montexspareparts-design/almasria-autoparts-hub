@@ -47,6 +47,9 @@ const ACTION_META: Record<string, { label: string; icon: typeof CheckCircle2; to
   done: { label: "تم", icon: CheckCircle2, tone: "bg-green-500/15 text-green-700 border-green-500/30" },
   call: { label: "اتصال", icon: Phone, tone: "bg-blue-500/15 text-blue-700 border-blue-500/30" },
   whatsapp: { label: "واتساب", icon: MessageCircle, tone: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
+  no_answer: { label: "لم يردّ", icon: XCircle, tone: "bg-red-500/15 text-red-700 border-red-500/30" },
+  visit: { label: "زيارة", icon: Calendar, tone: "bg-violet-500/15 text-violet-700 border-violet-500/30" },
+  note: { label: "ملاحظة", icon: ClipboardList, tone: "bg-amber-500/15 text-amber-700 border-amber-500/30" },
   dismiss: { label: "تجاهل", tone: "bg-muted text-muted-foreground border-border", icon: XCircle },
   cancel: { label: "إلغاء", tone: "bg-red-500/15 text-red-700 border-red-500/30", icon: XCircle },
 };
@@ -178,7 +181,7 @@ const AdminTaskActionAuditLog = () => {
           <p className="text-[11px] text-muted-foreground">الإجمالي</p>
           <p className="text-2xl font-extrabold text-foreground tabular-nums">{counters.total}</p>
         </Card>
-        {(["done", "call", "whatsapp", "dismiss"] as const).map((a) => {
+        {(["done", "call", "whatsapp", "no_answer", "visit", "note", "dismiss"] as const).map((a) => {
           const meta = ACTION_META[a];
           const Icon = meta.icon;
           return (
