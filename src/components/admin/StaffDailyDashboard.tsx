@@ -565,8 +565,14 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
             <div className="flex items-center gap-2 flex-1">
               <Phone className="w-4 h-4 text-emerald-600" />
               <span className="font-bold text-sm">عملاء بحثوا اليوم — جاهزين للتواصل</span>
-              {searchContacts.length > 0 && (
-                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{searchContacts.length}</Badge>
+              {visibleSearchContacts.length > 0 && (
+                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{visibleSearchContacts.length}</Badge>
+              )}
+              {hiddenSearchCount > 0 && (
+                <Badge variant="outline" className="text-[10px] gap-1 border-emerald-300/60 text-emerald-700">
+                  <CheckCircle className="w-3 h-3" />
+                  +{hiddenSearchCount} بيتم متابعتهم
+                </Badge>
               )}
             </div>
           </AccordionTrigger>
@@ -589,10 +595,17 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
               </div>
             )}
 
+            {hiddenSearchCount > 0 && (
+              <div className="text-[11px] bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 rounded-md px-2.5 py-1.5 text-emerald-800 dark:text-emerald-200 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5" />
+                تم إخفاء <span className="font-bold">{hiddenSearchCount}</span> عميل لأن زميلك تواصل معاهم اليوم — تابعهم من «متابعة العملاء».
+              </div>
+            )}
+
             {/* Contact list */}
-            {searchContacts.length > 0 ? (
+            {visibleSearchContacts.length > 0 ? (
               <div className="space-y-2">
-                {searchContacts.map((c) => (
+                {visibleSearchContacts.map((c) => (
                   <div key={c.userId} className="flex items-center gap-2 p-3 rounded-lg border bg-card hover:shadow-sm transition flex-wrap">
                     <div className="flex-1 min-w-0 min-w-[180px]">
                       <p className="text-sm font-bold truncate">{c.name}</p>
@@ -620,7 +633,11 @@ export default function StaffDailyDashboard({ onNavigate }: StaffDailyDashboardP
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">لا يوجد عملاء بحثوا اليوم بأرقام مسجلة.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">
+                {searchContacts.length > 0
+                  ? "✓ كل العملاء اللي بحثوا اليوم تم التواصل معاهم — تابعهم في «متابعة العملاء»."
+                  : "لا يوجد عملاء بحثوا اليوم بأرقام مسجلة."}
+              </p>
             )}
           </AccordionContent>
         </AccordionItem>
