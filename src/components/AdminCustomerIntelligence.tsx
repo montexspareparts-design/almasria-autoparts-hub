@@ -1543,16 +1543,18 @@ const AdminCustomerIntelligence = () => {
 
   const visibleTasks = todayTasks
     .filter((t) => {
+      // تبويب "تمت اليوم": يعرض فقط المهام اللي اتعمل فيها أكشن أو اتقفلت
       if (onlyCompletedTasks) return !!handledMeta[t.id] || completedTasks.has(t.id);
-      return handledMeta[t.id] || showCompletedTasks || !completedTasks.has(t.id);
+      // التبويبات العادية: لو فيه أكشن (handledMeta) أو متقفلة → تختفي تلقائياً
+      // إلا لو الموظف ضغط "إظهار المكتمل" يدوياً
+      if (showCompletedTasks) return true;
+      if (handledMeta[t.id]) return false; // ← الإصلاح: إخفاء بعد الأكشن
+      return !completedTasks.has(t.id);
     })
-    .sort((a, b) => {
-      const aHandled = handledMeta[a.id] ? 1 : 0;
-      const bHandled = handledMeta[b.id] ? 1 : 0;
-      return bHandled - aHandled || b.score - a.score || a.priority - b.priority;
-    });
-  const pendingTasksCount = todayTasks.filter(t => !completedTasks.has(t.id)).length;
-  const completedTasksCount = todayTasks.length - pendingTasksCount;
+    .sort((a, b) => b.score - a.score || a.priority - b.priority);
+  const handledOrCompletedCount = todayTasks.filter(t => !!handledMeta[t.id] || completedTasks.has(t.id)).length;
+  const pendingTasksCount = todayTasks.length - handledOrCompletedCount;
+  const completedTasksCount = handledOrCompletedCount;
 
   // Build a ready-to-use call/whatsapp script based on customer behavior
   const buildCallScript = (userId: string): string => {
