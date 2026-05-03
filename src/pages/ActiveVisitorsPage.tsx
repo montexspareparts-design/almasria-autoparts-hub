@@ -439,23 +439,17 @@ export default function ActiveVisitorsPage() {
     return list;
   }, [visitors, search, range, overdueOnly]);
 
-  // عدّاد لكل تبويب — يعيد حسابه أوتوماتيك مع كل تغيير
-  const tabCounts = useMemo(() => {
-    const counts: Record<"new" | CommType, number> = {
-      new: 0, phone: 0, whatsapp: 0, no_answer: 0, visit: 0, note: 0,
-    };
-    inWindow.forEach((v) => {
-      if (!v.last_contact_type) counts.new++;
-      else counts[v.last_contact_type] = (counts[v.last_contact_type] || 0) + 1;
-    });
-    return counts;
-  }, [inWindow]);
+  // عدّاد الزوار اللي اتعمل عليهم إجراء داخل النافذة (للعرض في البانر التحويلي)
+  const handledInWindowCount = useMemo(
+    () => inWindow.filter((v) => !!v.last_contact_type).length,
+    [inWindow],
+  );
 
-  // الـ filtered النهائي = inWindow + تبويب الإجراء
-  const filtered = useMemo(() => {
-    if (activeTab === "new") return inWindow.filter((v) => !v.last_contact_type);
-    return inWindow.filter((v) => v.last_contact_type === activeTab);
-  }, [inWindow, activeTab]);
+  // الـ filtered = زوار جدد فقط (بدون أي إجراء سابق)
+  const filtered = useMemo(
+    () => inWindow.filter((v) => !v.last_contact_type),
+    [inWindow],
+  );
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
