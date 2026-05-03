@@ -633,6 +633,37 @@ export default function ActiveVisitorsPage() {
                         )}
                       </div>
 
+                      {/* بانل آخر إجراء — شفافية كاملة لمنع تكرار التواصل */}
+                      {v.last_contact_type && v.last_contacted_at && (() => {
+                        const typeMeta: Record<CommType, { label: string; icon: string; cls: string }> = {
+                          phone:     { label: "اتصال",   icon: "📞", cls: "bg-blue-50 dark:bg-blue-950/30 border-blue-300/50 text-blue-800 dark:text-blue-300" },
+                          whatsapp:  { label: "واتساب",  icon: "💬", cls: "bg-green-50 dark:bg-green-950/30 border-green-300/50 text-green-800 dark:text-green-300" },
+                          no_answer: { label: "لم يردّ",  icon: "🚫", cls: "bg-red-50 dark:bg-red-950/30 border-red-300/50 text-red-800 dark:text-red-300" },
+                          visit:     { label: "زيارة",    icon: "🏬", cls: "bg-purple-50 dark:bg-purple-950/30 border-purple-300/50 text-purple-800 dark:text-purple-300" },
+                          note:      { label: "ملاحظة",   icon: "📝", cls: "bg-amber-50 dark:bg-amber-950/30 border-amber-300/50 text-amber-800 dark:text-amber-300" },
+                        };
+                        const m = typeMeta[v.last_contact_type];
+                        const sinceMin = Math.max(0, Math.round((Date.now() - new Date(v.last_contacted_at).getTime()) / 60000));
+                        const sinceLabel = sinceMin < 1 ? "الآن" : sinceMin < 60 ? `من ${sinceMin}د` : sinceMin < 1440 ? `من ${Math.floor(sinceMin/60)}س` : `من ${Math.floor(sinceMin/1440)} يوم`;
+                        return (
+                          <div className={cn("text-[11px] flex items-center gap-1.5 mb-1.5 p-1.5 rounded border flex-wrap", m.cls)}>
+                            <span>{m.icon}</span>
+                            <span className="font-bold">آخر إجراء: {m.label}</span>
+                            {v.last_contact_by && (
+                              <>
+                                <span className="opacity-60">·</span>
+                                <span>بواسطة <span className="font-bold">{v.last_contact_by}</span></span>
+                              </>
+                            )}
+                            <span className="opacity-60">·</span>
+                            <span className="tabular-nums">{sinceLabel}</span>
+                            {v.last_contact_note && (
+                              <span className="truncate opacity-80 max-w-[200px]">— {v.last_contact_note}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
+
                       {v.phone && (
                         <div className="text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
                           <Phone className="w-3 h-3" />
