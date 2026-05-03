@@ -2786,6 +2786,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_task_action_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          note: string | null
+          staff_name: string | null
+          staff_user_id: string
+          task_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_name?: string | null
+          staff_user_id: string
+          task_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          staff_name?: string | null
+          staff_user_id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       staff_task_handling: {
         Row: {
           action: string
