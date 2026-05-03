@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { History, Phone, MessageCircle, CheckCircle2, StickyNote, Loader2, User } from "lucide-react";
+import { History, Phone, MessageCircle, CheckCircle2, StickyNote, Loader2, User, Filter, X, ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StaffInfoDialog } from "./StaffInfoDialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface ActionLogRow {
   id: string;
