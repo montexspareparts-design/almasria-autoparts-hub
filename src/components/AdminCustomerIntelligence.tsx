@@ -21,6 +21,12 @@ import { cn } from "@/lib/utils";
 import { format, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx-js-style";
+import {
+  cairoToday,
+  cairoDaysAgo,
+  cairoDayBoundsUTC,
+  isWithinCairoToday,
+} from "@/lib/handledTasks";
 
 const addCompanyHeader = (ws: XLSX.WorkSheet, colCount: number, reportTitle?: string) => {
   const shiftRows = 5; // company + subtitle + contact + report info + separator
