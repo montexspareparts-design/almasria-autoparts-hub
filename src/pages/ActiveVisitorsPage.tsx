@@ -35,7 +35,6 @@ import {
 } from "lucide-react";
 
 type CommType = "phone" | "whatsapp" | "no_answer" | "visit" | "note";
-type AuditAction = "call" | "whatsapp" | "no_answer" | "visit" | "note";
 
 interface ActiveVisitor {
   user_id: string;
@@ -85,14 +84,6 @@ const normalizeEgyptianPhone = (raw: string | null | undefined) => {
   if (digits.startsWith("20") && digits.length === 12) return digits;
   if (digits.startsWith("01") && digits.length === 11) return `20${digits.slice(1)}`;
   return digits;
-};
-
-const COMM_TO_AUDIT_ACTION: Record<CommType, AuditAction> = {
-  phone: "call",
-  whatsapp: "whatsapp",
-  no_answer: "no_answer",
-  visit: "visit",
-  note: "note",
 };
 
 export default function ActiveVisitorsPage() {
@@ -155,26 +146,16 @@ export default function ActiveVisitorsPage() {
 
     applyActionLocally(visitor.user_id, type, trimmedNote, staffName, createdAt);
 
-    const [{ error: communicationError }, { error: auditError }] = await Promise.all([
-      supabase.from("customer_communications").insert({
+    const { error: communicationError } = await supabase.from("customer_communications").insert({
         customer_user_id: visitor.user_id,
         staff_user_id: user.id,
         comm_type: type,
         note: trimmedNote,
-      } as any),
-      supabase.from("staff_task_action_log" as any).insert({
-        task_id: `${visitor.user_id}:active_visitor`,
-        staff_user_id: user.id,
-        staff_name: staffName,
-        action: COMM_TO_AUDIT_ACTION[type],
-        note: trimmedNote ? `[الزوار النشطون] ${trimmedNote}` : "[الزوار النشطون] إجراء سريع",
-        created_at: createdAt,
-      }),
-    ]);
+      } as any);
 
-    if (communicationError || auditError) {
+    if (communicationError) {
       await fetchActive();
-      throw communicationError || auditError;
+      throw communicationError;
     }
 
     return true;
