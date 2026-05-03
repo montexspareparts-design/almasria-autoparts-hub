@@ -5542,6 +5542,12 @@ const AdminCustomerIntelligence = () => {
                   toast({ title: "فشل حفظ الإجراء", description: error.message, variant: "destructive" });
                   return;
                 }
+                setContactedUserIds(prev => {
+                  if (prev.has(actionDialogUser)) return prev;
+                  const next = new Set(prev);
+                  next.add(actionDialogUser);
+                  return next;
+                });
                 toast({ title: "✅ تم تسجيل الإجراء بنجاح" });
                 queryClient.invalidateQueries({ queryKey: ["admin_customer_communications"] });
                 setActionDialogUser(null);
