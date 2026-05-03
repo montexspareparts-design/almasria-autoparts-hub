@@ -113,8 +113,8 @@ const App = () => (
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
               <DeferredComponent delay={5000}><AddPhonePrompt /></DeferredComponent>
-              <DeferredComponent delay={6000}><VisitorLeadCapture /></DeferredComponent>
-              <DeferredComponent delay={7000}><SmartLeadTriggers /></DeferredComponent>
+              <DeferredComponent delay={1500}><VisitorLeadCapture /></DeferredComponent>
+              <DeferredComponent delay={3000}><SmartLeadTriggers /></DeferredComponent>
               {/* Staff popups — self-gate by role, no-op for non-staff */}
               <DeferredComponent delay={1500}><AdminNewOrderAlertGlobal /></DeferredComponent>
               <DeferredComponent delay={1500}><AdminNewSignupAlertGlobal /></DeferredComponent>
