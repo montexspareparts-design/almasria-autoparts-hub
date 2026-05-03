@@ -107,6 +107,60 @@ export default function ActiveVisitorsPage() {
   // user_ids تم تسجيل إجراء لها للتو في هذه الجلسة — لإظهار تأثير "بهتان اللون"
   const [recentlyHandled, setRecentlyHandled] = useState<Set<string>>(new Set());
 
+  const applyActionLocally = (visitorId: string, type: CommType, note: string | null, staffName: string | null, createdAt: string) => {
+    setRecentlyHandled((prev) => {
+      if (prev.has(visitorId)) return prev;
+      const next = new Set(prev);
+      next.add(visitorId);
+      return next;
+    });
+
+    setVisitors((prev) =>
+      prev.map((v) =>
+        v.user_id === visitorId
+          ? {
+              ...v,
+              last_contacted_at: createdAt,
+              last_contact_type: type,
+              last_contact_by: staffName,
+              last_contact_note: note,
+            }
+          : v,
+      ),
+    );
+  };
+
+  const recordVisitorAction = async (visitor: ActiveVisitor, type: CommType, note?: string | null) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
+      return false;
+    }
+
+    const trimmedNote = note?.trim() || null;
+    const createdAt = new Date().toISOString();
+    const staffName = user.user_metadata?.full_name || user.email || "موظف";
+
+    applyActionLocally(visitor.user_id, type, trimmedNote, staffName, createdAt);
+
+    const { error: communicationError } = await supabase.from("customer_communications").insert({
+        customer_user_id: visitor.user_id,
+        staff_user_id: user.id,
+        comm_type: type,
+        note: trimmedNote,
+      } as any);
+
+    if (communicationError) {
+      await fetchActive();
+      throw communicationError;
+    }
+
+    return true;
+  };
+
   const fetchActive = async () => {
     // نافذة الجلب تتوسّع لو المستخدم اختار "كل الأيام" (حتى 90 يوم) عشان يشوف كل الزوار
     const windowHours = hoursFilter === "all" ? 24 * 90 : MAX_WINDOW_HOURS;
@@ -285,6 +339,53 @@ export default function ActiveVisitorsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hoursFilter]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel("active_visitors_customer_communications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "customer_communications" },
+        async (payload: any) => {
+          const row = payload.new;
+          if (!row?.customer_user_id) return;
+
+          let staffName: string | null = null;
+          if (row.staff_user_id) {
+            const { data: staffProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", row.staff_user_id)
+              .maybeSingle();
+            staffName = (staffProfile as any)?.full_name || null;
+          }
+
+          applyActionLocally(
+            row.customer_user_id,
+            (row.comm_type as CommType) || "note",
+            row.note || null,
+            staffName,
+            row.created_at || new Date().toISOString(),
+          );
+        },
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          fetchActive();
+        }
+      });
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") fetchActive();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // نطاق زمني [from, to] بناءً على الفلتر — يدعم "أمس" كنافذة محدودة وليس "آخر X"
   const range = useMemo(() => {
     const now = Date.now();
@@ -369,42 +470,9 @@ export default function ActiveVisitorsPage() {
   // حفظ إجراء التواصل من نفس الكارت (يخفي الكارت تدريجياً ويسجل في customer_communications)
   const saveAction = async () => {
     if (!actionFor) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({ title: "يجب تسجيل الدخول", variant: "destructive" });
-      return;
-    }
     setSavingAction(true);
     try {
-      const { error } = await supabase.from("customer_communications").insert({
-        customer_user_id: actionFor.user_id,
-        staff_user_id: user.id,
-        comm_type: actionType,
-        note: actionNote.trim() || null,
-      });
-      if (error) throw error;
-      // علّم الكارت كـ "تم التعامل" — يبدأ تأثير fade
-      setRecentlyHandled((prev) => {
-        const next = new Set(prev);
-        next.add(actionFor.user_id);
-        return next;
-      });
-      // حدّث آخر تواصل + النوع + الموظف فوراً → الكارت ينتقل تلقائياً للتبويب الصحيح
-      const { data: { user: me } } = await supabase.auth.getUser();
-      const myName = me?.user_metadata?.full_name || me?.email || null;
-      setVisitors((prev) =>
-        prev.map((v) =>
-          v.user_id === actionFor.user_id
-            ? {
-                ...v,
-                last_contacted_at: new Date().toISOString(),
-                last_contact_type: actionType,
-                last_contact_by: myName,
-                last_contact_note: actionNote.trim() || null,
-              }
-            : v
-        )
-      );
+      await recordVisitorAction(actionFor, actionType, actionNote);
       const tabLabels: Record<CommType, string> = {
         phone: "📞 اتصال", whatsapp: "💬 واتساب", no_answer: "🚫 لم يردّ", visit: "🏬 زيارة", note: "📝 ملاحظة",
       };
@@ -709,8 +777,16 @@ export default function ActiveVisitorsPage() {
                     {/* Quick actions */}
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {v.phone && (
-                        <a
-                          href={`tel:${v.phone}`}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await recordVisitorAction(v, "phone", "");
+                              window.location.href = `tel:${v.phone}`;
+                            } catch (e: any) {
+                              toast({ title: "فشل تسجيل الاتصال", description: e.message, variant: "destructive" });
+                            }
+                          }}
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
                             "bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
@@ -719,13 +795,19 @@ export default function ActiveVisitorsPage() {
                         >
                           <Phone className="w-3.5 h-3.5" />
                           اتصال
-                        </a>
+                        </button>
                       )}
                       {wpUrl && (
-                        <a
-                          href={wpUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await recordVisitorAction(v, "whatsapp", "");
+                              window.open(wpUrl, "_blank", "noopener,noreferrer");
+                            } catch (e: any) {
+                              toast({ title: "فشل تسجيل الواتساب", description: e.message, variant: "destructive" });
+                            }
+                          }}
                           className={cn(
                             "inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-bold",
                             "bg-[#25D366] hover:bg-[#1ebe57] text-white transition-colors"
@@ -734,7 +816,7 @@ export default function ActiveVisitorsPage() {
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           واتساب
-                        </a>
+                        </button>
                       )}
                       <button
                         onClick={() => { setActionFor(v); setActionType("phone"); setActionNote(""); }}
