@@ -348,13 +348,20 @@ const AdminDashboard = () => {
 
   const filteredSidebarSections = filteredSidebarGroups.flatMap(g => g.items);
 
-  // الأدمن يبدأ من "ذكاء العملاء"، والموظف يبدأ من "مهامي اليومية وتقرير اليوم"
-  // حتى يرى مباشرة الواجهة الجديدة بدل لوحة staff-home القديمة.
-  const defaultSection = isModerator && !isAdmin ? "my-daily-tasks" : "customer-intel";
+  // الكل يبدأ من «الرئيسية» المدموجة (تحتوي ذكاء العملاء كتبويب)
+  const defaultSection = isModerator && !isAdmin ? "my-daily-tasks" : "daily-dashboard";
   const activeSection = searchParams.get("section") || defaultSection;
+  const activeTab = searchParams.get("tab") || "home";
 
   const setActiveSection = (section: string) => {
     setSearchParams({ section });
+  };
+
+  const setActiveTab = (tab: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("section", "daily-dashboard");
+    next.set("tab", tab);
+    setSearchParams(next);
   };
 
   // إعادة توجيه تلقائي فوري لما يدخل /admin بدون ?section → القسم الافتراضي حسب الدور
