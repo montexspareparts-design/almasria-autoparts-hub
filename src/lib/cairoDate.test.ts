@@ -30,6 +30,7 @@ describe("Cairo-day helpers (single source of truth for 'today')", () => {
   it("winter date (no DST) is UTC+2 — 2026-01-15 starts at 22:00 UTC prev day", () => {
     const { startMs } = cairoDayBoundsUTC("2026-01-15");
     expect(new Date(startMs).toISOString()).toBe("2026-01-14T22:00:00.000Z");
+  });
 
   it("isWithinCairoToday picks today and rejects yesterday/tomorrow", () => {
     const now = new Date();
