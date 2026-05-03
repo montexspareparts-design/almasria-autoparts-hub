@@ -1709,6 +1709,10 @@ const AdminCustomerIntelligence = () => {
   }).length;
   const pendingTasksCount = todayTasks.length - handledOrCompletedCount;
   const completedTasksCount = handledOrCompletedCount;
+  // عدد المهام اللي فعلاً هتظهر في تبويب "تمت اليوم — تابعها موظف"
+  // (مهام اليوم اللي عليها لمسة من موظف). ده بيطابق الكروت المعروضة فعلاً
+  // ومش بيعدّ سجلات قديمة من staff_task_handling لمهام مش ضمن نافذة اليوم.
+  const doneTodayCount = todayTasks.filter(t => !!getTaskTouchRecord(t.id)).length;
 
   // Build a ready-to-use call/whatsapp script based on customer behavior
   const buildCallScript = (userId: string): string => {
@@ -2432,7 +2436,7 @@ const AdminCustomerIntelligence = () => {
                   const isRemaining = activeFilter === "remaining";
                   const isAll = activeFilter === "all";
                   const isDone = activeFilter === "done";
-                  const doneCount = Object.keys(handledMeta).length;
+                  const doneCount = doneTodayCount;
                   return (
                     <>
                       <button
