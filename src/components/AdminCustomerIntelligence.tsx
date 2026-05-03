@@ -5545,6 +5545,14 @@ const AdminCustomerIntelligence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Task Action History Dialog — full audit trail of every action on a task */}
+      <TaskActionHistoryDialog
+        taskId={historyDialog?.taskId || null}
+        taskTitle={historyDialog?.taskTitle}
+        customerName={historyDialog?.customerName}
+        open={!!historyDialog}
+        onOpenChange={(o) => { if (!o) setHistoryDialog(null); }}
+      />
     </div>
   );
 };
