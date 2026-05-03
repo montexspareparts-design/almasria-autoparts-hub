@@ -113,7 +113,7 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "👥 العملاء والمبيعات",
     items: [
-      { id: "customer-intel", label: "ذكاء العملاء", icon: Eye },
+      // ذكاء العملاء تم دمجه داخل «الرئيسية» كتبويب — راجع case "daily-dashboard".
       { id: "task-audit-log", label: "سجل تدقيق الإجراءات", icon: ClipboardList },
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "Leads (عملاء محتملين)", icon: Users },
