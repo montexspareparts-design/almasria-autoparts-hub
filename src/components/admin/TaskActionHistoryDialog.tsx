@@ -159,6 +159,13 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
           </div>
         )}
       </DialogContent>
+
+      <StaffInfoDialog
+        staffUserId={selectedStaff?.id || null}
+        fallbackName={selectedStaff?.name || null}
+        open={staffOpen}
+        onOpenChange={setStaffOpen}
+      />
     </Dialog>
   );
 }
