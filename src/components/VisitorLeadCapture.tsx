@@ -7,69 +7,97 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const STORAGE_KEY = "visitor_lead_capture_v1";
-const SHOW_AFTER_MS = 30_000; // 30 seconds
-const HIDE_PATHS = ["/admin", "/dealer", "/checkout", "/payment", "/auth", "/reset-password"];
+const STORAGE_KEY = "visitor_lead_capture_v2"; // bumped to invalidate old "永遠 dismiss"
+const DISMISS_HOURS = 24; // re-show after 24h instead of forever
+const SHOW_AFTER_MS_DEFAULT = 25_000; // for organic visitors
+const SHOW_AFTER_MS_AD = 7_000; // for paid traffic (fbclid/gclid/utm) — must catch them fast
+const HIDE_PATHS = ["/admin", "/dealer", "/checkout", "/payment", "/auth", "/reset-password", "/staff"];
 
-const detectSource = (): { source: string; label: string; icon: string } => {
-  if (typeof window === "undefined") return { source: "direct", label: "زائر مباشر", icon: "👋" };
+const detectAdSource = () => {
+  if (typeof window === "undefined") {
+    return { source: "direct", label: "زائر مباشر", icon: "👋", isPaid: false };
+  }
   const params = new URLSearchParams(window.location.search);
   const ref = (document.referrer || "").toLowerCase();
   const utm = (params.get("utm_source") || "").toLowerCase();
-  const hay = `${ref} ${utm} ${window.location.search.toLowerCase()}`;
+  const search = window.location.search.toLowerCase();
+  const hay = `${ref} ${utm} ${search}`;
+  const hasFb = hay.includes("fbclid") || hay.includes("facebook") || hay.includes("fb.com") || utm.includes("fb");
+  const hasIg = hay.includes("instagram") || utm.includes("ig");
+  const hasGoogle = hay.includes("gclid") || hay.includes("google") || utm.includes("google");
+  const hasTiktok = hay.includes("tiktok") || hay.includes("ttclid");
+  const hasWhatsapp = hay.includes("whatsapp") || utm === "wa";
 
-  if (hay.includes("fbclid") || hay.includes("facebook") || utm.includes("fb")) {
-    return { source: "facebook", label: "أهلاً بيك من فيسبوك 👋", icon: "📘" };
+  if (hasFb) return { source: "facebook", label: "أهلاً بيك من فيسبوك 👋", icon: "📘", isPaid: true };
+  if (hasIg) return { source: "instagram", label: "أهلاً بيك من إنستجرام 👋", icon: "📷", isPaid: true };
+  if (hasTiktok) return { source: "tiktok", label: "أهلاً بيك من تيك توك 👋", icon: "🎵", isPaid: true };
+  if (hasGoogle) return { source: "google", label: "أهلاً بيك من جوجل 👋", icon: "🔍", isPaid: !!params.get("gclid") };
+  if (hasWhatsapp) return { source: "whatsapp", label: "أهلاً بيك من واتساب 👋", icon: "💬", isPaid: false };
+  return { source: "direct", label: "أهلاً بيك في المصرية جروب 👋", icon: "✨", isPaid: false };
+};
+
+const isDismissedRecently = (): boolean => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed?.reason === "submitted") return true; // if they submitted, never bug them again
+    const at = Number(parsed?.at) || 0;
+    const ageMs = Date.now() - at;
+    return ageMs < DISMISS_HOURS * 60 * 60 * 1000;
+  } catch {
+    return false;
   }
-  if (hay.includes("instagram") || utm.includes("ig")) {
-    return { source: "instagram", label: "أهلاً بيك من إنستجرام 👋", icon: "📷" };
-  }
-  if (hay.includes("gclid") || hay.includes("google") || utm.includes("google")) {
-    return { source: "google", label: "أهلاً بيك من جوجل 👋", icon: "🔍" };
-  }
-  if (hay.includes("tiktok")) return { source: "tiktok", label: "أهلاً بيك من تيك توك 👋", icon: "🎵" };
-  if (hay.includes("whatsapp")) return { source: "whatsapp", label: "أهلاً بيك من واتساب 👋", icon: "💬" };
-  return { source: "direct", label: "أهلاً بيك في المصرية جروب 👋", icon: "✨" };
 };
 
 const VisitorLeadCapture = () => {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [meta] = useState(detectSource);
+  const [meta] = useState(detectAdSource);
   const { pathname } = useLocation();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Skip on internal pages
     if (HIDE_PATHS.some((p) => pathname.startsWith(p))) return;
+    if (isDismissedRecently()) return;
 
-    // Skip if already shown / submitted / dismissed
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return;
-    } catch {}
-
-    // Skip if user is already logged in
     let mounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     supabase.auth.getSession().then(({ data }) => {
-      if (!mounted || data.session?.user) return;
-      const timer = setTimeout(() => mounted && setOpen(true), SHOW_AFTER_MS);
-      // Store cleanup on window for unmount
-      (window as any).__leadCaptureTimer = timer;
+      if (!mounted) return;
+      // If user is signed in AND has phone in profile → skip. Otherwise still show.
+      if (data.session?.user) {
+        supabase
+          .from("profiles")
+          .select("phone, whatsapp_opt_in")
+          .eq("user_id", data.session.user.id)
+          .maybeSingle()
+          .then(({ data: profile }) => {
+            if (!mounted) return;
+            if (profile?.phone && profile?.whatsapp_opt_in) return; // already have it, no need
+            const delay = meta.isPaid ? SHOW_AFTER_MS_AD : SHOW_AFTER_MS_DEFAULT;
+            timer = setTimeout(() => mounted && setOpen(true), delay);
+          });
+        return;
+      }
+      const delay = meta.isPaid ? SHOW_AFTER_MS_AD : SHOW_AFTER_MS_DEFAULT;
+      timer = setTimeout(() => mounted && setOpen(true), delay);
     });
 
     return () => {
       mounted = false;
-      const t = (window as any).__leadCaptureTimer;
-      if (t) clearTimeout(t);
+      if (timer) clearTimeout(timer);
     };
-  }, [pathname]);
+  }, [pathname, meta.isPaid]);
 
   const dismiss = (reason: "closed" | "submitted") => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ at: Date.now(), reason }));
-    } catch {}
+    } catch {
+      /* noop */
+    }
     setOpen(false);
   };
 
@@ -88,16 +116,24 @@ const VisitorLeadCapture = () => {
     setSubmitting(true);
     let session_key = "";
     try {
-      session_key = sessionStorage.getItem("visitor_session_key") || localStorage.getItem("visitor_session_key") || "";
-    } catch {}
+      session_key =
+        sessionStorage.getItem("visitor_session_key") ||
+        localStorage.getItem("visitor_session_key") ||
+        "";
+    } catch {
+      /* noop */
+    }
 
-    const { error } = await supabase.from("visitor_leads").upsert({
-      phone: trimmed,
-      source: meta.source,
-      first_path: pathname,
-      referrer: typeof document !== "undefined" ? document.referrer : "",
-      session_key: session_key || null,
-    }, { onConflict: "phone", ignoreDuplicates: true });
+    const { error } = await supabase.from("visitor_leads").upsert(
+      {
+        phone: trimmed,
+        source: meta.source,
+        first_path: pathname,
+        referrer: typeof document !== "undefined" ? document.referrer : "",
+        session_key: session_key || null,
+      },
+      { onConflict: "phone", ignoreDuplicates: true },
+    );
 
     setSubmitting(false);
 
@@ -119,6 +155,7 @@ const VisitorLeadCapture = () => {
         <>
           {/* Backdrop */}
           <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -128,6 +165,7 @@ const VisitorLeadCapture = () => {
 
           {/* Modal */}
           <motion.div
+            key="modal"
             initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -136,10 +174,8 @@ const VisitorLeadCapture = () => {
             dir="rtl"
           >
             <div className="w-full max-w-md pointer-events-auto bg-card border-2 border-primary/20 rounded-3xl shadow-2xl overflow-hidden relative">
-              {/* Top accent gradient */}
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-primary" />
 
-              {/* Close */}
               <button
                 onClick={() => dismiss("closed")}
                 className="absolute top-3 left-3 p-2 rounded-full hover:bg-muted transition-colors"
@@ -149,7 +185,6 @@ const VisitorLeadCapture = () => {
               </button>
 
               <div className="p-6 pt-8 space-y-5">
-                {/* Header */}
                 <div className="text-center space-y-2">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 mb-2">
                     <span className="text-3xl">{meta.icon}</span>
@@ -162,7 +197,6 @@ const VisitorLeadCapture = () => {
                   </p>
                 </div>
 
-                {/* Benefits */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 rounded-xl bg-muted/40">
                     <Gift className="w-4 h-4 mx-auto mb-1 text-primary" />
@@ -178,7 +212,6 @@ const VisitorLeadCapture = () => {
                   </div>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-3">
                   <Input
                     type="tel"
