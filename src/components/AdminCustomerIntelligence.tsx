@@ -441,26 +441,37 @@ const AdminCustomerIntelligence = () => {
   const [doneDialogNote, setDoneDialogNote] = useState("");
   const [doneDialogSaving, setDoneDialogSaving] = useState(false);
 
-  // Load today's handling records from DB + subscribe to realtime updates
+  // Load handling records (last 30 days) so any task already actioned
+  // by ANY staff stays hidden — even if the admin's view spans older tasks.
+  // Subscribe to realtime updates for today.
   useEffect(() => {
     let cancelled = false;
-    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }); // YYYY-MM-DD
+    const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+    // Build YYYY-MM-DD for 30 days ago
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const cutoffDate = cutoff.toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
     (async () => {
       const { data, error } = await supabase
         .from("staff_task_handling")
-        .select("task_id, staff_user_id, staff_name, action, created_at")
-        .eq("handled_date", todayDate);
+        .select("task_id, staff_user_id, staff_name, action, note, created_at")
+        .gte("handled_date", cutoffDate);
       if (cancelled || error || !data) return;
       const map: Record<string, HandledRecord> = {};
-      data.forEach((row: any) => {
-        map[row.task_id] = {
-          at: row.created_at,
-          by: row.staff_user_id,
-          byName: row.staff_name,
-          action: row.action as HandledAction,
-          note: row.note ?? null,
-        };
-      });
+      // Keep the most recent record per task_id
+      data
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .forEach((row: any) => {
+          if (!map[row.task_id]) {
+            map[row.task_id] = {
+              at: row.created_at,
+              by: row.staff_user_id,
+              byName: row.staff_name,
+              action: row.action as HandledAction,
+              note: row.note ?? null,
+            };
+          }
+        });
       setHandledMeta(map);
     })();
 
