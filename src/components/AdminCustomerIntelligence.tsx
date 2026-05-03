@@ -434,6 +434,8 @@ const AdminCustomerIntelligence = () => {
   type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual" | "done";
   type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction; note?: string | null };
   const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>({});
+  // Task action history dialog state
+  const [historyDialog, setHistoryDialog] = useState<{ taskId: string; taskTitle?: string; customerName?: string } | null>(null);
   // Dialog state for "تم" button — asks the staff what they did with the customer
   const [doneDialogTaskId, setDoneDialogTaskId] = useState<string | null>(null);
   const [doneDialogNote, setDoneDialogNote] = useState("");
