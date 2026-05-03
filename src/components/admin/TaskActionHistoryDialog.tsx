@@ -135,7 +135,17 @@ export function TaskActionHistoryDialog({ taskId, taskTitle, customerName, open,
                     </div>
                     <div className="flex items-center gap-1.5 mt-1.5 text-xs">
                       <User className="w-3 h-3 text-muted-foreground" />
-                      <span className="font-semibold text-foreground">{row.staff_name || "موظف"}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedStaff({ id: row.staff_user_id, name: row.staff_name });
+                          setStaffOpen(true);
+                        }}
+                        className="font-semibold text-primary hover:underline underline-offset-2 transition-colors"
+                      >
+                        {row.staff_name || "موظف"}
+                      </button>
+                      <span className="text-[10px] text-muted-foreground">(اضغط للتفاصيل)</span>
                     </div>
                     {row.note && (
                       <div className="mt-2 text-xs text-foreground bg-muted/40 rounded p-2 whitespace-pre-wrap leading-relaxed">
