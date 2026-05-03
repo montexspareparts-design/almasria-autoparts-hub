@@ -322,7 +322,8 @@ export default function ActiveVisitorsPage() {
     return visitors.filter((v) => inRange(v.last_seen_at) && isOverdue(v)).length;
   }, [visitors, range]);
 
-  const filtered = useMemo(() => {
+  // قائمة الزوار داخل النافذة الزمنية + بحث + فلتر المتأخر (قبل تبويب الإجراء)
+  const inWindow = useMemo(() => {
     let list = visitors.filter((v) => inRange(v.last_seen_at));
     if (overdueOnly) list = list.filter(isOverdue);
     const q = search.trim().toLowerCase();
@@ -335,6 +336,24 @@ export default function ActiveVisitorsPage() {
     }
     return list;
   }, [visitors, search, range, overdueOnly]);
+
+  // عدّاد لكل تبويب — يعيد حسابه أوتوماتيك مع كل تغيير
+  const tabCounts = useMemo(() => {
+    const counts: Record<"new" | CommType, number> = {
+      new: 0, phone: 0, whatsapp: 0, no_answer: 0, visit: 0, note: 0,
+    };
+    inWindow.forEach((v) => {
+      if (!v.last_contact_type) counts.new++;
+      else counts[v.last_contact_type] = (counts[v.last_contact_type] || 0) + 1;
+    });
+    return counts;
+  }, [inWindow]);
+
+  // الـ filtered النهائي = inWindow + تبويب الإجراء
+  const filtered = useMemo(() => {
+    if (activeTab === "new") return inWindow.filter((v) => !v.last_contact_type);
+    return inWindow.filter((v) => v.last_contact_type === activeTab);
+  }, [inWindow, activeTab]);
 
   const hoursLabel: Record<typeof hoursFilter, string> = {
     "30m": "30 دقيقة",
