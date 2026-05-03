@@ -1,7 +1,66 @@
 /**
  * Pure helpers for the "تمت اليوم" (Handled Today) tab logic in AdminCustomerIntelligence.
  * Extracted to be testable in isolation from the React component.
+ *
+ * SINGLE SOURCE OF TRUTH for "today" semantics across the whole CRM:
+ *   - Always Africa/Cairo timezone.
+ *   - `cairoToday()` returns YYYY-MM-DD as the canonical day key.
+ *   - `cairoDayBoundsUTC(day)` returns the UTC ms range [start, end) for that day,
+ *     so client-side filtering of ISO timestamps is timezone-safe.
+ *   - `isWithinCairoToday(at)` is the ONE check used by every consumer
+ *     (handledMeta filter, customerTouchedToday, visibleTasks, badges).
  */
+
+export const CAIRO_TZ = "Africa/Cairo";
+
+/** Canonical "today" key in Cairo as `YYYY-MM-DD`. */
+export function cairoToday(now: Date = new Date()): string {
+  return now.toLocaleDateString("en-CA", { timeZone: CAIRO_TZ });
+}
+
+/** N days ago in Cairo as `YYYY-MM-DD`. */
+export function cairoDaysAgo(days: number, now: Date = new Date()): string {
+  const d = new Date(now);
+  d.setUTCDate(d.getUTCDate() - days);
+  return cairoToday(d);
+}
+
+/**
+ * Convert a Cairo `YYYY-MM-DD` day to its UTC millisecond bounds [start, end).
+ * Cairo is UTC+2 year-round (no DST since 2014), so the day starts at 22:00 UTC
+ * the previous day. We compute it dynamically to be safe against future changes.
+ */
+export function cairoDayBoundsUTC(day: string = cairoToday()): { startMs: number; endMs: number } {
+  // Take noon of the requested Cairo day as a stable reference
+  const noonUtcGuess = new Date(`${day}T12:00:00Z`);
+  // What does that instant look like in Cairo? Extract the offset.
+  const cairoParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CAIRO_TZ,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(noonUtcGuess);
+  const get = (t: string) => Number(cairoParts.find((p) => p.type === t)?.value);
+  const cairoHour = get("hour");
+  // offsetHours = how many hours Cairo is ahead of UTC at that instant
+  const offsetHours = cairoHour - 12;
+  const startMs = Date.UTC(
+    Number(day.slice(0, 4)),
+    Number(day.slice(5, 7)) - 1,
+    Number(day.slice(8, 10)),
+    -offsetHours, 0, 0, 0,
+  );
+  return { startMs, endMs: startMs + 24 * 60 * 60 * 1000 };
+}
+
+/** True iff the ISO/Date timestamp falls within today's Cairo calendar day. */
+export function isWithinCairoToday(at: string | Date | null | undefined, now: Date = new Date()): boolean {
+  if (!at) return false;
+  const ts = typeof at === "string" ? Date.parse(at) : at.getTime();
+  if (!Number.isFinite(ts)) return false;
+  const { startMs, endMs } = cairoDayBoundsUTC(cairoToday(now));
+  return ts >= startMs && ts < endMs;
+}
+
 
 export interface HandledRecord {
   action: "call" | "whatsapp" | "note" | "outcome" | "done" | string;
