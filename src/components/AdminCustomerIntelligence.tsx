@@ -2436,7 +2436,7 @@ const AdminCustomerIntelligence = () => {
                   const isRemaining = activeFilter === "remaining";
                   const isAll = activeFilter === "all";
                   const isDone = activeFilter === "done";
-                  const doneCount = Object.keys(handledMeta).length;
+                  const doneCount = doneTodayCount;
                   return (
                     <>
                       <button
