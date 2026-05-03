@@ -137,6 +137,7 @@ import {
   Settings2, RotateCcw, History,
 } from "lucide-react";
 import { InteractionsHistory } from "@/components/admin/InteractionsHistory";
+import { TaskActionHistoryDialog } from "@/components/admin/TaskActionHistoryDialog";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -433,6 +434,8 @@ const AdminCustomerIntelligence = () => {
   type HandledAction = "call" | "whatsapp" | "note" | "outcome" | "manual" | "done";
   type HandledRecord = { at: string; by: string; byName?: string | null; action: HandledAction; note?: string | null };
   const [handledMeta, setHandledMeta] = useState<Record<string, HandledRecord>>({});
+  // Task action history dialog state
+  const [historyDialog, setHistoryDialog] = useState<{ taskId: string; taskTitle?: string; customerName?: string } | null>(null);
   // Dialog state for "تم" button — asks the staff what they did with the customer
   const [doneDialogTaskId, setDoneDialogTaskId] = useState<string | null>(null);
   const [doneDialogNote, setDoneDialogNote] = useState("");
@@ -2921,6 +2924,26 @@ const AdminCustomerIntelligence = () => {
                           </div>
                         );
                       })()}
+                      {/* History button — opens dialog with full action log for this task */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setHistoryDialog({
+                            taskId: task.id,
+                            taskTitle: task.title,
+                            customerName: task.userName,
+                          });
+                        }}
+                        className={cn(
+                          "inline-flex items-center justify-center gap-1.5 w-full text-[10px] font-bold px-2 py-1 rounded-md border border-border/50 bg-muted/20 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors",
+                          isDone && "opacity-60"
+                        )}
+                        title="عرض كل الإجراءات اللي اتعملت على المهمة دي"
+                      >
+                        <History className="w-3 h-3" />
+                        سجل الإجراءات
+                      </button>
                       {/* Toggle button for score breakdown panel */}
                       {(() => {
                         const isScoreOpen = expandedScoreTasks.has(task.id);
@@ -5522,6 +5545,14 @@ const AdminCustomerIntelligence = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Task Action History Dialog — full audit trail of every action on a task */}
+      <TaskActionHistoryDialog
+        taskId={historyDialog?.taskId || null}
+        taskTitle={historyDialog?.taskTitle}
+        customerName={historyDialog?.customerName}
+        open={!!historyDialog}
+        onOpenChange={(o) => { if (!o) setHistoryDialog(null); }}
+      />
     </div>
   );
 };
