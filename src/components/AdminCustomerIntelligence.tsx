@@ -3672,7 +3672,18 @@ const AdminCustomerIntelligence = () => {
                                       href={`https://wa.me/${formatPhoneForWA(p.phone)}?text=${buildQuickMessage(p.full_name, item.reasons)}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      title="فتح محادثة واتساب"
+                                      title="فتح محادثة واتساب — يُسجّل تلقائياً كإجراء اليوم"
+                                      onClick={() => {
+                                        if (!user?.id) return;
+                                        supabase.from("customer_communications").insert({
+                                          customer_user_id: p.user_id,
+                                          staff_user_id: user.id,
+                                          comm_type: "whatsapp",
+                                          note: "تم فتح محادثة واتساب من قائمة المتابعة",
+                                        }).then(({ error }) => {
+                                          if (error) console.warn("[touched-today/wa] failed:", error.message);
+                                        });
+                                      }}
                                     >
                                       <MessageCircle className="w-3.5 h-3.5" />
                                       واتساب
@@ -3684,7 +3695,21 @@ const AdminCustomerIntelligence = () => {
                                     variant="outline"
                                     className="h-9 gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 font-bold"
                                   >
-                                    <a href={`tel:${p.phone}`} title="بدء مكالمة">
+                                    <a
+                                      href={`tel:${p.phone}`}
+                                      title="بدء مكالمة — يُسجّل تلقائياً كإجراء اليوم"
+                                      onClick={() => {
+                                        if (!user?.id) return;
+                                        supabase.from("customer_communications").insert({
+                                          customer_user_id: p.user_id,
+                                          staff_user_id: user.id,
+                                          comm_type: "phone",
+                                          note: "تم بدء مكالمة من قائمة المتابعة",
+                                        }).then(({ error }) => {
+                                          if (error) console.warn("[touched-today/call] failed:", error.message);
+                                        });
+                                      }}
+                                    >
                                       <Phone className="w-3.5 h-3.5" />
                                       اتصل
                                     </a>
