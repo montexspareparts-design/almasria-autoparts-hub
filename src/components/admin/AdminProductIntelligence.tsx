@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Activity, ArrowDownRight, ArrowUpRight, BarChart3, CheckCircle2,
-  Download, Filter, Loader2, Package, RefreshCw, Search, ShieldAlert,
-  Sparkles, TrendingDown, TrendingUp, XCircle,
+  Copy, Download, Filter, Loader2, Package, RefreshCw, Search, ShieldAlert,
+  Sparkles, TrendingDown, TrendingUp, X, XCircle,
 } from "lucide-react";
 
 // ============================================================================
@@ -44,11 +45,11 @@ interface PriceChangeRow {
   change_percentage: number;
   source: string;
   created_at: string;
-  // joined
   name_ar?: string;
   part_number?: string | null;
   sku?: string | null;
   erp_item_code?: string | null;
+  brand?: string | null;
 }
 
 // ============================================================================
@@ -74,6 +75,16 @@ const fmtNum = (n: number) => n.toLocaleString("ar-EG");
 const fmtMoney = (n: number) => n.toLocaleString("ar-EG", { maximumFractionDigits: 2 });
 const fmtPct = (n: number | null) => n == null ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
 
+const BRAND_LABEL: Record<string, string> = {
+  toyota_genuine: "تويوتا أصلي",
+  denso: "دنسو",
+  aisin: "ايسن",
+  mtx_aftermarket: "مونتكس",
+  toyota: "تويوتا",
+  lexus: "لكزس",
+};
+const brandLabel = (b: string | null | undefined) => (b ? (BRAND_LABEL[b] || b) : "—");
+
 const downloadCSV = (filename: string, rows: any[][], headers: string[]) => {
   const csv = [headers, ...rows]
     .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
@@ -95,12 +106,14 @@ export default function AdminProductIntelligence() {
   const [tab, setTab] = useState<"stock" | "prices">("stock");
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [minChange, setMinChange] = useState<string>("0"); // min absolute change
 
   // Stock data
   const [stockRows, setStockRows] = useState<StockDiffRow[]>([]);
   const [stockLoading, setStockLoading] = useState(false);
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
-  const [stockSort, setStockSort] = useState<"abs_delta" | "delta_desc" | "delta_asc" | "pct_desc">("abs_delta");
+  const [stockSort, setStockSort] = useState<"abs_delta" | "delta_desc" | "delta_asc" | "pct_desc" | "name">("abs_delta");
 
   // Price data
   const [priceRows, setPriceRows] = useState<PriceChangeRow[]>([]);
@@ -132,7 +145,7 @@ export default function AdminProductIntelligence() {
     const toIso = `${to}T23:59:59.999Z`;
     const { data, error } = await supabase
       .from("price_change_history")
-      .select("id, product_id, old_price, new_price, change_percentage, source, created_at, products:product_id(name_ar, part_number, sku, erp_item_code)")
+      .select("id, product_id, old_price, new_price, change_percentage, source, created_at, products:product_id(name_ar, part_number, sku, erp_item_code, brand)")
       .gte("created_at", fromIso)
       .lte("created_at", toIso)
       .order("created_at", { ascending: false })
@@ -149,6 +162,7 @@ export default function AdminProductIntelligence() {
         created_at: r.created_at,
         name_ar: r.products?.name_ar, part_number: r.products?.part_number,
         sku: r.products?.sku, erp_item_code: r.products?.erp_item_code,
+        brand: r.products?.brand,
       }));
       setPriceRows(flat);
     }
@@ -184,10 +198,19 @@ export default function AdminProductIntelligence() {
     }
   };
 
+  // ----- Brand options (from current dataset)
+  const brandOptions = useMemo(() => {
+    const src = tab === "stock" ? stockRows : priceRows;
+    const set = new Set<string>();
+    src.forEach((r: any) => { if (r.brand) set.add(r.brand); });
+    return Array.from(set).sort();
+  }, [tab, stockRows, priceRows]);
+
   // ----- Filtering & sorting (stock)
   const filteredStock = useMemo(() => {
     let arr = [...stockRows];
     const q = search.trim().toLowerCase();
+    const minC = Math.max(0, Number(minChange) || 0);
     if (q) {
       arr = arr.filter((r) =>
         (r.name_ar || "").toLowerCase().includes(q) ||
@@ -196,6 +219,8 @@ export default function AdminProductIntelligence() {
         (r.erp_item_code || "").toLowerCase().includes(q)
       );
     }
+    if (brandFilter !== "all") arr = arr.filter((r) => r.brand === brandFilter);
+    if (minC > 0) arr = arr.filter((r) => Math.abs(r.delta) >= minC);
     if (stockFilter === "increased") arr = arr.filter((r) => r.delta > 0);
     else if (stockFilter === "decreased") arr = arr.filter((r) => r.delta < 0);
     else if (stockFilter === "zero_to_in") arr = arr.filter((r) => r.old_qty === 0 && r.new_qty > 0);
@@ -205,14 +230,16 @@ export default function AdminProductIntelligence() {
       if (stockSort === "abs_delta") return Math.abs(b.delta) - Math.abs(a.delta);
       if (stockSort === "delta_desc") return b.delta - a.delta;
       if (stockSort === "delta_asc") return a.delta - b.delta;
+      if (stockSort === "name") return (a.name_ar || "").localeCompare(b.name_ar || "", "ar");
       return (b.change_pct ?? -Infinity) - (a.change_pct ?? -Infinity);
     });
     return arr;
-  }, [stockRows, search, stockFilter, stockSort]);
+  }, [stockRows, search, stockFilter, stockSort, brandFilter, minChange]);
 
   const filteredPrices = useMemo(() => {
     let arr = [...priceRows];
     const q = search.trim().toLowerCase();
+    const minC = Math.max(0, Number(minChange) || 0);
     if (q) {
       arr = arr.filter((r) =>
         (r.name_ar || "").toLowerCase().includes(q) ||
@@ -221,10 +248,12 @@ export default function AdminProductIntelligence() {
         (r.erp_item_code || "").toLowerCase().includes(q)
       );
     }
+    if (brandFilter !== "all") arr = arr.filter((r) => r.brand === brandFilter);
+    if (minC > 0) arr = arr.filter((r) => Math.abs(r.change_percentage) >= minC);
     if (priceFilter === "up") arr = arr.filter((r) => r.new_price > r.old_price);
     else if (priceFilter === "down") arr = arr.filter((r) => r.new_price < r.old_price);
     return arr;
-  }, [priceRows, search, priceFilter]);
+  }, [priceRows, search, priceFilter, brandFilter, minChange]);
 
   // ----- KPIs
   const stockKpi = useMemo(() => {
@@ -258,9 +287,10 @@ export default function AdminProductIntelligence() {
       `stock-report-${range}-${todayStr()}.csv`,
       filteredStock.map((r) => [
         r.name_ar, r.part_number || "", r.erp_item_code || r.sku || "",
+        brandLabel(r.brand),
         r.old_qty, r.new_qty, r.delta, r.change_pct ?? "",
       ]),
-      ["اسم الصنف", "بارت نمبر", "كود الصنف", "كانت", "بقت", "التغيير", "نسبة %"],
+      ["اسم الصنف", "بارت نمبر", "كود الصنف", "البراند", "كانت", "بقت", "التغيير", "نسبة %"],
     );
   };
 
@@ -269,12 +299,24 @@ export default function AdminProductIntelligence() {
       `price-report-${range}-${todayStr()}.csv`,
       filteredPrices.map((r) => [
         r.name_ar || "", r.part_number || "", r.erp_item_code || r.sku || "",
+        brandLabel(r.brand),
         r.old_price, r.new_price, r.change_percentage,
         new Date(r.created_at).toLocaleString("ar-EG"),
       ]),
-      ["اسم الصنف", "بارت نمبر", "كود الصنف", "السعر القديم", "السعر الجديد", "نسبة %", "وقت التغيير"],
+      ["اسم الصنف", "بارت نمبر", "كود الصنف", "البراند", "السعر القديم", "السعر الجديد", "نسبة %", "وقت التغيير"],
     );
   };
+
+  const copyText = (txt: string) => {
+    navigator.clipboard.writeText(txt);
+    toast({ title: "تم النسخ", description: txt });
+  };
+
+  const clearFilters = () => {
+    setSearch(""); setBrandFilter("all"); setMinChange("0");
+    setStockFilter("all"); setPriceFilter("all");
+  };
+  const hasActiveFilters = !!search || brandFilter !== "all" || (Number(minChange) || 0) > 0 || stockFilter !== "all" || priceFilter !== "all";
 
   // ============================================================================
   // Access guard
@@ -301,295 +343,461 @@ export default function AdminProductIntelligence() {
     { key: "30d",       label: "آخر شهر",      icon: BarChart3 },
   ];
 
-  return (
-    <div dir="rtl" className="space-y-4">
-      {/* Hero */}
-      <Card className="p-4 sm:p-5 border-2 border-primary/15 bg-gradient-to-br from-primary/5 via-background to-background">
-        <div className="flex items-start justify-between gap-3 flex-wrap">
-          <div className="flex items-start gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/70 grid place-items-center shadow-md">
-              <Package className="w-5 h-5 text-primary-foreground" />
+  // ----- KPI cards (clickable presets)
+  const renderStockKpis = () => {
+    const items = [
+      { l: "أصناف اتغيّر رصيدها", v: stockKpi.changedCount, c: "text-primary",       bg: "bg-primary/10",       i: Package,        onClick: () => setStockFilter("all"),         active: stockFilter === "all" },
+      { l: "زاد رصيدها",          v: stockKpi.increasedCount, c: "text-emerald-600", bg: "bg-emerald-500/10",   i: TrendingUp,     onClick: () => setStockFilter("increased"),   active: stockFilter === "increased" },
+      { l: "نقص رصيدها",          v: stockKpi.decreasedCount, c: "text-amber-600",   bg: "bg-amber-500/10",     i: TrendingDown,   onClick: () => setStockFilter("decreased"),   active: stockFilter === "decreased" },
+      { l: "وصلت بعد نفاد",       v: stockKpi.newlyIn,       c: "text-emerald-600",  bg: "bg-emerald-500/10",   i: Sparkles,       onClick: () => setStockFilter("zero_to_in"),  active: stockFilter === "zero_to_in" },
+      { l: "نفدت بالكامل",        v: stockKpi.wentOut,       c: "text-red-600",      bg: "bg-red-500/10",       i: XCircle,        onClick: () => setStockFilter("in_to_zero"),  active: stockFilter === "in_to_zero" },
+      { l: "إجمالي قطع زادت",     v: fmtNum(stockKpi.totalAdded),   c: "text-emerald-700", bg: "bg-emerald-500/5",  i: ArrowUpRight,   onClick: () => {},                            active: false },
+      { l: "إجمالي قطع باعت",     v: fmtNum(stockKpi.totalRemoved), c: "text-amber-700",   bg: "bg-amber-500/5",    i: ArrowDownRight, onClick: () => {},                            active: false },
+    ];
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+        {items.map((k) => (
+          <button
+            key={k.l}
+            onClick={k.onClick}
+            className={`text-right p-3 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${
+              k.active ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border bg-card"
+            }`}
+          >
+            <div className={`w-7 h-7 rounded-lg grid place-items-center mb-1.5 ${k.bg}`}>
+              <k.i className={`w-3.5 h-3.5 ${k.c}`} />
             </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold">ذكاء المنتجات — تقارير المخزون والأسعار</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                تقارير لحظية للأصناف الجديدة، تغيّرات الأرصدة والأسعار، مع مزامنة فورية للفيصل
-              </p>
-            </div>
-          </div>
+            <p className="text-[11px] text-muted-foreground leading-tight mb-0.5">{k.l}</p>
+            <p className="text-xl font-extrabold tabular-nums">{k.v}</p>
+          </button>
+        ))}
+      </div>
+    );
+  };
 
-          <Button onClick={handleErpSync} disabled={syncing} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
-            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            مزامنة الفيصل الآن
+  const renderPriceKpis = () => {
+    const items = [
+      { l: "إجمالي تغييرات",  v: priceKpi.total,         c: "text-primary",       bg: "bg-primary/10",     i: BarChart3,     onClick: () => setPriceFilter("all"),  active: priceFilter === "all" },
+      { l: "زادت أسعار",       v: priceKpi.upCount,       c: "text-red-600",       bg: "bg-red-500/10",     i: TrendingUp,    onClick: () => setPriceFilter("up"),   active: priceFilter === "up" },
+      { l: "نقصت أسعار",       v: priceKpi.downCount,     c: "text-emerald-600",   bg: "bg-emerald-500/10", i: TrendingDown,  onClick: () => setPriceFilter("down"), active: priceFilter === "down" },
+      { l: "متوسط الزيادة",    v: fmtPct(priceKpi.avgUp), c: "text-red-600",       bg: "bg-red-500/5",      i: ArrowUpRight,  onClick: () => {}, active: false },
+      { l: "متوسط النقص",      v: fmtPct(priceKpi.avgDown), c: "text-emerald-600", bg: "bg-emerald-500/5",  i: ArrowDownRight, onClick: () => {}, active: false },
+      { l: "أعلى زيادة",       v: fmtPct(priceKpi.maxUp), c: "text-red-700",       bg: "bg-red-500/5",      i: ArrowUpRight,  onClick: () => {}, active: false },
+      { l: "أعلى نقص",         v: fmtPct(priceKpi.maxDown), c: "text-emerald-700", bg: "bg-emerald-500/5",  i: ArrowDownRight, onClick: () => {}, active: false },
+    ];
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+        {items.map((k) => (
+          <button
+            key={k.l}
+            onClick={k.onClick}
+            className={`text-right p-3 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${
+              k.active ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border bg-card"
+            }`}
+          >
+            <div className={`w-7 h-7 rounded-lg grid place-items-center mb-1.5 ${k.bg}`}>
+              <k.i className={`w-3.5 h-3.5 ${k.c}`} />
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-tight mb-0.5">{k.l}</p>
+            <p className="text-xl font-extrabold tabular-nums">{k.v}</p>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Filters bar (shared)
+  const FiltersBar = ({
+    onRefresh, refreshing, onExport, exportDisabled, extraFilter,
+  }: {
+    onRefresh: () => void; refreshing: boolean;
+    onExport: () => void; exportDisabled: boolean;
+    extraFilter?: React.ReactNode;
+  }) => (
+    <Card className="p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث: اسم الصنف، بارت نمبر، أو كود الصنف..."
+            className="pr-9 h-10 text-sm"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <Select value={brandFilter} onValueChange={setBrandFilter}>
+          <SelectTrigger className="h-10 w-[150px]">
+            <SelectValue placeholder="كل البراندات" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">كل البراندات</SelectItem>
+            {brandOptions.map((b) => (
+              <SelectItem key={b} value={b}>{brandLabel(b)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {extraFilter}
+
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">حد أدنى للتغيير:</span>
+          <Input
+            type="number"
+            value={minChange}
+            onChange={(e) => setMinChange(e.target.value)}
+            className="h-10 w-[80px] text-sm tabular-nums"
+            min={0}
+          />
+        </div>
+
+        <div className="flex items-center gap-1.5 mr-auto">
+          {hasActiveFilters && (
+            <Button size="sm" variant="ghost" onClick={clearFilters} className="gap-1.5 h-9 text-xs">
+              <X className="w-3.5 h-3.5" /> مسح الفلاتر
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={onRefresh} disabled={refreshing} className="gap-1.5 h-9">
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} /> تحديث
+          </Button>
+          <Button size="sm" variant="outline" onClick={onExport} disabled={exportDisabled} className="gap-1.5 h-9">
+            <Download className="w-3.5 h-3.5" /> CSV
           </Button>
         </div>
+      </div>
+    </Card>
+  );
 
-        {syncProgress && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-lg border bg-card p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">{syncProgress.label}</span>
-              {syncProgress.done && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-              {syncProgress.error && <XCircle className="w-4 h-4 text-destructive" />}
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div dir="rtl" className="space-y-4">
+        {/* Hero */}
+        <Card className="p-4 sm:p-5 border-2 border-primary/15 bg-gradient-to-br from-primary/5 via-background to-background">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/70 grid place-items-center shadow-md">
+                <Package className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold">ذكاء المنتجات — تقارير المخزون والأسعار</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  تقارير لحظية للأصناف الجديدة، تغيّرات الأرصدة والأسعار، مع مزامنة فورية للفيصل
+                </p>
+              </div>
             </div>
-            <Progress value={(syncProgress.step / syncProgress.total) * 100} className="h-2" />
-            <span className="text-xs text-muted-foreground mt-1 inline-block">الخطوة {syncProgress.step} من {syncProgress.total}</span>
-          </motion.div>
-        )}
-      </Card>
 
-      {/* Range selector */}
-      <Card className="p-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground ml-1">الفترة:</span>
-          {ranges.map((r) => {
-            const active = range === r.key;
-            return (
-              <button
-                key={r.key}
-                onClick={() => setRange(r.key)}
-                className={`flex items-center gap-1.5 px-3 h-9 rounded-full text-xs sm:text-sm font-semibold transition-all border ${
-                  active
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
-                }`}
-              >
-                <r.icon className="w-3.5 h-3.5" />
-                {r.label}
-              </button>
-            );
-          })}
-          <span className="text-xs text-muted-foreground mr-auto">
-            {getRange(range).from} → {getRange(range).to}
-          </span>
-        </div>
-      </Card>
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:inline-grid">
-          <TabsTrigger value="stock" className="gap-2">
-            <Package className="w-4 h-4" />
-            تقرير المخزون
-          </TabsTrigger>
-          <TabsTrigger value="prices" className="gap-2">
-            <TrendingUp className="w-4 h-4" />
-            تقرير الأسعار
-          </TabsTrigger>
-        </TabsList>
-
-        {/* ============================ STOCK ============================ */}
-        <TabsContent value="stock" className="mt-4 space-y-4">
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
-            {[
-              { l: "أصناف اتغيّر رصيدها", v: stockKpi.changedCount, c: "text-primary", i: Package },
-              { l: "زاد رصيدها", v: stockKpi.increasedCount, c: "text-emerald-600", i: TrendingUp },
-              { l: "نقص رصيدها", v: stockKpi.decreasedCount, c: "text-amber-600", i: TrendingDown },
-              { l: "وصلت بعد نفاد", v: stockKpi.newlyIn, c: "text-emerald-600", i: Sparkles },
-              { l: "نفدت", v: stockKpi.wentOut, c: "text-red-600", i: ArrowDownRight },
-              { l: "إجمالي قطع زادت", v: fmtNum(stockKpi.totalAdded), c: "text-emerald-600", i: ArrowUpRight },
-              { l: "إجمالي قطع باعت", v: fmtNum(stockKpi.totalRemoved), c: "text-amber-600", i: ArrowDownRight },
-            ].map((k) => (
-              <Card key={k.l} className="p-2.5">
-                <k.i className={`w-3.5 h-3.5 ${k.c} mb-1`} />
-                <p className="text-[10px] text-muted-foreground leading-tight">{k.l}</p>
-                <p className="text-base font-bold tabular-nums">{k.v}</p>
-              </Card>
-            ))}
+            <Button onClick={handleErpSync} disabled={syncing} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
+              {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              مزامنة الفيصل الآن
+            </Button>
           </div>
 
-          {/* Filters */}
-          <Card className="p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث بالاسم أو البارت نمبر أو الكود..." className="pr-9 h-9" />
+          {syncProgress && (
+            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">{syncProgress.label}</span>
+                {syncProgress.done && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                {syncProgress.error && <XCircle className="w-4 h-4 text-destructive" />}
               </div>
-              <div className="flex items-center gap-1.5">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Select value={stockFilter} onValueChange={(v) => setStockFilter(v as StockFilter)}>
-                  <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">كل التغييرات</SelectItem>
-                    <SelectItem value="increased">زيادة فقط</SelectItem>
-                    <SelectItem value="decreased">نقص فقط</SelectItem>
-                    <SelectItem value="zero_to_in">وصل بعد نفاد</SelectItem>
-                    <SelectItem value="in_to_zero">نفد بالكامل</SelectItem>
-                  </SelectContent>
-                </Select>
+              <Progress value={(syncProgress.step / syncProgress.total) * 100} className="h-2" />
+              <span className="text-xs text-muted-foreground mt-1 inline-block">الخطوة {syncProgress.step} من {syncProgress.total}</span>
+            </motion.div>
+          )}
+        </Card>
+
+        {/* Range selector */}
+        <Card className="p-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground ml-1">الفترة:</span>
+            {ranges.map((r) => {
+              const active = range === r.key;
+              return (
+                <button
+                  key={r.key}
+                  onClick={() => setRange(r.key)}
+                  className={`flex items-center gap-1.5 px-3 h-9 rounded-full text-xs sm:text-sm font-semibold transition-all border ${
+                    active
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <r.icon className="w-3.5 h-3.5" />
+                  {r.label}
+                </button>
+              );
+            })}
+            <span className="text-xs text-muted-foreground mr-auto">
+              {getRange(range).from} → {getRange(range).to}
+            </span>
+          </div>
+        </Card>
+
+        <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+          <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:inline-grid">
+            <TabsTrigger value="stock" className="gap-2">
+              <Package className="w-4 h-4" />
+              تقرير المخزون
+            </TabsTrigger>
+            <TabsTrigger value="prices" className="gap-2">
+              <TrendingUp className="w-4 h-4" />
+              تقرير الأسعار
+            </TabsTrigger>
+          </TabsList>
+
+          {/* ============================ STOCK ============================ */}
+          <TabsContent value="stock" className="mt-4 space-y-4">
+            {renderStockKpis()}
+
+            <FiltersBar
+              onRefresh={loadStock}
+              refreshing={stockLoading}
+              onExport={exportStock}
+              exportDisabled={!filteredStock.length}
+              extraFilter={
                 <Select value={stockSort} onValueChange={(v) => setStockSort(v as any)}>
-                  <SelectTrigger className="h-9 w-[170px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-10 w-[160px]">
+                    <Filter className="w-3.5 h-3.5 ml-1 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="abs_delta">الأكثر تغيّراً</SelectItem>
                     <SelectItem value="delta_desc">الأكثر زيادة</SelectItem>
                     <SelectItem value="delta_asc">الأكثر نقصاً</SelectItem>
                     <SelectItem value="pct_desc">أعلى نسبة %</SelectItem>
+                    <SelectItem value="name">ترتيب أبجدي</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <Button size="sm" variant="outline" onClick={loadStock} disabled={stockLoading} className="gap-1.5">
-                <RefreshCw className={`w-3.5 h-3.5 ${stockLoading ? "animate-spin" : ""}`} /> تحديث
-              </Button>
-              <Button size="sm" variant="outline" onClick={exportStock} disabled={!filteredStock.length} className="gap-1.5">
-                <Download className="w-3.5 h-3.5" /> تصدير CSV
-              </Button>
-            </div>
-          </Card>
+              }
+            />
 
-          {/* Table */}
-          <Card className="overflow-hidden">
-            {/* Header (desktop) */}
-            <div className="hidden sm:grid grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_100px_90px_90px_100px_100px] gap-2 px-4 py-2.5 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b">
-              <div className="text-right">اسم الصنف</div>
-              <div>بارت نمبر</div>
-              <div className="text-center">الكود</div>
-              <div className="text-center">كانت</div>
-              <div className="text-center">بقت</div>
-              <div className="text-center">التغيير</div>
-              <div className="text-center">النسبة</div>
-            </div>
-
-            {stockLoading ? (
-              <div className="p-10 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
-            ) : filteredStock.length === 0 ? (
-              <div className="p-10 text-center text-muted-foreground">
-                <Package className="w-10 h-10 mx-auto opacity-40 mb-2" />
-                لا توجد تغييرات في هذا النطاق
+            {/* Table */}
+            <Card className="overflow-hidden">
+              <div className="hidden md:grid grid-cols-[minmax(0,2.2fr)_140px_110px_90px_90px_110px_100px] gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10">
+                <div className="text-right">الصنف</div>
+                <div className="text-right">بارت نمبر</div>
+                <div className="text-right">كود الصنف</div>
+                <div className="text-center">كانت</div>
+                <div className="text-center">بقت</div>
+                <div className="text-center">التغيير</div>
+                <div className="text-center">النسبة</div>
               </div>
-            ) : (
-              <div className="divide-y max-h-[60vh] overflow-y-auto">
-                {filteredStock.map((r) => {
-                  const positive = r.delta > 0;
-                  const newlyIn = r.old_qty === 0 && r.new_qty > 0;
-                  const out = r.old_qty > 0 && r.new_qty === 0;
-                  return (
-                    <div key={r.product_id} className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)_100px_90px_90px_100px_100px] gap-2 px-4 py-2.5 items-center text-sm hover:bg-muted/30 transition-colors">
-                      <div className="col-span-2 sm:col-span-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold truncate">{r.name_ar}</p>
-                          {newlyIn && <Badge variant="default" className="bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px]">🎉 وصل بعد نفاد</Badge>}
-                          {out && <Badge variant="destructive" className="text-[10px]">⚠️ نفد</Badge>}
+
+              {stockLoading ? (
+                <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
+              ) : filteredStock.length === 0 ? (
+                <div className="p-12 text-center text-muted-foreground">
+                  <Package className="w-10 h-10 mx-auto opacity-40 mb-2" />
+                  لا توجد تغييرات في هذا النطاق
+                </div>
+              ) : (
+                <div className="divide-y max-h-[65vh] overflow-y-auto">
+                  {filteredStock.map((r, idx) => {
+                    const positive = r.delta > 0;
+                    const newlyIn = r.old_qty === 0 && r.new_qty > 0;
+                    const out = r.old_qty > 0 && r.new_qty === 0;
+                    const code = r.erp_item_code || r.sku || "—";
+                    return (
+                      <div
+                        key={r.product_id}
+                        className={`grid grid-cols-1 md:grid-cols-[minmax(0,2.2fr)_140px_110px_90px_90px_110px_100px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
+                      >
+                        {/* الاسم */}
+                        <div className="min-w-0">
+                          <div className="flex items-start gap-2">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="font-semibold text-[14px] leading-snug line-clamp-2 break-words text-right cursor-default">
+                                  {r.name_ar}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-md">{r.name_ar}</TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                            {r.brand && <Badge variant="outline" className="text-[10px] h-5">{brandLabel(r.brand)}</Badge>}
+                            {newlyIn && <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300 text-[10px] h-5">🎉 وصل بعد نفاد</Badge>}
+                            {out && <Badge variant="destructive" className="text-[10px] h-5">⚠️ نفد</Badge>}
+                          </div>
+                        </div>
+
+                        {/* بارت نمبر */}
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="md:hidden text-[10px] text-muted-foreground ml-1">بارت:</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => r.part_number && copyText(r.part_number)}
+                                className="font-mono text-[12px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded truncate inline-flex items-center gap-1"
+                                title={r.part_number || ""}
+                              >
+                                {r.part_number || "—"}
+                                {r.part_number && <Copy className="w-3 h-3 opacity-40" />}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{r.part_number || "—"}</TooltipContent>
+                          </Tooltip>
+                        </div>
+
+                        {/* كود الصنف */}
+                        <div className="flex items-center gap-1">
+                          <span className="md:hidden text-[10px] text-muted-foreground ml-1">كود:</span>
+                          <button
+                            onClick={() => code !== "—" && copyText(code)}
+                            className="font-mono text-[12px] text-slate-700 hover:bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1"
+                          >
+                            {code}
+                            {code !== "—" && <Copy className="w-3 h-3 opacity-40" />}
+                          </button>
+                        </div>
+
+                        {/* كانت */}
+                        <div className="text-center">
+                          <span className="md:hidden text-[10px] text-muted-foreground ml-1">كانت:</span>
+                          <span className="tabular-nums text-muted-foreground text-[14px]">{r.old_qty}</span>
+                        </div>
+
+                        {/* بقت */}
+                        <div className="text-center">
+                          <span className="md:hidden text-[10px] text-muted-foreground ml-1">بقت:</span>
+                          <span className="tabular-nums font-bold text-[15px]">{r.new_qty}</span>
+                        </div>
+
+                        {/* التغيير */}
+                        <div className="text-center">
+                          <span
+                            className={`inline-flex items-center justify-center min-w-[60px] px-2 py-1 rounded-md font-bold tabular-nums text-[13px] ${
+                              positive
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-red-50 text-red-700 border border-red-200"
+                            }`}
+                          >
+                            {positive ? "+" : ""}{r.delta}
+                          </span>
+                        </div>
+
+                        {/* النسبة */}
+                        <div className="text-center">
+                          <span className={`text-[12px] font-bold tabular-nums ${positive ? "text-emerald-600" : "text-red-600"}`}>
+                            {fmtPct(r.change_pct)}
+                          </span>
                         </div>
                       </div>
-                      <div className="font-mono text-xs text-indigo-700 truncate">{r.part_number || "—"}</div>
-                      <div className="text-center font-mono text-xs text-muted-foreground">{r.erp_item_code || r.sku || "—"}</div>
-                      <div className="text-center tabular-nums">{r.old_qty}</div>
-                      <div className="text-center font-bold tabular-nums">{r.new_qty}</div>
-                      <div className={`text-center font-bold tabular-nums ${positive ? "text-emerald-600" : "text-red-600"}`}>
-                        {positive ? "+" : ""}{r.delta}
-                      </div>
-                      <div className={`text-center text-xs font-semibold ${positive ? "text-emerald-600" : "text-red-600"}`}>
-                        {fmtPct(r.change_pct)}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="px-4 py-2.5 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between">
+                <span>عرض <strong className="text-foreground">{filteredStock.length}</strong> من {stockRows.length}</span>
+                <span>الفترة: {getRange(range).label}</span>
               </div>
-            )}
+            </Card>
+          </TabsContent>
 
-            <div className="px-4 py-2 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between">
-              <span>عرض <strong className="text-foreground">{filteredStock.length}</strong> من {stockRows.length}</span>
-              <span>الفترة: {getRange(range).label}</span>
-            </div>
-          </Card>
-        </TabsContent>
+          {/* ============================ PRICES ============================ */}
+          <TabsContent value="prices" className="mt-4 space-y-4">
+            {renderPriceKpis()}
 
-        {/* ============================ PRICES ============================ */}
-        <TabsContent value="prices" className="mt-4 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
-            {[
-              { l: "إجمالي تغييرات", v: priceKpi.total, c: "text-primary", i: BarChart3 },
-              { l: "زادت أسعار", v: priceKpi.upCount, c: "text-red-600", i: TrendingUp },
-              { l: "نقصت أسعار", v: priceKpi.downCount, c: "text-emerald-600", i: TrendingDown },
-              { l: "متوسط الزيادة", v: fmtPct(priceKpi.avgUp), c: "text-red-600", i: ArrowUpRight },
-              { l: "متوسط النقص", v: fmtPct(priceKpi.avgDown), c: "text-emerald-600", i: ArrowDownRight },
-              { l: "أعلى زيادة", v: fmtPct(priceKpi.maxUp), c: "text-red-600", i: ArrowUpRight },
-              { l: "أعلى نقص", v: fmtPct(priceKpi.maxDown), c: "text-emerald-600", i: ArrowDownRight },
-            ].map((k) => (
-              <Card key={k.l} className="p-2.5">
-                <k.i className={`w-3.5 h-3.5 ${k.c} mb-1`} />
-                <p className="text-[10px] text-muted-foreground leading-tight">{k.l}</p>
-                <p className="text-base font-bold tabular-nums">{k.v}</p>
-              </Card>
-            ))}
-          </div>
+            <FiltersBar
+              onRefresh={loadPrices}
+              refreshing={priceLoading}
+              onExport={exportPrices}
+              exportDisabled={!filteredPrices.length}
+            />
 
-          <Card className="p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث بالاسم أو البارت نمبر أو الكود..." className="pr-9 h-9" />
+            <Card className="overflow-hidden">
+              <div className="hidden md:grid grid-cols-[minmax(0,2fr)_140px_110px_110px_110px_100px_120px] gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10">
+                <div className="text-right">الصنف</div>
+                <div className="text-right">بارت نمبر</div>
+                <div className="text-right">كود الصنف</div>
+                <div className="text-center">السعر القديم</div>
+                <div className="text-center">السعر الجديد</div>
+                <div className="text-center">النسبة</div>
+                <div className="text-center">الوقت</div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Filter className="w-4 h-4 text-muted-foreground" />
-                <Select value={priceFilter} onValueChange={(v) => setPriceFilter(v as PriceFilter)}>
-                  <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">كل التغييرات</SelectItem>
-                    <SelectItem value="up">زيادة فقط</SelectItem>
-                    <SelectItem value="down">نقص فقط</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button size="sm" variant="outline" onClick={loadPrices} disabled={priceLoading} className="gap-1.5">
-                <RefreshCw className={`w-3.5 h-3.5 ${priceLoading ? "animate-spin" : ""}`} /> تحديث
-              </Button>
-              <Button size="sm" variant="outline" onClick={exportPrices} disabled={!filteredPrices.length} className="gap-1.5">
-                <Download className="w-3.5 h-3.5" /> تصدير CSV
-              </Button>
-            </div>
-          </Card>
 
-          <Card className="overflow-hidden">
-            <div className="hidden sm:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_100px_110px_110px_100px_120px] gap-2 px-4 py-2.5 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b">
-              <div className="text-right">اسم الصنف</div>
-              <div>بارت نمبر</div>
-              <div className="text-center">الكود</div>
-              <div className="text-center">كان</div>
-              <div className="text-center">بقى</div>
-              <div className="text-center">النسبة</div>
-              <div className="text-center">الوقت</div>
-            </div>
+              {priceLoading ? (
+                <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
+              ) : filteredPrices.length === 0 ? (
+                <div className="p-12 text-center text-muted-foreground">
+                  <TrendingUp className="w-10 h-10 mx-auto opacity-40 mb-2" />
+                  لا توجد تغييرات أسعار في هذا النطاق
+                </div>
+              ) : (
+                <div className="divide-y max-h-[65vh] overflow-y-auto">
+                  {filteredPrices.map((r, idx) => {
+                    const up = r.new_price > r.old_price;
+                    const code = r.erp_item_code || r.sku || "—";
+                    return (
+                      <div
+                        key={r.id}
+                        className={`grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_140px_110px_110px_110px_100px_120px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
+                      >
+                        <div className="min-w-0">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="font-semibold text-[14px] leading-snug line-clamp-2 break-words text-right cursor-default">
+                                {r.name_ar || "—"}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-md">{r.name_ar}</TooltipContent>
+                          </Tooltip>
+                          {r.brand && <Badge variant="outline" className="text-[10px] h-5 mt-1">{brandLabel(r.brand)}</Badge>}
+                        </div>
 
-            {priceLoading ? (
-              <div className="p-10 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
-            ) : filteredPrices.length === 0 ? (
-              <div className="p-10 text-center text-muted-foreground">
-                <TrendingUp className="w-10 h-10 mx-auto opacity-40 mb-2" />
-                لا توجد تغييرات أسعار في هذا النطاق
-              </div>
-            ) : (
-              <div className="divide-y max-h-[60vh] overflow-y-auto">
-                {filteredPrices.map((r) => {
-                  const up = r.new_price > r.old_price;
-                  return (
-                    <div key={r.id} className="grid grid-cols-2 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_100px_110px_110px_100px_120px] gap-2 px-4 py-2.5 items-center text-sm hover:bg-muted/30 transition-colors">
-                      <div className="col-span-2 sm:col-span-1 min-w-0">
-                        <p className="font-semibold truncate">{r.name_ar || "—"}</p>
+                        <button
+                          onClick={() => r.part_number && copyText(r.part_number)}
+                          className="font-mono text-[12px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded truncate inline-flex items-center gap-1 text-right"
+                          title={r.part_number || ""}
+                        >
+                          {r.part_number || "—"}
+                          {r.part_number && <Copy className="w-3 h-3 opacity-40" />}
+                        </button>
+
+                        <button
+                          onClick={() => code !== "—" && copyText(code)}
+                          className="font-mono text-[12px] text-slate-700 hover:bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1 text-right"
+                        >
+                          {code}
+                          {code !== "—" && <Copy className="w-3 h-3 opacity-40" />}
+                        </button>
+
+                        <div className="text-center tabular-nums text-muted-foreground text-[14px]">{fmtMoney(r.old_price)}</div>
+                        <div className="text-center font-bold tabular-nums text-[15px]">{fmtMoney(r.new_price)}</div>
+
+                        <div className="text-center">
+                          <span
+                            className={`inline-flex items-center justify-center gap-0.5 px-2 py-1 rounded-md font-bold text-[12px] tabular-nums ${
+                              up ? "bg-red-50 text-red-700 border border-red-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            }`}
+                          >
+                            {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                            {r.change_percentage > 0 ? "+" : ""}{r.change_percentage.toFixed(1)}%
+                          </span>
+                        </div>
+
+                        <div className="text-center text-[11px] text-muted-foreground tabular-nums">
+                          {new Date(r.created_at).toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </div>
                       </div>
-                      <div className="font-mono text-xs text-indigo-700 truncate">{r.part_number || "—"}</div>
-                      <div className="text-center font-mono text-xs text-muted-foreground">{r.erp_item_code || r.sku || "—"}</div>
-                      <div className="text-center tabular-nums text-muted-foreground">{fmtMoney(r.old_price)}</div>
-                      <div className="text-center font-bold tabular-nums">{fmtMoney(r.new_price)}</div>
-                      <div className={`text-center text-xs font-bold ${up ? "text-red-600" : "text-emerald-600"}`}>
-                        {up ? <ArrowUpRight className="w-3 h-3 inline" /> : <ArrowDownRight className="w-3 h-3 inline" />}
-                        {" "}{r.change_percentage > 0 ? "+" : ""}{r.change_percentage.toFixed(1)}%
-                      </div>
-                      <div className="text-center text-[10px] text-muted-foreground">
-                        {new Date(r.created_at).toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
 
-            <div className="px-4 py-2 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between">
-              <span>عرض <strong className="text-foreground">{filteredPrices.length}</strong> من {priceRows.length}</span>
-              <span>الفترة: {getRange(range).label}</span>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+              <div className="px-4 py-2.5 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between">
+                <span>عرض <strong className="text-foreground">{filteredPrices.length}</strong> من {priceRows.length}</span>
+                <span>الفترة: {getRange(range).label}</span>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </TooltipProvider>
   );
 }
