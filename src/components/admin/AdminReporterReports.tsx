@@ -683,7 +683,8 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
 
   return (
     <div className="space-y-4">
-      {/* Day off panel */}
+      {/* Missing today + Day off panels */}
+      <MissingTodayPanel />
       <DayOffPanel profilesMap={profilesMap} />
 
       {/* Aggregates */}
