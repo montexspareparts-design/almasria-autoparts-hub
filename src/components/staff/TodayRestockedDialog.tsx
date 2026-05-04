@@ -48,6 +48,7 @@ const BRAND_OPTIONS: { value: string; label: string }[] = [
 interface ErpRestockedItem {
   erp_id: string;
   name: string;
+  part_number: string | null;
   prev_qty: number;
   current_qty: number;
   delta: number;
@@ -388,11 +389,13 @@ export default function TodayRestockedDialog({
           </div>
         ) : (
           <>
-            <div className="hidden sm:grid grid-cols-[120px_120px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
-              <div className="text-center">{isAdmin ? "إجراء / حالة" : "الحالة"}</div>
-              <div className="text-center">الرصيد</div>
-              <div>كود الفيصل</div>
+            <div dir="rtl" className="hidden sm:grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_90px_90px_90px_110px] gap-3 px-4 py-2 text-[11px] font-bold text-amber-900/80 bg-amber-100/60 border-b border-amber-200">
               <div className="text-right">اسم الصنف</div>
+              <div>البارت نمبر</div>
+              <div className="text-center">الكود</div>
+              <div className="text-center">وصل</div>
+              <div className="text-center">اجمالي الرصيد</div>
+              <div className="text-center">{isAdmin ? "إجراء / حالة" : "الحالة"}</div>
             </div>
             <ScrollArea className="h-[440px]">
               <div className="divide-y divide-amber-100">
