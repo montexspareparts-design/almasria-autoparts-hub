@@ -3891,6 +3891,12 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_staff_user_ids: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
       get_submit_streak: { Args: { _user_id: string }; Returns: number }
       get_team_avg_today: {
         Args: never
