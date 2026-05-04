@@ -767,7 +767,7 @@ export default function AdminProductIntelligence() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
-                                {r.name_ar || "—"}
+                                <Highlight text={r.name_ar} query={search} />
                               </p>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-md">{r.name_ar}</TooltipContent>
