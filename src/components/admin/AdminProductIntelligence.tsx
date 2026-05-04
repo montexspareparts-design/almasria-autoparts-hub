@@ -660,7 +660,7 @@ export default function AdminProductIntelligence() {
                                 className="font-mono text-[12px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded truncate inline-flex items-center gap-1"
                                 title={r.part_number || ""}
                               >
-                                {r.part_number || "—"}
+                                <Highlight text={r.part_number} query={search} />
                                 {r.part_number && <Copy className="w-3 h-3 opacity-40" />}
                               </button>
                             </TooltipTrigger>
