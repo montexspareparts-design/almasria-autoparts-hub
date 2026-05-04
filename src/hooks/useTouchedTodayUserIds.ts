@@ -11,7 +11,7 @@
  *
  * Realtime: يشترك في الجدولين ويحدّث الـ Set فوراً.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cairoDayBoundsUTC, cairoToday } from "@/lib/handledTasks";
 
@@ -22,6 +22,7 @@ export function useTouchedTodayUserIds(): {
 } {
   const [touchedIds, setTouchedIds] = useState<Set<string>>(new Set());
   const [isReady, setIsReady] = useState(false);
+  const staffIdsRef = useRef<Set<string>>(new Set());
 
   const refresh = async () => {
     const { startMs } = cairoDayBoundsUTC(cairoToday());
