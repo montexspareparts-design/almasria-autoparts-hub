@@ -403,13 +403,66 @@ export default function TodayRestockedDialog({
                   const alreadyAdded = addedSkus.has(item.erp_id);
                   return (
                     <div
+                      dir="rtl"
                       key={item.erp_id}
-                      className={`grid grid-cols-1 sm:grid-cols-[120px_120px_minmax(0,1fr)_minmax(0,1.6fr)] gap-3 px-4 py-3 items-center transition-colors ${
+                      className={`grid grid-cols-1 sm:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_90px_90px_90px_110px] gap-3 px-4 py-3 items-center transition-colors ${
                         item.had_shortage_request
                           ? "bg-rose-50/50 hover:bg-rose-100/60"
                           : "bg-white hover:bg-amber-50/60"
                       }`}
                     >
+                      {/* اسم الصنف */}
+                      <div className="min-w-0 text-right">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">اسم الصنف</div>
+                        <p className="text-sm font-semibold text-foreground leading-tight break-words">
+                          {item.name}
+                        </p>
+                        {item.retail_price && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
+                          </p>
+                        )}
+                      </div>
+
+                      {/* البارت نمبر */}
+                      <div className="min-w-0" dir="ltr">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">البارت نمبر</div>
+                        {item.part_number ? (
+                          <span className="inline-block font-mono text-xs font-bold text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded break-all tracking-wide" title={item.part_number}>
+                            {item.part_number}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground italic" dir="rtl">— غير محدد</span>
+                        )}
+                      </div>
+
+                      {/* الكود (كود الفيصل) */}
+                      <div className="text-center" dir="ltr">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5" dir="rtl">الكود</div>
+                        <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
+                          {item.erp_id}
+                        </span>
+                      </div>
+
+                      {/* الكمية اللي وصلت */}
+                      <div className="text-center">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">وصل</div>
+                        <span className="inline-flex items-center justify-center font-mono text-sm font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                          +{item.delta.toLocaleString("ar-EG")}
+                        </span>
+                      </div>
+
+                      {/* اجمالي الرصيد */}
+                      <div className="text-center">
+                        <div className="text-[10px] font-bold text-muted-foreground sm:hidden mb-0.5">اجمالي الرصيد</div>
+                        <span className="text-base font-extrabold text-foreground font-mono">
+                          {item.current_qty.toLocaleString("ar-EG")}
+                        </span>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">
+                          من <span className="font-bold text-rose-600">{item.prev_qty.toLocaleString("ar-EG")}</span>
+                        </div>
+                      </div>
+
                       {/* عمود الإجراء/الحالة */}
                       <div className="flex sm:justify-center gap-1 flex-wrap">
                         {item.had_shortage_request && (
@@ -419,18 +472,13 @@ export default function TodayRestockedDialog({
                         )}
                         {item.is_new ? (
                           <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto border-blue-400 text-blue-700">
-                            جديد على الفيصل
+                            جديد
                           </Badge>
                         ) : item.was_zero ? (
                           <Badge variant="secondary" className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 h-auto">
                             رجع متاح
                           </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] px-2 py-0.5 h-auto">
-                            +{item.delta}
-                          </Badge>
-                        )}
-                        {/* زر إضافة للموقع — للأدمن فقط لو مش موجود عندنا */}
+                        ) : null}
                         {isAdmin && !item.in_our_system && (
                           alreadyAdded ? (
                             <Badge className="bg-emerald-600 text-white text-[10px] gap-0.5 px-2 py-0.5 h-auto">
@@ -450,36 +498,6 @@ export default function TodayRestockedDialog({
                               للموقع
                             </Button>
                           )
-                        )}
-                      </div>
-
-                      {/* عمود الرصيد */}
-                      <div className="text-center">
-                        <span className="text-base font-extrabold text-emerald-700 font-mono">
-                          {item.current_qty.toLocaleString("ar-EG")}
-                        </span>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">
-                          من <span className="font-bold text-rose-600">{item.prev_qty.toLocaleString("ar-EG")}</span>
-                          <span className="mx-0.5 text-emerald-600 font-bold">+{item.delta.toLocaleString("ar-EG")}</span>
-                        </div>
-                      </div>
-
-                      {/* عمود كود الفيصل */}
-                      <div className="min-w-0" dir="ltr">
-                        <span className="inline-block font-mono text-xs font-bold text-amber-950 bg-amber-100/70 px-2 py-1 rounded break-all tracking-wide">
-                          {item.erp_id}
-                        </span>
-                      </div>
-
-                      {/* عمود اسم الصنف */}
-                      <div className="min-w-0 text-right">
-                        <p className="text-sm font-semibold text-foreground leading-tight break-words">
-                          {item.name}
-                        </p>
-                        {item.retail_price && (
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            قطاعي: {Number(item.retail_price).toLocaleString("ar-EG")} ج.م
-                          </p>
                         )}
                       </div>
                     </div>
