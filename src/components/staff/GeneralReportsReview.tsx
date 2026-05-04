@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ClipboardList, Search, Calendar, TrendingUp, Users, FileText, AlertCircle, Sparkles, Target, X } from "lucide-react";
+import { ClipboardList, Search, Calendar, TrendingUp, Users, FileText, AlertCircle, Sparkles, Target, X, ShieldAlert } from "lucide-react";
 
 interface DailyReport {
   id: string;
