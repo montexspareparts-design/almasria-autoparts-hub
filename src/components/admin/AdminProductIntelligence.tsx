@@ -86,6 +86,30 @@ const BRAND_LABEL: Record<string, string> = {
 };
 const brandLabel = (b: string | null | undefined) => (b ? (BRAND_LABEL[b] || b) : "—");
 
+// Highlight matching substring inside text (case-insensitive, safe regex)
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const Highlight = ({ text, query }: { text: string | null | undefined; query: string }) => {
+  const t = text ?? "";
+  const q = query.trim();
+  if (!q) return <>{t || "—"}</>;
+  try {
+    const parts = t.split(new RegExp(`(${escapeRegex(q)})`, "ig"));
+    return (
+      <>
+        {parts.map((p, i) =>
+          p.toLowerCase() === q.toLowerCase() ? (
+            <mark key={i} className="bg-yellow-200 text-foreground rounded px-0.5">{p}</mark>
+          ) : (
+            <span key={i}>{p}</span>
+          )
+        )}
+      </>
+    );
+  } catch {
+    return <>{t || "—"}</>;
+  }
+};
+
 const downloadCSV = (filename: string, rows: any[][], headers: string[]) => {
   const csv = [headers, ...rows]
     .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
@@ -613,7 +637,7 @@ export default function AdminProductIntelligence() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
-                                  {r.name_ar}
+                                  <Highlight text={r.name_ar} query={search} />
                                 </p>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-md">{r.name_ar}</TooltipContent>
@@ -636,7 +660,7 @@ export default function AdminProductIntelligence() {
                                 className="font-mono text-[12px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded truncate inline-flex items-center gap-1"
                                 title={r.part_number || ""}
                               >
-                                {r.part_number || "—"}
+                                <Highlight text={r.part_number} query={search} />
                                 {r.part_number && <Copy className="w-3 h-3 opacity-40" />}
                               </button>
                             </TooltipTrigger>
@@ -651,7 +675,7 @@ export default function AdminProductIntelligence() {
                             onClick={() => code !== "—" && copyText(code)}
                             className="font-mono text-[12px] text-slate-700 hover:bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1"
                           >
-                            {code}
+                            <Highlight text={code} query={search} />
                             {code !== "—" && <Copy className="w-3 h-3 opacity-40" />}
                           </button>
                         </div>
@@ -743,7 +767,7 @@ export default function AdminProductIntelligence() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
-                                {r.name_ar || "—"}
+                                <Highlight text={r.name_ar} query={search} />
                               </p>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="max-w-md">{r.name_ar}</TooltipContent>
@@ -756,7 +780,7 @@ export default function AdminProductIntelligence() {
                           className="font-mono text-[12px] text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 px-2 py-1 rounded truncate inline-flex items-center gap-1 text-right"
                           title={r.part_number || ""}
                         >
-                          {r.part_number || "—"}
+                          <Highlight text={r.part_number} query={search} />
                           {r.part_number && <Copy className="w-3 h-3 opacity-40" />}
                         </button>
 
@@ -764,7 +788,7 @@ export default function AdminProductIntelligence() {
                           onClick={() => code !== "—" && copyText(code)}
                           className="font-mono text-[12px] text-slate-700 hover:bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1 text-right"
                         >
-                          {code}
+                          <Highlight text={code} query={search} />
                           {code !== "—" && <Copy className="w-3 h-3 opacity-40" />}
                         </button>
 
