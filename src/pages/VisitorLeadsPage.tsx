@@ -54,13 +54,43 @@ const fmtRel = (iso: string) => {
   return `منذ ${Math.floor(h / 24)} يوم`;
 };
 
+type ActionKind = "call" | "whatsapp" | "view";
+type ActionRec = { kind: ActionKind; at: number };
+
+const ACTIONS_STORAGE_KEY = "visitor_leads_actions_v1";
+const loadActions = (): Record<string, ActionRec> => {
+  try {
+    return JSON.parse(localStorage.getItem(ACTIONS_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+const saveActions = (a: Record<string, ActionRec>) => {
+  try { localStorage.setItem(ACTIONS_STORAGE_KEY, JSON.stringify(a)); } catch { /* ignore */ }
+};
+
+const actionMeta: Record<ActionKind, { icon: string; label: string; color: string }> = {
+  call: { icon: "📞", label: "اتصلت", color: "bg-blue-500/15 text-blue-700 border-blue-500/40 dark:text-blue-300" },
+  whatsapp: { icon: "💬", label: "راسلت واتساب", color: "bg-green-500/15 text-green-700 border-green-500/40 dark:text-green-300" },
+  view: { icon: "👁", label: "شفت الملخص", color: "bg-purple-500/15 text-purple-700 border-purple-500/40 dark:text-purple-300" },
+};
+
 const VisitorLeadsPage = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
+  const [actions, setActions] = useState<Record<string, ActionRec>>(() => loadActions());
   const { toast } = useToast();
+
+  const markAction = (leadId: string, kind: ActionKind) => {
+    setActions((prev) => {
+      const next = { ...prev, [leadId]: { kind, at: Date.now() } };
+      saveActions(next);
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
