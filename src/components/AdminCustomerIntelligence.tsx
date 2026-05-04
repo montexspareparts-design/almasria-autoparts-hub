@@ -1355,24 +1355,51 @@ const AdminCustomerIntelligence = () => {
     return map;
   }, [communicationsData]);
 
-  // Sort: customers with NO action first (oldest registered first), then by oldest last action
+  // Sort modes: importance (default), newest, oldest
   const sortedProfiles = useMemo(() => {
     if (!filteredProfiles) return filteredProfiles;
-    if (!prioritySort) return filteredProfiles;
+
+    if (sortMode === "newest") {
+      return [...filteredProfiles].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    }
+    if (sortMode === "oldest") {
+      return [...filteredProfiles].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    }
+    // importance: untouched-today first, then by composite score (cart + search + lifecycle), then oldest action
+    const importanceScore = (uid: string) => {
+      let s = 0;
+      const cart = cartByUser?.[uid];
+      if (cart && cart.count > 0) s += 50 + Math.min(cart.count * 2, 20);
+      const searches = (userSearchMap?.[uid] || []).reduce((acc, q) => acc + q.count, 0);
+      const orders = ordersMap?.[uid];
+      if (searches >= 5 && !orders) s += 40 + Math.min(searches, 20);
+      else if (searches >= 3 && !orders) s += 20;
+      const lc = getLifecycleStage(uid);
+      if (lc === "idle") s += 25;
+      if (!orders) s += 10;
+      return s;
+    };
     return [...filteredProfiles].sort((a, b) => {
       const la = lastActionByUser[a.user_id];
       const lb = lastActionByUser[b.user_id];
-      // No action: priority bucket 0; with action: bucket 1
+      // Bucket 1: no action today/ever — highest priority
+      if (!la && lb) return -1;
+      if (!lb && la) return 1;
+      // Same bucket — compare importance score
+      const sa = importanceScore(a.user_id);
+      const sb = importanceScore(b.user_id);
+      if (sb !== sa) return sb - sa;
+      // Tie-break by oldest action (or oldest registration if no action)
       if (!la && !lb) {
-        // both no action — oldest registered first (longer waiting)
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       }
-      if (!la) return -1;
-      if (!lb) return 1;
-      // Both have action — oldest action first (haven't been touched in longest time)
-      return new Date(la).getTime() - new Date(lb).getTime();
+      return new Date(la!).getTime() - new Date(lb!).getTime();
     });
-  }, [filteredProfiles, lastActionByUser, prioritySort]);
+  }, [filteredProfiles, lastActionByUser, sortMode, cartByUser, userSearchMap, ordersMap]);
 
   const hasActiveFilters =
     !!dateFrom || !!dateTo ||
