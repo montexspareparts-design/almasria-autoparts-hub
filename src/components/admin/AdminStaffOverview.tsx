@@ -30,12 +30,15 @@ const STORAGE_KEY = "admin-staff-overview-tab";
 export default function AdminStaffOverview() {
   const [params, setParams] = useSearchParams();
 
+  const isValidTab = (v: string | null): v is TabKey =>
+    v === "activity" || v === "performance" || v === "reports" || v === "general";
+
   const initialTab: TabKey = (() => {
     const fromUrl = params.get("tab");
-    if (fromUrl === "activity" || fromUrl === "performance" || fromUrl === "reports") return fromUrl;
+    if (isValidTab(fromUrl)) return fromUrl;
     if (typeof window !== "undefined") {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "activity" || saved === "performance" || saved === "reports") return saved;
+      if (isValidTab(saved)) return saved;
     }
     return "activity";
   })();
@@ -45,9 +48,7 @@ export default function AdminStaffOverview() {
   // Sync URL deep-link from sidebar (?tab=...) ↔ state
   useEffect(() => {
     const fromUrl = params.get("tab");
-    if (fromUrl === "activity" || fromUrl === "performance" || fromUrl === "reports") {
-      if (fromUrl !== tab) setTab(fromUrl);
-    }
+    if (isValidTab(fromUrl) && fromUrl !== tab) setTab(fromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
