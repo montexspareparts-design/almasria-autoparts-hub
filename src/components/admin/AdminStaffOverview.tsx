@@ -78,7 +78,7 @@ export default function AdminStaffOverview() {
       </Card>
 
       <Tabs value={tab} onValueChange={handleChange}>
-        <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:inline-grid">
+        <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:grid-cols-4 sm:inline-grid">
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="w-4 h-4" />
             نشاط اليوم
@@ -89,7 +89,11 @@ export default function AdminStaffOverview() {
           </TabsTrigger>
           <TabsTrigger value="reports" className="gap-2">
             <FileText className="w-4 h-4" />
-            التقارير اليومية
+            تقارير الفيصل
+          </TabsTrigger>
+          <TabsTrigger value="general" className="gap-2">
+            <ClipboardList className="w-4 h-4" />
+            التقرير العام
           </TabsTrigger>
         </TabsList>
 
@@ -108,6 +112,12 @@ export default function AdminStaffOverview() {
         <TabsContent value="reports" className="mt-4">
           <Suspense fallback={<Loader />}>
             <AdminReporterReports />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="general" className="mt-4">
+          <Suspense fallback={<Loader />}>
+            <GeneralReportsReview />
           </Suspense>
         </TabsContent>
       </Tabs>
