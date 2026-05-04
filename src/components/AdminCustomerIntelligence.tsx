@@ -275,7 +275,8 @@ const AdminCustomerIntelligence = () => {
   const [actionDialogNote, setActionDialogNote] = useState("");
   const [savingAction, setSavingAction] = useState(false);
   // Sort by priority (no action / oldest action first)
-  const [prioritySort, setPrioritySort] = useState(true);
+  const [prioritySort, setPrioritySort] = useState(true); // legacy — kept for back-compat
+  const [sortMode, setSortMode] = useState<"importance" | "newest" | "oldest">("importance");
 
   // Today's tasks: persistent completion state (resets daily via date-keyed localStorage)
   const todayKey = format(new Date(), "yyyy-MM-dd");
@@ -1354,24 +1355,51 @@ const AdminCustomerIntelligence = () => {
     return map;
   }, [communicationsData]);
 
-  // Sort: customers with NO action first (oldest registered first), then by oldest last action
+  // Sort modes: importance (default), newest, oldest
   const sortedProfiles = useMemo(() => {
     if (!filteredProfiles) return filteredProfiles;
-    if (!prioritySort) return filteredProfiles;
+
+    if (sortMode === "newest") {
+      return [...filteredProfiles].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    }
+    if (sortMode === "oldest") {
+      return [...filteredProfiles].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    }
+    // importance: untouched-today first, then by composite score (cart + search + lifecycle), then oldest action
+    const importanceScore = (uid: string) => {
+      let s = 0;
+      const cart = cartByUser?.[uid];
+      if (cart && cart.count > 0) s += 50 + Math.min(cart.count * 2, 20);
+      const searches = (userSearchMap?.[uid] || []).reduce((acc, q) => acc + q.count, 0);
+      const orders = ordersMap?.[uid];
+      if (searches >= 5 && !orders) s += 40 + Math.min(searches, 20);
+      else if (searches >= 3 && !orders) s += 20;
+      const lc = getLifecycleStage(uid);
+      if (lc === "idle") s += 25;
+      if (!orders) s += 10;
+      return s;
+    };
     return [...filteredProfiles].sort((a, b) => {
       const la = lastActionByUser[a.user_id];
       const lb = lastActionByUser[b.user_id];
-      // No action: priority bucket 0; with action: bucket 1
+      // Bucket 1: no action today/ever — highest priority
+      if (!la && lb) return -1;
+      if (!lb && la) return 1;
+      // Same bucket — compare importance score
+      const sa = importanceScore(a.user_id);
+      const sb = importanceScore(b.user_id);
+      if (sb !== sa) return sb - sa;
+      // Tie-break by oldest action (or oldest registration if no action)
       if (!la && !lb) {
-        // both no action — oldest registered first (longer waiting)
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       }
-      if (!la) return -1;
-      if (!lb) return 1;
-      // Both have action — oldest action first (haven't been touched in longest time)
-      return new Date(la).getTime() - new Date(lb).getTime();
+      return new Date(la!).getTime() - new Date(lb!).getTime();
     });
-  }, [filteredProfiles, lastActionByUser, prioritySort]);
+  }, [filteredProfiles, lastActionByUser, sortMode, cartByUser, userSearchMap, ordersMap]);
 
   const hasActiveFilters =
     !!dateFrom || !!dateTo ||
@@ -3766,27 +3794,41 @@ const AdminCustomerIntelligence = () => {
 
             {/* ===== Tab: All Customers (existing list) ===== */}
             <TabsContent value="all" className="mt-0 focus-visible:outline-none">
-              {/* Priority sort toggle */}
-              <div className="flex items-center justify-between mb-2 px-1">
+              {/* Sort mode segmented control */}
+              <div className="flex items-center justify-between mb-2 px-1 gap-2 flex-wrap">
                 <p className="text-[11px] text-muted-foreground">
-                  {prioritySort
-                    ? "📌 الترتيب: العملاء بدون إجراء أولاً، ثم الأقدم متابعةً"
-                    : "الترتيب: حسب تاريخ التسجيل"}
+                  {sortMode === "importance" && "🔥 الترتيب: الأكثر أهمية (بدون إجراء + سلة + بحث)"}
+                  {sortMode === "newest" && "🆕 الترتيب: الأحدث تسجيلاً أولاً"}
+                  {sortMode === "oldest" && "📅 الترتيب: الأقدم تسجيلاً أولاً"}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setPrioritySort(!prioritySort)}
-                  className={cn(
-                    "text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5",
-                    prioritySort
-                      ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15"
-                      : "bg-muted/40 border-border hover:bg-muted/60"
-                  )}
-                  title="تبديل ترتيب الأولوية"
-                >
-                  <Zap className="w-3 h-3" />
-                  {prioritySort ? "ترتيب الأولوية ✓" : "ترتيب الأولوية"}
-                </button>
+                <div className="inline-flex items-center bg-muted/40 border border-border rounded-lg p-0.5 gap-0.5" role="tablist" aria-label="ترتيب القائمة">
+                  {([
+                    { key: "importance", label: "الأكثر أهمية", icon: <Zap className="w-3 h-3" /> },
+                    { key: "newest",     label: "الأحدث",       icon: <span className="text-[10px]">🆕</span> },
+                    { key: "oldest",     label: "الأقدم",       icon: <span className="text-[10px]">📅</span> },
+                  ] as const).map((opt) => {
+                    const active = sortMode === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => setSortMode(opt.key)}
+                        className={cn(
+                          "text-[11px] font-bold px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5",
+                          active
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:bg-background hover:text-foreground",
+                        )}
+                        title={opt.label}
+                      >
+                        {opt.icon}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {loadingProfiles ? (
                 <div className="space-y-3">
