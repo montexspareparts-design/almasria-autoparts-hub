@@ -3922,6 +3922,7 @@ export type Database = {
           minutes_since_baseline: number
           name: string
           our_product_id: string
+          part_number: string
           prev_qty: number
           retail_price: number
           shortage_requests_count: number
