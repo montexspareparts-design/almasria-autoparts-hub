@@ -8,6 +8,7 @@ import StaffDailyReport from "@/components/staff/StaffDailyReport";
 import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
 import TeamShortagesView from "@/components/staff/TeamShortagesView";
 import RestockedYesterdayCard from "@/components/staff/RestockedYesterdayCard";
+import GeneralReportsReview from "@/components/staff/GeneralReportsReview";
 import { cn } from "@/lib/utils";
 
 /**
@@ -138,7 +139,7 @@ export default function StaffDailyReportPage() {
           >
             {([
               { key: "report",     label: showReporterForm ? "تقرير الفيصل" : "تقريري اليومي", shortLabel: showReporterForm ? "الفيصل" : "تقريري", icon: FileText, show: true },
-              { key: "general",    label: "التقرير العام",   shortLabel: "العام",    icon: ClipboardList, show: showReporterForm && !isReporterOnly },
+              { key: "general",    label: "التقرير العام",   shortLabel: "العام",    icon: ClipboardList, show: isAdmin && !isReporterOnly },
               { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX, show: true },
               { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck, show: true },
             ] as const).filter((t) => t.show).map((t) => {
@@ -182,7 +183,7 @@ export default function StaffDailyReportPage() {
         ) : view === "restocked" ? (
           <RestockedYesterdayCard />
         ) : view === "general" ? (
-          <StaffDailyReport />
+          <GeneralReportsReview />
         ) : (
           showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />
         )}
