@@ -788,7 +788,7 @@ export default function AdminProductIntelligence() {
                           onClick={() => code !== "—" && copyText(code)}
                           className="font-mono text-[12px] text-slate-700 hover:bg-slate-100 px-2 py-1 rounded inline-flex items-center gap-1 text-right"
                         >
-                          {code}
+                          <Highlight text={code} query={search} />
                           {code !== "—" && <Copy className="w-3 h-3 opacity-40" />}
                         </button>
 
