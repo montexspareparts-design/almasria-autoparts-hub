@@ -641,7 +641,7 @@ export default function AdminProductIntelligence() {
               {(() => {
                 const arrow = (keys: string[]) => keys.includes(stockSort) ? (stockSort === "delta_asc" ? " ↑" : " ↓") : "";
                 const HBtn = ({ label, onClick, keys, align = "right" }: { label: string; onClick: () => void; keys: string[]; align?: "right" | "center" }) => (
-                  <button onClick={onClick} className={`text-${align} hover:text-primary transition-colors ${keys.includes(stockSort) ? "text-primary" : ""}`}>
+                  <button onClick={onClick} className={`${align === "center" ? "text-center" : "text-right"} hover:text-primary transition-colors ${keys.includes(stockSort) ? "text-primary" : ""}`}>
                     {label}{arrow(keys)}
                   </button>
                 );
