@@ -2,11 +2,12 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Activity, FileText, TrendingUp } from "lucide-react";
+import { Activity, FileText, TrendingUp, ClipboardList } from "lucide-react";
 
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminReporterReports = lazy(() => import("@/components/admin/AdminReporterReports"));
+const GeneralReportsReview = lazy(() => import("@/components/staff/GeneralReportsReview"));
 
 const Loader = () => (
   <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
@@ -14,7 +15,7 @@ const Loader = () => (
   </div>
 );
 
-type TabKey = "activity" | "performance" | "reports";
+type TabKey = "activity" | "performance" | "reports" | "general";
 
 const STORAGE_KEY = "admin-staff-overview-tab";
 
