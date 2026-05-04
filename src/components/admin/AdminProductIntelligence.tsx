@@ -505,6 +505,18 @@ export default function AdminProductIntelligence() {
           />
         </div>
 
+        <Select value={colPreset} onValueChange={(v) => setColPreset(v as any)}>
+          <SelectTrigger className="h-10 w-[150px]" title="عرض اسم الصنف">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="compact">📏 مدمج</SelectItem>
+            <SelectItem value="standard">📋 قياسي</SelectItem>
+            <SelectItem value="wide">📖 اسم واسع</SelectItem>
+            <SelectItem value="xwide">📚 اسم أوسع</SelectItem>
+          </SelectContent>
+        </Select>
+
         <div className="flex items-center gap-1.5 mr-auto">
           {hasActiveFilters && (
             <Button size="sm" variant="ghost" onClick={clearFilters} className="gap-1.5 h-9 text-xs">
