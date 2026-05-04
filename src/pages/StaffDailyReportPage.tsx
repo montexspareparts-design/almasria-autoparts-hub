@@ -175,7 +175,7 @@ export default function StaffDailyReportPage() {
       {/* Content */}
       <main className={cn(
         "mx-auto px-3 sm:px-6 py-4 sm:py-6",
-        view === "report" ? "max-w-3xl" : "max-w-5xl"
+        (view === "report" || view === "general") ? "max-w-3xl" : "max-w-5xl"
       )}>
         {view === "shortages" ? (
           <TeamShortagesView />
