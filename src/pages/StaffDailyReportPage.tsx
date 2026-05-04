@@ -8,6 +8,7 @@ import StaffDailyReport from "@/components/staff/StaffDailyReport";
 import ReporterDailyForm from "@/components/staff/ReporterDailyForm";
 import TeamShortagesView from "@/components/staff/TeamShortagesView";
 import RestockedYesterdayCard from "@/components/staff/RestockedYesterdayCard";
+import GeneralReportsReview from "@/components/staff/GeneralReportsReview";
 import { cn } from "@/lib/utils";
 
 /**
