@@ -37,16 +37,15 @@ export function useTouchedTodayUserIds(): {
         .from("staff_task_handling")
         .select("customer_user_id, action_at")
         .gte("action_at", sinceIso),
-      supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("role", ["admin", "moderator", "reporter"]),
+      // SECURITY DEFINER RPC — يرجّع IDs كل الموظفين بصرف النظر عن دور المستخدم الحالي،
+      // عشان أي موظف (مش بس الأدمن) يقدر يستبعد زمايله من قوائم العملاء.
+      supabase.rpc("get_staff_user_ids" as any),
     ]);
 
     // استبعاد أي user_id ينتمي لموظف (admin/moderator/reporter)
     // عشان موظف اتصل/سجّل ملاحظة على موظف تاني ميظهروش كعملاء.
     const staffIds = new Set<string>(
-      (staffRes.data || []).map((r: any) => r.user_id).filter(Boolean),
+      ((staffRes.data as any[]) || []).map((r: any) => r.user_id).filter(Boolean),
     );
     staffIdsRef.current = staffIds;
 
