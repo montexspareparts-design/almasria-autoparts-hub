@@ -612,7 +612,7 @@ export default function AdminProductIntelligence() {
                           <div className="flex items-start gap-2">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <p className="font-semibold text-[14px] leading-snug line-clamp-2 break-words text-right cursor-default">
+                                <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
                                   {r.name_ar}
                                 </p>
                               </TooltipTrigger>
