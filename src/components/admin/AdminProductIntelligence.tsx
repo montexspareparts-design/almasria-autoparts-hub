@@ -302,8 +302,19 @@ export default function AdminProductIntelligence() {
     if (minC > 0) arr = arr.filter((r) => Math.abs(r.change_percentage) >= minC);
     if (priceFilter === "up") arr = arr.filter((r) => r.new_price > r.old_price);
     else if (priceFilter === "down") arr = arr.filter((r) => r.new_price < r.old_price);
+    arr.sort((a, b) => {
+      switch (priceSort) {
+        case "time_asc":  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "pct_desc":  return b.change_percentage - a.change_percentage;
+        case "pct_asc":   return a.change_percentage - b.change_percentage;
+        case "old_desc":  return b.old_price - a.old_price;
+        case "new_desc":  return b.new_price - a.new_price;
+        case "name":      return (a.name_ar || "").localeCompare(b.name_ar || "", "ar");
+        default:          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
     return arr;
-  }, [priceRows, search, priceFilter, brandFilter, minChange]);
+  }, [priceRows, search, priceFilter, brandFilter, minChange, priceSort]);
 
   // ----- KPIs
   const stockKpi = useMemo(() => {
