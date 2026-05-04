@@ -3897,6 +3897,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_stock_diff_in_range: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          brand: string
+          change_pct: number
+          delta: number
+          erp_item_code: string
+          name_ar: string
+          new_qty: number
+          old_qty: number
+          part_number: string
+          product_id: string
+          sku: string
+        }[]
+      }
       get_submit_streak: { Args: { _user_id: string }; Returns: number }
       get_team_avg_today: {
         Args: never
