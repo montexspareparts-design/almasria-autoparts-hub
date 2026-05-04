@@ -653,7 +653,7 @@ export default function AdminProductIntelligence() {
                     return (
                       <div
                         key={r.product_id}
-                        className={`grid grid-cols-1 md:grid-cols-[minmax(220px,2.5fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_70px_70px_90px_80px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
+                        className={`grid grid-cols-1 ${stockGrid} gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
                       >
                         {/* الاسم */}
                         <div className="min-w-0">
