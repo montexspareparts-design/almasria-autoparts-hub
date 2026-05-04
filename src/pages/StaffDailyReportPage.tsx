@@ -183,7 +183,7 @@ export default function StaffDailyReportPage() {
         ) : view === "restocked" ? (
           <RestockedYesterdayCard />
         ) : view === "general" ? (
-          <StaffDailyReport />
+          <GeneralReportsReview />
         ) : (
           showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />
         )}
