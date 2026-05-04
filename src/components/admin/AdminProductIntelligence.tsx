@@ -626,7 +626,7 @@ export default function AdminProductIntelligence() {
 
             {/* Table */}
             <Card className="overflow-hidden">
-              <div className="hidden md:grid `+`stockGrid`+` gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10">
+              <div className={`hidden md:grid ${stockGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
                 <div className="text-right">الصنف</div>
                 <div className="text-right">بارت نمبر</div>
                 <div className="text-right">كود الصنف</div>
