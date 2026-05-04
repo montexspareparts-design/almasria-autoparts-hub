@@ -29,6 +29,7 @@ const AdminERPSyncStatus = lazy(() => import("@/components/AdminERPSyncStatus"))
 const AdminFaisalCatalogHealth = lazy(() => import("@/components/admin/AdminFaisalCatalogHealth"));
 const AdminPushNotifications = lazy(() => import("@/components/AdminPushNotifications"));
 const AdminProducts = lazy(() => import("@/components/AdminProducts"));
+const AdminProductIntelligence = lazy(() => import("@/components/admin/AdminProductIntelligence"));
 const AdminYearCoverage = lazy(() => import("@/components/admin/AdminYearCoverage"));
 const AdminAnalytics = lazy(() => import("@/components/AdminAnalytics"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
