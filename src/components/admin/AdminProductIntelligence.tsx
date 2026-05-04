@@ -785,7 +785,7 @@ export default function AdminProductIntelligence() {
                     return (
                       <div
                         key={r.id}
-                        className={`grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_140px_110px_110px_110px_100px_120px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
+                        className={`grid grid-cols-1 ${priceGrid} gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
                       >
                         <div className="min-w-0">
                           <Tooltip>
