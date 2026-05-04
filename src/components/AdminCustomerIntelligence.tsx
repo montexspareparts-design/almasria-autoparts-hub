@@ -275,7 +275,8 @@ const AdminCustomerIntelligence = () => {
   const [actionDialogNote, setActionDialogNote] = useState("");
   const [savingAction, setSavingAction] = useState(false);
   // Sort by priority (no action / oldest action first)
-  const [prioritySort, setPrioritySort] = useState(true);
+  const [prioritySort, setPrioritySort] = useState(true); // legacy — kept for back-compat
+  const [sortMode, setSortMode] = useState<"importance" | "newest" | "oldest">("importance");
 
   // Today's tasks: persistent completion state (resets daily via date-keyed localStorage)
   const todayKey = format(new Date(), "yyyy-MM-dd");
