@@ -149,6 +149,30 @@ export default function AdminProductIntelligence() {
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<{ step: number; total: number; label: string; done?: boolean; error?: boolean } | null>(null);
 
+  // Column layout preset (persisted)
+  type ColPreset = "compact" | "standard" | "wide" | "xwide";
+  const [colPreset, setColPreset] = useState<ColPreset>(() => {
+    const v = (typeof window !== "undefined" && localStorage.getItem("api_col_preset")) as ColPreset | null;
+    return v || "standard";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("api_col_preset", colPreset); } catch {}
+  }, [colPreset]);
+
+  const stockGrid = {
+    compact:  "md:grid-cols-[minmax(180px,1.6fr)_minmax(110px,1fr)_minmax(80px,0.7fr)_64px_64px_84px_72px]",
+    standard: "md:grid-cols-[minmax(220px,2.5fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_70px_70px_90px_80px]",
+    wide:     "md:grid-cols-[minmax(280px,3.5fr)_minmax(110px,0.9fr)_minmax(85px,0.7fr)_64px_64px_84px_72px]",
+    xwide:    "md:grid-cols-[minmax(360px,5fr)_minmax(110px,0.8fr)_minmax(85px,0.6fr)_60px_60px_80px_70px]",
+  }[colPreset];
+
+  const priceGrid = {
+    compact:  "md:grid-cols-[minmax(180px,1.4fr)_120px_100px_95px_95px_90px_105px]",
+    standard: "md:grid-cols-[minmax(220px,2fr)_140px_110px_110px_110px_100px_120px]",
+    wide:     "md:grid-cols-[minmax(280px,3fr)_130px_100px_100px_100px_90px_110px]",
+    xwide:    "md:grid-cols-[minmax(360px,4.5fr)_120px_95px_95px_95px_85px_100px]",
+  }[colPreset];
+
   // ----- Loaders
   const loadStock = useCallback(async () => {
     setStockLoading(true);
