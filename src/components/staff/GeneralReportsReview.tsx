@@ -39,6 +39,7 @@ const daysAgoStr = (n: number) => {
 
 const GeneralReportsReview = () => {
   const { isAdmin, loading: authLoading } = useAuth();
+  const [reports, setReports] = useState<DailyReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState<string>(daysAgoStr(6));
