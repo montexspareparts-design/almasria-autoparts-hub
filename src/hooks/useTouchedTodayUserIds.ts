@@ -48,6 +48,7 @@ export function useTouchedTodayUserIds(): {
     const staffIds = new Set<string>(
       (staffRes.data || []).map((r: any) => r.user_id).filter(Boolean),
     );
+    staffIdsRef.current = staffIds;
 
     const next = new Set<string>();
     (commsRes.data || []).forEach((r: any) => {
