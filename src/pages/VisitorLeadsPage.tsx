@@ -134,11 +134,28 @@ const VisitorLeadsPage = () => {
     }
   };
 
-  const callPhone = (phone: string) => { window.location.href = `tel:${phone}`; };
-  const whatsappPhone = (phone: string) => {
-    const cleaned = phone.startsWith("0") ? `2${phone}` : phone;
+  const callPhone = (lead: Lead) => {
+    markAction(lead.id, "call");
+    window.location.href = `tel:${lead.phone}`;
+  };
+  const whatsappPhone = (lead: Lead) => {
+    markAction(lead.id, "whatsapp");
+    const cleaned = lead.phone.startsWith("0") ? `2${lead.phone}` : lead.phone;
     const msg = encodeURIComponent("السلام عليكم، شكراً لاهتمامكم بالمصرية جروب لقطع غيار تويوتا. كيف يمكنني مساعدتك؟");
     window.open(`https://wa.me/${cleaned}?text=${msg}`, "_blank");
+  };
+  const openSummary = (lead: Lead) => {
+    markAction(lead.id, "view");
+    setActiveLead(lead);
+  };
+
+  const fmtSinceAction = (ts: number) => {
+    const m = Math.floor((Date.now() - ts) / 60000);
+    if (m < 1) return "الآن";
+    if (m < 60) return `منذ ${m} د`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `منذ ${h} س`;
+    return `منذ ${Math.floor(h / 24)} يوم`;
   };
 
   const filtered = leads.filter((l) => {
