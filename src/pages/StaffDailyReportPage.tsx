@@ -24,7 +24,12 @@ export default function StaffDailyReportPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading, isReporterOnly, isAdmin, signOut } = useAuth();
   const viewParam = searchParams.get("view");
-  const view = (viewParam === "shortages" ? "shortages" : viewParam === "restocked" ? "restocked" : "report") as "report" | "shortages" | "restocked";
+  const view = (
+    viewParam === "shortages" ? "shortages" :
+    viewParam === "restocked" ? "restocked" :
+    viewParam === "general" ? "general" :
+    "report"
+  ) as "report" | "general" | "shortages" | "restocked";
   const editMode = searchParams.get("edit") === "1" && isAdmin;
   // Force the Al-Faisal (Reporter) form when ?as=reporter is present (admin preview)
   const forceReporter = searchParams.get("as") === "reporter" && isAdmin;
@@ -132,10 +137,11 @@ export default function StaffDailyReportPage() {
             className="flex items-center gap-1 p-1 rounded-full bg-muted/60 border border-border/50 shadow-inner w-full sm:w-fit"
           >
             {([
-              { key: "report",     label: "تقريري اليومي",   shortLabel: "تقريري",  icon: FileText },
-              { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX },
-              { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck },
-            ] as const).map((t) => {
+              { key: "report",     label: showReporterForm ? "تقرير الفيصل" : "تقريري اليومي", shortLabel: showReporterForm ? "الفيصل" : "تقريري", icon: FileText, show: true },
+              { key: "general",    label: "التقرير العام",   shortLabel: "العام",    icon: ClipboardList, show: showReporterForm && !isReporterOnly },
+              { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX, show: true },
+              { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck, show: true },
+            ] as const).filter((t) => t.show).map((t) => {
               const Icon = t.icon;
               const active = view === t.key;
               return (
@@ -175,6 +181,8 @@ export default function StaffDailyReportPage() {
           <TeamShortagesView />
         ) : view === "restocked" ? (
           <RestockedYesterdayCard />
+        ) : view === "general" ? (
+          <StaffDailyReport />
         ) : (
           showReporterForm ? <ReporterDailyForm /> : <StaffDailyReport />
         )}
