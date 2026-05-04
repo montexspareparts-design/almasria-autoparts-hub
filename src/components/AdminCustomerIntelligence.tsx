@@ -3701,17 +3701,22 @@ const AdminCustomerIntelligence = () => {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       title="فتح محادثة واتساب — يُسجّل تلقائياً كإجراء اليوم"
-                                      onClick={() => {
-                                        if (!user?.id) return;
-                                        supabase.from("customer_communications").insert({
-                                          customer_user_id: p.user_id,
-                                          staff_user_id: user.id,
-                                          comm_type: "whatsapp",
-                                          note: "تم فتح محادثة واتساب من قائمة المتابعة",
-                                        }).then(({ error }) => {
-                                          if (error) console.warn("[touched-today/wa] failed:", error.message);
-                                        });
-                                      }}
+                                       onClick={() => {
+                                         if (!user?.id) return;
+                                         supabase.from("customer_communications").insert({
+                                           customer_user_id: p.user_id,
+                                           staff_user_id: user.id,
+                                           comm_type: "whatsapp",
+                                           note: "تم فتح محادثة واتساب من قائمة المتابعة",
+                                         }).then(({ error }) => {
+                                           if (error) {
+                                             console.warn("[touched-today/wa] failed:", error.message);
+                                             toast({ title: "تعذّر تسجيل الإجراء", description: error.message, variant: "destructive" });
+                                           } else {
+                                             toast({ title: "💬 تم تسجيل الإجراء", description: `تم فتح محادثة واتساب مع ${p.full_name || "العميل"} وانتقل لتبويب «تمت اليوم»` });
+                                           }
+                                         });
+                                       }}
                                     >
                                       <MessageCircle className="w-3.5 h-3.5" />
                                       واتساب
@@ -3726,17 +3731,22 @@ const AdminCustomerIntelligence = () => {
                                     <a
                                       href={`tel:${p.phone}`}
                                       title="بدء مكالمة — يُسجّل تلقائياً كإجراء اليوم"
-                                      onClick={() => {
-                                        if (!user?.id) return;
-                                        supabase.from("customer_communications").insert({
-                                          customer_user_id: p.user_id,
-                                          staff_user_id: user.id,
-                                          comm_type: "phone",
-                                          note: "تم بدء مكالمة من قائمة المتابعة",
-                                        }).then(({ error }) => {
-                                          if (error) console.warn("[touched-today/call] failed:", error.message);
-                                        });
-                                      }}
+                                       onClick={() => {
+                                         if (!user?.id) return;
+                                         supabase.from("customer_communications").insert({
+                                           customer_user_id: p.user_id,
+                                           staff_user_id: user.id,
+                                           comm_type: "phone",
+                                           note: "تم بدء مكالمة من قائمة المتابعة",
+                                         }).then(({ error }) => {
+                                           if (error) {
+                                             console.warn("[touched-today/call] failed:", error.message);
+                                             toast({ title: "تعذّر تسجيل الإجراء", description: error.message, variant: "destructive" });
+                                           } else {
+                                             toast({ title: "📞 تم تسجيل الإجراء", description: `تم بدء مكالمة مع ${p.full_name || "العميل"} وانتقل لتبويب «تمت اليوم»` });
+                                           }
+                                         });
+                                       }}
                                     >
                                       <Phone className="w-3.5 h-3.5" />
                                       اتصل
