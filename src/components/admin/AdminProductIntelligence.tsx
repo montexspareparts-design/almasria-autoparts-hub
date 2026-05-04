@@ -86,6 +86,30 @@ const BRAND_LABEL: Record<string, string> = {
 };
 const brandLabel = (b: string | null | undefined) => (b ? (BRAND_LABEL[b] || b) : "—");
 
+// Highlight matching substring inside text (case-insensitive, safe regex)
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const Highlight = ({ text, query }: { text: string | null | undefined; query: string }) => {
+  const t = text ?? "";
+  const q = query.trim();
+  if (!q) return <>{t || "—"}</>;
+  try {
+    const parts = t.split(new RegExp(`(${escapeRegex(q)})`, "ig"));
+    return (
+      <>
+        {parts.map((p, i) =>
+          p.toLowerCase() === q.toLowerCase() ? (
+            <mark key={i} className="bg-yellow-200 text-foreground rounded px-0.5">{p}</mark>
+          ) : (
+            <span key={i}>{p}</span>
+          )
+        )}
+      </>
+    );
+  } catch {
+    return <>{t || "—"}</>;
+  }
+};
+
 const downloadCSV = (filename: string, rows: any[][], headers: string[]) => {
   const csv = [headers, ...rows]
     .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
