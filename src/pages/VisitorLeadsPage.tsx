@@ -54,13 +54,43 @@ const fmtRel = (iso: string) => {
   return `منذ ${Math.floor(h / 24)} يوم`;
 };
 
+type ActionKind = "call" | "whatsapp" | "view";
+type ActionRec = { kind: ActionKind; at: number };
+
+const ACTIONS_STORAGE_KEY = "visitor_leads_actions_v1";
+const loadActions = (): Record<string, ActionRec> => {
+  try {
+    return JSON.parse(localStorage.getItem(ACTIONS_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+};
+const saveActions = (a: Record<string, ActionRec>) => {
+  try { localStorage.setItem(ACTIONS_STORAGE_KEY, JSON.stringify(a)); } catch { /* ignore */ }
+};
+
+const actionMeta: Record<ActionKind, { icon: string; label: string; color: string }> = {
+  call: { icon: "📞", label: "اتصلت", color: "bg-blue-500/15 text-blue-700 border-blue-500/40 dark:text-blue-300" },
+  whatsapp: { icon: "💬", label: "راسلت واتساب", color: "bg-green-500/15 text-green-700 border-green-500/40 dark:text-green-300" },
+  view: { icon: "👁", label: "شفت الملخص", color: "bg-purple-500/15 text-purple-700 border-purple-500/40 dark:text-purple-300" },
+};
+
 const VisitorLeadsPage = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
+  const [actions, setActions] = useState<Record<string, ActionRec>>(() => loadActions());
   const { toast } = useToast();
+
+  const markAction = (leadId: string, kind: ActionKind) => {
+    setActions((prev) => {
+      const next = { ...prev, [leadId]: { kind, at: Date.now() } };
+      saveActions(next);
+      return next;
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -104,11 +134,28 @@ const VisitorLeadsPage = () => {
     }
   };
 
-  const callPhone = (phone: string) => { window.location.href = `tel:${phone}`; };
-  const whatsappPhone = (phone: string) => {
-    const cleaned = phone.startsWith("0") ? `2${phone}` : phone;
+  const callPhone = (lead: Lead) => {
+    markAction(lead.id, "call");
+    window.location.href = `tel:${lead.phone}`;
+  };
+  const whatsappPhone = (lead: Lead) => {
+    markAction(lead.id, "whatsapp");
+    const cleaned = lead.phone.startsWith("0") ? `2${lead.phone}` : lead.phone;
     const msg = encodeURIComponent("السلام عليكم، شكراً لاهتمامكم بالمصرية جروب لقطع غيار تويوتا. كيف يمكنني مساعدتك؟");
     window.open(`https://wa.me/${cleaned}?text=${msg}`, "_blank");
+  };
+  const openSummary = (lead: Lead) => {
+    markAction(lead.id, "view");
+    setActiveLead(lead);
+  };
+
+  const fmtSinceAction = (ts: number) => {
+    const m = Math.floor((Date.now() - ts) / 60000);
+    if (m < 1) return "الآن";
+    if (m < 60) return `منذ ${m} د`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `منذ ${h} س`;
+    return `منذ ${Math.floor(h / 24)} يوم`;
   };
 
   const filtered = leads.filter((l) => {
@@ -191,14 +238,46 @@ const VisitorLeadsPage = () => {
             {filtered.map((lead, idx) => {
               const src = sourceMeta(lead.source);
               const st = statusMeta[lead.status] || statusMeta.new;
+              const action = actions[lead.id];
+              const aMeta = action ? actionMeta[action.kind] : null;
               return (
                 <motion.div
                   key={lead.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
-                  className="bg-card border border-border rounded-2xl p-4 hover:shadow-md transition-shadow"
+                  className={`bg-card border rounded-2xl p-4 hover:shadow-md transition-all ${
+                    action
+                      ? "opacity-60 hover:opacity-90 border-border/60 bg-muted/20"
+                      : "border-border"
+                  }`}
                 >
+                  {/* شريط إجراء الموظف */}
+                  {action && aMeta && (
+                    <div className={`mb-3 -mt-1 -mx-1 px-3 py-1.5 rounded-lg border ${aMeta.color} flex items-center justify-between gap-2 text-xs font-bold`}>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-base">{aMeta.icon}</span>
+                        <span>{aMeta.label}</span>
+                        <span className="opacity-70 font-normal">· {fmtSinceAction(action.at)}</span>
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActions((prev) => {
+                            const next = { ...prev };
+                            delete next[lead.id];
+                            saveActions(next);
+                            return next;
+                          });
+                        }}
+                        className="opacity-70 hover:opacity-100 underline decoration-dotted text-[10px]"
+                        title="إلغاء العلامة"
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -219,13 +298,13 @@ const VisitorLeadsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Button size="sm" onClick={() => setActiveLead(lead)} variant="default" className="bg-primary hover:bg-primary/90">
+                      <Button size="sm" onClick={() => openSummary(lead)} variant="default" className="bg-primary hover:bg-primary/90">
                         <Eye className="w-4 h-4 ml-1" /> ملخص الزيارة
                       </Button>
-                      <Button size="sm" onClick={() => whatsappPhone(lead.phone)} className="bg-green-600 hover:bg-green-700">
+                      <Button size="sm" onClick={() => whatsappPhone(lead)} className="bg-green-600 hover:bg-green-700">
                         <MessageCircle className="w-4 h-4 ml-1" /> واتساب
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => callPhone(lead.phone)}>
+                      <Button size="sm" variant="outline" onClick={() => callPhone(lead)}>
                         <Phone className="w-4 h-4 ml-1" /> اتصال
                       </Button>
                     </div>
