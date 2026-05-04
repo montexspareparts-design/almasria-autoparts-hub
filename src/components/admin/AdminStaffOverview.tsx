@@ -2,11 +2,12 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Activity, FileText, TrendingUp } from "lucide-react";
+import { Activity, FileText, TrendingUp, ClipboardList } from "lucide-react";
 
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
 const AdminReporterReports = lazy(() => import("@/components/admin/AdminReporterReports"));
+const GeneralReportsReview = lazy(() => import("@/components/staff/GeneralReportsReview"));
 
 const Loader = () => (
   <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
@@ -14,7 +15,7 @@ const Loader = () => (
   </div>
 );
 
-type TabKey = "activity" | "performance" | "reports";
+type TabKey = "activity" | "performance" | "reports" | "general";
 
 const STORAGE_KEY = "admin-staff-overview-tab";
 
@@ -29,12 +30,15 @@ const STORAGE_KEY = "admin-staff-overview-tab";
 export default function AdminStaffOverview() {
   const [params, setParams] = useSearchParams();
 
+  const isValidTab = (v: string | null): v is TabKey =>
+    v === "activity" || v === "performance" || v === "reports" || v === "general";
+
   const initialTab: TabKey = (() => {
     const fromUrl = params.get("tab");
-    if (fromUrl === "activity" || fromUrl === "performance" || fromUrl === "reports") return fromUrl;
+    if (isValidTab(fromUrl)) return fromUrl;
     if (typeof window !== "undefined") {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "activity" || saved === "performance" || saved === "reports") return saved;
+      if (isValidTab(saved)) return saved;
     }
     return "activity";
   })();
@@ -44,9 +48,7 @@ export default function AdminStaffOverview() {
   // Sync URL deep-link from sidebar (?tab=...) ↔ state
   useEffect(() => {
     const fromUrl = params.get("tab");
-    if (fromUrl === "activity" || fromUrl === "performance" || fromUrl === "reports") {
-      if (fromUrl !== tab) setTab(fromUrl);
-    }
+    if (isValidTab(fromUrl) && fromUrl !== tab) setTab(fromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
@@ -76,7 +78,7 @@ export default function AdminStaffOverview() {
       </Card>
 
       <Tabs value={tab} onValueChange={handleChange}>
-        <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:inline-grid">
+        <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:grid-cols-4 sm:inline-grid">
           <TabsTrigger value="activity" className="gap-2">
             <Activity className="w-4 h-4" />
             نشاط اليوم
@@ -87,7 +89,11 @@ export default function AdminStaffOverview() {
           </TabsTrigger>
           <TabsTrigger value="reports" className="gap-2">
             <FileText className="w-4 h-4" />
-            التقارير اليومية
+            تقارير الفيصل
+          </TabsTrigger>
+          <TabsTrigger value="general" className="gap-2">
+            <ClipboardList className="w-4 h-4" />
+            التقرير العام
           </TabsTrigger>
         </TabsList>
 
@@ -106,6 +112,12 @@ export default function AdminStaffOverview() {
         <TabsContent value="reports" className="mt-4">
           <Suspense fallback={<Loader />}>
             <AdminReporterReports />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="general" className="mt-4">
+          <Suspense fallback={<Loader />}>
+            <GeneralReportsReview />
           </Suspense>
         </TabsContent>
       </Tabs>
