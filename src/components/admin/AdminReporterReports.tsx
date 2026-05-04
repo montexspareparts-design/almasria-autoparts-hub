@@ -683,7 +683,8 @@ function AllReports({ from, to, label }: { from: string; to: string; label: stri
 
   return (
     <div className="space-y-4">
-      {/* Day off panel */}
+      {/* Missing today + Day off panels */}
+      <MissingTodayPanel />
       <DayOffPanel profilesMap={profilesMap} />
 
       {/* Aggregates */}
@@ -952,6 +953,154 @@ function AggCard({ title, subtitle, agg, color }: { title: string; subtitle: str
           <Stat label="غير مكتملة" value={agg.incomplete} />
         </div>
       )}
+    </Card>
+  );
+}
+
+/* -------------------- Missing Today Panel (admin) -------------------- */
+function MissingTodayPanel() {
+  const [loading, setLoading] = useState(true);
+  const [missing, setMissing] = useState<Array<{ user_id: string; full_name: string | null; email: string | null }>>([]);
+  const [total, setTotal] = useState(0);
+  const [submittedCount, setSubmittedCount] = useState(0);
+  const [offCount, setOffCount] = useState(0);
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "reporter" as any);
+      const reporterIds = Array.from(new Set((roles || []).map((r: any) => r.user_id)));
+      setTotal(reporterIds.length);
+      if (reporterIds.length === 0) { setMissing([]); setLoading(false); return; }
+
+      const { data: subs } = await supabase
+        .from("reporter_daily_reports")
+        .select("user_id, is_submitted")
+        .eq("report_date", todayStr)
+        .eq("is_submitted", true)
+        .in("user_id", reporterIds);
+      const submittedSet = new Set((subs || []).map((s: any) => s.user_id));
+      setSubmittedCount(submittedSet.size);
+
+      const { data: offs } = await supabase
+        .from("reporter_day_off" as any)
+        .select("user_id")
+        .eq("off_date", todayStr)
+        .in("user_id", reporterIds);
+      const offSet = new Set(((offs as any) || []).map((o: any) => o.user_id));
+      setOffCount(offSet.size);
+
+      const missingIds = reporterIds.filter((id) => !submittedSet.has(id) && !offSet.has(id));
+      if (missingIds.length === 0) { setMissing([]); setLoading(false); return; }
+
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", missingIds);
+      const sorted = (profs || []).sort((a: any, b: any) =>
+        (a.full_name || a.email || "").localeCompare(b.full_name || b.email || "", "ar")
+      );
+      setMissing(sorted as any);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    const ch = supabase
+      .channel("missing-today-admin")
+      .on("postgres_changes", { event: "*", schema: "public", table: "reporter_daily_reports" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "reporter_day_off" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayStr]);
+
+  if (loading) {
+    return (
+      <Card className="p-3 bg-muted/30 border-dashed text-xs text-muted-foreground flex items-center gap-2">
+        <Loader2 className="w-3.5 h-3.5 animate-spin" /> جاري التحقق من تقارير اليوم...
+      </Card>
+    );
+  }
+
+  if (missing.length === 0) {
+    return (
+      <Card className="p-3 bg-emerald-500/10 border-emerald-500/30 text-xs flex items-center gap-2">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+        <span className="font-bold text-emerald-700 dark:text-emerald-300">
+          ✨ كل الموظفين سلّموا تقرير اليوم ({submittedCount}/{total})
+          {offCount > 0 && <span className="text-muted-foreground font-normal"> — {offCount} في أجازة</span>}
+        </span>
+        <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] mr-auto" onClick={load}>
+          <RefreshCw className="w-3 h-3" />
+        </Button>
+      </Card>
+    );
+  }
+
+  const pct = total > 0 ? Math.round((submittedCount / Math.max(total - offCount, 1)) * 100) : 0;
+
+  return (
+    <Card className="p-4 bg-gradient-to-br from-rose-500/10 to-amber-500/5 border-rose-500/40">
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-rose-500/20 grid place-items-center">
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-rose-700 dark:text-rose-300 flex items-center gap-2">
+              لم يقدّم تقرير اليوم
+              <Badge className="bg-rose-500 text-white border-0 h-5 text-[10px]">{missing.length}</Badge>
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              مُسلَّم: <b className="text-emerald-600">{submittedCount}</b> / {total}
+              {offCount > 0 && <> • أجازة: <b className="text-emerald-600">{offCount}</b></>}
+              • النسبة: <b>{pct}%</b>
+            </div>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" onClick={load}>
+          <RefreshCw className="w-3.5 h-3.5" /> تحديث
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {missing.map((m) => {
+          const name = m.full_name || m.email || "موظف";
+          const phone = (m.email || "").match(/^(\d{10,11})@/)?.[1];
+          return (
+            <div
+              key={m.user_id}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-rose-950/30 border border-rose-300 dark:border-rose-800 text-xs shadow-sm"
+            >
+              <span className="w-6 h-6 rounded-full bg-rose-500/15 grid place-items-center text-[10px] font-bold text-rose-700 dark:text-rose-300">
+                {name.trim().charAt(0)}
+              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-bold">{name}</span>
+                {m.email && <span className="text-[9px] text-muted-foreground">{m.email}</span>}
+              </div>
+              {phone && (
+                <a
+                  href={`https://wa.me/2${phone}?text=${encodeURIComponent("متنساش تسلّم تقرير اليوم 🙏")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-emerald-600 hover:text-emerald-700"
+                  title="تذكير عبر واتساب"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </Card>
   );
 }
