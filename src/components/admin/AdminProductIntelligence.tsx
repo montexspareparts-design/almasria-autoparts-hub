@@ -638,15 +638,25 @@ export default function AdminProductIntelligence() {
 
             {/* Table */}
             <Card className="overflow-hidden">
-              <div className={`hidden md:grid ${stockGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
-                <div className="text-right">الصنف</div>
-                <div className="text-right">بارت نمبر</div>
-                <div className="text-right">كود الصنف</div>
-                <div className="text-center">كانت</div>
-                <div className="text-center">بقت</div>
-                <div className="text-center">التغيير</div>
-                <div className="text-center">النسبة</div>
-              </div>
+              {(() => {
+                const arrow = (keys: string[]) => keys.includes(stockSort) ? (stockSort === "delta_asc" ? " ↑" : " ↓") : "";
+                const HBtn = ({ label, onClick, keys, align = "right" }: { label: string; onClick: () => void; keys: string[]; align?: "right" | "center" }) => (
+                  <button onClick={onClick} className={`text-${align} hover:text-primary transition-colors ${keys.includes(stockSort) ? "text-primary" : ""}`}>
+                    {label}{arrow(keys)}
+                  </button>
+                );
+                return (
+                  <div className={`hidden md:grid ${stockGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
+                    <HBtn label="الصنف"     onClick={() => setStockSort("name")}       keys={["name"]} />
+                    <HBtn label="بارت نمبر" onClick={() => setStockSort("name")}       keys={[]} />
+                    <HBtn label="كود الصنف" onClick={() => setStockSort("name")}       keys={[]} />
+                    <HBtn label="كانت"      onClick={() => setStockSort("delta_asc")}  keys={[]}                align="center" />
+                    <HBtn label="بقت"       onClick={() => setStockSort("delta_desc")} keys={[]}                align="center" />
+                    <HBtn label="التغيير"   onClick={() => setStockSort(stockSort === "delta_desc" ? "delta_asc" : "delta_desc")} keys={["delta_desc","delta_asc","abs_delta"]} align="center" />
+                    <HBtn label="النسبة"    onClick={() => setStockSort("pct_desc")}   keys={["pct_desc"]} align="center" />
+                  </div>
+                );
+              })()}
 
               {stockLoading ? (
                 <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
