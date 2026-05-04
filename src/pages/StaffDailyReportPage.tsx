@@ -139,7 +139,7 @@ export default function StaffDailyReportPage() {
           >
             {([
               { key: "report",     label: showReporterForm ? "تقرير الفيصل" : "تقريري اليومي", shortLabel: showReporterForm ? "الفيصل" : "تقريري", icon: FileText, show: true },
-              { key: "general",    label: "التقرير العام",   shortLabel: "العام",    icon: ClipboardList, show: showReporterForm && !isReporterOnly },
+              { key: "general",    label: "التقرير العام",   shortLabel: "العام",    icon: ClipboardList, show: isAdmin && !isReporterOnly },
               { key: "shortages",  label: "النواقص",          shortLabel: "النواقص", icon: PackageX, show: true },
               { key: "restocked",  label: "وصل امبارح",       shortLabel: "وصل",     icon: PackageCheck, show: true },
             ] as const).filter((t) => t.show).map((t) => {
