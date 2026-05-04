@@ -3466,7 +3466,9 @@ const AdminCustomerIntelligence = () => {
 
         const followUpList: FollowUpItem[] = [];
         filteredProfiles?.forEach((p) => {
-          // Skip customers I already handled today (action recorded with note)
+          // اخفاء أي عميل اتعمل عليه إجراء اليوم من أي موظف (مصدر موحّد)
+          if (touchedTodayIds.has(p.user_id)) return;
+          // (احتياطي) لو الموظف الحالي عمل إجراء على Customer مش ظاهر في touchedTodayIds بعد
           if (actedTodayByMe.has(p.user_id)) return;
           const reasons: { icon: string; label: string }[] = [];
           let score = 0;
