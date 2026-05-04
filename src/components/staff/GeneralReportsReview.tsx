@@ -136,6 +136,32 @@ const GeneralReportsReview = () => {
 
   const clearTeam = () => setTeamId("all");
 
+  // 🔒 Access guard: Admin (المدير) only
+  if (authLoading) {
+    return (
+      <div dir="rtl" className="space-y-2">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="p-4 h-24 bg-muted/30 animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+  if (!isAdmin) {
+    return (
+      <Card dir="rtl" className="p-8 sm:p-10 text-center max-w-xl mx-auto border-destructive/30 bg-destructive/5">
+        <div className="w-14 h-14 rounded-2xl bg-destructive/10 grid place-items-center mx-auto mb-3">
+          <ShieldAlert className="w-7 h-7 text-destructive" />
+        </div>
+        <h3 className="text-lg font-bold text-destructive mb-1">غير مصرّح بالوصول</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          التقرير العام مخصّص للمدير (Admin) فقط لمراجعة تقارير كل الموظفين.
+          <br />
+          لو محتاج تشوف تقريرك اليومي، استخدم تبويب «تقريري اليومي» أو «تقرير الفيصل».
+        </p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4" dir="rtl">
       {/* Filters Card */}
