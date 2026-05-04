@@ -794,15 +794,25 @@ export default function AdminProductIntelligence() {
             />
 
             <Card className="overflow-hidden">
-              <div className={`hidden md:grid ${priceGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
-                <div className="text-right">الصنف</div>
-                <div className="text-right">بارت نمبر</div>
-                <div className="text-right">كود الصنف</div>
-                <div className="text-center">السعر القديم</div>
-                <div className="text-center">السعر الجديد</div>
-                <div className="text-center">النسبة</div>
-                <div className="text-center">الوقت</div>
-              </div>
+              {(() => {
+                const arrow = (keys: string[]) => keys.includes(priceSort) ? (priceSort.endsWith("_asc") ? " ↑" : " ↓") : "";
+                const HBtn = ({ label, onClick, keys, align = "right" }: { label: string; onClick: () => void; keys: string[]; align?: "right" | "center" }) => (
+                  <button onClick={onClick} className={`${align === "center" ? "text-center" : "text-right"} hover:text-primary transition-colors ${keys.includes(priceSort) ? "text-primary" : ""}`}>
+                    {label}{arrow(keys)}
+                  </button>
+                );
+                return (
+                  <div className={`hidden md:grid ${priceGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
+                    <HBtn label="الصنف"       onClick={() => setPriceSort("name")} keys={["name"]} />
+                    <HBtn label="بارت نمبر"   onClick={() => setPriceSort("name")} keys={[]} />
+                    <HBtn label="كود الصنف"   onClick={() => setPriceSort("name")} keys={[]} />
+                    <HBtn label="السعر القديم" onClick={() => setPriceSort("old_desc")} keys={["old_desc"]} align="center" />
+                    <HBtn label="السعر الجديد" onClick={() => setPriceSort("new_desc")} keys={["new_desc"]} align="center" />
+                    <HBtn label="النسبة"      onClick={() => setPriceSort(priceSort === "pct_desc" ? "pct_asc" : "pct_desc")} keys={["pct_desc","pct_asc"]} align="center" />
+                    <HBtn label="الوقت"       onClick={() => setPriceSort(priceSort === "time_desc" ? "time_asc" : "time_desc")} keys={["time_desc","time_asc"]} align="center" />
+                  </div>
+                );
+              })()}
 
               {priceLoading ? (
                 <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
