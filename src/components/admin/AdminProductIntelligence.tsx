@@ -62,12 +62,13 @@ const daysAgoStr = (n: number) => {
   return d.toISOString().split("T")[0];
 };
 
+// نقارن snapshot أقدم بـ snapshot أحدث (أو الرصيد الحالي لو لحد النهاردة)
 const getRange = (k: RangeKey): { from: string; to: string; label: string } => {
   switch (k) {
-    case "today":     return { from: todayStr(),       to: todayStr(),       label: "اليوم" };
-    case "yesterday": return { from: daysAgoStr(1),    to: daysAgoStr(1),    label: "امبارح" };
-    case "7d":        return { from: daysAgoStr(6),    to: todayStr(),       label: "آخر 7 أيام" };
-    case "30d":       return { from: daysAgoStr(29),   to: todayStr(),       label: "آخر 30 يوم" };
+    case "today":     return { from: daysAgoStr(1),    to: todayStr(),       label: "اليوم" };
+    case "yesterday": return { from: daysAgoStr(2),    to: daysAgoStr(1),    label: "امبارح" };
+    case "7d":        return { from: daysAgoStr(7),    to: todayStr(),       label: "آخر 7 أيام" };
+    case "30d":       return { from: daysAgoStr(30),   to: todayStr(),       label: "آخر 30 يوم" };
   }
 };
 
