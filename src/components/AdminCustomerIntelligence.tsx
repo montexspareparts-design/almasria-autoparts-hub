@@ -136,6 +136,83 @@ const applyExcelStyles = (ws: XLSX.WorkSheet, headerCount: number, reportTitle?:
   ws["!rows"] = [{ hpt: 40 }, { hpt: 24 }, { hpt: 22 }, { hpt: 26 }, { hpt: 10 }, { hpt: 28 }];
 };
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+
+/**
+ * يترجم خطأ Supabase لرسالة عربية واضحة + يصنّف نوعه (شبكة/صلاحية/تكرار/غيره).
+ */
+function explainSupabaseError(err: { code?: string; message?: string } | null | undefined) {
+  const code = err?.code || "";
+  const msg = (err?.message || "").toLowerCase();
+  if (!err) return { title: "خطأ غير معروف", reason: "حصل خطأ غير محدد", code: "UNKNOWN" };
+  if (code === "23505" || msg.includes("duplicate")) {
+    return { title: "سجل مكرر", reason: "هذا الإجراء مسجّل بالفعل لنفس العميل اليوم", code };
+  }
+  if (code === "42501" || msg.includes("permission") || msg.includes("rls") || msg.includes("policy")) {
+    return { title: "صلاحية مرفوضة", reason: "ليس لديك صلاحية تسجيل هذا الإجراء — راجع الإدارة", code: code || "RLS" };
+  }
+  if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed to fetch") || msg.includes("timeout")) {
+    return { title: "فشل اتصال بالشبكة", reason: "تأكد من اتصالك بالإنترنت ثم أعد المحاولة", code: "NETWORK" };
+  }
+  if (code === "23503" || msg.includes("foreign key")) {
+    return { title: "بيانات غير متطابقة", reason: "العميل أو المستخدم غير موجود في قاعدة البيانات", code };
+  }
+  return { title: "تعذّر تسجيل الإجراء", reason: err?.message || "حصل خطأ غير متوقع", code: code || "ERR" };
+}
+
+/**
+ * يسجّل إجراء في customer_communications مع toast نجاح/فشل تفصيلي + زر إعادة محاولة.
+ */
+async function logCustomerCommWithToast(params: {
+  customerId: string;
+  staffId: string;
+  commType: "whatsapp" | "phone" | "visit" | "other";
+  note: string;
+  customerName?: string | null;
+}) {
+  const { customerId, staffId, commType, note, customerName } = params;
+  const labelMap: Record<string, { ok: string; verb: string }> = {
+    whatsapp: { ok: "💬 تم تسجيل الإجراء", verb: "فتح محادثة واتساب" },
+    phone: { ok: "📞 تم تسجيل الإجراء", verb: "بدء مكالمة" },
+    visit: { ok: "🏬 تم تسجيل الإجراء", verb: "زيارة" },
+    other: { ok: "✓ تم تسجيل الإجراء", verb: "إجراء" },
+  };
+  const lbl = labelMap[commType] || labelMap.other;
+
+  const { error } = await supabase.from("customer_communications").insert({
+    customer_user_id: customerId,
+    staff_user_id: staffId,
+    comm_type: commType,
+    note,
+  });
+
+  if (error) {
+    const ex = explainSupabaseError(error);
+    console.warn(`[touched-today/${commType}] failed:`, error);
+    toast({
+      title: ex.title,
+      description: `${ex.reason}${ex.code ? ` (كود: ${ex.code})` : ""}`,
+      variant: "destructive",
+      duration: 8000,
+      action: (
+        <ToastAction
+          altText="إعادة المحاولة"
+          onClick={() => logCustomerCommWithToast(params)}
+        >
+          إعادة المحاولة
+        </ToastAction>
+      ),
+    });
+    return false;
+  }
+
+  toast({
+    title: lbl.ok,
+    description: `تم تسجيل ${lbl.verb} مع ${customerName || "العميل"} وانتقل لتبويب «تمت اليوم»`,
+    duration: 4000,
+  });
+  return true;
+}
 import {
   Users, Search, Eye, ShoppingCart, Phone, Mail, Car,
   TrendingUp, TrendingDown, Clock, ChevronDown, ChevronUp, BarChart3,
@@ -3701,22 +3778,16 @@ const AdminCustomerIntelligence = () => {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       title="فتح محادثة واتساب — يُسجّل تلقائياً كإجراء اليوم"
-                                       onClick={() => {
-                                         if (!user?.id) return;
-                                         supabase.from("customer_communications").insert({
-                                           customer_user_id: p.user_id,
-                                           staff_user_id: user.id,
-                                           comm_type: "whatsapp",
-                                           note: "تم فتح محادثة واتساب من قائمة المتابعة",
-                                         }).then(({ error }) => {
-                                           if (error) {
-                                             console.warn("[touched-today/wa] failed:", error.message);
-                                             toast({ title: "تعذّر تسجيل الإجراء", description: error.message, variant: "destructive" });
-                                           } else {
-                                             toast({ title: "💬 تم تسجيل الإجراء", description: `تم فتح محادثة واتساب مع ${p.full_name || "العميل"} وانتقل لتبويب «تمت اليوم»` });
-                                           }
-                                         });
-                                       }}
+                                        onClick={() => {
+                                          if (!user?.id) return;
+                                          logCustomerCommWithToast({
+                                            customerId: p.user_id,
+                                            staffId: user.id,
+                                            commType: "whatsapp",
+                                            note: "تم فتح محادثة واتساب من قائمة المتابعة",
+                                            customerName: p.full_name,
+                                          });
+                                        }}
                                     >
                                       <MessageCircle className="w-3.5 h-3.5" />
                                       واتساب
@@ -3731,22 +3802,16 @@ const AdminCustomerIntelligence = () => {
                                     <a
                                       href={`tel:${p.phone}`}
                                       title="بدء مكالمة — يُسجّل تلقائياً كإجراء اليوم"
-                                       onClick={() => {
-                                         if (!user?.id) return;
-                                         supabase.from("customer_communications").insert({
-                                           customer_user_id: p.user_id,
-                                           staff_user_id: user.id,
-                                           comm_type: "phone",
-                                           note: "تم بدء مكالمة من قائمة المتابعة",
-                                         }).then(({ error }) => {
-                                           if (error) {
-                                             console.warn("[touched-today/call] failed:", error.message);
-                                             toast({ title: "تعذّر تسجيل الإجراء", description: error.message, variant: "destructive" });
-                                           } else {
-                                             toast({ title: "📞 تم تسجيل الإجراء", description: `تم بدء مكالمة مع ${p.full_name || "العميل"} وانتقل لتبويب «تمت اليوم»` });
-                                           }
-                                         });
-                                       }}
+                                        onClick={() => {
+                                          if (!user?.id) return;
+                                          logCustomerCommWithToast({
+                                            customerId: p.user_id,
+                                            staffId: user.id,
+                                            commType: "phone",
+                                            note: "تم بدء مكالمة من قائمة المتابعة",
+                                            customerName: p.full_name,
+                                          });
+                                        }}
                                     >
                                       <Phone className="w-3.5 h-3.5" />
                                       اتصل
