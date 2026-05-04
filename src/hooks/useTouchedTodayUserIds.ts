@@ -11,7 +11,7 @@
  *
  * Realtime: يشترك في الجدولين ويحدّث الـ Set فوراً.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cairoDayBoundsUTC, cairoToday } from "@/lib/handledTasks";
 
@@ -22,12 +22,13 @@ export function useTouchedTodayUserIds(): {
 } {
   const [touchedIds, setTouchedIds] = useState<Set<string>>(new Set());
   const [isReady, setIsReady] = useState(false);
+  const staffIdsRef = useRef<Set<string>>(new Set());
 
   const refresh = async () => {
     const { startMs } = cairoDayBoundsUTC(cairoToday());
     const sinceIso = new Date(startMs).toISOString();
 
-    const [commsRes, handlingRes] = await Promise.all([
+    const [commsRes, handlingRes, staffRes] = await Promise.all([
       supabase
         .from("customer_communications")
         .select("customer_user_id")
@@ -36,14 +37,27 @@ export function useTouchedTodayUserIds(): {
         .from("staff_task_handling")
         .select("customer_user_id, action_at")
         .gte("action_at", sinceIso),
+      supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["admin", "moderator", "reporter"]),
     ]);
+
+    // استبعاد أي user_id ينتمي لموظف (admin/moderator/reporter)
+    // عشان موظف اتصل/سجّل ملاحظة على موظف تاني ميظهروش كعملاء.
+    const staffIds = new Set<string>(
+      (staffRes.data || []).map((r: any) => r.user_id).filter(Boolean),
+    );
+    staffIdsRef.current = staffIds;
 
     const next = new Set<string>();
     (commsRes.data || []).forEach((r: any) => {
-      if (r.customer_user_id) next.add(r.customer_user_id);
+      const uid = r.customer_user_id;
+      if (uid && !staffIds.has(uid)) next.add(uid);
     });
     (handlingRes.data || []).forEach((r: any) => {
-      if (r.customer_user_id) next.add(r.customer_user_id);
+      const uid = r.customer_user_id;
+      if (uid && !staffIds.has(uid)) next.add(uid);
     });
     setTouchedIds(next);
     setIsReady(true);
@@ -58,7 +72,7 @@ export function useTouchedTodayUserIds(): {
         { event: "INSERT", schema: "public", table: "customer_communications" },
         (payload: any) => {
           const uid = payload.new?.customer_user_id;
-          if (!uid) return;
+          if (!uid || staffIdsRef.current.has(uid)) return;
           setTouchedIds((prev) => {
             if (prev.has(uid)) return prev;
             const next = new Set(prev);
@@ -72,7 +86,7 @@ export function useTouchedTodayUserIds(): {
         { event: "INSERT", schema: "public", table: "staff_task_handling" },
         (payload: any) => {
           const uid = payload.new?.customer_user_id;
-          if (!uid) return;
+          if (!uid || staffIdsRef.current.has(uid)) return;
           setTouchedIds((prev) => {
             if (prev.has(uid)) return prev;
             const next = new Set(prev);
