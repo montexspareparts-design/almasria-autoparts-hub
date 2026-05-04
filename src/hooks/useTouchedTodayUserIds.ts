@@ -27,7 +27,7 @@ export function useTouchedTodayUserIds(): {
     const { startMs } = cairoDayBoundsUTC(cairoToday());
     const sinceIso = new Date(startMs).toISOString();
 
-    const [commsRes, handlingRes] = await Promise.all([
+    const [commsRes, handlingRes, staffRes] = await Promise.all([
       supabase
         .from("customer_communications")
         .select("customer_user_id")
@@ -36,14 +36,26 @@ export function useTouchedTodayUserIds(): {
         .from("staff_task_handling")
         .select("customer_user_id, action_at")
         .gte("action_at", sinceIso),
+      supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("role", ["admin", "moderator", "reporter"]),
     ]);
+
+    // استبعاد أي user_id ينتمي لموظف (admin/moderator/reporter)
+    // عشان موظف اتصل/سجّل ملاحظة على موظف تاني ميظهروش كعملاء.
+    const staffIds = new Set<string>(
+      (staffRes.data || []).map((r: any) => r.user_id).filter(Boolean),
+    );
 
     const next = new Set<string>();
     (commsRes.data || []).forEach((r: any) => {
-      if (r.customer_user_id) next.add(r.customer_user_id);
+      const uid = r.customer_user_id;
+      if (uid && !staffIds.has(uid)) next.add(uid);
     });
     (handlingRes.data || []).forEach((r: any) => {
-      if (r.customer_user_id) next.add(r.customer_user_id);
+      const uid = r.customer_user_id;
+      if (uid && !staffIds.has(uid)) next.add(uid);
     });
     setTouchedIds(next);
     setIsReady(true);
