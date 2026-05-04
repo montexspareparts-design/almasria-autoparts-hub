@@ -578,7 +578,7 @@ export default function AdminProductIntelligence() {
 
             {/* Table */}
             <Card className="overflow-hidden">
-              <div className="hidden md:grid grid-cols-[minmax(0,2.2fr)_140px_110px_90px_90px_110px_100px] gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10">
+              <div className="hidden md:grid grid-cols-[minmax(220px,2.5fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_70px_70px_90px_80px] gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10">
                 <div className="text-right">الصنف</div>
                 <div className="text-right">بارت نمبر</div>
                 <div className="text-right">كود الصنف</div>
@@ -605,14 +605,14 @@ export default function AdminProductIntelligence() {
                     return (
                       <div
                         key={r.product_id}
-                        className={`grid grid-cols-1 md:grid-cols-[minmax(0,2.2fr)_140px_110px_90px_90px_110px_100px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
+                        className={`grid grid-cols-1 md:grid-cols-[minmax(220px,2.5fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_70px_70px_90px_80px] gap-2 md:gap-3 px-4 py-3 items-center text-sm hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}
                       >
                         {/* الاسم */}
                         <div className="min-w-0">
                           <div className="flex items-start gap-2">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <p className="font-semibold text-[14px] leading-snug line-clamp-2 break-words text-right cursor-default">
+                                <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
                                   {r.name_ar}
                                 </p>
                               </TooltipTrigger>
@@ -742,7 +742,7 @@ export default function AdminProductIntelligence() {
                         <div className="min-w-0">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <p className="font-semibold text-[14px] leading-snug line-clamp-2 break-words text-right cursor-default">
+                              <p className="font-semibold text-[14px] leading-relaxed break-words text-right cursor-default whitespace-normal">
                                 {r.name_ar || "—"}
                               </p>
                             </TooltipTrigger>
