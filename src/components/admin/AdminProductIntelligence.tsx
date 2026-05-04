@@ -144,6 +144,7 @@ export default function AdminProductIntelligence() {
   const [priceRows, setPriceRows] = useState<PriceChangeRow[]>([]);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [priceSort, setPriceSort] = useState<"time_desc" | "time_asc" | "pct_desc" | "pct_asc" | "old_desc" | "new_desc" | "name">("time_desc");
 
   // ERP sync state
   const [syncing, setSyncing] = useState(false);
@@ -301,8 +302,19 @@ export default function AdminProductIntelligence() {
     if (minC > 0) arr = arr.filter((r) => Math.abs(r.change_percentage) >= minC);
     if (priceFilter === "up") arr = arr.filter((r) => r.new_price > r.old_price);
     else if (priceFilter === "down") arr = arr.filter((r) => r.new_price < r.old_price);
+    arr.sort((a, b) => {
+      switch (priceSort) {
+        case "time_asc":  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "pct_desc":  return b.change_percentage - a.change_percentage;
+        case "pct_asc":   return a.change_percentage - b.change_percentage;
+        case "old_desc":  return b.old_price - a.old_price;
+        case "new_desc":  return b.new_price - a.new_price;
+        case "name":      return (a.name_ar || "").localeCompare(b.name_ar || "", "ar");
+        default:          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
     return arr;
-  }, [priceRows, search, priceFilter, brandFilter, minChange]);
+  }, [priceRows, search, priceFilter, brandFilter, minChange, priceSort]);
 
   // ----- KPIs
   const stockKpi = useMemo(() => {
@@ -638,15 +650,25 @@ export default function AdminProductIntelligence() {
 
             {/* Table */}
             <Card className="overflow-hidden">
-              <div className={`hidden md:grid ${stockGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
-                <div className="text-right">الصنف</div>
-                <div className="text-right">بارت نمبر</div>
-                <div className="text-right">كود الصنف</div>
-                <div className="text-center">كانت</div>
-                <div className="text-center">بقت</div>
-                <div className="text-center">التغيير</div>
-                <div className="text-center">النسبة</div>
-              </div>
+              {(() => {
+                const arrow = (keys: string[]) => keys.includes(stockSort) ? (stockSort === "delta_asc" ? " ↑" : " ↓") : "";
+                const HBtn = ({ label, onClick, keys, align = "right" }: { label: string; onClick: () => void; keys: string[]; align?: "right" | "center" }) => (
+                  <button onClick={onClick} className={`${align === "center" ? "text-center" : "text-right"} hover:text-primary transition-colors ${keys.includes(stockSort) ? "text-primary" : ""}`}>
+                    {label}{arrow(keys)}
+                  </button>
+                );
+                return (
+                  <div className={`hidden md:grid ${stockGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
+                    <HBtn label="الصنف"     onClick={() => setStockSort("name")}       keys={["name"]} />
+                    <HBtn label="بارت نمبر" onClick={() => setStockSort("name")}       keys={[]} />
+                    <HBtn label="كود الصنف" onClick={() => setStockSort("name")}       keys={[]} />
+                    <HBtn label="كانت"      onClick={() => setStockSort("delta_asc")}  keys={[]}                align="center" />
+                    <HBtn label="بقت"       onClick={() => setStockSort("delta_desc")} keys={[]}                align="center" />
+                    <HBtn label="التغيير"   onClick={() => setStockSort(stockSort === "delta_desc" ? "delta_asc" : "delta_desc")} keys={["delta_desc","delta_asc","abs_delta"]} align="center" />
+                    <HBtn label="النسبة"    onClick={() => setStockSort("pct_desc")}   keys={["pct_desc"]} align="center" />
+                  </div>
+                );
+              })()}
 
               {stockLoading ? (
                 <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
@@ -772,15 +794,25 @@ export default function AdminProductIntelligence() {
             />
 
             <Card className="overflow-hidden">
-              <div className={`hidden md:grid ${priceGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
-                <div className="text-right">الصنف</div>
-                <div className="text-right">بارت نمبر</div>
-                <div className="text-right">كود الصنف</div>
-                <div className="text-center">السعر القديم</div>
-                <div className="text-center">السعر الجديد</div>
-                <div className="text-center">النسبة</div>
-                <div className="text-center">الوقت</div>
-              </div>
+              {(() => {
+                const arrow = (keys: string[]) => keys.includes(priceSort) ? (priceSort.endsWith("_asc") ? " ↑" : " ↓") : "";
+                const HBtn = ({ label, onClick, keys, align = "right" }: { label: string; onClick: () => void; keys: string[]; align?: "right" | "center" }) => (
+                  <button onClick={onClick} className={`${align === "center" ? "text-center" : "text-right"} hover:text-primary transition-colors ${keys.includes(priceSort) ? "text-primary" : ""}`}>
+                    {label}{arrow(keys)}
+                  </button>
+                );
+                return (
+                  <div className={`hidden md:grid ${priceGrid} gap-3 px-4 py-3 text-[11px] font-bold text-muted-foreground bg-muted/40 border-b sticky top-0 z-10`}>
+                    <HBtn label="الصنف"       onClick={() => setPriceSort("name")} keys={["name"]} />
+                    <HBtn label="بارت نمبر"   onClick={() => setPriceSort("name")} keys={[]} />
+                    <HBtn label="كود الصنف"   onClick={() => setPriceSort("name")} keys={[]} />
+                    <HBtn label="السعر القديم" onClick={() => setPriceSort("old_desc")} keys={["old_desc"]} align="center" />
+                    <HBtn label="السعر الجديد" onClick={() => setPriceSort("new_desc")} keys={["new_desc"]} align="center" />
+                    <HBtn label="النسبة"      onClick={() => setPriceSort(priceSort === "pct_desc" ? "pct_asc" : "pct_desc")} keys={["pct_desc","pct_asc"]} align="center" />
+                    <HBtn label="الوقت"       onClick={() => setPriceSort(priceSort === "time_desc" ? "time_asc" : "time_desc")} keys={["time_desc","time_asc"]} align="center" />
+                  </div>
+                );
+              })()}
 
               {priceLoading ? (
                 <div className="p-12 text-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />جارٍ التحميل...</div>
