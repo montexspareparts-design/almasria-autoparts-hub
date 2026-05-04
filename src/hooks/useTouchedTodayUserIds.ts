@@ -72,7 +72,7 @@ export function useTouchedTodayUserIds(): {
         { event: "INSERT", schema: "public", table: "customer_communications" },
         (payload: any) => {
           const uid = payload.new?.customer_user_id;
-          if (!uid) return;
+          if (!uid || staffIdsRef.current.has(uid)) return;
           setTouchedIds((prev) => {
             if (prev.has(uid)) return prev;
             const next = new Set(prev);
@@ -86,7 +86,7 @@ export function useTouchedTodayUserIds(): {
         { event: "INSERT", schema: "public", table: "staff_task_handling" },
         (payload: any) => {
           const uid = payload.new?.customer_user_id;
-          if (!uid) return;
+          if (!uid || staffIdsRef.current.has(uid)) return;
           setTouchedIds((prev) => {
             if (prev.has(uid)) return prev;
             const next = new Set(prev);
