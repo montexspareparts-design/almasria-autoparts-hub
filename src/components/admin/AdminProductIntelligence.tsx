@@ -144,6 +144,7 @@ export default function AdminProductIntelligence() {
   const [priceRows, setPriceRows] = useState<PriceChangeRow[]>([]);
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [priceSort, setPriceSort] = useState<"time_desc" | "time_asc" | "pct_desc" | "pct_asc" | "old_desc" | "new_desc" | "name">("time_desc");
 
   // ERP sync state
   const [syncing, setSyncing] = useState(false);
