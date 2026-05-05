@@ -27,20 +27,24 @@ type WindowDays = 30 | 60 | 90;
 type CategoryKey = "all" | "hot" | "steady" | "slow" | "dead" | "reorder" | "demand_no_stock";
 
 interface Row {
-  product_id: string;
+  product_id: string | null;
+  erp_id: string;
   name_ar: string;
   sku: string | null;
   part_number: string | null;
   erp_item_code: string | null;
   brand: string | null;
   current_stock: number;
+  retail_price: number | null;
+  wholesale_price: number | null;
   units_sold: number;
   orders_count: number;
   unique_buyers: number;
   views_count: number;
   daily_velocity: number;
-  days_of_supply: number | null; // null لو الفلوسيتي = 0
-  turnover: number; // ratio
+  days_of_supply: number | null;
+  turnover: number;
+  in_website: boolean;
   category: Exclude<CategoryKey, "all">;
   recommendation: string;
   recIcon: string;
@@ -97,16 +101,36 @@ export const ProductTurnoverAnalysis = () => {
     try {
       const fromDate = new Date(Date.now() - windowDays * 86400_000).toISOString();
 
-      // 1) Products (active)
-      const { data: products, error: pErr } = await supabase
+      // 1) ERP Faisal catalog (المصدر الأساسي للأصناف والرصيد)
+      const erpAll: any[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
+          .from("erp_full_catalog_cache")
+          .select("erp_id, name, qty, retail_price, wholesale_price, part_number")
+          .order("erp_id", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        erpAll.push(...data);
+        if (data.length < PAGE) break;
+      }
+      const erpMap = new Map<string, any>(erpAll.map((e) => [String(e.erp_id), e]));
+
+      // 2) Website products (للربط بالـ id والـ brand فقط — مش مصدر الرصيد)
+      const { data: websiteProducts } = await supabase
         .from("products")
-        .select("id, name_ar, sku, part_number, erp_item_code, brand, stock_quantity")
+        .select("id, name_ar, sku, part_number, erp_item_code, brand")
         .eq("is_active", true);
-      if (pErr) throw pErr;
+      const productByErpId = new Map<string, any>();
+      const productByPid = new Map<string, any>();
+      (websiteProducts || []).forEach((p) => {
+        productByPid.set(p.id, p);
+        const key = String(p.erp_item_code || p.sku || "").trim();
+        if (key) productByErpId.set(key, p);
+      });
 
-      const productMap = new Map<string, any>((products || []).map((p) => [p.id, p]));
-
-      // 2) Delivered orders within window
+      // 3) Delivered orders within window
       const { data: deliveredOrders, error: oErr } = await supabase
         .from("orders")
         .select("id, user_id, created_at, status")
@@ -116,10 +140,9 @@ export const ProductTurnoverAnalysis = () => {
       const orderUserMap = new Map<string, string>((deliveredOrders || []).map((o) => [o.id, o.user_id]));
       const orderIds = Array.from(orderUserMap.keys());
 
-      // 3) Order items for those orders
-      const sales = new Map<string, { qty: number; orderIds: Set<string>; users: Set<string> }>();
+      // 4) Order items — sales aggregated by product_id (website)
+      const salesByPid = new Map<string, { qty: number; orderIds: Set<string>; users: Set<string> }>();
       if (orderIds.length > 0) {
-        // chunk to avoid URL limits
         for (let i = 0; i < orderIds.length; i += 200) {
           const chunk = orderIds.slice(i, i + 200);
           const { data: items, error: iErr } = await supabase
@@ -128,52 +151,57 @@ export const ProductTurnoverAnalysis = () => {
             .in("order_id", chunk);
           if (iErr) throw iErr;
           (items || []).forEach((it: any) => {
-            const cur = sales.get(it.product_id) || { qty: 0, orderIds: new Set<string>(), users: new Set<string>() };
+            const cur = salesByPid.get(it.product_id) || { qty: 0, orderIds: new Set<string>(), users: new Set<string>() };
             cur.qty += Number(it.quantity || 0);
             cur.orderIds.add(it.order_id);
             const uid = orderUserMap.get(it.order_id);
             if (uid) cur.users.add(uid);
-            sales.set(it.product_id, cur);
+            salesByPid.set(it.product_id, cur);
           });
         }
       }
 
-      // 4) Dealer price views (signal of demand even without sale)
+      // 5) Dealer price views by product_id
       const { data: views, error: vErr } = await supabase
         .from("dealer_price_views")
         .select("product_id")
         .gte("viewed_at", fromDate);
       if (vErr) throw vErr;
-      const viewsMap = new Map<string, number>();
+      const viewsByPid = new Map<string, number>();
       (views || []).forEach((v: any) => {
-        viewsMap.set(v.product_id, (viewsMap.get(v.product_id) || 0) + 1);
+        viewsByPid.set(v.product_id, (viewsByPid.get(v.product_id) || 0) + 1);
       });
 
-      // 5) Build rows
+      // 6) Build rows من كاش الفيصل
       const out: Row[] = [];
-      productMap.forEach((p, pid) => {
-        const s = sales.get(pid);
+      erpMap.forEach((e, erpId) => {
+        const websiteProd = productByErpId.get(erpId);
+        const inWebsite = !!websiteProd;
+        const pid = websiteProd?.id || null;
+        const s = pid ? salesByPid.get(pid) : undefined;
         const units_sold = s?.qty || 0;
         const orders_count = s?.orderIds.size || 0;
         const unique_buyers = s?.users.size || 0;
-        const views_count = viewsMap.get(pid) || 0;
-        const current_stock = Number(p.stock_quantity || 0);
+        const views_count = pid ? viewsByPid.get(pid) || 0 : 0;
+        const current_stock = Number(e.qty || 0); // من الفيصل
         const daily_velocity = units_sold / windowDays;
         const days_of_supply = daily_velocity > 0 ? current_stock / daily_velocity : null;
-        // Approx avg stock = current + half of sold (assume linear depletion)
         const avg_stock = Math.max(1, current_stock + units_sold / 2);
         const turnover = units_sold / avg_stock;
         const c = classify(units_sold, current_stock, views_count, days_of_supply);
-        // Skip totally inert items (no signal at all) to keep the report focused
-        if (units_sold === 0 && views_count === 0 && current_stock === 0) return;
+        // أصناف بلا أي إشارة ولا رصيد ولا حتى موجودة في الموقع — تخطَّ
+        if (units_sold === 0 && views_count === 0 && current_stock === 0 && !inWebsite) return;
         out.push({
           product_id: pid,
-          name_ar: p.name_ar,
-          sku: p.sku,
-          part_number: p.part_number,
-          erp_item_code: p.erp_item_code,
-          brand: p.brand,
+          erp_id: erpId,
+          name_ar: websiteProd?.name_ar || e.name,
+          sku: websiteProd?.sku || erpId,
+          part_number: e.part_number || websiteProd?.part_number || null,
+          erp_item_code: websiteProd?.erp_item_code || erpId,
+          brand: websiteProd?.brand || null,
           current_stock,
+          retail_price: e.retail_price != null ? Number(e.retail_price) : null,
+          wholesale_price: e.wholesale_price != null ? Number(e.wholesale_price) : null,
           units_sold,
           orders_count,
           unique_buyers,
@@ -181,6 +209,7 @@ export const ProductTurnoverAnalysis = () => {
           daily_velocity,
           days_of_supply,
           turnover,
+          in_website: inWebsite,
           category: c.cat,
           recommendation: c.rec,
           recIcon: c.icon,
@@ -252,7 +281,7 @@ export const ProductTurnoverAnalysis = () => {
             <div className="flex-1 min-w-[220px]">
               <h2 className="text-xl font-bold text-foreground">تحليل سحب الأصناف ومعدل الدوران</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                رؤية ذكية لكل صنف: سرعة البيع، أيام التغطية، الطلب الكامن، وتوصيات قرار فورية.
+                المصدر: <strong className="text-primary">كاش الفيصل</strong> (الرصيد + كل الأصناف) مدموج بمبيعات الموقع. سرعة البيع، أيام التغطية، الطلب الكامن، وتوصيات فورية.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -367,7 +396,7 @@ export const ProductTurnoverAnalysis = () => {
                 const stockBarPct = r.days_of_supply == null ? 100 : Math.min(100, (r.days_of_supply / 60) * 100);
                 const barColor = r.days_of_supply == null ? "bg-slate-300" : r.days_of_supply <= 14 ? "bg-red-500" : r.days_of_supply <= 30 ? "bg-orange-500" : "bg-emerald-500";
                 return (
-                  <div key={r.product_id} onClick={() => setDetailProductId(r.product_id)} title="اضغط لعرض تحليل تفصيلي" className={`p-3 sm:p-4 hover:bg-primary/5 cursor-pointer transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}>
+                  <div key={r.erp_id} onClick={() => r.product_id && setDetailProductId(r.product_id)} title={r.product_id ? "اضغط لعرض تحليل تفصيلي" : "صنف من الفيصل غير معروض في الموقع"} className={`p-3 sm:p-4 transition-colors ${r.product_id ? "hover:bg-primary/5 cursor-pointer" : "opacity-90"} ${idx % 2 ? "bg-muted/10" : ""}`}>
                     <div className="grid grid-cols-12 gap-3 items-start">
                       {/* Name + identifiers */}
                       <div className="col-span-12 md:col-span-5 min-w-0">
@@ -387,6 +416,7 @@ export const ProductTurnoverAnalysis = () => {
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px]">
                           {r.brand && <Badge variant="secondary" className="text-[9px]">{BRAND_LABEL[r.brand] || r.brand}</Badge>}
+                          {!r.in_website && <Badge className="text-[9px] bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/40">🆕 من الفيصل — غير معروض</Badge>}
                           <span className="text-muted-foreground">كود: <span className="font-mono text-foreground">{code}</span></span>
                           {r.part_number && <span className="text-muted-foreground">بارت: <span className="font-mono text-foreground">{r.part_number}</span></span>}
                         </div>
