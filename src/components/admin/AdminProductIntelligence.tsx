@@ -128,7 +128,7 @@ export default function AdminProductIntelligence() {
   const { isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [tab, setTab] = useState<"stock" | "prices">("stock");
+  const [tab, setTab] = useState<"stock" | "prices" | "turnover">("stock");
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState<string>("all");
