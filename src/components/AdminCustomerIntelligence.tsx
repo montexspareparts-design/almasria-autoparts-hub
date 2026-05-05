@@ -292,6 +292,19 @@ const AdminCustomerIntelligence = () => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [followupReasonFilter, setFollowupReasonFilter] = useState<string>("all");
   const [followupContactFilter, setFollowupContactFilter] = useState<"all" | "withPhone" | "noPhone">("all");
+  const [doneDialog, setDoneDialog] = useState<{ open: boolean; userId: string; name: string | null }>({ open: false, userId: "", name: null });
+  const [doneNote, setDoneNote] = useState("");
+  const [doneSubmitting, setDoneSubmitting] = useState(false);
+  const DONE_PRESETS = [
+    { icon: "📞", label: "اتصلت بيه", text: "اتصلت بالعميل" },
+    { icon: "✅", label: "اتفقت معاه", text: "اتفقت مع العميل على التفاصيل" },
+    { icon: "💬", label: "بعتله عرض سعر", text: "بعتله عرض سعر على واتساب" },
+    { icon: "📵", label: "مش بيرد", text: "اتصلت ومش بيرد — هحاول تاني" },
+    { icon: "🕐", label: "طلب أتواصل بعدين", text: "العميل طلب التواصل في وقت لاحق" },
+    { icon: "🚫", label: "مش مهتم حالياً", text: "العميل غير مهتم حالياً" },
+    { icon: "📦", label: "في انتظار توفر صنف", text: "في انتظار توفر الصنف من المخزن" },
+    { icon: "✍️", label: "متابعة عامة", text: "متابعة عامة مع العميل" },
+  ];
   const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
   const toggleTaskDetails = (id: string) => {
     setExpandedTaskDetails(prev => {
@@ -3941,20 +3954,10 @@ const AdminCustomerIntelligence = () => {
                                 variant="outline"
                                 className="h-9 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 font-bold"
                                 title="تأكيد إنك خدت إجراء — هيختفي ويظهر في «تمت اليوم»"
-                                onClick={async () => {
+                                onClick={() => {
                                   if (!user?.id) return;
-                                  const note = window.prompt(
-                                    `سجّل الإجراء مع ${p.full_name || "العميل"}\n(مثال: اتصلت بيه — اتفقت معاه — بعتله عرض سعر)`,
-                                    ""
-                                  );
-                                  if (note === null) return; // user cancelled
-                                  await logCustomerCommWithToast({
-                                    customerId: p.user_id,
-                                    staffId: user.id,
-                                    commType: "other",
-                                    note: note.trim() || "تم اتخاذ إجراء (بدون تفاصيل)",
-                                    customerName: p.full_name,
-                                  });
+                                  setDoneNote("");
+                                  setDoneDialog({ open: true, userId: p.user_id, name: p.full_name });
                                 }}
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -6128,6 +6131,91 @@ const AdminCustomerIntelligence = () => {
         open={!!historyDialog}
         onOpenChange={(o) => { if (!o) setHistoryDialog(null); }}
       />
+
+      {/* Done-Action Dialog — quick presets + free note */}
+      <Dialog open={doneDialog.open} onOpenChange={(o) => setDoneDialog((d) => ({ ...d, open: o }))}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              سجّل الإجراء مع {doneDialog.name || "العميل"}
+            </DialogTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              اختار الإجراء من الأزرار وهيتكتب تلقائياً في الملاحظة، أو اكتب بنفسك.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground mb-2">إجراءات سريعة:</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {DONE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setDoneNote(preset.text)}
+                    className={cn(
+                      "text-right text-[12px] font-bold px-2.5 py-2 rounded-lg border transition-all flex items-center gap-1.5",
+                      doneNote === preset.text
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                        : "bg-card hover:bg-muted/40 border-border/60 text-foreground hover:border-emerald-300",
+                    )}
+                  >
+                    <span className="text-base">{preset.icon}</span>
+                    <span className="truncate">{preset.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground mb-1">ملاحظة (اختياري):</p>
+              <Textarea
+                value={doneNote}
+                onChange={(e) => setDoneNote(e.target.value)}
+                placeholder="اكتب تفاصيل إضافية أو عدّل النص..."
+                rows={3}
+                className="text-sm resize-none"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDoneDialog((d) => ({ ...d, open: false }))}
+              disabled={doneSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5"
+              disabled={doneSubmitting}
+              onClick={async () => {
+                if (!user?.id || !doneDialog.userId) return;
+                setDoneSubmitting(true);
+                try {
+                  await logCustomerCommWithToast({
+                    customerId: doneDialog.userId,
+                    staffId: user.id,
+                    commType: "other",
+                    note: doneNote.trim() || "تم اتخاذ إجراء (بدون تفاصيل)",
+                    customerName: doneDialog.name,
+                  });
+                  setDoneDialog({ open: false, userId: "", name: null });
+                  setDoneNote("");
+                } finally {
+                  setDoneSubmitting(false);
+                }
+              }}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {doneSubmitting ? "جاري الحفظ..." : "تأكيد الإجراء"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
