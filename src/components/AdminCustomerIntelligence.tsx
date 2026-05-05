@@ -292,6 +292,19 @@ const AdminCustomerIntelligence = () => {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [followupReasonFilter, setFollowupReasonFilter] = useState<string>("all");
   const [followupContactFilter, setFollowupContactFilter] = useState<"all" | "withPhone" | "noPhone">("all");
+  const [doneDialog, setDoneDialog] = useState<{ open: boolean; userId: string; name: string | null }>({ open: false, userId: "", name: null });
+  const [doneNote, setDoneNote] = useState("");
+  const [doneSubmitting, setDoneSubmitting] = useState(false);
+  const DONE_PRESETS = [
+    { icon: "📞", label: "اتصلت بيه", text: "اتصلت بالعميل" },
+    { icon: "✅", label: "اتفقت معاه", text: "اتفقت مع العميل على التفاصيل" },
+    { icon: "💬", label: "بعتله عرض سعر", text: "بعتله عرض سعر على واتساب" },
+    { icon: "📵", label: "مش بيرد", text: "اتصلت ومش بيرد — هحاول تاني" },
+    { icon: "🕐", label: "طلب أتواصل بعدين", text: "العميل طلب التواصل في وقت لاحق" },
+    { icon: "🚫", label: "مش مهتم حالياً", text: "العميل غير مهتم حالياً" },
+    { icon: "📦", label: "في انتظار توفر صنف", text: "في انتظار توفر الصنف من المخزن" },
+    { icon: "✍️", label: "متابعة عامة", text: "متابعة عامة مع العميل" },
+  ];
   const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
   const toggleTaskDetails = (id: string) => {
     setExpandedTaskDetails(prev => {
