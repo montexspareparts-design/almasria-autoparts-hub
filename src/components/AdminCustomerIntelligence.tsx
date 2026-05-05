@@ -6131,6 +6131,91 @@ const AdminCustomerIntelligence = () => {
         open={!!historyDialog}
         onOpenChange={(o) => { if (!o) setHistoryDialog(null); }}
       />
+
+      {/* Done-Action Dialog — quick presets + free note */}
+      <Dialog open={doneDialog.open} onOpenChange={(o) => setDoneDialog((d) => ({ ...d, open: o }))}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              سجّل الإجراء مع {doneDialog.name || "العميل"}
+            </DialogTitle>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              اختار الإجراء من الأزرار وهيتكتب تلقائياً في الملاحظة، أو اكتب بنفسك.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground mb-2">إجراءات سريعة:</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {DONE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setDoneNote(preset.text)}
+                    className={cn(
+                      "text-right text-[12px] font-bold px-2.5 py-2 rounded-lg border transition-all flex items-center gap-1.5",
+                      doneNote === preset.text
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                        : "bg-card hover:bg-muted/40 border-border/60 text-foreground hover:border-emerald-300",
+                    )}
+                  >
+                    <span className="text-base">{preset.icon}</span>
+                    <span className="truncate">{preset.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground mb-1">ملاحظة (اختياري):</p>
+              <Textarea
+                value={doneNote}
+                onChange={(e) => setDoneNote(e.target.value)}
+                placeholder="اكتب تفاصيل إضافية أو عدّل النص..."
+                rows={3}
+                className="text-sm resize-none"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDoneDialog((d) => ({ ...d, open: false }))}
+              disabled={doneSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5"
+              disabled={doneSubmitting}
+              onClick={async () => {
+                if (!user?.id || !doneDialog.userId) return;
+                setDoneSubmitting(true);
+                try {
+                  await logCustomerCommWithToast({
+                    customerId: doneDialog.userId,
+                    staffId: user.id,
+                    commType: "other",
+                    note: doneNote.trim() || "تم اتخاذ إجراء (بدون تفاصيل)",
+                    customerName: doneDialog.name,
+                  });
+                  setDoneDialog({ open: false, userId: "", name: null });
+                  setDoneNote("");
+                } finally {
+                  setDoneSubmitting(false);
+                }
+              }}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {doneSubmitting ? "جاري الحفظ..." : "تأكيد الإجراء"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
