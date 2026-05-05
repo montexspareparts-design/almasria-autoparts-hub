@@ -21,6 +21,7 @@ import {
   RefreshCw, Search, ShoppingCart, Snowflake, Sparkles, TrendingUp, Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ProductDetailAnalytics } from "./ProductDetailAnalytics";
 
 type WindowDays = 30 | 60 | 90;
 type CategoryKey = "all" | "hot" | "steady" | "slow" | "dead" | "reorder" | "demand_no_stock";
@@ -89,6 +90,7 @@ export const ProductTurnoverAnalysis = () => {
   const [sort, setSort] = useState<"velocity" | "turnover" | "stock_low" | "stock_high" | "views">("velocity");
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
+  const [detailProductId, setDetailProductId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -365,7 +367,7 @@ export const ProductTurnoverAnalysis = () => {
                 const stockBarPct = r.days_of_supply == null ? 100 : Math.min(100, (r.days_of_supply / 60) * 100);
                 const barColor = r.days_of_supply == null ? "bg-slate-300" : r.days_of_supply <= 14 ? "bg-red-500" : r.days_of_supply <= 30 ? "bg-orange-500" : "bg-emerald-500";
                 return (
-                  <div key={r.product_id} className={`p-3 sm:p-4 hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}>
+                  <div key={r.product_id} onClick={() => setDetailProductId(r.product_id)} title="اضغط لعرض تحليل تفصيلي" className={`p-3 sm:p-4 hover:bg-primary/5 cursor-pointer transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}>
                     <div className="grid grid-cols-12 gap-3 items-start">
                       {/* Name + identifiers */}
                       <div className="col-span-12 md:col-span-5 min-w-0">
@@ -456,6 +458,12 @@ export const ProductTurnoverAnalysis = () => {
             </div>
           )}
         </Card>
+
+        <ProductDetailAnalytics
+          productId={detailProductId}
+          open={!!detailProductId}
+          onOpenChange={(v) => !v && setDetailProductId(null)}
+        />
       </div>
     </TooltipProvider>
   );
