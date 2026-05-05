@@ -2,7 +2,9 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Activity, FileText, TrendingUp, ClipboardList } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
