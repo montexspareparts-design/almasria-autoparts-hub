@@ -62,7 +62,7 @@ export const ProductDetailAnalytics = ({ productId, open, onOpenChange }: Props)
         // 1) Product info
         const { data: prod } = await supabase
           .from("products")
-          .select("id, name_ar, sku, part_number, erp_item_code, brand, stock_quantity, base_price, tier_price")
+          .select("id, name_ar, sku, part_number, erp_item_code, brand, stock_quantity, base_price, sale_price")
           .eq("id", productId)
           .maybeSingle();
 
@@ -343,7 +343,7 @@ export const ProductDetailAnalytics = ({ productId, open, onOpenChange }: Props)
               </div>
               {priceHistory.length === 0 ? (
                 <div className="h-[140px] flex items-center justify-center text-xs text-muted-foreground">
-                  لا توجد عمليات بيع لرسم تطور السعر — السعر الحالي: {info.tier_price ? fmtEgp(info.tier_price) : "—"}
+                  لا توجد عمليات بيع لرسم تطور السعر — السعر الحالي: {info.sale_price ? fmtEgp(info.sale_price) : "—"}
                 </div>
               ) : (
                 <div className="h-[200px]">
