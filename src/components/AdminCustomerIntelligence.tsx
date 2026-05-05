@@ -3628,6 +3628,30 @@ const AdminCustomerIntelligence = () => {
         });
         followUpList.sort((a, b) => b.score - a.score);
 
+        // Categorize each follow-up by reason "kind" for filtering
+        const reasonKindOf = (item: FollowUpItem): string[] => {
+          const kinds: string[] = [];
+          item.reasons.forEach((r) => {
+            if (r.icon === "🛒") kinds.push("cart");
+            else if (r.icon === "🔥" || r.icon === "🎯") kinds.push("search");
+            else if (r.icon === "⏰") kinds.push("idle");
+            else if (r.icon === "👋") kinds.push("absent");
+            else if (r.icon === "✨") kinds.push("new");
+          });
+          return kinds;
+        };
+        const reasonCounts = { cart: 0, search: 0, idle: 0, absent: 0, new: 0, withPhone: 0, noPhone: 0 };
+        followUpList.forEach((it) => {
+          reasonKindOf(it).forEach((k) => { (reasonCounts as any)[k] += 1; });
+          if (it.profile.phone) reasonCounts.withPhone += 1; else reasonCounts.noPhone += 1;
+        });
+        const filteredFollowUp = followUpList.filter((it) => {
+          if (followupContactFilter === "withPhone" && !it.profile.phone) return false;
+          if (followupContactFilter === "noPhone" && it.profile.phone) return false;
+          if (followupReasonFilter === "all") return true;
+          return reasonKindOf(it).includes(followupReasonFilter);
+        });
+
         const formatPhoneForWA = (phone: string) => {
           let cleaned = phone.replace(/[\s\-()]/g, "");
           cleaned = cleaned.replace(/^002/, "").replace(/^0020/, "");
