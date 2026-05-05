@@ -121,6 +121,11 @@ export default function AdminStaffOverview() {
           <TabsTrigger value="general" className="gap-2">
             <ClipboardList className="w-4 h-4" />
             التقرير العام
+            {todayGeneralCount > 0 && (
+              <Badge className="h-5 min-w-5 px-1.5 bg-emerald-600 hover:bg-emerald-600 text-white text-[10px]">
+                {todayGeneralCount}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
