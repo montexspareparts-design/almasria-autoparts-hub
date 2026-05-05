@@ -458,6 +458,12 @@ export const ProductTurnoverAnalysis = () => {
             </div>
           )}
         </Card>
+
+        <ProductDetailAnalytics
+          productId={detailProductId}
+          open={!!detailProductId}
+          onOpenChange={(v) => !v && setDetailProductId(null)}
+        />
       </div>
     </TooltipProvider>
   );
