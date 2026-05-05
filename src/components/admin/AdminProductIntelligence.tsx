@@ -16,6 +16,7 @@ import {
   Copy, Download, Filter, Loader2, Package, RefreshCw, Search, ShieldAlert,
   Sparkles, TrendingDown, TrendingUp, X, XCircle,
 } from "lucide-react";
+import { ProductTurnoverAnalysis } from "./ProductTurnoverAnalysis";
 
 // ============================================================================
 // Types
