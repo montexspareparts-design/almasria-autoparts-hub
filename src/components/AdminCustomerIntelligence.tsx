@@ -3989,10 +3989,12 @@ const AdminCustomerIntelligence = () => {
                       </Card>
                     );
                   })}
-                  {followUpList.length > 50 && (
+                  {filteredFollowUp.length > 50 && (
                     <p className="text-center text-[11px] text-muted-foreground mt-2">
-                      يتم عرض أعلى 50 من إجمالي {followUpList.length} عميل يحتاج متابعة
+                      يتم عرض أعلى 50 من إجمالي {filteredFollowUp.length} عميل مطابق للفلتر
                     </p>
+                  )}
+                  </>
                   )}
                 </>
               )}
