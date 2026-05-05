@@ -21,6 +21,7 @@ import {
   RefreshCw, Search, ShoppingCart, Snowflake, Sparkles, TrendingUp, Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ProductDetailAnalytics } from "./ProductDetailAnalytics";
 
 type WindowDays = 30 | 60 | 90;
 type CategoryKey = "all" | "hot" | "steady" | "slow" | "dead" | "reorder" | "demand_no_stock";
