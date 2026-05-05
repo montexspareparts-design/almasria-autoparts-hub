@@ -416,6 +416,7 @@ export const ProductTurnoverAnalysis = () => {
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px]">
                           {r.brand && <Badge variant="secondary" className="text-[9px]">{BRAND_LABEL[r.brand] || r.brand}</Badge>}
+                          {!r.in_website && <Badge className="text-[9px] bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/40">🆕 من الفيصل — غير معروض</Badge>}
                           <span className="text-muted-foreground">كود: <span className="font-mono text-foreground">{code}</span></span>
                           {r.part_number && <span className="text-muted-foreground">بارت: <span className="font-mono text-foreground">{r.part_number}</span></span>}
                         </div>
