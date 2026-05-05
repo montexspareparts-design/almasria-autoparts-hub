@@ -29,7 +29,7 @@ interface ProductInfo {
   brand: string | null;
   stock_quantity: number;
   base_price: number | null;
-  tier_price: number | null;
+  sale_price: number | null;
 }
 
 const fmtNum = (n: number) => n.toLocaleString("ar-EG");
