@@ -3831,6 +3831,30 @@ const AdminCustomerIntelligence = () => {
                               )}
                               <Button
                                 size="sm"
+                                variant="outline"
+                                className="h-9 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30 font-bold"
+                                title="تأكيد إنك خدت إجراء — هيختفي ويظهر في «تمت اليوم»"
+                                onClick={async () => {
+                                  if (!user?.id) return;
+                                  const note = window.prompt(
+                                    `سجّل الإجراء مع ${p.full_name || "العميل"}\n(مثال: اتصلت بيه — اتفقت معاه — بعتله عرض سعر)`,
+                                    ""
+                                  );
+                                  if (note === null) return; // user cancelled
+                                  await logCustomerCommWithToast({
+                                    customerId: p.user_id,
+                                    staffId: user.id,
+                                    commType: "other",
+                                    note: note.trim() || "تم اتخاذ إجراء (بدون تفاصيل)",
+                                    customerName: p.full_name,
+                                  });
+                                }}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                تمّ
+                              </Button>
+                              <Button
+                                size="sm"
                                 variant="ghost"
                                 className="h-9 px-2 text-[11px]"
                                 onClick={() => {
