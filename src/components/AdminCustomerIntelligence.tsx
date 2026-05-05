@@ -290,6 +290,8 @@ const AdminCustomerIntelligence = () => {
   const { touchedIds: touchedTodayIds } = useTouchedTodayUserIds();
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [followupReasonFilter, setFollowupReasonFilter] = useState<string>("all");
+  const [followupContactFilter, setFollowupContactFilter] = useState<"all" | "withPhone" | "noPhone">("all");
   const [expandedTaskDetails, setExpandedTaskDetails] = useState<Set<string>>(new Set());
   const toggleTaskDetails = (id: string) => {
     setExpandedTaskDetails(prev => {
