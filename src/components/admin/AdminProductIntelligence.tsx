@@ -16,6 +16,7 @@ import {
   Copy, Download, Filter, Loader2, Package, RefreshCw, Search, ShieldAlert,
   Sparkles, TrendingDown, TrendingUp, X, XCircle,
 } from "lucide-react";
+import { ProductTurnoverAnalysis } from "./ProductTurnoverAnalysis";
 
 // ============================================================================
 // Types
@@ -128,7 +129,7 @@ export default function AdminProductIntelligence() {
   const { isAdmin, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [tab, setTab] = useState<"stock" | "prices">("stock");
+  const [tab, setTab] = useState<"stock" | "prices" | "turnover">("stock");
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
   const [brandFilter, setBrandFilter] = useState<string>("all");
@@ -611,7 +612,7 @@ export default function AdminProductIntelligence() {
         </Card>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-          <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:inline-grid">
+          <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:inline-grid">
             <TabsTrigger value="stock" className="gap-2">
               <Package className="w-4 h-4" />
               تقرير المخزون
@@ -620,7 +621,15 @@ export default function AdminProductIntelligence() {
               <TrendingUp className="w-4 h-4" />
               تقرير الأسعار
             </TabsTrigger>
+            <TabsTrigger value="turnover" className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              تحليل السحب والدوران
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="turnover" className="mt-4">
+            <ProductTurnoverAnalysis />
+          </TabsContent>
 
           {/* ============================ STOCK ============================ */}
           <TabsContent value="stock" className="mt-4 space-y-4">
