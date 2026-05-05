@@ -281,7 +281,7 @@ export const ProductTurnoverAnalysis = () => {
             <div className="flex-1 min-w-[220px]">
               <h2 className="text-xl font-bold text-foreground">تحليل سحب الأصناف ومعدل الدوران</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                رؤية ذكية لكل صنف: سرعة البيع، أيام التغطية، الطلب الكامن، وتوصيات قرار فورية.
+                المصدر: <strong className="text-primary">كاش الفيصل</strong> (الرصيد + كل الأصناف) مدموج بمبيعات الموقع. سرعة البيع، أيام التغطية، الطلب الكامن، وتوصيات فورية.
               </p>
             </div>
             <div className="flex items-center gap-2">
