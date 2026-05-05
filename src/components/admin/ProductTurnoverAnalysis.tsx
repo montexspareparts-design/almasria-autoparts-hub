@@ -367,7 +367,7 @@ export const ProductTurnoverAnalysis = () => {
                 const stockBarPct = r.days_of_supply == null ? 100 : Math.min(100, (r.days_of_supply / 60) * 100);
                 const barColor = r.days_of_supply == null ? "bg-slate-300" : r.days_of_supply <= 14 ? "bg-red-500" : r.days_of_supply <= 30 ? "bg-orange-500" : "bg-emerald-500";
                 return (
-                  <div key={r.product_id} className={`p-3 sm:p-4 hover:bg-muted/30 transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}>
+                  <div key={r.product_id} onClick={() => setDetailProductId(r.product_id)} title="اضغط لعرض تحليل تفصيلي" className={`p-3 sm:p-4 hover:bg-primary/5 cursor-pointer transition-colors ${idx % 2 ? "bg-muted/10" : ""}`}>
                     <div className="grid grid-cols-12 gap-3 items-start">
                       {/* Name + identifiers */}
                       <div className="col-span-12 md:col-span-5 min-w-0">
