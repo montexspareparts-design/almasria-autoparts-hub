@@ -101,16 +101,36 @@ export const ProductTurnoverAnalysis = () => {
     try {
       const fromDate = new Date(Date.now() - windowDays * 86400_000).toISOString();
 
-      // 1) Products (active)
-      const { data: products, error: pErr } = await supabase
+      // 1) ERP Faisal catalog (المصدر الأساسي للأصناف والرصيد)
+      const erpAll: any[] = [];
+      const PAGE = 1000;
+      for (let from = 0; ; from += PAGE) {
+        const { data, error } = await supabase
+          .from("erp_full_catalog_cache")
+          .select("erp_id, name, qty, retail_price, wholesale_price, part_number")
+          .order("erp_id", { ascending: true })
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        erpAll.push(...data);
+        if (data.length < PAGE) break;
+      }
+      const erpMap = new Map<string, any>(erpAll.map((e) => [String(e.erp_id), e]));
+
+      // 2) Website products (للربط بالـ id والـ brand فقط — مش مصدر الرصيد)
+      const { data: websiteProducts } = await supabase
         .from("products")
-        .select("id, name_ar, sku, part_number, erp_item_code, brand, stock_quantity")
+        .select("id, name_ar, sku, part_number, erp_item_code, brand")
         .eq("is_active", true);
-      if (pErr) throw pErr;
+      const productByErpId = new Map<string, any>();
+      const productByPid = new Map<string, any>();
+      (websiteProducts || []).forEach((p) => {
+        productByPid.set(p.id, p);
+        const key = String(p.erp_item_code || p.sku || "").trim();
+        if (key) productByErpId.set(key, p);
+      });
 
-      const productMap = new Map<string, any>((products || []).map((p) => [p.id, p]));
-
-      // 2) Delivered orders within window
+      // 3) Delivered orders within window
       const { data: deliveredOrders, error: oErr } = await supabase
         .from("orders")
         .select("id, user_id, created_at, status")
@@ -120,10 +140,9 @@ export const ProductTurnoverAnalysis = () => {
       const orderUserMap = new Map<string, string>((deliveredOrders || []).map((o) => [o.id, o.user_id]));
       const orderIds = Array.from(orderUserMap.keys());
 
-      // 3) Order items for those orders
-      const sales = new Map<string, { qty: number; orderIds: Set<string>; users: Set<string> }>();
+      // 4) Order items — sales aggregated by product_id (website)
+      const salesByPid = new Map<string, { qty: number; orderIds: Set<string>; users: Set<string> }>();
       if (orderIds.length > 0) {
-        // chunk to avoid URL limits
         for (let i = 0; i < orderIds.length; i += 200) {
           const chunk = orderIds.slice(i, i + 200);
           const { data: items, error: iErr } = await supabase
@@ -132,52 +151,57 @@ export const ProductTurnoverAnalysis = () => {
             .in("order_id", chunk);
           if (iErr) throw iErr;
           (items || []).forEach((it: any) => {
-            const cur = sales.get(it.product_id) || { qty: 0, orderIds: new Set<string>(), users: new Set<string>() };
+            const cur = salesByPid.get(it.product_id) || { qty: 0, orderIds: new Set<string>(), users: new Set<string>() };
             cur.qty += Number(it.quantity || 0);
             cur.orderIds.add(it.order_id);
             const uid = orderUserMap.get(it.order_id);
             if (uid) cur.users.add(uid);
-            sales.set(it.product_id, cur);
+            salesByPid.set(it.product_id, cur);
           });
         }
       }
 
-      // 4) Dealer price views (signal of demand even without sale)
+      // 5) Dealer price views by product_id
       const { data: views, error: vErr } = await supabase
         .from("dealer_price_views")
         .select("product_id")
         .gte("viewed_at", fromDate);
       if (vErr) throw vErr;
-      const viewsMap = new Map<string, number>();
+      const viewsByPid = new Map<string, number>();
       (views || []).forEach((v: any) => {
-        viewsMap.set(v.product_id, (viewsMap.get(v.product_id) || 0) + 1);
+        viewsByPid.set(v.product_id, (viewsByPid.get(v.product_id) || 0) + 1);
       });
 
-      // 5) Build rows
+      // 6) Build rows من كاش الفيصل
       const out: Row[] = [];
-      productMap.forEach((p, pid) => {
-        const s = sales.get(pid);
+      erpMap.forEach((e, erpId) => {
+        const websiteProd = productByErpId.get(erpId);
+        const inWebsite = !!websiteProd;
+        const pid = websiteProd?.id || null;
+        const s = pid ? salesByPid.get(pid) : undefined;
         const units_sold = s?.qty || 0;
         const orders_count = s?.orderIds.size || 0;
         const unique_buyers = s?.users.size || 0;
-        const views_count = viewsMap.get(pid) || 0;
-        const current_stock = Number(p.stock_quantity || 0);
+        const views_count = pid ? viewsByPid.get(pid) || 0 : 0;
+        const current_stock = Number(e.qty || 0); // من الفيصل
         const daily_velocity = units_sold / windowDays;
         const days_of_supply = daily_velocity > 0 ? current_stock / daily_velocity : null;
-        // Approx avg stock = current + half of sold (assume linear depletion)
         const avg_stock = Math.max(1, current_stock + units_sold / 2);
         const turnover = units_sold / avg_stock;
         const c = classify(units_sold, current_stock, views_count, days_of_supply);
-        // Skip totally inert items (no signal at all) to keep the report focused
-        if (units_sold === 0 && views_count === 0 && current_stock === 0) return;
+        // أصناف بلا أي إشارة ولا رصيد ولا حتى موجودة في الموقع — تخطَّ
+        if (units_sold === 0 && views_count === 0 && current_stock === 0 && !inWebsite) return;
         out.push({
           product_id: pid,
-          name_ar: p.name_ar,
-          sku: p.sku,
-          part_number: p.part_number,
-          erp_item_code: p.erp_item_code,
-          brand: p.brand,
+          erp_id: erpId,
+          name_ar: websiteProd?.name_ar || e.name,
+          sku: websiteProd?.sku || erpId,
+          part_number: e.part_number || websiteProd?.part_number || null,
+          erp_item_code: websiteProd?.erp_item_code || erpId,
+          brand: websiteProd?.brand || null,
           current_stock,
+          retail_price: e.retail_price != null ? Number(e.retail_price) : null,
+          wholesale_price: e.wholesale_price != null ? Number(e.wholesale_price) : null,
           units_sold,
           orders_count,
           unique_buyers,
@@ -185,6 +209,7 @@ export const ProductTurnoverAnalysis = () => {
           daily_velocity,
           days_of_supply,
           turnover,
+          in_website: inWebsite,
           category: c.cat,
           recommendation: c.rec,
           recIcon: c.icon,
