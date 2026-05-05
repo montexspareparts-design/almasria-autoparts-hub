@@ -27,20 +27,24 @@ type WindowDays = 30 | 60 | 90;
 type CategoryKey = "all" | "hot" | "steady" | "slow" | "dead" | "reorder" | "demand_no_stock";
 
 interface Row {
-  product_id: string;
+  product_id: string | null;
+  erp_id: string;
   name_ar: string;
   sku: string | null;
   part_number: string | null;
   erp_item_code: string | null;
   brand: string | null;
   current_stock: number;
+  retail_price: number | null;
+  wholesale_price: number | null;
   units_sold: number;
   orders_count: number;
   unique_buyers: number;
   views_count: number;
   daily_velocity: number;
-  days_of_supply: number | null; // null لو الفلوسيتي = 0
-  turnover: number; // ratio
+  days_of_supply: number | null;
+  turnover: number;
+  in_website: boolean;
   category: Exclude<CategoryKey, "all">;
   recommendation: string;
   recIcon: string;
