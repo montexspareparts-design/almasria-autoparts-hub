@@ -3719,7 +3719,88 @@ const AdminCustomerIntelligence = () => {
                 </Card>
               ) : (
                 <>
-                  {followUpList.slice(0, 50).map((item, idx) => {
+                  {/* === فلاتر تصنيف المتابعة === */}
+                  {(() => {
+                    const chips: { key: string; label: string; icon: string; count: number; activeCls: string }[] = [
+                      { key: "all", label: "الكل", icon: "📋", count: followUpList.length, activeCls: "bg-primary text-primary-foreground border-primary" },
+                      { key: "cart", label: "سلة متروكة", icon: "🛒", count: reasonCounts.cart, activeCls: "bg-emerald-600 text-white border-emerald-600" },
+                      { key: "search", label: "بحث بدون شراء", icon: "🔥", count: reasonCounts.search, activeCls: "bg-orange-500 text-white border-orange-500" },
+                      { key: "absent", label: "غايبين", icon: "👋", count: reasonCounts.absent, activeCls: "bg-blue-600 text-white border-blue-600" },
+                      { key: "idle", label: "خاملين", icon: "⏰", count: reasonCounts.idle, activeCls: "bg-amber-500 text-white border-amber-500" },
+                      { key: "new", label: "جدد نشطين", icon: "✨", count: reasonCounts.new, activeCls: "bg-violet-600 text-white border-violet-600" },
+                    ];
+                    return (
+                      <div className="rounded-xl border border-border/50 bg-card/60 p-2.5 mb-2 space-y-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-black text-muted-foreground">نوع الإجراء:</span>
+                          {chips.map((c) => {
+                            const active = followupReasonFilter === c.key;
+                            return (
+                              <button
+                                key={c.key}
+                                type="button"
+                                onClick={() => setFollowupReasonFilter(c.key)}
+                                disabled={c.count === 0 && c.key !== "all"}
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all",
+                                  active ? c.activeCls : "bg-background border-border/60 text-foreground hover:border-primary/40",
+                                  c.count === 0 && c.key !== "all" && "opacity-40 cursor-not-allowed",
+                                )}
+                              >
+                                <span>{c.icon}</span>
+                                {c.label}
+                                <span className={cn("text-[9px] px-1.5 rounded-full", active ? "bg-white/25" : "bg-muted")}>{c.count}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-black text-muted-foreground">القابلية للتواصل:</span>
+                          {([
+                            { key: "all" as const, label: "الكل", count: followUpList.length },
+                            { key: "withPhone" as const, label: "📱 لديهم رقم", count: reasonCounts.withPhone },
+                            { key: "noPhone" as const, label: "⚠ بدون رقم", count: reasonCounts.noPhone },
+                          ]).map((c) => {
+                            const active = followupContactFilter === c.key;
+                            return (
+                              <button
+                                key={c.key}
+                                type="button"
+                                onClick={() => setFollowupContactFilter(c.key)}
+                                className={cn(
+                                  "inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all",
+                                  active ? "bg-foreground text-background border-foreground" : "bg-background border-border/60 text-foreground hover:border-primary/40",
+                                )}
+                              >
+                                {c.label}
+                                <span className={cn("text-[9px] px-1.5 rounded-full", active ? "bg-white/25" : "bg-muted")}>{c.count}</span>
+                              </button>
+                            );
+                          })}
+                          <span className="text-[10px] text-muted-foreground mr-auto">
+                            ظاهر: <strong className="text-foreground">{filteredFollowUp.length}</strong> من {followUpList.length}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {filteredFollowUp.length === 0 ? (
+                    <Card className="rounded-2xl border-dashed border-2 border-border/50">
+                      <CardContent className="py-8 text-center">
+                        <p className="text-sm font-bold text-muted-foreground">لا يوجد عملاء مطابقين للفلتر الحالي</p>
+                        <button
+                          type="button"
+                          onClick={() => { setFollowupReasonFilter("all"); setFollowupContactFilter("all"); }}
+                          className="text-[11px] text-primary font-bold mt-2 hover:underline"
+                        >
+                          مسح الفلاتر
+                        </button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                  <>
+                  {filteredFollowUp.slice(0, 50).map((item, idx) => {
                     const p = item.profile;
                     const isDealer = dealerUserIds?.has(p.user_id);
                     const urgencyColor =
