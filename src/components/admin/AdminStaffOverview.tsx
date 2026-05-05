@@ -2,7 +2,9 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Activity, FileText, TrendingUp, ClipboardList } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminStaffActivity = lazy(() => import("@/components/AdminStaffActivity"));
 const AdminStaffPerformance = lazy(() => import("@/components/AdminStaffPerformance"));
@@ -36,6 +38,12 @@ export default function AdminStaffOverview() {
   const initialTab: TabKey = (() => {
     const fromUrl = params.get("tab");
     if (isValidTab(fromUrl)) return fromUrl;
+    // Default tab depends on the entry section:
+    // - daily-reports → "general" (تقارير الموظفين العامة)
+    // - reporter-reports → "reports" (تقارير الفيصل)
+    const section = params.get("section");
+    if (section === "daily-reports") return "general";
+    if (section === "reporter-reports") return "reports";
     if (typeof window !== "undefined") {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (isValidTab(saved)) return saved;
@@ -44,6 +52,7 @@ export default function AdminStaffOverview() {
   })();
 
   const [tab, setTab] = useState<TabKey>(initialTab);
+  const [todayGeneralCount, setTodayGeneralCount] = useState(0);
 
   // Sync URL deep-link from sidebar (?tab=...) ↔ state
   useEffect(() => {
@@ -51,6 +60,24 @@ export default function AdminStaffOverview() {
     if (isValidTab(fromUrl) && fromUrl !== tab) setTab(fromUrl);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
+
+  // Live count of today's submitted general reports → badge on "general" tab
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("staff_daily_reports")
+        .select("id", { count: "exact", head: true })
+        .eq("report_date", today);
+      setTodayGeneralCount(count ?? 0);
+    };
+    fetchCount();
+    const ch = supabase
+      .channel("staff-overview-today-count")
+      .on("postgres_changes", { event: "*", schema: "public", table: "staff_daily_reports" }, fetchCount)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, []);
 
   function handleChange(v: string) {
     const next = v as TabKey;
@@ -94,6 +121,11 @@ export default function AdminStaffOverview() {
           <TabsTrigger value="general" className="gap-2">
             <ClipboardList className="w-4 h-4" />
             التقرير العام
+            {todayGeneralCount > 0 && (
+              <Badge className="h-5 min-w-5 px-1.5 bg-emerald-600 hover:bg-emerald-600 text-white text-[10px]">
+                {todayGeneralCount}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 

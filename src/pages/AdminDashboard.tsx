@@ -850,8 +850,8 @@ const AdminDashboard = () => {
       case "staff-overview":
       case "staff-activity":      // legacy alias → tab=activity
       case "staff-performance":   // legacy alias → tab=performance
-      case "daily-reports":       // legacy alias → tab=reports
-      case "reporter-reports":    // legacy alias → tab=reports
+      case "daily-reports":       // legacy alias → tab=general (تقارير الموظفين العامة)
+      case "reporter-reports":    // legacy alias → tab=reports (تقارير الفيصل)
         return <Suspense fallback={<SectionLoader />}><AdminStaffOverview /></Suspense>;
       case "customer-intel":
       case "customer-intelligence":
