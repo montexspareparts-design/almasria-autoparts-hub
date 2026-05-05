@@ -90,6 +90,7 @@ export const ProductTurnoverAnalysis = () => {
   const [sort, setSort] = useState<"velocity" | "turnover" | "stock_low" | "stock_high" | "views">("velocity");
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<Row[]>([]);
+  const [detailProductId, setDetailProductId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
