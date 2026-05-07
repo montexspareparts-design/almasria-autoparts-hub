@@ -355,7 +355,7 @@ const ProductListingSection = memo(({
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-muted-foreground">
-                    {isLoading ? "جاري التحميل..." : <><span className="text-foreground font-bold">{filteredProducts.length}</span> منتج</>}
+                    {isLoading ? "جاري التحميل..." : <><AnimatedCounter value={filteredProducts.length} className="text-foreground font-bold tabular-nums" /> منتج</>}
                   </p>
                   {!isLoading && !filters.search && !filters.categoryId && (
                     <span className="text-[10px] text-muted-foreground/60 flex items-center gap-1">
