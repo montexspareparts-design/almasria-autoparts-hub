@@ -185,6 +185,8 @@ export default {
         "sidebar-indicator": "sidebar-indicator 0.25s ease-out both",
         "digit-flip": "digit-flip 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "price-highlight": "price-highlight 1.1s ease-out both",
+        "filter-pop": "filter-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "search-glow": "search-glow 2.4s ease-in-out infinite",
       },
     },
   },
