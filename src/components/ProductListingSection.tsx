@@ -317,18 +317,18 @@ const ProductListingSection = memo(({
                   <div className="flex items-center gap-2 min-w-0 flex-wrap">
                     <span className="text-xs font-semibold text-muted-foreground shrink-0">الفلتر النشط:</span>
                     {filters.search && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm max-w-[180px]">
+                      <span key={`s-${filters.search}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm max-w-[180px] animate-filter-pop origin-center">
                         <span className="opacity-80">بحث:</span>
                         <span className="truncate">"{filters.search}"</span>
                       </span>
                     )}
                     {filters.categoryId && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+                      <span key={`c-${filters.categoryId}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm animate-filter-pop origin-center">
                         {visibleCategories.find((c: any) => c.id === filters.categoryId)?.name_ar || "تصنيف"}
                       </span>
                     )}
                     {filters.brandKey && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm">
+                      <span key={`b-${filters.brandKey}`} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-xs font-bold shadow-sm animate-filter-pop origin-center">
                         {filters.brandKey === "toyota_genuine" ? "أصلي" :
                          filters.brandKey === "toyota_oils" ? "زيوت" :
                          filters.brandKey === "mtx_aftermarket" ? "MTX" :
@@ -336,7 +336,7 @@ const ProductListingSection = memo(({
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground shrink-0">
-                      (<span className="font-bold text-foreground">{filteredProducts.length}</span> منتج)
+                      (<AnimatedCounter value={filteredProducts.length} className="font-bold text-foreground tabular-nums" /> منتج)
                     </span>
                   </div>
                   <Button
