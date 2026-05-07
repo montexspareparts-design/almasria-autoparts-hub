@@ -154,6 +154,16 @@ export default {
           "20%": { opacity: "1" },
           "100%": { backgroundPosition: "-200% 0", opacity: "0" },
         },
+        "filter-pop": {
+          "0%": { transform: "scale(0.82)", opacity: "0" },
+          "55%": { transform: "scale(1.12)", opacity: "1" },
+          "80%": { transform: "scale(0.97)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "search-glow": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(var(--primary) / 0.18)" },
+          "50%": { boxShadow: "0 0 0 6px hsl(var(--primary) / 0.06)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -175,6 +185,8 @@ export default {
         "sidebar-indicator": "sidebar-indicator 0.25s ease-out both",
         "digit-flip": "digit-flip 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both",
         "price-highlight": "price-highlight 1.1s ease-out both",
+        "filter-pop": "filter-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "search-glow": "search-glow 2.4s ease-in-out infinite",
       },
     },
   },
