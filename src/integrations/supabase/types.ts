@@ -3732,6 +3732,7 @@ export type Database = {
           was_zero: boolean
         }[]
       }
+      get_executive_kpis: { Args: never; Returns: Json }
       get_reporter_aggregate: {
         Args: { _from: string; _to: string; _user_id: string }
         Returns: {
