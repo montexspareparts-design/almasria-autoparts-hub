@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound, Smartphone, Activity, HelpCircle, ClipboardList } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, Eye, LogOut, Trash2, Users, ShoppingBag, Video, FileText, Image, Brain, Zap, Bell, ListVideo, Menu, X, ChevronRight, Package, BarChart3, Tag, Layers, TrendingUp, ArrowLeftRight, Briefcase, Banknote, Shield, Building2, ShieldCheck, MessageCircle, User as UserIcon, Phone, KeyRound, Smartphone, Activity, HelpCircle, ClipboardList, Sparkles } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
@@ -76,6 +76,7 @@ const AdminDailyReportEditor = lazy(() => import("@/components/admin/AdminDailyR
 const MyDailyTasks = lazy(() => import("@/components/admin/MyDailyTasks"));
 const AdminDailyReportsDashboard = lazy(() => import("@/components/admin/AdminDailyReportsDashboard"));
 const StaffDailyReport = lazy(() => import("@/components/staff/StaffDailyReport"));
+const ExecutiveAIDashboard = lazy(() => import("@/components/admin/ExecutiveAIDashboard"));
 
 type DealerApplication = Database["public"]["Tables"]["dealer_applications"]["Row"];
 type CustomerTier = Database["public"]["Enums"]["customer_tier"];
@@ -105,6 +106,7 @@ const sidebarGroups: SidebarGroup[] = [
     label: "🏠 الشغل اليومي",
     items: [
       { id: "daily-dashboard", label: "الرئيسية", icon: BarChart3 },
+      { id: "executive-ai", label: "✨ الذكاء التنفيذي (AI)", icon: Sparkles },
       { id: "orders", label: "الطلبات", icon: ShoppingBag },
       { id: "my-daily-tasks", label: "مهامي اليومية وتقرير اليوم", icon: ClipboardList },
       { id: "shortage-requests", label: "🚨 الأصناف الناقصة", icon: FileText },
@@ -810,6 +812,12 @@ const AdminDashboard = () => {
         return (
           <Suspense fallback={<SectionLoader />}>
             {isAdmin ? <AdminDailyReportsDashboard /> : <StaffDailyReport />}
+          </Suspense>
+        );
+      case "executive-ai":
+        return (
+          <Suspense fallback={<SectionLoader />}>
+            <ExecutiveAIDashboard />
           </Suspense>
         );
       case "analytics":
