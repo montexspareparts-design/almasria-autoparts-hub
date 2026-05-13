@@ -1,39 +1,85 @@
-## الهدف
-إضافة إمكانية البحث/الفلترة بالتاريخ داخل جدول "كل تقارير الموظفين — الأسبوع" بشكل سريع ومرن، بجانب فلاتر الموظف والحالة الموجودة حالياً.
+## AI Dashboard لإدارة المصرية — خطة تنفيذ تدريجية
 
-## الموقع
-`src/components/admin/AdminReporterReports.tsx` — قسم `AllReportsCard` (السطور 350-540).
+### نظرة عامة
+لوحة تحكم تنفيذية ذكية مرتبطة بـ ERP الفيصل + Lovable AI (مش OpenAI مباشرة — هنستخدم Lovable AI Gateway اللي عندنا فعلياً Gemini + GPT-5 بدون API key إضافي ووفر فلوس).
 
-الوضع الحالي: في فلتر علوي عام للنطاق (اليوم/أمس/أسبوع/شهر/مخصص) لكن مفيش فلتر تاريخ مباشر داخل الجدول لاختيار يوم/أيام محددة من ضمن النطاق المعروض.
+### ملاحظة مهمة قبل ما نبدأ
+المشروع ده عنده **أساس قوي موجود فعلاً**:
+- ERP integration شغّال (`erp_full_catalog_cache`, `erp-search-products`, `erp-webhook`, auto-sync كل ساعة)
+- Supabase + RLS + Edge Functions
+- جداول products / orders / customers / dealer_price_views / erp_sync_logs
+- Admin dashboard + staff CRM + analytics موجودين
 
-## الإضافات
+يعني مش هنبني من الصفر — هنضيف **طبقة Executive AI Dashboard** فوق اللي موجود.
 
-### 1) فلتر تاريخ مفرد (DatePicker)
-- زر تقويم جديد بين فلتر الموظف وفلتر الحالة، بـ placeholder "كل التواريخ".
-- لما يختار تاريخ → يفلتر الصفوف على `r.report_date === selectedDate` فقط.
-- زر ✕ صغير جنبه لمسح الاختيار والرجوع لكل التواريخ.
+---
 
-### 2) Quick Chips للتواريخ المتاحة
-- شريط أفقي صغير تحت الفلاتر يعرض التواريخ الفريدة الموجودة في `rows` كـ Badges قابلة للضغط (آخر 7 تواريخ ظاهرة).
-- كل badge يعرض التاريخ + اليوم بالعربي (مثلاً "الجمعة 2026-05-01") + عدد التقارير في اليوم ده.
-- ضغط على Badge = اختصار لاختياره في الـ DatePicker.
+### المرحلة 1 — MVP (اللي هننفذه دلوقتي)
 
-### 3) دمج مع منطق الفلترة الحالي
-- إضافة `filterDate` للـ state.
-- تحديث `filteredRows` عشان يأخذ التاريخ في الاعتبار.
-- تحديث `hasActiveFilter` و"مسح الفلتر" عشان يشمل تاريخ.
-- البادج اللي يعرض العدد (`{filteredRows.length} / {rows.length}`) هيشتغل تلقائي.
+#### 1. Executive Dashboard صفحة جديدة
+مسار: `/admin?section=executive-ai` (Admin only)
 
-### 4) منع التضارب مع النطاق العلوي
-- التاريخ المختار لازم يكون ضمن نطاق `from`/`to` الحالي. لو المستخدم غيّر النطاق وخرج التاريخ المختار من المدى → نمسح `filterDate` تلقائياً (مع toast بسيط).
+**KPI Cards (8 كروت):**
+- مبيعات اليوم / الشهر (من orders حيث status != cancelled)
+- قيمة المخزون الكلية (sum(stock_quantity * base_price) من erp_full_catalog_cache)
+- عدد الأصناف الراكدة (لا مبيعات 60 يوم + رصيد > 0)
+- أصناف منخفضة المخزون (stock < safety_stock)
+- أعلى 5 عملاء (آخر 30 يوم)
+- متوسط هامش الربح
+- التحصيل اليومي
 
-## التفاصيل التقنية
-- استخدام نفس `DatePick` المعرّف في الملف (سطر 134) أو `Popover + Calendar` بنفس الستايل.
-- `filterDate: string | null` — قيمة بصيغة `YYYY-MM-DD` للمقارنة المباشرة مع `report_date`.
-- Quick Chips: `Array.from(new Set(rows.map(r => r.report_date)))` مرتبة تنازلياً، أول 7.
-- استخدام `format(parseISO(d), "EEEE", { locale: ar })` لعرض اسم اليوم.
+**Charts:**
+- Sales trend (آخر 30 يوم) — Recharts line
+- Top 10 brands — Bar chart
+- Stock health distribution — Donut
 
-## مش هيتغيّر
-- الـ aggregates العلوية (ملخص الأسبوع/الشهر) تفضل زي ما هي.
-- النطاق العلوي (RangeKey) يفضل المتحكم الأساسي في جلب البيانات من السيرفر.
-- باقي التبويبات (Customer Intelligence إلخ) ما تتأثرش.
+#### 2. AI Analysis Edge Function
+`supabase/functions/executive-ai-analysis/index.ts`
+- يجمع snapshot للبيانات (sales, stock, customers)
+- يبعتها لـ Lovable AI (`google/gemini-2.5-pro`)
+- يرجّع تحليل منظّم: مشاكل / فرص / تحذيرات / توصيات
+
+3 أزرار في Dashboard:
+- 🧠 حلّل المبيعات
+- 📦 حلّل المخزون  
+- 📊 الملخّص التنفيذي اليومي
+
+#### 3. AI Chat للإدارة
+صفحة `/admin?section=ai-assistant`
+- chat بسيط (يستخدم نفس مكوّن AIChatBot الموجود لكن بـ system prompt إداري)
+- عنده tools لاستعلام: sales/stock/customers/branches من قاعدة البيانات
+- streaming responses
+
+#### 4. Daily Snapshot للتحليل التاريخي
+- جدول `executive_daily_snapshots` (موجود `product_stock_snapshots` بالفعل — هنضيف snapshots للـ KPIs)
+- Cron يومي 6 صباحاً
+
+---
+
+### المرحلة 2 (بعد ما نخلّص MVP ونتأكد إنه شغّال)
+- Sales Analysis تفصيلي (فروع/موظفين/خصومات)
+- Inventory deep dive (turnover ratio, reorder suggestions)
+- Customer churn detection
+- Smart Alerts engine (تنبيهات تلقائية للأدمن)
+
+### المرحلة 3
+- Branches comparison (لما نجيب بيانات الفروع من ERP)
+- مرتجعات / ديون
+- Predictive forecasting
+
+---
+
+### Tech details
+```text
+Frontend:  ExecutiveDashboard.tsx + ExecutiveAIPanel.tsx + AIAssistantChat.tsx
+Backend:   executive-ai-analysis (edge), daily-snapshot (cron)
+Data:      executive_daily_snapshots table + موجود فعلاً
+AI:        Lovable AI Gateway — google/gemini-2.5-pro للتحليل، gemini-2.5-flash للـ chat
+Auth:      Admin role only (has_role check)
+Style:     نفس الـ luxury theme الموجود (Navy/Gold/Red, Glassmorphism)
+```
+
+---
+
+### السؤال قبل ما أبدأ
+هل أبدأ بـ **المرحلة 1 كاملة** (Dashboard + 3 أزرار AI + Chat + Snapshot)؟ ولا تحب أبدأ بجزء أصغر الأول (مثلاً Dashboard + زر تحليل واحد فقط) عشان نتأكد من الشكل قبل ما نوسّع؟
