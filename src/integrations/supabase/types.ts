@@ -1419,11 +1419,70 @@ export type Database = {
           },
         ]
       }
+      order_returns: {
+        Row: {
+          created_by: string | null
+          id: string
+          order_id: string
+          order_item_id: string | null
+          product_id: string | null
+          quantity: number
+          reason: string | null
+          refund_amount: number
+          returned_at: string
+        }
+        Insert: {
+          created_by?: string | null
+          id?: string
+          order_id: string
+          order_item_id?: string | null
+          product_id?: string | null
+          quantity: number
+          reason?: string | null
+          refund_amount?: number
+          returned_at?: string
+        }
+        Update: {
+          created_by?: string | null
+          id?: string
+          order_id?: string
+          order_item_id?: string | null
+          product_id?: string | null
+          quantity?: number
+          reason?: string | null
+          refund_amount?: number
+          returned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_returns_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_returns_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           coupon_code: string | null
           coupon_discount: number | null
           created_at: string
+          created_by_staff_id: string | null
           delivered_at: string | null
           erp_order_code: string | null
           first_contacted_at: string | null
@@ -1436,6 +1495,7 @@ export type Database = {
           shipped_at: string | null
           shipping_address: string | null
           shipping_company: string | null
+          shipping_cost: number
           shipping_governorate: string | null
           status: string
           total_amount: number
@@ -1447,6 +1507,7 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          created_by_staff_id?: string | null
           delivered_at?: string | null
           erp_order_code?: string | null
           first_contacted_at?: string | null
@@ -1459,6 +1520,7 @@ export type Database = {
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_company?: string | null
+          shipping_cost?: number
           shipping_governorate?: string | null
           status?: string
           total_amount?: number
@@ -1470,6 +1532,7 @@ export type Database = {
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
+          created_by_staff_id?: string | null
           delivered_at?: string | null
           erp_order_code?: string | null
           first_contacted_at?: string | null
@@ -1482,6 +1545,7 @@ export type Database = {
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_company?: string | null
+          shipping_cost?: number
           shipping_governorate?: string | null
           status?: string
           total_amount?: number
@@ -2100,6 +2164,90 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp_opt_in?: boolean
+        }
+        Relationships: []
+      }
+      purchase_invoice_items: {
+        Row: {
+          created_at: string
+          id: string
+          invoice_id: string
+          product_id: string | null
+          quantity: number
+          sku: string | null
+          total_cost: number | null
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invoice_id: string
+          product_id?: string | null
+          quantity: number
+          sku?: string | null
+          total_cost?: number | null
+          unit_cost: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          product_id?: string | null
+          quantity?: number
+          sku?: string | null
+          total_cost?: number | null
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_invoice_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          supplier_name: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          supplier_name?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          supplier_name?: string | null
+          total_amount?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -3519,6 +3667,17 @@ export type Database = {
       }
     }
     Views: {
+      product_moving_avg_cost: {
+        Row: {
+          avg_cost: number | null
+          invoices_count: number | null
+          last_purchase_date: string | null
+          product_id: string | null
+          sku: string | null
+          total_qty_purchased: number | null
+        }
+        Relationships: []
+      }
       product_reviews_public: {
         Row: {
           comment: string | null
@@ -3737,6 +3896,10 @@ export type Database = {
       get_executive_kpis: { Args: never; Returns: Json }
       get_financial_intelligence: { Args: never; Returns: Json }
       get_funnel_analysis: { Args: never; Returns: Json }
+      get_real_profit_intelligence: {
+        Args: { period_days?: number }
+        Returns: Json
+      }
       get_reporter_aggregate: {
         Args: { _from: string; _to: string; _user_id: string }
         Returns: {

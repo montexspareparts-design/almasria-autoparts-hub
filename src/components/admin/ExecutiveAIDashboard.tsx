@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import FinancialIntelligencePanel from "./FinancialIntelligencePanel";
 import SalesFunnelPanel from "./SalesFunnelPanel";
+import RealProfitPanel from "./RealProfitPanel";
 
 const fmt = (n: number) => new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.round(n || 0));
 const fmtMoney = (n: number) => `${fmt(n)} ج.م`;
@@ -393,6 +394,9 @@ export default function ExecutiveAIDashboard() {
 
       {/* ===== Stage 4: Sales Funnel ===== */}
       <SalesFunnelPanel />
+
+      {/* ===== Stage 5: Real Profit Intelligence ===== */}
+      <RealProfitPanel />
 
       {/* Customer Churn Table */}
       <Card>
