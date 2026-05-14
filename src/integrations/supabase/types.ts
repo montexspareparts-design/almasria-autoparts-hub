@@ -3736,6 +3736,7 @@ export type Database = {
       get_executive_alerts: { Args: never; Returns: Json }
       get_executive_kpis: { Args: never; Returns: Json }
       get_financial_intelligence: { Args: never; Returns: Json }
+      get_funnel_analysis: { Args: never; Returns: Json }
       get_reporter_aggregate: {
         Args: { _from: string; _to: string; _user_id: string }
         Returns: {

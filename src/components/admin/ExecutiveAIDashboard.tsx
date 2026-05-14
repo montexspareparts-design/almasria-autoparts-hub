@@ -15,6 +15,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import FinancialIntelligencePanel from "./FinancialIntelligencePanel";
+import SalesFunnelPanel from "./SalesFunnelPanel";
 
 const fmt = (n: number) => new Intl.NumberFormat("ar-EG", { maximumFractionDigits: 0 }).format(Math.round(n || 0));
 const fmtMoney = (n: number) => `${fmt(n)} ج.م`;
@@ -389,6 +390,9 @@ export default function ExecutiveAIDashboard() {
 
       {/* ===== Stage 3: Financial Intelligence ===== */}
       <FinancialIntelligencePanel />
+
+      {/* ===== Stage 4: Sales Funnel ===== */}
+      <SalesFunnelPanel />
 
       {/* Customer Churn Table */}
       <Card>
