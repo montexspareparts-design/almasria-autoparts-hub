@@ -58,7 +58,6 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "openai/gpt-5.5",
-        temperature: 0.2,
         messages: [
           { role: "system", content: SYSTEM },
           { role: "system", content: contextMsg },
