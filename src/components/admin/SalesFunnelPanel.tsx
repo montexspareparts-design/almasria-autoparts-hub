@@ -367,7 +367,7 @@ export default function SalesFunnelPanel() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4 text-yellow-600" /> طلبيات متوقفة بدون فوترة (>7 أيام)</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Clock className="w-4 h-4 text-yellow-600" /> طلبيات متوقفة بدون فوترة (أكثر من 7 أيام)</CardTitle></CardHeader>
             <CardContent className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b text-xs text-muted-foreground">
