@@ -387,6 +387,9 @@ export default function ExecutiveAIDashboard() {
         </CardContent>
       </Card>
 
+      {/* ===== Stage 3: Financial Intelligence ===== */}
+      <FinancialIntelligencePanel />
+
       {/* Customer Churn Table */}
       <Card>
         <CardHeader>
