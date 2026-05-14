@@ -395,6 +395,9 @@ export default function ExecutiveAIDashboard() {
       {/* ===== Stage 4: Sales Funnel ===== */}
       <SalesFunnelPanel />
 
+      {/* ===== Stage 5: Real Profit Intelligence ===== */}
+      <RealProfitPanel />
+
       {/* Customer Churn Table */}
       <Card>
         <CardHeader>
