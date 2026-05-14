@@ -4,6 +4,7 @@ import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 installMobileErrorReporter();
 initHighContrastEarly();
@@ -64,7 +65,11 @@ const registerServiceWorkerUpdateChecks = () => {
 const disposeLazyImportRecovery = setupLazyImportRecovery();
 const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);
 requestAnimationFrame(removeSplash);
 
 if (import.meta.hot) {
