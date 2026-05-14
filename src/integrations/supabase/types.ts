@@ -3705,6 +3705,7 @@ export type Database = {
           snapshot_date: string
         }[]
       }
+      get_customer_churn: { Args: never; Returns: Json }
       get_daily_view_count: { Args: { _user_id: string }; Returns: number }
       get_effective_targets: {
         Args: { _user_id: string }
@@ -3732,6 +3733,7 @@ export type Database = {
           was_zero: boolean
         }[]
       }
+      get_executive_alerts: { Args: never; Returns: Json }
       get_executive_kpis: { Args: never; Returns: Json }
       get_reporter_aggregate: {
         Args: { _from: string; _to: string; _user_id: string }
