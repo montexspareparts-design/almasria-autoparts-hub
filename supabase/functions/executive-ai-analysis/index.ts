@@ -27,16 +27,36 @@ Deno.serve(async (req) => {
 
     const { mode = "executive" } = await req.json().catch(() => ({}));
 
-    // Pull KPIs
-    const { data: kpis, error } = await supabase.rpc("get_executive_kpis");
-    if (error) throw error;
-
+    let kpis: any = null;
     let focus = "";
-    if (mode === "sales") focus = "ركّز فقط على المبيعات: الاتجاه، أعلى العملاء، أعلى الأصناف، البراندات، نسبة إلغاء الطلبات.";
-    else if (mode === "inventory") focus = "ركّز فقط على المخزون: الراكد، الناقص، قيمة المخزون، اقتراحات إعادة الطلب.";
-    else focus = "تحليل تنفيذي شامل لكل المؤشرات.";
 
-    const userPrompt = `${focus}\n\nالبيانات (آخر 30 يوم):\n${JSON.stringify(kpis, null, 2)}`;
+    if (mode === "recommendations") {
+      // Pull financial intelligence + KPIs
+      const [{ data: fin, error: e1 }, { data: kp, error: e2 }] = await Promise.all([
+        supabase.rpc("get_financial_intelligence"),
+        supabase.rpc("get_executive_kpis"),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      kpis = { financial: fin, kpis: kp };
+      focus = `أنت كبير المستشارين التنفيذيين. اقترح أهم 10 قرارات تنفيذية لهذا الأسبوع مرتبة حسب الأثر المالي المتوقع (بالجنيه).
+لكل قرار اكتب: 
+- العنوان (مختصر)
+- السبب من البيانات (رقم محدد)
+- الإجراء التنفيذي (خطوة عملية واحدة)
+- الأثر المالي المتوقع (تقدير بالجنيه)
+- الأولوية (🔴 عاجل / 🟡 مهم / 🟢 فرصة)
+ممنوع النصائح العامة. كل توصية مبنية على رقم من الداتا.`;
+    } else {
+      const { data: kp, error } = await supabase.rpc("get_executive_kpis");
+      if (error) throw error;
+      kpis = kp;
+      if (mode === "sales") focus = "ركّز فقط على المبيعات: الاتجاه، أعلى العملاء، أعلى الأصناف، البراندات، نسبة إلغاء الطلبات.";
+      else if (mode === "inventory") focus = "ركّز فقط على المخزون: الراكد، الناقص، قيمة المخزون، اقتراحات إعادة الطلب.";
+      else focus = "تحليل تنفيذي شامل لكل المؤشرات.";
+    }
+
+    const userPrompt = `${focus}\n\nالبيانات:\n${JSON.stringify(kpis, null, 2)}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
