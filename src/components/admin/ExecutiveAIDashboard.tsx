@@ -47,7 +47,22 @@ export default function ExecutiveAIDashboard() {
       supabase.rpc("get_customer_churn"),
     ]);
     if (k.error) toast({ title: "خطأ KPIs", description: k.error.message, variant: "destructive" });
-    else setKpis(k.data);
+    else {
+      const raw = (k.data as any) || {};
+      setKpis({
+        generated_at: raw.generated_at ?? new Date().toISOString(),
+        sales_today: { s: 0, c: 0, ...(raw.sales_today || {}) },
+        sales_month: { s: 0, c: 0, ...(raw.sales_month || {}) },
+        cancel_rate: { pct: 0, cancelled: 0, total: 0, ...(raw.cancel_rate || {}) },
+        inventory: { total_value: 0, in_stock: 0, low_stock: 0, out_of_stock: 0, total_skus: 0, ...(raw.inventory || {}) },
+        stagnant: { c: 0, v: 0, ...(raw.stagnant || {}) },
+        daily_trend: raw.daily_trend || [],
+        brand_split: raw.brand_split || [],
+        top_customers: raw.top_customers || [],
+        top_products: raw.top_products || [],
+        ...raw,
+      });
+    }
     if (!a.error) setAlerts((a.data as any)?.alerts ?? []);
     if (!c.error) setChurn((c.data as any)?.customers ?? []);
     setLoading(false);
