@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5.5",
+        temperature: 0.2,
         messages: [
           { role: "system", content: SYSTEM },
           { role: "system", content: contextMsg },
