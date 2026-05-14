@@ -4,6 +4,7 @@ import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 installMobileErrorReporter();
 initHighContrastEarly();
