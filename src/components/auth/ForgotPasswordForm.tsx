@@ -13,10 +13,13 @@ type PhoneStep = "phone" | "otp" | "new-password";
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
+  initialMethod?: "phone" | "email";
 }
 
-const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
-  const [method, setMethod] = useState<ResetMethod | null>(null);
+const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) => {
+  // If user came from phone login, lock the flow to WhatsApp OTP (no method picker)
+  const lockedToPhone = initialMethod === "phone";
+  const [method, setMethod] = useState<ResetMethod | null>(lockedToPhone ? "whatsapp" : null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
