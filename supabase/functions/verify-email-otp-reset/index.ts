@@ -5,6 +5,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function findUserByEmail(
+  supabase: ReturnType<typeof createClient>,
+  normalizedEmail: string,
+) {
+  let page = 1;
+  const perPage = 1000;
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+
+    const users = data.users ?? [];
+    const foundUser = users.find((candidate) => candidate.email?.trim().toLowerCase() === normalizedEmail);
+    if (foundUser) return foundUser;
+    if (users.length < perPage) return null;
+
+    page += 1;
+  }
+}
+
 async function sha256(text: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -42,29 +62,28 @@ Deno.serve(async (req) => {
     if (fetchErr) throw fetchErr;
     const otp = otps?.[0];
     if (!otp) {
-      return new Response(JSON.stringify({ error: "مفيش كود صالح. اطلب كود جديد." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, error: "مفيش كود صالح. اطلب كود جديد." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (new Date(otp.expires_at) < new Date()) {
-      return new Response(JSON.stringify({ error: "الكود انتهت صلاحيته. اطلب كود جديد." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, error: "الكود انتهت صلاحيته. اطلب كود جديد." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (otp.attempts >= 5) {
       await supabase.from("email_password_reset_otps").update({ used: true }).eq("id", otp.id);
-      return new Response(JSON.stringify({ error: "تم تجاوز عدد المحاولات. اطلب كود جديد." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, error: "تم تجاوز عدد المحاولات. اطلب كود جديد." }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (otp.code_hash !== codeHash) {
       await supabase.from("email_password_reset_otps").update({ attempts: otp.attempts + 1 }).eq("id", otp.id);
-      return new Response(JSON.stringify({ error: "كود غير صحيح" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ success: false, error: "كود غير صحيح" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Code valid — find user and update password
-    const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
-    if (listErr) throw listErr;
-    const user = users.find(u => u.email?.toLowerCase() === normalizedEmail);
+    const user = await findUserByEmail(supabase, normalizedEmail);
     if (!user) {
-      return new Response(JSON.stringify({ error: "المستخدم غير موجود" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.warn("verify-email-otp-reset: email not found in auth.users", normalizedEmail);
+      return new Response(JSON.stringify({ success: false, error: "المستخدم غير موجود" }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { error: updateErr } = await supabase.auth.admin.updateUserById(user.id, { password: new_password });
