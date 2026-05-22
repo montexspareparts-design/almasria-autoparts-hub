@@ -8,14 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import heroBg from "@/assets/hero-corporate.webp";
-
-import {
-  HeroLiveTicker,
-  HeroTrustStrip,
-  HeroScarcityCounter,
-  QuickWhatsAppQuote,
-  HeroTestimonialPiP,
-} from "@/components/hero/HeroEnhancements";
+import HeroLeadCapture from "@/components/HeroLeadCapture";
 
 /* ── Animated Counter ── */
 const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: string; delay: number }) => {
