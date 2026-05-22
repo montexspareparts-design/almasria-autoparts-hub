@@ -68,6 +68,21 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
     setLoading(true);
     try {
       const formattedPhone = formatPhone(phone);
+      // Verify the phone is actually registered before sending OTP
+      const { data: isRegistered, error: checkErr } = await supabase.rpc(
+        "phone_already_registered",
+        { _phone: formattedPhone }
+      );
+      if (checkErr) throw checkErr;
+      if (!isRegistered) {
+        toast({
+          title: "الرقم غير مسجل",
+          description: "مفيش حساب مسجل بالرقم ده. تأكد من الرقم أو أنشئ حساب جديد.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("send-otp", {
         body: { phone: formattedPhone, channel },
       });
