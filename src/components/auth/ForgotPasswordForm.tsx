@@ -35,20 +35,62 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleEmailReset = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendEmailOTP = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: false },
     });
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
       toast({
-        title: "تم إرسال رابط إعادة التعيين ✅",
-        description: "تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+        title: "تم إرسال كود التحقق ✅",
+        description: `تم إرسال كود مكوّن من 6 أرقام إلى ${email.trim()}`,
       });
+      setEmailStep("otp");
+    }
+    setLoading(false);
+  };
+
+  const handleVerifyEmailOTP = async () => {
+    if (otp.length < 6) {
+      toast({ title: "أدخل الكود المكون من 6 أرقام", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: otp,
+      type: "email",
+    });
+    if (error) {
+      toast({ title: "كود غير صحيح", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    setEmailStep("new-password");
+    setLoading(false);
+  };
+
+  const handleSetNewEmailPassword = async () => {
+    if (newPassword.length < 6) {
+      toast({ title: "كلمة المرور قصيرة", description: "يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: "كلمة المرور غير متطابقة", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم تغيير كلمة المرور بنجاح ✅" });
+      await supabase.auth.signOut();
       onBack();
     }
     setLoading(false);
