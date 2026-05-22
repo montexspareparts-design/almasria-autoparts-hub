@@ -244,17 +244,16 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Testimonial PiP (only renders when admin sets testimonial_video_url) */}
-      <HeroTestimonialPiP />
-
-      {/* Live activity ticker */}
-      <div className="relative z-20">
-        <HeroLiveTicker />
-      </div>
-
       {/* Bottom red accent line */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] z-20">
         <div className="w-full h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center animate-fade-in" style={{ animationDelay: "2s", animationFillMode: "both" }}>
+        <div className="w-6 h-9 rounded-full border-2 border-white/15 flex items-start justify-center p-1.5">
+          <div className="w-1 h-2 bg-primary rounded-full animate-bounce" />
+        </div>
       </div>
     </section>
   );
