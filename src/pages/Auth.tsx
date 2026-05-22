@@ -332,7 +332,7 @@ const Auth = () => {
           )}
 
           {forgotMode ? (
-            <ForgotPasswordForm onBack={() => setForgotMode(false)} />
+            <ForgotPasswordForm onBack={() => setForgotMode(false)} initialMethod={loginMethod} />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
               {!isLogin && (
