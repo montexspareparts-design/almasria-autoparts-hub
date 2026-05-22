@@ -29,8 +29,6 @@ const Footer = lazy(() => import("@/components/Footer"));
 
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
-const StickyHeroSearch = lazy(() => import("@/components/hero/StickyHeroSearch"));
-const ExitIntentPopup = lazy(() => import("@/components/hero/ExitIntentPopup"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -132,8 +130,6 @@ const Index = () => {
       
       <Suspense fallback={null}><BackToTop /></Suspense>
       <Suspense fallback={null}><CarProfilePopup /></Suspense>
-      <Suspense fallback={null}><StickyHeroSearch /></Suspense>
-      <Suspense fallback={null}><ExitIntentPopup /></Suspense>
     </div>
   );
 };

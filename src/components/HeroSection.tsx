@@ -8,14 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import heroBg from "@/assets/hero-corporate.webp";
-
-import {
-  HeroLiveTicker,
-  HeroTrustStrip,
-  HeroScarcityCounter,
-  QuickWhatsAppQuote,
-  HeroTestimonialPiP,
-} from "@/components/hero/HeroEnhancements";
+import HeroLeadCapture from "@/components/HeroLeadCapture";
 
 /* ── Animated Counter ── */
 const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: string; delay: number }) => {
@@ -170,12 +163,9 @@ const HeroSection = () => {
             <span className="inline-block"> {t("hero.title4")}</span>
           </h1>
 
-          {/* Trust Strip — instant safety signal before the user reads */}
-          <HeroTrustStrip />
-
           {/* Description */}
           <p
-            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-8 font-medium animate-fade-in"
+            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-10 font-medium animate-fade-in"
             style={{ animationDelay: "0.3s", animationFillMode: "both" }}
             dangerouslySetInnerHTML={{ __html: t("hero.desc") }}
           />
@@ -231,11 +221,9 @@ const HeroSection = () => {
             )}
           </div>
 
-          {/* Scarcity counter (real orders today) */}
-          {!isDealer && <HeroScarcityCounter />}
+          {/* Lead Capture — visitors only (no auth) */}
+          {!user && <HeroLeadCapture />}
 
-          {/* One-step WhatsApp quote — visitors only */}
-          {!user && <QuickWhatsAppQuote />}
 
           {/* Stats */}
           <div className="flex items-center gap-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
@@ -256,17 +244,16 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Testimonial PiP (only renders when admin sets testimonial_video_url) */}
-      <HeroTestimonialPiP />
-
-      {/* Live activity ticker */}
-      <div className="relative z-20">
-        <HeroLiveTicker />
-      </div>
-
       {/* Bottom red accent line */}
       <div className="absolute bottom-0 left-0 right-0 h-[2px] z-20">
         <div className="w-full h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center animate-fade-in" style={{ animationDelay: "2s", animationFillMode: "both" }}>
+        <div className="w-6 h-9 rounded-full border-2 border-white/15 flex items-start justify-center p-1.5">
+          <div className="w-1 h-2 bg-primary rounded-full animate-bounce" />
+        </div>
       </div>
     </section>
   );
