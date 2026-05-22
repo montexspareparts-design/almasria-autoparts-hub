@@ -229,42 +229,119 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
     );
   }
 
-  // Email method
+  // Email method (OTP flow: send code → verify → set new password)
   if (method === "email") {
     return (
-      <form onSubmit={handleEmailReset} className="space-y-4">
+      <div className="space-y-4">
         {!lockedToEmail && (
-          <button type="button" onClick={() => setMethod(null)} className="flex items-center gap-1 text-sm text-primary hover:underline">
+          <button type="button" onClick={() => { setMethod(null); setEmailStep("email"); setOtp(""); }} className="flex items-center gap-1 text-sm text-primary hover:underline">
             <ArrowRight className="w-3 h-3" />
             تغيير الطريقة
           </button>
         )}
-        <p className="text-sm text-muted-foreground text-center">
-          أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور
-        </p>
-        <div className="space-y-2">
-          <Label htmlFor="forgot-email" className="text-card-foreground">البريد الإلكتروني</Label>
-          <div className="relative">
-            <Input
-              id="forgot-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@email.com"
-              required
-              dir="ltr"
-              className="bg-background pl-10"
-            />
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          </div>
-        </div>
-        <Button type="submit" className="w-full red-glow" disabled={loading}>
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : "إرسال رابط إعادة التعيين"}
-        </Button>
+
+        {emailStep === "email" && (
+          <form onSubmit={handleSendEmailOTP} className="space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              أدخل بريدك الإلكتروني وسنرسل لك كود تحقق مكوّن من 6 أرقام
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="forgot-email" className="text-card-foreground">البريد الإلكتروني</Label>
+              <div className="relative">
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  required
+                  dir="ltr"
+                  className="bg-background pl-10"
+                />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+            <Button type="submit" className="w-full red-glow" disabled={loading}>
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإرسال...</> : "إرسال كود التحقق"}
+            </Button>
+          </form>
+        )}
+
+        {emailStep === "otp" && (
+          <>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                <KeyRound className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">تم إرسال كود التحقق إلى</p>
+              <p className="font-bold text-card-foreground" dir="ltr">{email.trim()}</p>
+            </div>
+            <div className="flex justify-center" dir="ltr">
+              <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <Button className="w-full red-glow" onClick={handleVerifyEmailOTP} disabled={loading || otp.length < 6}>
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري التحقق...</> : "تأكيد الكود"}
+            </Button>
+            <button type="button" onClick={() => { setEmailStep("email"); setOtp(""); }} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block">
+              تغيير البريد الإلكتروني
+            </button>
+            <button type="button" onClick={() => handleSendEmailOTP()} className="text-sm text-muted-foreground hover:text-foreground w-full text-center block" disabled={loading}>
+              إعادة إرسال الكود
+            </button>
+          </>
+        )}
+
+        {emailStep === "new-password" && (
+          <>
+            <p className="text-sm text-muted-foreground text-center">أدخل كلمة المرور الجديدة</p>
+            <div className="space-y-2">
+              <Label className="text-card-foreground">كلمة المرور الجديدة</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="6 أحرف على الأقل"
+                  dir="ltr"
+                  className="bg-background pl-10"
+                  minLength={6}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-card-foreground">تأكيد كلمة المرور</Label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="أعد إدخال كلمة المرور"
+                dir="ltr"
+                className="bg-background"
+                minLength={6}
+              />
+            </div>
+            <Button className="w-full red-glow" onClick={handleSetNewEmailPassword} disabled={loading}>
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري التحديث...</> : "تحديث كلمة المرور"}
+            </Button>
+          </>
+        )}
+
         <button type="button" onClick={onBack} className="text-sm text-primary hover:underline w-full text-center">
           العودة لتسجيل الدخول
         </button>
-      </form>
+      </div>
     );
   }
 
