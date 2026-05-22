@@ -13,10 +13,13 @@ type PhoneStep = "phone" | "otp" | "new-password";
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
+  initialMethod?: "phone" | "email";
 }
 
-const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
-  const [method, setMethod] = useState<ResetMethod | null>(null);
+const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) => {
+  // If user came from phone login, lock the flow to WhatsApp OTP (no method picker)
+  const lockedToPhone = initialMethod === "phone";
+  const [method, setMethod] = useState<ResetMethod | null>(lockedToPhone ? "whatsapp" : null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -65,6 +68,21 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
     setLoading(true);
     try {
       const formattedPhone = formatPhone(phone);
+      // Verify the phone is actually registered before sending OTP
+      const { data: isRegistered, error: checkErr } = await supabase.rpc(
+        "phone_already_registered",
+        { _phone: formattedPhone }
+      );
+      if (checkErr) throw checkErr;
+      if (!isRegistered) {
+        toast({
+          title: "الرقم غير مسجل",
+          description: "مفيش حساب مسجل بالرقم ده. تأكد من الرقم أو أنشئ حساب جديد.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase.functions.invoke("send-otp", {
         body: { phone: formattedPhone, channel },
       });
@@ -204,10 +222,12 @@ const ForgotPasswordForm = ({ onBack }: ForgotPasswordFormProps) => {
   // Phone / WhatsApp method
   return (
     <div className="space-y-4">
-      <button type="button" onClick={() => { setMethod(null); setPhoneStep("phone"); setOtp(""); }} className="flex items-center gap-1 text-sm text-primary hover:underline">
-        <ArrowRight className="w-3 h-3" />
-        تغيير الطريقة
-      </button>
+      {!lockedToPhone && (
+        <button type="button" onClick={() => { setMethod(null); setPhoneStep("phone"); setOtp(""); }} className="flex items-center gap-1 text-sm text-primary hover:underline">
+          <ArrowRight className="w-3 h-3" />
+          تغيير الطريقة
+        </button>
+      )}
 
       {phoneStep === "phone" && (
         <>
