@@ -17,9 +17,12 @@ interface ForgotPasswordFormProps {
 }
 
 const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) => {
-  // If user came from phone login, lock the flow to WhatsApp OTP (no method picker)
+  // Lock the flow when user arrived from a specific login method (no method picker)
   const lockedToPhone = initialMethod === "phone";
-  const [method, setMethod] = useState<ResetMethod | null>(lockedToPhone ? "whatsapp" : null);
+  const lockedToEmail = initialMethod === "email";
+  const [method, setMethod] = useState<ResetMethod | null>(
+    lockedToPhone ? "whatsapp" : lockedToEmail ? "email" : null
+  );
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -186,10 +189,12 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
   if (method === "email") {
     return (
       <form onSubmit={handleEmailReset} className="space-y-4">
-        <button type="button" onClick={() => setMethod(null)} className="flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowRight className="w-3 h-3" />
-          تغيير الطريقة
-        </button>
+        {!lockedToEmail && (
+          <button type="button" onClick={() => setMethod(null)} className="flex items-center gap-1 text-sm text-primary hover:underline">
+            <ArrowRight className="w-3 h-3" />
+            تغيير الطريقة
+          </button>
+        )}
         <p className="text-sm text-muted-foreground text-center">
           أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة تعيين كلمة المرور
         </p>
