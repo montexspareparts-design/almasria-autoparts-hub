@@ -29,6 +29,8 @@ const Footer = lazy(() => import("@/components/Footer"));
 
 const BackToTop = lazy(() => import("@/components/BackToTop"));
 const CarProfilePopup = lazy(() => import("@/components/CarProfilePopup"));
+const StickyHeroSearch = lazy(() => import("@/components/hero/StickyHeroSearch"));
+const ExitIntentPopup = lazy(() => import("@/components/hero/ExitIntentPopup"));
 
 const SectionFallback = () => (
   <div className="flex items-center justify-center py-20">
