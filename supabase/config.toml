@@ -72,3 +72,9 @@ verify_jwt = false
 
 [functions.summarize-support-conversation]
 verify_jwt = false
+
+[functions.send-email-otp]
+verify_jwt = false
+
+[functions.verify-email-otp-reset]
+verify_jwt = false
