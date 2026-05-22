@@ -31,6 +31,7 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [phoneStep, setPhoneStep] = useState<PhoneStep>("phone");
+  const [emailStep, setEmailStep] = useState<EmailStep>("email");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
