@@ -231,8 +231,11 @@ const HeroSection = () => {
             )}
           </div>
 
-          {/* Lead Capture — visitors only (no auth) */}
-          {!user && <HeroLeadCapture />}
+          {/* Scarcity counter (real orders today) */}
+          {!isDealer && <HeroScarcityCounter />}
+
+          {/* One-step WhatsApp quote — visitors only */}
+          {!user && <QuickWhatsAppQuote />}
 
           {/* Stats */}
           <div className="flex items-center gap-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
