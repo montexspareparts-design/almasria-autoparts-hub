@@ -39,18 +39,19 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
     e?.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: false },
-    });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-email-otp", {
+        body: { email: email.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast({
         title: "تم إرسال كود التحقق ✅",
         description: `تم إرسال كود مكوّن من 6 أرقام إلى ${email.trim()}`,
       });
       setEmailStep("otp");
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message || "فشل الإرسال", variant: "destructive" });
     }
     setLoading(false);
   };
@@ -60,19 +61,8 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
       toast({ title: "أدخل الكود المكون من 6 أرقام", variant: "destructive" });
       return;
     }
-    setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: otp,
-      type: "email",
-    });
-    if (error) {
-      toast({ title: "كود غير صحيح", description: error.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
+    // Move to password step; we'll verify on submit
     setEmailStep("new-password");
-    setLoading(false);
   };
 
   const handleSetNewEmailPassword = async () => {
@@ -85,13 +75,21 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-email-otp-reset", {
+        body: { email: email.trim(), code: otp, new_password: newPassword },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "حدث خطأ");
       toast({ title: "تم تغيير كلمة المرور بنجاح ✅" });
-      await supabase.auth.signOut();
       onBack();
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+      // If code was wrong, go back to OTP step
+      if (err.message?.includes("كود")) {
+        setEmailStep("otp");
+        setOtp("");
+      }
     }
     setLoading(false);
   };
