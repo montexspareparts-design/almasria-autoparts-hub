@@ -10,6 +10,7 @@ import { normalizePhoneDigits } from "@/lib/phoneAuth";
 
 type ResetMethod = "email" | "phone" | "whatsapp";
 type PhoneStep = "phone" | "otp" | "new-password";
+type EmailStep = "email" | "otp" | "new-password";
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
