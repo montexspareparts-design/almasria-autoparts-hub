@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "Authorization": `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Al Masria <onboarding@resend.dev>",
+        from: "Al Masria Auto Parts <noreply@almasriaautoparts.com>",
         to: [normalizedEmail],
         subject: `كود استعادة كلمة المرور: ${code}`,
         html,
