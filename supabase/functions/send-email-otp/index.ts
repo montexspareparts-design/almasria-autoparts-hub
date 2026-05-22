@@ -25,10 +25,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify the email is registered
-    const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
-    if (listErr) throw listErr;
-    const user = users.find(u => u.email?.toLowerCase() === normalizedEmail);
+    // Verify the email is registered (paginate through all users)
+    let user: any = null;
+    let page = 1;
+    const perPage = 1000;
+    while (true) {
+      const { data, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage });
+      if (listErr) throw listErr;
+      const found = data.users.find(u => u.email?.toLowerCase() === normalizedEmail);
+      if (found) { user = found; break; }
+      if (data.users.length < perPage) break;
+      page++;
+      if (page > 50) break;
+    }
     if (!user) {
       return new Response(JSON.stringify({ error: "الإيميل ده مش مسجل عندنا" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
