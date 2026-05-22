@@ -234,16 +234,6 @@ const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) 
           <p className="text-sm text-muted-foreground text-center">
             أدخل رقم هاتفك المسجل وسنرسل لك كود تحقق {method === "whatsapp" ? "عبر واتساب" : "عبر SMS"}
           </p>
-          {method === "whatsapp" && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-xs text-center space-y-1">
-              <p className="font-semibold text-green-700">⚠️ خطوة مطلوبة أولاً:</p>
-              <p className="text-muted-foreground">
-                أرسل الرسالة <span className="font-mono font-bold text-green-700" dir="ltr">join &lt;keyword&gt;</span> إلى الرقم
-              </p>
-              <p className="font-mono font-bold text-green-700" dir="ltr">+1 (415) 523-8886</p>
-              <p className="text-muted-foreground">على واتساب للانضمام للخدمة التجريبية</p>
-            </div>
-          )}
           <div className="space-y-2">
             <Label className="text-card-foreground">رقم الهاتف</Label>
             <div className="relative">
