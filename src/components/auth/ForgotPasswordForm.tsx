@@ -17,9 +17,12 @@ interface ForgotPasswordFormProps {
 }
 
 const ForgotPasswordForm = ({ onBack, initialMethod }: ForgotPasswordFormProps) => {
-  // If user came from phone login, lock the flow to WhatsApp OTP (no method picker)
+  // Lock the flow when user arrived from a specific login method (no method picker)
   const lockedToPhone = initialMethod === "phone";
-  const [method, setMethod] = useState<ResetMethod | null>(lockedToPhone ? "whatsapp" : null);
+  const lockedToEmail = initialMethod === "email";
+  const [method, setMethod] = useState<ResetMethod | null>(
+    lockedToPhone ? "whatsapp" : lockedToEmail ? "email" : null
+  );
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
