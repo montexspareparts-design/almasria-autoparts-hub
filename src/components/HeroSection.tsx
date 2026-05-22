@@ -170,9 +170,12 @@ const HeroSection = () => {
             <span className="inline-block"> {t("hero.title4")}</span>
           </h1>
 
+          {/* Trust Strip — instant safety signal before the user reads */}
+          <HeroTrustStrip />
+
           {/* Description */}
           <p
-            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-10 font-medium animate-fade-in"
+            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-8 font-medium animate-fade-in"
             style={{ animationDelay: "0.3s", animationFillMode: "both" }}
             dangerouslySetInnerHTML={{ __html: t("hero.desc") }}
           />
