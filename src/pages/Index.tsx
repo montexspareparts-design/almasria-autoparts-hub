@@ -132,6 +132,8 @@ const Index = () => {
       
       <Suspense fallback={null}><BackToTop /></Suspense>
       <Suspense fallback={null}><CarProfilePopup /></Suspense>
+      <Suspense fallback={null}><StickyHeroSearch /></Suspense>
+      <Suspense fallback={null}><ExitIntentPopup /></Suspense>
     </div>
   );
 };
