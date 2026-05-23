@@ -13,7 +13,12 @@ import { Link } from "react-router-dom";
 
 const DAILY_LIMIT = 20;
 
-const FeaturedProducts = () => {
+interface FeaturedProductsProps {
+  categorySlugs?: string[];
+}
+
+const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
+
   const { addItem } = useCart();
   const { user, isDealer, dealerAccount } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -75,9 +80,22 @@ const FeaturedProducts = () => {
   }, [user, isDealer, viewedProductIds, limitReached, queryClient]);
 
   // Popular products: top-ordered first, fallback to recent in-stock
+  // When categorySlugs provided → filter by those categories instead.
+  const catKey = categorySlugs?.join(",") || "all";
   const { data: products, isLoading } = useQuery({
-    queryKey: ["popular_products_v2"],
+    queryKey: ["popular_products_v2", catKey],
     queryFn: async () => {
+      // Resolve category ids if filtering
+      let categoryIds: string[] | null = null;
+      if (categorySlugs && categorySlugs.length) {
+        const { data: cats } = await supabase
+          .from("product_categories")
+          .select("id")
+          .in("slug", categorySlugs);
+        categoryIds = (cats || []).map((c: any) => c.id);
+        if (!categoryIds.length) return [];
+      }
+
       const { data: orderRows } = await supabase
         .from("order_items")
         .select("product_id, quantity");
@@ -88,17 +106,18 @@ const FeaturedProducts = () => {
       });
       const topIds = Object.entries(counts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 16)
         .map(([id]) => id);
 
       let topProducts: any[] = [];
       if (topIds.length) {
-        const { data } = await supabase
+        let q = supabase
           .from("products")
           .select("*, product_categories(name_ar)")
-          .in("id", topIds)
+          .in("id", topIds.slice(0, 60))
           .eq("is_active", true)
           .gt("stock_quantity", 0);
+        if (categoryIds) q = q.in("category_id", categoryIds);
+        const { data } = await q;
         topProducts = (data || []).sort(
           (a: any, b: any) => (counts[b.id] || 0) - (counts[a.id] || 0)
         );
@@ -107,7 +126,7 @@ const FeaturedProducts = () => {
       if (topProducts.length >= 8) return topProducts.slice(0, 8);
 
       const excludeIds = topProducts.map((p) => p.id);
-      const { data: fillers } = await supabase
+      let fq = supabase
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
@@ -115,10 +134,13 @@ const FeaturedProducts = () => {
         .not("id", "in", `(${excludeIds.length ? excludeIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
         .order("created_at", { ascending: false })
         .limit(8 - topProducts.length);
+      if (categoryIds) fq = fq.in("category_id", categoryIds);
+      const { data: fillers } = await fq;
 
       return [...topProducts, ...(fillers || [])].slice(0, 8);
     },
   });
+
 
   const handleAdd = (product: any, e: React.MouseEvent) => {
     e.stopPropagation();
