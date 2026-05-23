@@ -55,13 +55,12 @@ const HeroSection = () => {
         {particles.map((p, i) => (
           <span
             key={i}
-            className="absolute bottom-0 rounded-full bg-toyota-red animate-[lux-particle_linear_infinite]"
+            className="absolute bottom-0 rounded-full bg-toyota-red"
             style={{
               left: p.left,
               width: p.size,
               height: p.size,
-              animationDelay: p.delay,
-              animationDuration: p.duration,
+              animation: `lux-particle ${p.duration} linear ${p.delay} infinite`,
               boxShadow: "0 0 8px hsl(var(--toyota-red) / 0.8)",
             }}
           />
