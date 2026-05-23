@@ -101,22 +101,14 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      {/* Above-the-fold sections — load immediately */}
-      <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
-      <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
+      {/* Luxury trust strip — eager (above the fold) */}
+      <Suspense fallback={<SectionFallback />}><TrustBadgesStrip /></Suspense>
 
-      {/* Below-the-fold — only load when scrolled near */}
-      <LazySection><ProductsShowcase /></LazySection>
-      <LazySection fallback={null}><SectionDivider variant="light" /></LazySection>
-      <LazySection><FeaturedProducts /></LazySection>
-      <LazySection fallback={null}><CarRecommendations /></LazySection>
+      {/* Below-the-fold — load when scrolled near */}
+      <LazySection><PopularProductsSection /></LazySection>
+      <LazySection><WhyGenuineSection /></LazySection>
       <LazySection><MaintenanceBundles /></LazySection>
-      <LazySection><WhyChooseUs /></LazySection>
-      <LazySection fallback={null}><SectionDivider variant="light" /></LazySection>
-      <LazySection><WhoWeServe /></LazySection>
       <LazySection><DistributionNetwork /></LazySection>
-      <LazySection><MTXSection /></LazySection>
-      <LazySection><OurClientsSection /></LazySection>
       <LazySection><MaintenanceTipsSection /></LazySection>
       <LazySection><ContactSimple /></LazySection>
       <LazySection fallback={null}><Footer /></LazySection>
