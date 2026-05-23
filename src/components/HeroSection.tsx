@@ -227,7 +227,41 @@ const HeroSection = () => {
               <span>من نحن</span>
             </Link>
           </div>
+
+          {/* Premium KPI stats strip */}
+          <div
+            className="mt-12 grid grid-cols-3 max-w-2xl mx-auto divide-x divide-white/10 rtl:divide-x-reverse border-y border-white/10 py-5 animate-lux-stagger-in"
+            style={{ animationDelay: "1s" }}
+          >
+            {[
+              { num: "+40", label: "سنة خبرة" },
+              { num: "+12K", label: "قطعة أصلية" },
+              { num: "100%", label: "ضمان أصلي" },
+            ].map((s) => (
+              <div key={s.label} className="px-4 text-center">
+                <div className="font-display font-black text-white text-2xl md:text-3xl tracking-tight">
+                  {s.num}
+                </div>
+                <div className="text-soft text-[11px] md:text-xs font-tajawal font-medium tracking-wider mt-1">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust chips */}
+          <div
+            className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-soft text-xs md:text-sm font-tajawal animate-lux-stagger-in"
+            style={{ animationDelay: "1.15s" }}
+          >
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold" /> فاتورة ضريبية</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-gold" /> شحن لكل الجمهورية</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="inline-flex items-center gap-1.5"><Award className="w-4 h-4 text-gold" /> موزع معتمد</span>
+          </div>
         </div>
+
 
         {/* Scroll cue */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-lux-scroll-cue">
