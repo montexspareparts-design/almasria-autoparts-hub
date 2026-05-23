@@ -11,8 +11,18 @@ const branches = [
 
 const DistributionNetwork = () => {
   return (
-    <section id="coverage" className="py-20 md:py-28 bg-secondary overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section id="coverage" className="relative bg-carbon py-20 md:py-28 overflow-hidden">
+      {/* Hairlines */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/40 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/20 to-transparent" />
+
+      {/* Ambient red glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-toyota-red/[0.05] rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-toyota-red/[0.04] rounded-full blur-[120px]" />
+      </div>
+
+      <div className="container mx-auto px-4 relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -20,10 +30,22 @@ const DistributionNetwork = () => {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-14"
         >
-          <h2 className="text-4xl md:text-5xl font-black text-secondary-foreground leading-tight mb-4">
-            شبكة <span className="text-primary">التوزيع</span>
+          <div className="inline-flex items-center gap-2 border border-white/10 bg-white/[0.04] rounded-full px-4 py-1.5 mb-5">
+            <MapPin className="w-3.5 h-3.5 text-toyota-red" />
+            <span className="font-tajawal text-xs font-bold text-soft tracking-widest">
+              تغطية وطنية
+            </span>
+          </div>
+          <h2
+            className="font-tajawal font-black text-white leading-tight mb-3"
+            style={{ fontSize: "clamp(32px, 4.5vw, 56px)" }}
+          >
+            شبكة <span className="text-toyota-red">التوزيع</span>
           </h2>
-          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto">
+          <div className="flex items-center justify-center mb-4">
+            <span className="h-[3px] w-20 bg-toyota-red rounded-full shadow-red-glow" />
+          </div>
+          <p className="font-tajawal text-soft text-base md:text-lg max-w-xl mx-auto">
             تغطية وطنية شاملة وشحن لجميع المحافظات عبر مخازن مركزية
           </p>
         </motion.div>
@@ -35,39 +57,30 @@ const DistributionNetwork = () => {
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{
-                delay: 0.1 + i * 0.1,
-                duration: 0.5,
-                type: "spring",
-                stiffness: 100,
-              }}
-              whileHover={{
-                y: -4,
-                scale: 1.02,
-                borderColor: "hsl(var(--primary) / 0.35)",
-                transition: { duration: 0.2 },
-              }}
-              className="group bg-secondary-foreground/[0.06] border-2 border-secondary-foreground/15 rounded-2xl p-6 transition-all duration-300 relative overflow-hidden hover:bg-secondary-foreground/[0.08] shadow-sm hover:shadow-lg"
+              transition={{ delay: 0.1 + i * 0.1, duration: 0.5, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="group relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 overflow-hidden hover:border-toyota-red/50 hover:bg-white/[0.06] hover:shadow-xl hover:shadow-toyota-red/15"
             >
-              {/* Hover shine */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/8 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
+              {/* Corner brackets */}
+              <span className="pointer-events-none absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-toyota-red/50 rounded-tl-2xl" />
+              <span className="pointer-events-none absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-toyota-red/50 rounded-tr-2xl" />
+
               <div className="relative z-10 flex items-start gap-4">
                 <motion.div
-                  className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary/30 transition-colors shadow-md shadow-primary/10"
+                  className="w-12 h-12 bg-toyota-red/15 border border-toyota-red/30 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-toyota-red/25 transition-colors"
                   whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <b.icon className="w-6 h-6 text-primary" strokeWidth={2} />
+                  <b.icon className="w-6 h-6 text-toyota-red" strokeWidth={2} />
                 </motion.div>
                 <div>
-                  <h3 className="font-black text-secondary-foreground text-base mb-1">{b.name}</h3>
-                  <p className="text-sm text-secondary-foreground/60 mt-1.5 font-medium">{b.detail}</p>
+                  <h3 className="font-tajawal font-black text-white text-base mb-1">{b.name}</h3>
+                  <p className="font-tajawal text-sm text-soft mt-1.5 font-medium">{b.detail}</p>
                   <motion.a
                     href={b.mapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-black text-primary hover:text-primary/80 transition-colors"
+                    className="inline-flex items-center gap-1.5 mt-3 font-tajawal text-sm font-black text-toyota-red hover:text-toyota-red/80 transition-colors"
                     whileHover={{ x: -4 }}
                     transition={{ duration: 0.15 }}
                   >
@@ -85,30 +98,25 @@ const DistributionNetwork = () => {
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6, duration: 0.5, type: "spring", stiffness: 100 }}
-            whileHover={{
-              y: -4,
-              scale: 1.02,
-              transition: { duration: 0.2 },
-            }}
-            className="bg-primary/15 border-2 border-primary/35 rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden group shadow-lg shadow-primary/20"
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            className="relative bg-gradient-to-br from-toyota-red/25 to-toyota-red/10 border border-toyota-red/40 rounded-2xl p-6 flex items-center gap-4 overflow-hidden group shadow-lg shadow-toyota-red/20"
           >
-            {/* Animated pulse bg */}
             <motion.div
-              className="absolute inset-0 bg-primary/10 rounded-2xl"
-              animate={{ opacity: [0, 0.6, 0] }}
+              className="absolute inset-0 bg-toyota-red/10 rounded-2xl"
+              animate={{ opacity: [0, 0.5, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
             <div className="relative z-10 flex items-center gap-4">
               <motion.div
-                className="w-12 h-12 bg-primary/30 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20"
+                className="w-12 h-12 bg-toyota-red/40 border border-toyota-red/60 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-toyota-red/30"
                 animate={{ y: [0, -3, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Truck className="w-6 h-6 text-primary" strokeWidth={2.5} />
+                <Truck className="w-6 h-6 text-white" strokeWidth={2.5} />
               </motion.div>
               <div>
-                <h3 className="font-black text-secondary-foreground text-base mb-1">توصيل سريع لجميع المحافظات</h3>
-                <p className="text-sm text-secondary-foreground/60 font-medium">تسليم خلال 48 ساعة داخل مصر</p>
+                <h3 className="font-tajawal font-black text-white text-base mb-1">توصيل سريع لجميع المحافظات</h3>
+                <p className="font-tajawal text-sm text-white/75 font-medium">تسليم خلال 48 ساعة داخل مصر</p>
               </div>
             </div>
           </motion.div>
