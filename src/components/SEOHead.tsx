@@ -45,12 +45,12 @@ const ROUTE_DEFAULTS: Record<
   }
 > = {
   "/": {
-    titleAr: "موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر",
-    titleEn: "Authorized Toyota Genuine Parts & Oils Distributor in Egypt",
+    titleAr: "قطع غيار وزيوت تويوتا الأصلية في مصر",
+    titleEn: "Toyota Genuine Parts & Oils — Egypt",
     descriptionAr:
-      "المصرية جروب — موزع معتمد رسمي لقطع غيار وزيوت تويوتا الأصلية منذ 1999. شبكة وطنية، تسليم خلال 48 ساعة، وعلامة MTX للقطع البديلة.",
+      "المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية منذ 1999. شبكة وطنية، تسليم 48 ساعة، وعلامة MTX.",
     descriptionEn:
-      "Al Masria Group — Egypt's authorized distributor of Toyota genuine parts & oils since 1999. Nationwide delivery in 48h plus our MTX aftermarket brand.",
+      "Al Masria Group — authorized Toyota genuine parts & oils distributor in Egypt since 1999. 48h nationwide delivery, plus MTX brand.",
     keywordsAr: "قطع غيار تويوتا, زيوت تويوتا, موزع تويوتا مصر, MTX, قطع غيار اصلية",
     keywordsEn: "Toyota parts Egypt, Toyota genuine parts, Toyota oil, MTX aftermarket, auto parts Egypt",
   },
@@ -73,8 +73,8 @@ const ROUTE_DEFAULTS: Record<
       "Get to know Al Masria Group: 25+ years experience, authorized Toyota parts & oils distributor, nationwide branches and a Dubai regional hub.",
   },
   "/genuine-parts": {
-    titleAr: "قطع غيار تويوتا الأصلية — جودة وضمان الوكالة",
-    titleEn: "Toyota Genuine Parts — Authorized Dealer Warranty",
+    titleAr: "قطع غيار تويوتا الأصلية — ضمان الوكالة",
+    titleEn: "Toyota Genuine Parts — Dealer Warranty",
     descriptionAr:
       "قطع غيار تويوتا الأصلية 100% بضمان الوكالة وتوافق دقيق مع موديلات تويوتا. توفر مستمر وتسليم سريع لكل المحافظات.",
     descriptionEn:
@@ -89,15 +89,15 @@ const ROUTE_DEFAULTS: Record<
       "MTX is Al Masria Group's registered aftermarket brand: replacement parts engineered to OEM-grade specs at competitive prices.",
   },
   "/contact": {
-    titleAr: "تواصل معنا — واتساب، بريد رسمي، وفروعنا",
-    titleEn: "Contact Us — WhatsApp, Email, and Branches",
+    titleAr: "تواصل معنا — واتساب، بريد، وفروعنا",
+    titleEn: "Contact Us — WhatsApp, Email, Branches",
     descriptionAr:
       "تواصل مع المصرية جروب عبر واتساب البيزنس، الهاتف، أو البريد الرسمي. وقم بزيارة فروعنا في القاهرة، الجيزة، الأقصر ودبي.",
     descriptionEn:
       "Reach Al Masria Group via WhatsApp Business, phone, or official email. Visit our branches in Cairo, Giza, Luxor, and Dubai.",
   },
   "/policies": {
-    titleAr: "السياسات — الشروط والخصوصية والشحن والاسترجاع",
+    titleAr: "السياسات — الشروط والخصوصية والشحن",
     titleEn: "Policies — Terms, Privacy, Shipping, Returns",
     descriptionAr:
       "اطّلع على سياسات المصرية جروب: شروط الاستخدام، الخصوصية، سياسة الشحن، وسياسة الاسترجاع لضمان تجربة شراء آمنة.",
