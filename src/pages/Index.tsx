@@ -106,6 +106,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><TrustBadgesStrip /></Suspense>
 
       {/* Below-the-fold — load when scrolled near */}
+      <LazySection><AboutBrief /></LazySection>
       <LazySection><PopularProductsSection /></LazySection>
       <LazySection><WhyGenuineSection /></LazySection>
       <LazySection><MaintenanceBundles /></LazySection>
