@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Info, ChevronDown, Sparkles, ShieldCheck, Truck, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
@@ -6,7 +6,8 @@ import heroPart from "@/assets/hero-toyota-part.png";
 /**
  * Luxury Hero — Rolex / premium product feel.
  * Carbon black, animated grid, floating particles, marquee backdrop text,
- * spinning gold ring around the product, shimmer CTA.
+ * spinning gold ring around the product, shimmer CTA, corner brackets,
+ * stats strip, trust chips, vertical side captions.
  */
 const HeroSection = () => {
   // pre-generate particle positions (stable per mount)
