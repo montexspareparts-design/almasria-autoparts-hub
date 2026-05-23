@@ -9,20 +9,13 @@ import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } fro
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 
 /* ── Above-the-fold: eager ── */
-const AboutBrief = lazy(() => import("@/components/AboutBrief"));
-const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
+const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
 
 /* ── Below-the-fold: deferred until near viewport ── */
-const ProductsShowcase = lazy(() => import("@/components/ProductsShowcase"));
-const SectionDivider = lazy(() => import("@/components/SectionDivider"));
-const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
-const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
+const PopularProductsSection = lazy(() => import("@/components/PopularProductsSection"));
+const WhyGenuineSection = lazy(() => import("@/components/WhyGenuineSection"));
 const MaintenanceBundles = lazy(() => import("@/components/MaintenanceBundles"));
-const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
-const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
-const MTXSection = lazy(() => import("@/components/MTXSection"));
-const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
