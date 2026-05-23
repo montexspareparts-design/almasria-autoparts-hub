@@ -162,19 +162,39 @@ const HeroSection = () => {
 
         {/* Headline overlay (below product) */}
         <div className="relative text-center mt-8 md:mt-10 max-w-3xl">
-          {/* Gold authenticity badge */}
+          {/* Brand logo crest — themed */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full border border-[hsl(var(--gold)/0.45)] bg-[hsl(var(--gold)/0.08)] backdrop-blur-sm animate-lux-badge-pulse animate-lux-stagger-in"
-            style={{ animationDelay: "0.2s" }}
+            className="flex flex-col items-center mb-5 animate-lux-stagger-in"
+            style={{ animationDelay: "0.15s" }}
           >
-            <span className="relative flex w-2 h-2">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
-            </span>
-            <span className="text-gold font-tajawal font-bold text-sm tracking-wide">
-              موزع تويوتا المعتمد رسمياً
-            </span>
+            <div className="relative">
+              {/* gold halo */}
+              <div
+                aria-hidden
+                className="absolute inset-0 -m-4 rounded-full blur-2xl opacity-50"
+                style={{ background: "radial-gradient(circle, hsl(var(--toyota-red) / 0.35) 0%, transparent 70%)" }}
+              />
+              <img
+                src={brandLogo}
+                alt="المصرية — موزع معتمد لقطع غيار تويوتا"
+                width={520}
+                height={340}
+                className="relative h-20 md:h-24 w-auto object-contain"
+                style={{ filter: "drop-shadow(0 8px 20px hsl(0 0% 0% / 0.6))" }}
+              />
+            </div>
+            {/* gold underline with side dots */}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-gold" />
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
+              <span className="text-gold font-tajawal font-bold text-[11px] tracking-[0.3em] uppercase">
+                Authorized Dealer
+              </span>
+              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
+              <span className="w-1 h-1 rounded-full bg-gold" />
+            </div>
           </div>
+
 
           <h1
             className="font-tajawal font-black text-white leading-[1.05] animate-lux-stagger-in"
