@@ -38,9 +38,16 @@ const MaintenanceTipsSection = () => {
   const inView = useInView(ref, { once: true, margin: "-80px" });
 
   return (
-    <section ref={ref} className="py-20 md:py-28 bg-secondary overflow-hidden relative">
-      {/* Subtle top accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+    <section ref={ref} className="relative bg-carbon py-20 md:py-28 overflow-hidden">
+      {/* Hairlines */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/40 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/20 to-transparent" />
+
+      {/* Ambient red glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-toyota-red/[0.05] rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-toyota-red/[0.04] rounded-full blur-[120px]" />
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -50,26 +57,29 @@ const MaintenanceTipsSection = () => {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
         >
-          <span className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-bold mb-4">
-            <Lightbulb className="w-4 h-4" />
-            مركز المعرفة
+          <span className="inline-flex items-center gap-2 border border-white/10 bg-white/[0.04] rounded-full px-4 py-1.5 mb-5">
+            <Lightbulb className="w-3.5 h-3.5 text-toyota-red" />
+            <span className="font-tajawal text-xs font-bold text-soft tracking-widest">مركز المعرفة</span>
           </span>
-          <h2 className="text-2xl md:text-4xl font-black text-secondary-foreground mb-3">
-            نصائح <span className="text-gradient-red">صيانة دورية</span> لسيارتك
+          <h2
+            className="font-tajawal font-black text-white leading-tight mb-3"
+            style={{ fontSize: "clamp(32px, 4.5vw, 56px)" }}
+          >
+            نصائح <span className="text-toyota-red">صيانة دورية</span> لسيارتك
           </h2>
-          <p className="text-secondary-foreground/50 max-w-xl mx-auto text-sm md:text-base">
-            حافظ على سيارتك في أفضل حالة مع نصائح خبرائنا — معلومات عملية توفر عليك وقت وفلوس
-          </p>
           <motion.div
             initial={{ width: 0 }}
             animate={inView ? { width: "5rem" } : {}}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="h-1 bg-primary mx-auto rounded-full mt-4"
+            className="h-[3px] bg-toyota-red mx-auto rounded-full mb-4 shadow-red-glow"
           />
+          <p className="font-tajawal text-soft max-w-xl mx-auto text-base md:text-lg">
+            حافظ على سيارتك في أفضل حالة مع نصائح خبرائنا — معلومات عملية توفر عليك وقت وفلوس
+          </p>
         </motion.div>
 
         {/* Tips Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-10 max-w-6xl mx-auto">
           {tips.map((tip, i) => {
             const Icon = tip.icon;
             return (
@@ -79,40 +89,41 @@ const MaintenanceTipsSection = () => {
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: i * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                className="group relative bg-secondary-foreground/[0.04] border border-secondary-foreground/10 rounded-2xl p-6 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-default overflow-hidden"
+                className="group relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-toyota-red/50 hover:shadow-2xl hover:shadow-toyota-red/15 transition-all duration-300 cursor-default overflow-hidden"
               >
-                {/* Hover gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${tip.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                {/* Corner brackets */}
+                <span className="pointer-events-none absolute top-0 left-0 w-5 h-5 border-t-2 border-l-2 border-toyota-red/50 rounded-tl-2xl" />
+                <span className="pointer-events-none absolute top-0 right-0 w-5 h-5 border-t-2 border-r-2 border-toyota-red/50 rounded-tr-2xl" />
 
                 <div className="relative z-10">
                   {/* Tag + Icon row */}
                   <div className="flex items-center justify-between mb-4">
                     <motion.div
-                      className={`w-12 h-12 ${tip.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                      className="w-12 h-12 bg-toyota-red/15 border border-toyota-red/30 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:bg-toyota-red/25 transition-all duration-300"
                       whileHover={{ rotate: [0, -10, 10, 0] }}
                       transition={{ duration: 0.4 }}
                     >
-                      <Icon className={`w-6 h-6 ${tip.iconColor}`} />
+                      <Icon className="w-6 h-6 text-toyota-red" />
                     </motion.div>
-                    <span className="text-xs font-bold text-secondary-foreground/40 bg-secondary-foreground/[0.06] px-3 py-1 rounded-full">
+                    <span className="font-tajawal text-xs font-bold text-white/60 bg-white/[0.06] border border-white/10 px-3 py-1 rounded-full">
                       {tip.tag}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-bold text-secondary-foreground text-base md:text-lg mb-2 group-hover:text-primary transition-colors duration-300">
+                  <h3 className="font-tajawal font-black text-white text-base md:text-lg mb-2 group-hover:text-toyota-red transition-colors duration-300">
                     {tip.title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-secondary-foreground/60 text-sm leading-relaxed">
+                  <p className="font-tajawal text-soft text-sm leading-relaxed">
                     {tip.desc}
                   </p>
 
                   {/* Did you know accent */}
-                  <div className="mt-4 pt-3 border-t border-secondary-foreground/[0.06] flex items-center gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-primary/60 flex-shrink-0" />
-                    <span className="text-xs text-secondary-foreground/40 font-medium">
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-toyota-red/80 flex-shrink-0" />
+                    <span className="font-tajawal text-xs text-white/50 font-medium">
                       الإهمال يضاعف تكلفة الإصلاح
                     </span>
                   </div>
@@ -131,7 +142,7 @@ const MaintenanceTipsSection = () => {
         >
           <Button
             size="lg"
-            className="gap-2 font-bold shadow-lg shadow-primary/20 px-8"
+            className="gap-2 font-tajawal font-bold shadow-lg shadow-toyota-red/30 hover:shadow-toyota-red/40 px-10 py-7 text-base bg-toyota-red hover:bg-toyota-red/90 text-white"
             onClick={() => {
               window.dispatchEvent(new CustomEvent('open-ai-chat', { detail: { message: 'محتاج استشارة صيانة لسيارتي' } }));
             }}
