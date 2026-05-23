@@ -523,6 +523,11 @@ html.hc-mode a:not(.no-hc-underline) {
   .bg-toyota-red { background-color: hsl(var(--toyota-red)); }
   .font-display { font-family: "Space Grotesk", "Tajawal", sans-serif; }
   .font-tajawal { font-family: "Tajawal", "Cairo", sans-serif; }
+  .font-kufi { font-family: "Noto Kufi Arabic", "Tajawal", "Cairo", sans-serif; }
+  .font-cairo { font-family: "Cairo", "Tajawal", sans-serif; }
+  .font-bebas { font-family: "Bebas Neue", "Space Grotesk", sans-serif; letter-spacing: 0.02em; }
+  .font-mono-tech { font-family: "Roboto Mono", ui-monospace, monospace; }
+  .text-verified { color: hsl(var(--verified-green)); }
   .bg-spotlight { background: var(--gradient-spotlight); }
   .bg-red-glow { background: var(--gradient-red-glow); }
   .shadow-red-glow { box-shadow: var(--shadow-red-glow); }
@@ -531,7 +536,17 @@ html.hc-mode a:not(.no-hc-underline) {
     -webkit-text-stroke: 1px hsl(0 0% 100% / 0.08);
     color: transparent;
   }
-}
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .hero-blueprint {
+    background-image:
+      repeating-linear-gradient(0deg, hsl(0 0% 100% / 0.03) 0 1px, transparent 1px 80px),
+      repeating-linear-gradient(90deg, hsl(0 0% 100% / 0.03) 0 1px, transparent 1px 80px);
+  }
+  .hero-spotlight {
+    background: radial-gradient(ellipse 60% 50% at 30% 50%, hsl(353 92% 48% / 0.10) 0%, transparent 70%);
+  }
 
 @keyframes lux-float {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
