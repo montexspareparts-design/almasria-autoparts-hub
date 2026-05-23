@@ -218,26 +218,8 @@ const HeroSection = () => {
             </Link>
           </div>
 
-          {/* Premium KPI stats strip */}
-          <div
-            className="mt-12 grid grid-cols-3 max-w-2xl mx-auto divide-x divide-white/10 rtl:divide-x-reverse border-y border-white/10 py-5 animate-lux-stagger-in"
-            style={{ animationDelay: "1s" }}
-          >
-            {[
-              { num: "+40", label: "سنة خبرة" },
-              { num: "+12K", label: "قطعة أصلية" },
-              { num: "100%", label: "ضمان أصلي" },
-            ].map((s) => (
-              <div key={s.label} className="px-4 text-center">
-                <div className="font-display font-black text-white text-2xl md:text-3xl tracking-tight">
-                  {s.num}
-                </div>
-                <div className="text-soft text-[11px] md:text-xs font-tajawal font-medium tracking-wider mt-1">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
+
+
 
           {/* Trust chips */}
           <div
