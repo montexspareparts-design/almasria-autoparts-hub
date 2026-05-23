@@ -53,16 +53,18 @@
     --gold-accent: 40 80% 55%;
     --toyota-grey: 210 8% 35%;
 
-    /* Luxury tokens */
-    --carbon: 0 0% 4%;            /* #0A0A0A */
-    --surface: 0 0% 8%;            /* #141414 */
-    --surface-2: 0 0% 11%;
-    --toyota-red: 353 92% 48%;     /* #EB0A1E */
+    /* Luxury tokens — Dark Toyota GR */
+    --carbon: 240 14% 3%;          /* #060608 bg-void */
+    --surface: 228 13% 6%;          /* #0E0F13 bg-card */
+    --surface-2: 226 14% 11%;       /* #16181F bg-elevated */
+    --toyota-red: 353 92% 48%;      /* #EB0A1E */
     --toyota-red-glow: 353 92% 60%;
-    --gold: 44 53% 54%;            /* #C9A84C */
-    --text-soft: 0 0% 60%;         /* #9A9A9A */
+    --gold: 44 63% 44%;             /* #B8972A authenticity */
+    --text-soft: 240 7% 45%;        /* #6B6B7A secondary */
+    --text-muted-deep: 240 8% 25%;  /* #3A3A45 muted */
+    --verified-green: 150 100% 50%; /* #00FF88 OEM verify */
 
-    --gradient-spotlight: radial-gradient(ellipse at center, hsl(0 0% 16%) 0%, hsl(var(--surface)) 60%, hsl(var(--carbon)) 100%);
+    --gradient-spotlight: radial-gradient(ellipse 60% 50% at 35% 50%, hsl(353 92% 48% / 0.10) 0%, transparent 70%);
     --gradient-red-glow: radial-gradient(circle at center, hsl(var(--toyota-red) / 0.55) 0%, hsl(var(--toyota-red) / 0.15) 35%, transparent 70%);
     --shadow-red-glow: 0 0 60px hsl(var(--toyota-red) / 0.45), 0 0 120px hsl(var(--toyota-red) / 0.25);
     --shadow-spotlight: 0 30px 80px -20px hsl(0 0% 0% / 0.8);
