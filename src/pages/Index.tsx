@@ -9,20 +9,13 @@ import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } fro
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 
 /* ── Above-the-fold: eager ── */
-const AboutBrief = lazy(() => import("@/components/AboutBrief"));
-const KeyMetrics = lazy(() => import("@/components/KeyMetrics"));
+const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
 
 /* ── Below-the-fold: deferred until near viewport ── */
-const ProductsShowcase = lazy(() => import("@/components/ProductsShowcase"));
-const SectionDivider = lazy(() => import("@/components/SectionDivider"));
-const FeaturedProducts = lazy(() => import("@/components/FeaturedProducts"));
-const CarRecommendations = lazy(() => import("@/components/CarRecommendations"));
+const PopularProductsSection = lazy(() => import("@/components/PopularProductsSection"));
+const WhyGenuineSection = lazy(() => import("@/components/WhyGenuineSection"));
 const MaintenanceBundles = lazy(() => import("@/components/MaintenanceBundles"));
-const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
-const WhoWeServe = lazy(() => import("@/components/WhoWeServe"));
 const DistributionNetwork = lazy(() => import("@/components/DistributionNetwork"));
-const MTXSection = lazy(() => import("@/components/MTXSection"));
-const OurClientsSection = lazy(() => import("@/components/OurClientsSection"));
 const MaintenanceTipsSection = lazy(() => import("@/components/MaintenanceTipsSection"));
 const ContactSimple = lazy(() => import("@/components/ContactSimple"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -108,22 +101,14 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      {/* Above-the-fold sections — load immediately */}
-      <Suspense fallback={<SectionFallback />}><AboutBrief /></Suspense>
-      <Suspense fallback={<SectionFallback />}><KeyMetrics /></Suspense>
+      {/* Luxury trust strip — eager (above the fold) */}
+      <Suspense fallback={<SectionFallback />}><TrustBadgesStrip /></Suspense>
 
-      {/* Below-the-fold — only load when scrolled near */}
-      <LazySection><ProductsShowcase /></LazySection>
-      <LazySection fallback={null}><SectionDivider variant="light" /></LazySection>
-      <LazySection><FeaturedProducts /></LazySection>
-      <LazySection fallback={null}><CarRecommendations /></LazySection>
+      {/* Below-the-fold — load when scrolled near */}
+      <LazySection><PopularProductsSection /></LazySection>
+      <LazySection><WhyGenuineSection /></LazySection>
       <LazySection><MaintenanceBundles /></LazySection>
-      <LazySection><WhyChooseUs /></LazySection>
-      <LazySection fallback={null}><SectionDivider variant="light" /></LazySection>
-      <LazySection><WhoWeServe /></LazySection>
       <LazySection><DistributionNetwork /></LazySection>
-      <LazySection><MTXSection /></LazySection>
-      <LazySection><OurClientsSection /></LazySection>
       <LazySection><MaintenanceTipsSection /></LazySection>
       <LazySection><ContactSimple /></LazySection>
       <LazySection fallback={null}><Footer /></LazySection>

@@ -1,85 +1,90 @@
-## AI Dashboard لإدارة المصرية — خطة تنفيذ تدريجية
+# إعادة تصميم الصفحة الرئيسية — Luxury Toyota Experience
 
-### نظرة عامة
-لوحة تحكم تنفيذية ذكية مرتبطة بـ ERP الفيصل + Lovable AI (مش OpenAI مباشرة — هنستخدم Lovable AI Gateway اللي عندنا فعلياً Gemini + GPT-5 بدون API key إضافي ووفر فلوس).
+طلبك مفصّل ومحدد بالظبط (ألوان/خطوط/سكاشن)، فهنفّذ مباشرة بدون اقتراح اتجاهات بديلة.
 
-### ملاحظة مهمة قبل ما نبدأ
-المشروع ده عنده **أساس قوي موجود فعلاً**:
-- ERP integration شغّال (`erp_full_catalog_cache`, `erp-search-products`, `erp-webhook`, auto-sync كل ساعة)
-- Supabase + RLS + Edge Functions
-- جداول products / orders / customers / dealer_price_views / erp_sync_logs
-- Admin dashboard + staff CRM + analytics موجودين
+## النطاق
 
-يعني مش هنبني من الصفر — هنضيف **طبقة Executive AI Dashboard** فوق اللي موجود.
+- إعادة تصميم **صفحة `/` للزائر/القطاعي (B2C) فقط**.
+- B2B (التجار) عندهم Dashboard منفصل ولن يتأثر — قاعدة فصل B2B/B2C في الذاكرة.
+- إخفاء الأسعار للزائر غير المسجّل سيظل كما هو ("سجّل لرؤية السعر") — قاعدة جوهرية.
+- الـ Navbar الموجود حالياً هيتم تحديث ستايله فقط (مش استبدال logic) عشان أدوار الـ Admin/Dealer/Moderator تستمر تشتغل.
 
----
+## التغييرات
 
-### المرحلة 1 — MVP (اللي هننفذه دلوقتي)
+### 1. Design Tokens (`src/index.css` + `tailwind.config.ts`)
+- إضافة tokens جديدة بصيغة HSL:
+  - `--carbon: 0 0% 4%` (#0A0A0A خلفية)
+  - `--surface: 0 0% 8%` (#141414 كروت)
+  - `--toyota-red: 353 92% 48%` (#EB0A1E)
+  - `--gold: 44 53% 54%` (#C9A84C) — موجود بالفعل، نتأكد منه
+  - `--text-secondary: 0 0% 60%` (#9A9A9A)
+- إضافة gradients: `--gradient-spotlight`, `--gradient-red-glow`
+- إضافة shadows: `--shadow-red-glow`, `--shadow-spotlight`
+- خطوط Google: **Tajawal** (عربي) + **Space Grotesk** (لاتيني) عبر `<link>` في `index.html` مع `&display=swap`.
 
-#### 1. Executive Dashboard صفحة جديدة
-مسار: `/admin?section=executive-ai` (Admin only)
+### 2. HeroSection جديد (`src/components/HeroSection.tsx` — إعادة كتابة)
+- خلفية carbon black بالـ token الجديد.
+- نص ضخم خلفي `TOYOTA GENUINE PARTS` بحجم clamp(80px → 180px) ولون أبيض شفاف ~6%.
+- صورة منتج Toyota أصلي 3D عائمة في المنتصف (هنولّد صورة فلتر/قرص فرامل أصلي على خلفية شفافة via imagegen premium).
+- glow أحمر خلف الصورة + parallax float بسيط (CSS keyframes).
+- Overlay: `قطع غيار تويوتا الأصلية` (display) + subtext `ضمان الجودة. ضمان الأمان. ضمان تويوتا.`.
+- زر CTA أحمر متوهج `تسوق الآن ←` يوجه لـ `/parts-by-type`.
+- خطوط حمراء فاصلة.
 
-**KPI Cards (8 كروت):**
-- مبيعات اليوم / الشهر (من orders حيث status != cancelled)
-- قيمة المخزون الكلية (sum(stock_quantity * base_price) من erp_full_catalog_cache)
-- عدد الأصناف الراكدة (لا مبيعات 60 يوم + رصيد > 0)
-- أصناف منخفضة المخزون (stock < safety_stock)
-- أعلى 5 عملاء (آخر 30 يوم)
-- متوسط هامش الربح
-- التحصيل اليومي
+### 3. Navbar محدث
+- إضافة state للـ scroll: شفاف فوق + frosted glass (`backdrop-blur-xl bg-carbon/70`) بعد scroll > 20px.
+- زر `اطلب الآن` أحمر pill على اليسار (RTL).
+- نحافظ على كل روابط الأدوار الموجودة.
 
-**Charts:**
-- Sales trend (آخر 30 يوم) — Recharts line
-- Top 10 brands — Bar chart
-- Stock health distribution — Donut
+### 4. شريط الثقة الجديد (`src/components/TrustBadgesStrip.tsx`)
+- 4 عدّادات متحركة (CountUp on viewport):
+  - +5,000 قطعة غيار أصلية
+  - ضمان أصالة 100%
+  - توصيل سريع
+  - +10 سنوات خبرة
+- يحل محل `KeyMetrics`.
 
-#### 2. AI Analysis Edge Function
-`supabase/functions/executive-ai-analysis/index.ts`
-- يجمع snapshot للبيانات (sales, stock, customers)
-- يبعتها لـ Lovable AI (`google/gemini-2.5-pro`)
-- يرجّع تحليل منظّم: مشاكل / فرص / تحذيرات / توصيات
+### 5. قسم المنتجات الأكثر طلباً (`src/components/PopularProducts.tsx` — جديد)
+- يستبدل `FeaturedProducts` على الصفحة الرئيسية.
+- Tabs الفئات: محرك / فرامل / زيوت / فلاتر / كهرباء.
+- كروت داكنة (#141414) + spotlight gradient خلف الصورة + red glow عند الـ hover + fade-up على scroll.
+- يلتزم بقاعدة الذاكرة: 3 أعمدة (كود الصنف + بارت نمبر + اسم الصنف) — حالياً مطبّقة في `ProductCard`.
+- زر `أضف للسلة` (يستخدم نفس Cart context الموجود).
 
-3 أزرار في Dashboard:
-- 🧠 حلّل المبيعات
-- 📦 حلّل المخزون  
-- 📊 الملخّص التنفيذي اليومي
+### 6. قسم "الأصلي يدوم. الرخيص يكلف." (`src/components/WhyGenuineSection.tsx` — جديد)
+- Split layout: يسار عنوان bold + اقتباس، يمين 3 كروت (أمان / ضمان / كفاءة).
+- خلفية carbon + Toyota logo watermark شفاف ~3%.
+- يحل محل `WhyChooseUs`.
 
-#### 3. AI Chat للإدارة
-صفحة `/admin?section=ai-assistant`
-- chat بسيط (يستخدم نفس مكوّن AIChatBot الموجود لكن بـ system prompt إداري)
-- عنده tools لاستعلام: sales/stock/customers/branches من قاعدة البيانات
-- streaming responses
+### 7. Footer محدث
+- خلفية carbon، روابط سريعة، زر WhatsApp أخضر بارز، tagline.
+- سيستخدم نفس `Footer.tsx` الموجود مع تحديث ستايله.
 
-#### 4. Daily Snapshot للتحليل التاريخي
-- جدول `executive_daily_snapshots` (موجود `product_stock_snapshots` بالفعل — هنضيف snapshots للـ KPIs)
-- Cron يومي 6 صباحاً
+### 8. تحديث `src/pages/Index.tsx`
+- ترتيب جديد:
+  1. Navbar
+  2. HeroSection (جديد)
+  3. TrustBadgesStrip (جديد)
+  4. PopularProducts (جديد)
+  5. WhyGenuineSection (جديد)
+  6. MaintenanceBundles (يبقى)
+  7. DistributionNetwork (يبقى)
+  8. FAQ (يبقى)
+  9. ContactSimple (يبقى)
+  10. Footer
+- حذف: AboutBrief, KeyMetrics, ProductsShowcase, FeaturedProducts, WhyChooseUs, MTXSection, OurClientsSection (تخفيف الزحام لصالح Luxury Feel).
 
----
+### 9. أصول
+- توليد صورة hero بـ imagegen premium: "Toyota genuine engine oil filter, floating in space, dramatic red rim light, photorealistic, transparent background, premium product photography".
 
-### المرحلة 2 (بعد ما نخلّص MVP ونتأكد إنه شغّال)
-- Sales Analysis تفصيلي (فروع/موظفين/خصومات)
-- Inventory deep dive (turnover ratio, reorder suggestions)
-- Customer churn detection
-- Smart Alerts engine (تنبيهات تلقائية للأدمن)
+## ما الذي **لن** يتغير
+- لا تعديل على الـ database أو RLS أو edge functions.
+- لا تعديل على B2B/Dealer pages.
+- لا تعديل على Auth/Cart/Pricing logic.
+- ProductCard الداخلي يفضل بنفس الـ 3-column rule.
 
-### المرحلة 3
-- Branches comparison (لما نجيب بيانات الفروع من ERP)
-- مرتجعات / ديون
-- Predictive forecasting
+## ملاحظات
+- بعد التنفيذ، الصفحة محتاجة **إعادة نشر** عشان تظهر مباشرة + يحلّ مشكلة Lighthouse Performance المعلّقة.
+- التصميم RTL-first مع fallback LTR.
 
----
-
-### Tech details
-```text
-Frontend:  ExecutiveDashboard.tsx + ExecutiveAIPanel.tsx + AIAssistantChat.tsx
-Backend:   executive-ai-analysis (edge), daily-snapshot (cron)
-Data:      executive_daily_snapshots table + موجود فعلاً
-AI:        Lovable AI Gateway — google/gemini-2.5-pro للتحليل، gemini-2.5-flash للـ chat
-Auth:      Admin role only (has_role check)
-Style:     نفس الـ luxury theme الموجود (Navy/Gold/Red, Glassmorphism)
-```
-
----
-
-### السؤال قبل ما أبدأ
-هل أبدأ بـ **المرحلة 1 كاملة** (Dashboard + 3 أزرار AI + Chat + Snapshot)؟ ولا تحب أبدأ بجزء أصغر الأول (مثلاً Dashboard + زر تحليل واحد فقط) عشان نتأكد من الشكل قبل ما نوسّع؟
+موافق أمشي؟
