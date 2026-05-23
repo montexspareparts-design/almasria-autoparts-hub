@@ -162,38 +162,7 @@ const HeroSection = () => {
 
         {/* Headline overlay (below product) */}
         <div className="relative text-center mt-8 md:mt-10 max-w-3xl">
-          {/* Brand logo crest — themed */}
-          <div
-            className="flex flex-col items-center mb-5 animate-lux-stagger-in"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <div className="relative">
-              {/* gold halo */}
-              <div
-                aria-hidden
-                className="absolute inset-0 -m-4 rounded-full blur-2xl opacity-50"
-                style={{ background: "radial-gradient(circle, hsl(var(--toyota-red) / 0.35) 0%, transparent 70%)" }}
-              />
-              <img
-                src={brandLogo}
-                alt="المصرية — موزع معتمد لقطع غيار تويوتا"
-                width={520}
-                height={340}
-                className="relative h-20 md:h-24 w-auto object-contain"
-                style={{ filter: "drop-shadow(0 8px 20px hsl(0 0% 0% / 0.6))" }}
-              />
-            </div>
-            {/* gold underline with side dots */}
-            <div className="mt-3 flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-gold" />
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <span className="text-gold font-tajawal font-bold text-[11px] tracking-[0.3em] uppercase">
-                Authorized Dealer
-              </span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <span className="w-1 h-1 rounded-full bg-gold" />
-            </div>
-          </div>
+
 
 
           <h1
@@ -249,26 +218,8 @@ const HeroSection = () => {
             </Link>
           </div>
 
-          {/* Premium KPI stats strip */}
-          <div
-            className="mt-12 grid grid-cols-3 max-w-2xl mx-auto divide-x divide-white/10 rtl:divide-x-reverse border-y border-white/10 py-5 animate-lux-stagger-in"
-            style={{ animationDelay: "1s" }}
-          >
-            {[
-              { num: "+40", label: "سنة خبرة" },
-              { num: "+12K", label: "قطعة أصلية" },
-              { num: "100%", label: "ضمان أصلي" },
-            ].map((s) => (
-              <div key={s.label} className="px-4 text-center">
-                <div className="font-display font-black text-white text-2xl md:text-3xl tracking-tight">
-                  {s.num}
-                </div>
-                <div className="text-soft text-[11px] md:text-xs font-tajawal font-medium tracking-wider mt-1">
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
+
+
 
           {/* Trust chips */}
           <div
