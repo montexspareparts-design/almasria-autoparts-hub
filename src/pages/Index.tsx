@@ -12,6 +12,7 @@ import { useLazyVisible } from "@/hooks/useLazyVisible";
 const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
 
 /* ── Below-the-fold: deferred until near viewport ── */
+const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const PopularProductsSection = lazy(() => import("@/components/PopularProductsSection"));
 const WhyGenuineSection = lazy(() => import("@/components/WhyGenuineSection"));
 const MaintenanceBundles = lazy(() => import("@/components/MaintenanceBundles"));
