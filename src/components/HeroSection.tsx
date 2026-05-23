@@ -1,26 +1,43 @@
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Info, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
 
 /**
- * Luxury Hero — inspired by premium product brands (Rolex / high-end perfume).
- * Full-viewport carbon black background, massive display typography behind the
- * floating Toyota part, glowing red CTA.
+ * Luxury Hero — Rolex / premium product feel.
+ * Carbon black, animated grid, floating particles, marquee backdrop text,
+ * spinning gold ring around the product, shimmer CTA.
  */
 const HeroSection = () => {
+  // pre-generate particle positions (stable per mount)
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 18 }).map((_, i) => ({
+        left: `${(i * 53) % 100}%`,
+        delay: `${(i * 0.7) % 14}s`,
+        duration: `${10 + ((i * 1.3) % 10)}s`,
+        size: 2 + (i % 3),
+      })),
+    []
+  );
+
   return (
     <section
+      id="hero"
       className="relative w-full bg-carbon overflow-hidden"
       style={{ minHeight: "100vh" }}
       aria-label="قطع غيار تويوتا الأصلية"
     >
-      {/* Subtle ambient red gradient layer */}
+      {/* Animated grid */}
+      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+
+      {/* Ambient red gradient */}
       <div
         aria-hidden
-        className="absolute inset-0 opacity-60"
+        className="absolute inset-0 opacity-70"
         style={{
           background:
-            "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.18) 0%, transparent 60%)",
+            "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.22) 0%, transparent 60%)",
         }}
       />
       {/* Vignette */}
@@ -29,105 +46,178 @@ const HeroSection = () => {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.7) 100%)",
+            "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.75) 100%)",
         }}
       />
 
+      {/* Floating particles */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+        {particles.map((p, i) => (
+          <span
+            key={i}
+            className="absolute bottom-0 rounded-full bg-toyota-red animate-[lux-particle_linear_infinite]"
+            style={{
+              left: p.left,
+              width: p.size,
+              height: p.size,
+              animationDelay: p.delay,
+              animationDuration: p.duration,
+              boxShadow: "0 0 8px hsl(var(--toyota-red) / 0.8)",
+            }}
+          />
+        ))}
+      </div>
+
       {/* Top red hairline */}
-      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-70" />
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
 
-      <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-16 flex flex-col items-center justify-center min-h-screen">
-        {/* MASSIVE display backdrop text */}
-        <h2
+      <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
+        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        <div
           aria-hidden
-          dir="ltr"
-          className="font-display font-black tracking-tighter text-mega-outline select-none pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
-          style={{
-            fontSize: "clamp(72px, 14vw, 220px)",
-            lineHeight: 1,
-            letterSpacing: "-0.04em",
-          }}
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
         >
-          TOYOTA GENUINE
-        </h2>
+          <span
+            dir="ltr"
+            className="font-display font-black tracking-tighter text-mega-outline"
+            style={{ fontSize: "clamp(72px, 14vw, 220px)", letterSpacing: "-0.04em" }}
+          >
+            TOYOTA GENUINE PARTS · TOYOTA GENUINE PARTS · TOYOTA GENUINE PARTS ·
+          </span>
+        </div>
 
-        {/* Floating product with red glow */}
-        <div className="relative w-full max-w-[560px] aspect-square mx-auto">
+        {/* Product with concentric rings + glow */}
+        <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
           {/* Red glow halo */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-red-glow animate-lux-pulse-glow"
-            style={{ filter: "blur(40px)" }}
+            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            style={{ filter: "blur(50px)" }}
           />
-          {/* Gold orbit ring (subtle) */}
+          {/* Spinning gold ring */}
           <div
             aria-hidden
-            className="absolute inset-[15%] rounded-full border border-[hsl(var(--gold)/0.15)]"
+            className="absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
+          />
+          {/* Highlight arc */}
+          <div
+            aria-hidden
+            className="absolute inset-[5%] rounded-full"
+            style={{
+              background:
+                "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
+              filter: "blur(20px)",
+            }}
           />
           <img
             src={heroPart}
-            alt="فلتر زيت تويوتا الأصلي"
-            width={1024}
+            alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
+            width={1536}
             height={1024}
             fetchPriority="high"
             decoding="async"
-            className="relative w-full h-full object-contain animate-lux-float drop-shadow-2xl"
-            style={{ filter: "drop-shadow(0 30px 40px hsl(0 0% 0% / 0.6))" }}
+            className="relative w-full h-full object-contain animate-lux-float"
+            style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
           />
+          {/* Floating part-number chip */}
+          <div className="absolute top-4 right-2 md:top-8 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
+               style={{ animationDelay: "0.6s" }}>
+            <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
+              PART # <span className="text-toyota-red">YZZN2</span>
+            </span>
+          </div>
+          {/* Floating "Iridium" chip */}
+          <div className="hidden sm:block absolute bottom-6 left-2 md:bottom-10 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
+               style={{ animationDelay: "0.9s" }}>
+            <span className="font-display font-black text-xs md:text-sm text-gold tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> IRIDIUM SPARK
+            </span>
+          </div>
         </div>
 
         {/* Headline overlay (below product) */}
-        <div className="relative text-center mt-8 md:mt-10 max-w-3xl animate-lux-fade-up">
+        <div className="relative text-center mt-8 md:mt-10 max-w-3xl">
           {/* Gold authenticity badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full border border-[hsl(var(--gold)/0.4)] bg-[hsl(var(--gold)/0.06)] backdrop-blur-sm">
-            <ShieldCheck className="w-4 h-4 text-gold" />
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full border border-[hsl(var(--gold)/0.45)] bg-[hsl(var(--gold)/0.08)] backdrop-blur-sm animate-lux-badge-pulse animate-lux-stagger-in"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
+            </span>
             <span className="text-gold font-tajawal font-bold text-sm tracking-wide">
               موزع تويوتا المعتمد رسمياً
             </span>
           </div>
 
           <h1
-            className="font-tajawal font-black text-white leading-[1.05]"
-            style={{ fontSize: "clamp(36px, 6vw, 68px)" }}
+            className="font-tajawal font-black text-white leading-[1.05] animate-lux-stagger-in"
+            style={{ fontSize: "clamp(36px, 6vw, 68px)", animationDelay: "0.3s" }}
           >
-            قطع غيار تويوتا{" "}
-            <span className="text-toyota-red">الأصلية</span>
+            قطع غيار تويوتا <span className="text-toyota-red">الأصلية</span>
           </h1>
 
           {/* Red divider */}
-          <div className="flex items-center justify-center gap-3 my-5">
+          <div
+            className="flex items-center justify-center gap-3 my-5 animate-lux-stagger-in"
+            style={{ animationDelay: "0.45s" }}
+          >
             <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-toyota-red" />
             <span className="w-1.5 h-1.5 rounded-full bg-toyota-red shadow-red-glow" />
             <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-toyota-red" />
           </div>
 
-          <p className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide">
+          <p
+            className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
+            style={{ animationDelay: "0.6s" }}
+          >
             ضمان الجودة. ضمان الأمان.{" "}
             <span className="text-white font-bold">ضمان تويوتا.</span>
           </p>
 
-          {/* CTA */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          {/* CTAs */}
+          <div
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-lux-stagger-in"
+            style={{ animationDelay: "0.8s" }}
+          >
             <Link
-              to="/parts-by-type"
-              className="group relative inline-flex items-center gap-3 px-9 py-4 rounded-full bg-toyota-red text-white font-tajawal font-black text-lg shadow-red-glow transition-all duration-300 hover:scale-105 hover:shadow-[0_0_80px_hsl(var(--toyota-red)/0.7)]"
+              to="/products"
+              className="group relative inline-flex items-center gap-3 px-9 py-4 rounded-full bg-toyota-red text-white font-tajawal font-black text-lg overflow-hidden animate-lux-red-pulse transition-transform duration-300 hover:scale-[1.04]"
             >
-              <span>تسوّق الآن</span>
-              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/20 pointer-events-none" />
+              {/* shimmer sweep */}
+              <span
+                aria-hidden
+                className="absolute inset-y-0 -inset-x-4 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-lux-shimmer-sweep"
+                style={{ width: "40%" }}
+              />
+              <span className="relative">تسوّق الآن</span>
+              <ArrowLeft className="relative w-5 h-5 transition-transform group-hover:-translate-x-1.5" />
+              <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/25 pointer-events-none" />
             </Link>
             <Link
-              to="/genuine-parts"
-              className="font-tajawal font-bold text-white/70 hover:text-white text-base px-6 py-3 border-b border-transparent hover:border-toyota-red transition-all"
+              to="/about"
+              className="group inline-flex items-center gap-2 font-tajawal font-bold text-white/70 hover:text-white text-base px-6 py-3 rounded-full border border-white/15 hover:border-toyota-red/60 backdrop-blur-sm transition-all"
             >
-              تعرّف على ضمان الأصالة →
+              <Info className="w-4 h-4" />
+              <span>من نحن</span>
             </Link>
           </div>
+        </div>
+
+        {/* Scroll cue */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-lux-scroll-cue">
+          <span className="text-soft text-[10px] tracking-[0.3em] font-display font-bold">SCROLL</span>
+          <ChevronDown className="w-4 h-4 text-soft" />
         </div>
       </div>
 
       {/* Bottom red hairline */}
-      <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-70" />
+      <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
     </section>
   );
 };
