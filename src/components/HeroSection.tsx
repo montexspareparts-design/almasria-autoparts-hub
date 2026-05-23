@@ -71,6 +71,26 @@ const HeroSection = () => {
       {/* Top red hairline */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
 
+      {/* Corner brackets — premium framing */}
+      <div aria-hidden className="pointer-events-none absolute inset-6 md:inset-10 z-20">
+        <span className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute top-0 right-0 w-6 h-6 border-t border-r border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[hsl(var(--gold)/0.55)]" />
+      </div>
+
+      {/* Vertical side captions */}
+      <div aria-hidden className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-3 text-soft">
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-toyota-red/60 to-transparent" />
+        <span className="font-display font-bold text-[10px] tracking-[0.4em] [writing-mode:vertical-rl] rotate-180">EST · 1985 · CAIRO</span>
+        <span className="h-16 w-px bg-gradient-to-b from-toyota-red/60 via-transparent to-transparent" />
+      </div>
+      <div aria-hidden className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-3 text-soft">
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-gold/60 to-transparent" />
+        <span className="font-display font-bold text-[10px] tracking-[0.4em] [writing-mode:vertical-rl]">TOYOTA · GENUINE · OEM</span>
+        <span className="h-16 w-px bg-gradient-to-b from-gold/60 via-transparent to-transparent" />
+      </div>
+
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
         {/* MARQUEE backdrop text — slow horizontal scroll */}
         <div
