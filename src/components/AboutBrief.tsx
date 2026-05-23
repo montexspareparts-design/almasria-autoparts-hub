@@ -25,9 +25,9 @@ const Counter = ({ target, suffix = "" }: { target: number; suffix?: string }) =
   }, [inView, target]);
 
   return (
-    <div ref={ref} className="font-black text-5xl md:text-6xl text-secondary-foreground tabular-nums tracking-tight leading-none">
-      <span className="text-primary">{count.toLocaleString("en")}</span>
-      <span className="text-primary text-3xl md:text-4xl">{suffix}</span>
+    <div ref={ref} className="font-black text-5xl md:text-6xl text-white tabular-nums tracking-tight leading-none">
+      <span className="text-toyota-red">{count.toLocaleString("en")}</span>
+      <span className="text-toyota-red text-3xl md:text-4xl">{suffix}</span>
     </div>
   );
 };
@@ -95,21 +95,21 @@ const AboutBrief = () => {
               {isAr ? (
                   <>
                   {[
-                    <>تعمل المصرية منذ <strong className="text-primary font-black">1999</strong>، بخبرة ممتدة كموزع معتمد لِـ <Link to="/products/toyota-genuine" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">قطع غيار</Link> و<Link to="/products/toyota-oils" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">زيوت تويوتا الأصلية</Link>، تعمل وفق <strong className="text-secondary-foreground font-bold">معايير تشغيل احترافية</strong> ورؤية استراتيجية طويلة المدى.</>,
-                    <>نموذج أعمال متكامل يرتكز على <strong className="text-secondary-foreground font-bold">بنية تشغيلية متقدمة</strong>، و<strong className="text-secondary-foreground font-bold">شبكة توزيع واسعة</strong> داخل مصر، مدعومة بحضور إقليمي <strong className="text-primary font-black">في دبي</strong> يعزز كفاءة سلاسل الإمداد ويواكب متطلبات الأسواق.</>,
-                    <>كما تمثل علامتنا <Link to="/mtx" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">MTX</Link> امتدادًا استراتيجيًا لمنظومة أعمالنا، تم تطويرها وفق معايير دقيقة تعكس التزامنا بالجودة والانضباط التشغيلي، وبمستوى يضاهي المنتجات الأصلية.</>,
+                    <>تعمل المصرية منذ <strong className="text-toyota-red font-black">1999</strong>، بخبرة ممتدة كموزع معتمد لِـ <Link to="/products/toyota-genuine" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">قطع غيار</Link> و<Link to="/products/toyota-oils" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">زيوت تويوتا الأصلية</Link>، تعمل وفق <strong className="text-white font-bold">معايير تشغيل احترافية</strong> ورؤية استراتيجية طويلة المدى.</>,
+                    <>نموذج أعمال متكامل يرتكز على <strong className="text-white font-bold">بنية تشغيلية متقدمة</strong>، و<strong className="text-white font-bold">شبكة توزيع واسعة</strong> داخل مصر، مدعومة بحضور إقليمي <strong className="text-toyota-red font-black">في دبي</strong> يعزز كفاءة سلاسل الإمداد ويواكب متطلبات الأسواق.</>,
+                    <>كما تمثل علامتنا <Link to="/mtx" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">MTX</Link> امتدادًا استراتيجيًا لمنظومة أعمالنا، تم تطويرها وفق معايير دقيقة تعكس التزامنا بالجودة والانضباط التشغيلي، وبمستوى يضاهي المنتجات الأصلية.</>,
                   ].map((text, i) => (
-                    <motion.p key={i} className="text-secondary-foreground/80 text-lg md:text-[1.35rem] leading-[2.2] font-medium" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.15 + i * 0.12, duration: 0.55, ease: "easeOut" }}>{text}</motion.p>
+                    <motion.p key={i} className="text-white/80 text-lg md:text-[1.35rem] leading-[2.2] font-medium" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.15 + i * 0.12, duration: 0.55, ease: "easeOut" }}>{text}</motion.p>
                   ))}
                 </>
               ) : (
                 <>
                   {[
-                    <>Al Masria Group has been operating since <strong className="text-primary font-black">1999</strong> as an authorized distributor of <Link to="/products/toyota-genuine" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">Toyota Genuine Parts</Link> and <Link to="/products/toyota-oils" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">Toyota Oils</Link>. We rely on a disciplined operational model built on <strong className="text-secondary-foreground font-bold">integrated digital management systems</strong> and a <strong className="text-secondary-foreground font-bold">distribution network</strong> covering all of Egypt.</>,
-                    <>We provide <strong className="text-secondary-foreground font-bold">fast delivery</strong> within <strong className="text-primary font-black">48&nbsp;hours</strong> through highly efficient central warehouses, with a <strong className="text-secondary-foreground font-bold">regional presence</strong> <strong className="text-primary font-black">in Dubai</strong> supporting supply continuity and product quality.</>,
-                    <>We also manage the <Link to="/mtx" className="text-primary font-black hover:underline underline-offset-4 decoration-2 decoration-primary/50">MTX</Link> brand for aftermarket parts with OEM-matching quality.</>,
+                    <>Al Masria Group has been operating since <strong className="text-toyota-red font-black">1999</strong> as an authorized distributor of <Link to="/products/toyota-genuine" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">Toyota Genuine Parts</Link> and <Link to="/products/toyota-oils" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">Toyota Oils</Link>. We rely on a disciplined operational model built on <strong className="text-white font-bold">integrated digital management systems</strong> and a <strong className="text-white font-bold">distribution network</strong> covering all of Egypt.</>,
+                    <>We provide <strong className="text-white font-bold">fast delivery</strong> within <strong className="text-toyota-red font-black">48&nbsp;hours</strong> through highly efficient central warehouses, with a <strong className="text-white font-bold">regional presence</strong> <strong className="text-toyota-red font-black">in Dubai</strong> supporting supply continuity and product quality.</>,
+                    <>We also manage the <Link to="/mtx" className="text-toyota-red font-black hover:underline underline-offset-4 decoration-2 decoration-toyota-red/50">MTX</Link> brand for aftermarket parts with OEM-matching quality.</>,
                   ].map((text, i) => (
-                    <motion.p key={i} className="text-secondary-foreground/80 text-lg md:text-[1.35rem] leading-[2.2] font-medium" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.15 + i * 0.12, duration: 0.55, ease: "easeOut" }}>{text}</motion.p>
+                    <motion.p key={i} className="text-white/80 text-lg md:text-[1.35rem] leading-[2.2] font-medium" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.15 + i * 0.12, duration: 0.55, ease: "easeOut" }}>{text}</motion.p>
                   ))}
                 </>
               )}
@@ -117,7 +117,7 @@ const AboutBrief = () => {
 
             <motion.div className="flex flex-col sm:flex-row gap-4 mt-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 0.5 }}>
               <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
-                <Button size="lg" className="gap-2.5 font-black shadow-xl shadow-primary/25 px-8 py-6 text-base" asChild>
+                <Button size="lg" className="gap-2.5 font-black shadow-xl shadow-toyota-red/25 px-8 py-6 text-base" asChild>
                   <Link to="/about">
                     {t("about.discover")}
                     <motion.span animate={{ x: isAr ? [0, -5, 0] : [0, 5, 0] }} transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}>
@@ -140,14 +140,14 @@ const AboutBrief = () => {
           <motion.div className="lg:col-span-5 order-2" initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }}>
             <div className="grid grid-cols-2 gap-4">
               {highlights.map((h, i) => (
-                <motion.div key={h.label} initial={{ opacity: 0, y: 24, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, margin: "-40px" }} transition={{ delay: 0.3 + i * 0.12, duration: 0.5, type: "spring", stiffness: 120 }} whileHover={{ y: -8, scale: 1.04, transition: { duration: 0.25 } }} className="group relative rounded-2xl p-6 transition-all duration-300 overflow-hidden bg-secondary-foreground/[0.06] border-2 border-secondary-foreground/10 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/15 cursor-default">
+                <motion.div key={h.label} initial={{ opacity: 0, y: 24, scale: 0.9 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true, margin: "-40px" }} transition={{ delay: 0.3 + i * 0.12, duration: 0.5, type: "spring", stiffness: 120 }} whileHover={{ y: -8, scale: 1.04, transition: { duration: 0.25 } }} className="group relative rounded-2xl p-6 transition-all duration-300 overflow-hidden bg-white/[0.06] border-2 border-white/10 hover:border-toyota-red/40 hover:shadow-2xl hover:shadow-toyota-red/15 cursor-default">
                   <div className={`absolute inset-0 bg-gradient-to-br ${h.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                   <div className="relative z-10">
-                    <motion.div className="w-14 h-14 bg-primary/15 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-primary/25 transition-all duration-300 shadow-lg shadow-primary/10 group-hover:shadow-xl group-hover:shadow-primary/20" whileHover={{ rotate: [0, -12, 12, -6, 0], scale: 1.1 }} transition={{ duration: 0.6 }}>
-                      <h.icon className="w-7 h-7 text-primary" strokeWidth={2} />
+                    <motion.div className="w-14 h-14 bg-toyota-red/15 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-toyota-red/25 transition-all duration-300 shadow-lg shadow-toyota-red/10 group-hover:shadow-xl group-hover:shadow-toyota-red/20" whileHover={{ rotate: [0, -12, 12, -6, 0], scale: 1.1 }} transition={{ duration: 0.6 }}>
+                      <h.icon className="w-7 h-7 text-toyota-red" strokeWidth={2} />
                     </motion.div>
-                    <h3 className="font-black text-secondary-foreground text-base mb-2">{h.label}</h3>
-                    <p className="text-secondary-foreground/50 text-sm leading-relaxed font-medium">{h.desc}</p>
+                    <h3 className="font-black text-white text-base mb-2">{h.label}</h3>
+                    <p className="text-white/50 text-sm leading-relaxed font-medium">{h.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -155,15 +155,15 @@ const AboutBrief = () => {
           </motion.div>
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="border-t border-secondary-foreground/10 pt-16">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="border-t border-white/10 pt-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
             {metrics.map((m, i) => (
               <motion.div key={m.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.12, duration: 0.6, ease: "easeOut" }} className="relative px-8 py-10 text-center group cursor-default">
-                {i < metrics.length - 1 && <div className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-16 bg-secondary-foreground/10" />}
+                {i < metrics.length - 1 && <div className="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-16 bg-white/10" />}
                 <motion.div className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] bg-primary rounded-full" initial={{ width: 0 }} whileInView={{ width: 40 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
                 <div className="mb-3"><Counter target={m.value} suffix={m.suffix} /></div>
-                <p className="text-secondary-foreground font-black text-lg tracking-wide mb-1">{m.label}</p>
-                <p className="text-secondary-foreground/40 text-sm font-medium tracking-wider uppercase">{m.desc}</p>
+                <p className="text-white font-black text-lg tracking-wide mb-1">{m.label}</p>
+                <p className="text-white/40 text-sm font-medium tracking-wider uppercase">{m.desc}</p>
               </motion.div>
             ))}
           </div>
