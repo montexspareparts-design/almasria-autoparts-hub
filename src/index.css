@@ -547,6 +547,9 @@ html.hc-mode a:not(.no-hc-underline) {
   .hero-spotlight {
     background: radial-gradient(ellipse 60% 50% at 30% 50%, hsl(353 92% 48% / 0.10) 0%, transparent 70%);
   }
+}
+
+
 
 @keyframes lux-float {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
