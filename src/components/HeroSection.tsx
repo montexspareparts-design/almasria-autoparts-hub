@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowLeft, Info, ChevronDown, Sparkles, ShieldCheck, Truck, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
@@ -6,7 +6,8 @@ import heroPart from "@/assets/hero-toyota-part.png";
 /**
  * Luxury Hero — Rolex / premium product feel.
  * Carbon black, animated grid, floating particles, marquee backdrop text,
- * spinning gold ring around the product, shimmer CTA.
+ * spinning gold ring around the product, shimmer CTA, corner brackets,
+ * stats strip, trust chips, vertical side captions.
  */
 const HeroSection = () => {
   // pre-generate particle positions (stable per mount)
@@ -69,6 +70,26 @@ const HeroSection = () => {
 
       {/* Top red hairline */}
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
+
+      {/* Corner brackets — premium framing */}
+      <div aria-hidden className="pointer-events-none absolute inset-6 md:inset-10 z-20">
+        <span className="absolute top-0 left-0 w-6 h-6 border-t border-l border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute top-0 right-0 w-6 h-6 border-t border-r border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-[hsl(var(--gold)/0.55)]" />
+        <span className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-[hsl(var(--gold)/0.55)]" />
+      </div>
+
+      {/* Vertical side captions */}
+      <div aria-hidden className="hidden lg:flex absolute left-6 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-3 text-soft">
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-toyota-red/60 to-transparent" />
+        <span className="font-display font-bold text-[10px] tracking-[0.4em] [writing-mode:vertical-rl] rotate-180">EST · 1985 · CAIRO</span>
+        <span className="h-16 w-px bg-gradient-to-b from-toyota-red/60 via-transparent to-transparent" />
+      </div>
+      <div aria-hidden className="hidden lg:flex absolute right-6 top-1/2 -translate-y-1/2 z-20 flex-col items-center gap-3 text-soft">
+        <span className="h-16 w-px bg-gradient-to-b from-transparent via-gold/60 to-transparent" />
+        <span className="font-display font-bold text-[10px] tracking-[0.4em] [writing-mode:vertical-rl]">TOYOTA · GENUINE · OEM</span>
+        <span className="h-16 w-px bg-gradient-to-b from-gold/60 via-transparent to-transparent" />
+      </div>
 
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
         {/* MARQUEE backdrop text — slow horizontal scroll */}
@@ -206,7 +227,41 @@ const HeroSection = () => {
               <span>من نحن</span>
             </Link>
           </div>
+
+          {/* Premium KPI stats strip */}
+          <div
+            className="mt-12 grid grid-cols-3 max-w-2xl mx-auto divide-x divide-white/10 rtl:divide-x-reverse border-y border-white/10 py-5 animate-lux-stagger-in"
+            style={{ animationDelay: "1s" }}
+          >
+            {[
+              { num: "+40", label: "سنة خبرة" },
+              { num: "+12K", label: "قطعة أصلية" },
+              { num: "100%", label: "ضمان أصلي" },
+            ].map((s) => (
+              <div key={s.label} className="px-4 text-center">
+                <div className="font-display font-black text-white text-2xl md:text-3xl tracking-tight">
+                  {s.num}
+                </div>
+                <div className="text-soft text-[11px] md:text-xs font-tajawal font-medium tracking-wider mt-1">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust chips */}
+          <div
+            className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-soft text-xs md:text-sm font-tajawal animate-lux-stagger-in"
+            style={{ animationDelay: "1.15s" }}
+          >
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold" /> فاتورة ضريبية</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-gold" /> شحن لكل الجمهورية</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="inline-flex items-center gap-1.5"><Award className="w-4 h-4 text-gold" /> موزع معتمد</span>
+          </div>
         </div>
+
 
         {/* Scroll cue */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-lux-scroll-cue">
