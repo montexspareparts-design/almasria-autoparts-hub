@@ -12,6 +12,7 @@ import { useLazyVisible } from "@/hooks/useLazyVisible";
 const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
 
 /* ── Below-the-fold: deferred until near viewport ── */
+const AboutBrief = lazy(() => import("@/components/AboutBrief"));
 const PopularProductsSection = lazy(() => import("@/components/PopularProductsSection"));
 const WhyGenuineSection = lazy(() => import("@/components/WhyGenuineSection"));
 const MaintenanceBundles = lazy(() => import("@/components/MaintenanceBundles"));
@@ -105,6 +106,7 @@ const Index = () => {
       <Suspense fallback={<SectionFallback />}><TrustBadgesStrip /></Suspense>
 
       {/* Below-the-fold — load when scrolled near */}
+      <LazySection><AboutBrief /></LazySection>
       <LazySection><PopularProductsSection /></LazySection>
       <LazySection><WhyGenuineSection /></LazySection>
       <LazySection><MaintenanceBundles /></LazySection>
