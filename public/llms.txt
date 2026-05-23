@@ -1,0 +1,48 @@
+# Al Masria Group (المصرية جروب)
+
+> Authorized distributor of Toyota genuine parts and oils in Egypt since 1999. Nationwide delivery within 48 hours, plus the MTX aftermarket brand.
+
+Al Masria Group is a leading Egyptian B2B/B2C distributor of Toyota Genuine Parts, Toyota Motor Oils, and the company's own MTX aftermarket replacement parts. Headquartered in Giza with branches across Egypt and a regional hub in Dubai.
+
+## Pages
+
+- [Home](/): Authorized Toyota parts & oils distributor in Egypt.
+- [About Us](/about): 25+ years of automotive distribution, branches, leadership.
+- [Products Catalog](/products): Full catalog — Toyota genuine, MTX, Denso, Aisin, FBK.
+- [Toyota Genuine Parts](/products/genuine-toyota-parts): 100% original parts with dealer warranty.
+- [Toyota Oils](/products/toyota-oils): Toyota engine and transmission oils.
+- [MTX Aftermarket](/mtx): Al Masria's own brand of premium replacement parts.
+- [Toyota Genuine Parts Egypt](/toyota-genuine-parts-egypt): Landing for Egypt market.
+- [Contact Us](/contact): WhatsApp, phone, email, branch locations.
+- [What Sets Us Apart](/what-sets-us-apart): Authorized status, network, guarantees.
+- [Catalogs](/catalogs): Wholesale catalogs for approved dealers.
+- [Policies](/policies): Terms, privacy, shipping, returns.
+- [Install App](/install): PWA installation guide.
+- [Track Order](/track-order): Real-time order tracking.
+
+## Parts by Model
+
+- [Hiace](/parts-by-model/hiace)
+- [Coaster](/parts-by-model/coaster)
+- [Hilux](/parts-by-model/hilux)
+- [Land Cruiser](/parts-by-model/land-cruiser)
+- [Yaris](/parts-by-model/yaris)
+- [RAV4](/parts-by-model/rav4)
+- [Fortuner](/parts-by-model/fortuner)
+- [Rush](/parts-by-model/rush)
+- [Corolla](/parts-by-model/corolla)
+- [Camry](/parts-by-model/camry)
+
+## Parts by Type
+
+- [Filters](/parts-by-type/filters)
+- [Oils](/parts-by-type/oils)
+- [Brakes](/parts-by-type/brakes)
+- [Suspension](/parts-by-type/suspension)
+- [Electrical](/parts-by-type/electrical)
+- [Engine](/parts-by-type/engine)
+- [Cooling](/parts-by-type/cooling)
+
+## Optional
+
+- [Dealer Application](/dealer-apply): Apply to join the wholesale dealer network.

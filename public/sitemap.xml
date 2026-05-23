@@ -78,14 +78,19 @@
 
   <!-- ═══ Client segments ═══ -->
   <url>
-    <loc>https://www.almasriaautoparts.com/clients</loc>
+    <loc>https://www.almasriaautoparts.com/clients/wholesale</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.almasriaautoparts.com/clients/wholesale</loc>
+    <loc>https://www.almasriaautoparts.com/auth</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/dealer-apply</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.almasriaautoparts.com/clients/workshop</loc>

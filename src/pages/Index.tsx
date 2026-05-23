@@ -94,10 +94,10 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       <SEOHead
-        titleAr="موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر"
-        titleEn="Authorized Toyota Genuine Parts & Oils Distributor in Egypt"
-        descriptionAr="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX بجودة تضاهي المواصفات الأصلية."
-        descriptionEn="Since 1999, Al Masria Group delivers Toyota genuine parts & oils across Egypt within 48 hours — plus our MTX brand engineered to OEM-grade quality."
+        titleAr="قطع غيار وزيوت تويوتا الأصلية في مصر"
+        titleEn="Toyota Genuine Parts & Oils — Egypt"
+        descriptionAr="منذ 1999 نقدم توزيعًا مؤسسيًا لقطع غيار وزيوت تويوتا الأصلية عبر شبكة تغطي مصر، تسليم خلال 48 ساعة، وعلامتنا MTX."
+        descriptionEn="Since 1999, Al Masria Group delivers Toyota genuine parts & oils across Egypt within 48 hours — plus our MTX brand."
         keywordsAr="قطع غيار تويوتا, زيوت تويوتا, موزع تويوتا مصر, MTX, قطع غيار اصلية, تويوتا"
         keywordsEn="Toyota parts Egypt, Toyota genuine parts, Toyota oil, MTX aftermarket, auto parts Egypt"
       />
