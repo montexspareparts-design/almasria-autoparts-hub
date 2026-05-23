@@ -552,3 +552,59 @@ html.hc-mode a:not(.no-hc-underline) {
 .animate-lux-float { animation: lux-float 7s ease-in-out infinite; }
 .animate-lux-pulse-glow { animation: lux-pulse-glow 4s ease-in-out infinite; }
 .animate-lux-fade-up { animation: lux-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* === Hero Liveliness Animations === */
+@keyframes lux-marquee {
+  0% { transform: translateX(-50%) translateY(-50%) translateX(0); }
+  100% { transform: translateX(-50%) translateY(-50%) translateX(-25%); }
+}
+@keyframes lux-grid-pan {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+@keyframes lux-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes lux-shimmer-sweep {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(220%) skewX(-20deg); }
+}
+@keyframes lux-particle {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-120vh) translateX(20px); opacity: 0; }
+}
+@keyframes lux-scroll-cue {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+@keyframes lux-stagger-in {
+  from { opacity: 0; transform: translateY(20px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes lux-badge-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--gold) / 0.5); }
+  50% { box-shadow: 0 0 0 10px hsl(var(--gold) / 0); }
+}
+@keyframes lux-red-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--toyota-red) / 0.6); }
+  50% { box-shadow: 0 0 0 18px hsl(var(--toyota-red) / 0); }
+}
+
+.animate-lux-marquee { animation: lux-marquee 28s linear infinite; }
+.animate-lux-grid-pan { animation: lux-grid-pan 16s linear infinite; }
+.animate-lux-ring-spin { animation: lux-ring-spin 40s linear infinite; }
+.animate-lux-shimmer-sweep { animation: lux-shimmer-sweep 3.5s ease-in-out infinite; }
+.animate-lux-scroll-cue { animation: lux-scroll-cue 1.8s ease-in-out infinite; }
+.animate-lux-stagger-in { animation: lux-stagger-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-lux-badge-pulse { animation: lux-badge-pulse 2.4s ease-in-out infinite; }
+.animate-lux-red-pulse { animation: lux-red-pulse 2.6s ease-in-out infinite; }
+
+.lux-grid-bg {
+  background-image:
+    linear-gradient(hsl(0 0% 100% / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
