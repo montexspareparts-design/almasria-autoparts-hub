@@ -162,38 +162,7 @@ const HeroSection = () => {
 
         {/* Headline overlay (below product) */}
         <div className="relative text-center mt-8 md:mt-10 max-w-3xl">
-          {/* Brand logo crest — themed */}
-          <div
-            className="flex flex-col items-center mb-5 animate-lux-stagger-in"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <div className="relative">
-              {/* gold halo */}
-              <div
-                aria-hidden
-                className="absolute inset-0 -m-4 rounded-full blur-2xl opacity-50"
-                style={{ background: "radial-gradient(circle, hsl(var(--toyota-red) / 0.35) 0%, transparent 70%)" }}
-              />
-              <img
-                src={brandLogo}
-                alt="المصرية — موزع معتمد لقطع غيار تويوتا"
-                width={520}
-                height={340}
-                className="relative h-20 md:h-24 w-auto object-contain"
-                style={{ filter: "drop-shadow(0 8px 20px hsl(0 0% 0% / 0.6))" }}
-              />
-            </div>
-            {/* gold underline with side dots */}
-            <div className="mt-3 flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-gold" />
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <span className="text-gold font-tajawal font-bold text-[11px] tracking-[0.3em] uppercase">
-                Authorized Dealer
-              </span>
-              <span className="h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <span className="w-1 h-1 rounded-full bg-gold" />
-            </div>
-          </div>
+
 
 
           <h1
