@@ -2,6 +2,7 @@ import { ArrowLeft, Info, ChevronDown, Sparkles, ShieldCheck, Truck, Award } fro
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
+import brandLogo from "@/assets/almasria-logo.png";
 
 /**
  * Luxury Hero — Rolex / premium product feel.
