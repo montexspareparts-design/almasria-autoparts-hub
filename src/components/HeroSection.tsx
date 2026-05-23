@@ -1,260 +1,133 @@
-import { ShieldCheck, Package, MapPin, Cog, LayoutDashboard, ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRef, useEffect, useState } from "react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useIsMobile } from "@/hooks/use-mobile";
-import heroBg from "@/assets/hero-corporate.webp";
-import HeroLeadCapture from "@/components/HeroLeadCapture";
+import heroPart from "@/assets/hero-toyota-part.png";
 
-/* ── Animated Counter ── */
-const AnimatedCounter = ({ value, suffix, delay }: { value: number; suffix: string; delay: number }) => {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setStarted(true), delay * 1000);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
-  useEffect(() => {
-    if (!started) return;
-    let current = 0;
-    const step = Math.max(1, Math.floor(value / 40));
-    const interval = setInterval(() => {
-      current += step;
-      if (current >= value) { setCount(value); clearInterval(interval); }
-      else setCount(current);
-    }, 35);
-    return () => clearInterval(interval);
-  }, [started, value]);
-
-  return (
-    <span className="font-black text-[1.6rem] md:text-[2rem] text-white tabular-nums tracking-tight">
-      {count}{suffix}
-    </span>
-  );
-};
-
-/* ── Hero Section ── */
+/**
+ * Luxury Hero — inspired by premium product brands (Rolex / high-end perfume).
+ * Full-viewport carbon black background, massive display typography behind the
+ * floating Toyota part, glowing red CTA.
+ */
 const HeroSection = () => {
-  const { t } = useLanguage();
-  const { user, dealerAccount, isDealer } = useAuth();
-  const isMobile = useIsMobile();
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
-
-  // Load video after idle
-  useEffect(() => {
-    const delay = isMobile ? 3000 : 1500;
-    const id = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback(() => setShouldLoadVideo(true), { timeout: delay })
-      : setTimeout(() => setShouldLoadVideo(true), delay) as unknown as number;
-    return () => {
-      if (typeof cancelIdleCallback !== 'undefined') cancelIdleCallback(id);
-      else clearTimeout(id);
-    };
-  }, [isMobile]);
-
-  const { data: heroVideoUrl } = useQuery({
-    queryKey: ["site-setting", "hero_video_url"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", "hero_video_url")
-        .maybeSingle();
-      return (data?.value as string) || "";
-    },
-    staleTime: 5 * 60 * 1000,
-    enabled: true,
-  });
-
-  const videoSrc = heroVideoUrl || "/videos/hero-cinematic-v3.mp4";
-
-  const stats = [
-    { value: 25, suffix: "+", label: t("hero.stat_years") },
-    { value: 48, suffix: "h", label: t("hero.stat_delivery") },
-    { value: 10, suffix: "K+", label: t("hero.stat_parts") },
-  ];
-
   return (
-    <section id="hero" className="relative min-h-[100svh] flex flex-col justify-end overflow-hidden">
-      {/* Background — no parallax for perf */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroBg}
-          alt=""
-          width={1920}
-          height={1080}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${videoLoaded ? "opacity-0" : "opacity-100"}`}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-        />
-        {shouldLoadVideo && (
-          <video
-            key={videoSrc}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 pointer-events-none ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            onLoadedData={() => setVideoLoaded(true)}
-            onCanPlay={(e) => {
-              const vid = e.currentTarget;
-              if (vid.paused) vid.play().catch(() => {});
-            }}
-            webkit-playsinline="true"
-            x-webkit-airplay="deny"
-            disablePictureInPicture
-            disableRemotePlayback
-            src={videoSrc}
+    <section
+      className="relative w-full bg-carbon overflow-hidden"
+      style={{ minHeight: "100vh" }}
+      aria-label="قطع غيار تويوتا الأصلية"
+    >
+      {/* Subtle ambient red gradient layer */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-60"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.18) 0%, transparent 60%)",
+        }}
+      />
+      {/* Vignette */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.7) 100%)",
+        }}
+      />
+
+      {/* Top red hairline */}
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-70" />
+
+      <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-16 flex flex-col items-center justify-center min-h-screen">
+        {/* MASSIVE display backdrop text */}
+        <h2
+          aria-hidden
+          dir="ltr"
+          className="font-display font-black tracking-tighter text-mega-outline select-none pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
+          style={{
+            fontSize: "clamp(72px, 14vw, 220px)",
+            lineHeight: 1,
+            letterSpacing: "-0.04em",
+          }}
+        >
+          TOYOTA GENUINE
+        </h2>
+
+        {/* Floating product with red glow */}
+        <div className="relative w-full max-w-[560px] aspect-square mx-auto">
+          {/* Red glow halo */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-red-glow animate-lux-pulse-glow"
+            style={{ filter: "blur(40px)" }}
           />
-        )}
-      </div>
+          {/* Gold orbit ring (subtle) */}
+          <div
+            aria-hidden
+            className="absolute inset-[15%] rounded-full border border-[hsl(var(--gold)/0.15)]"
+          />
+          <img
+            src={heroPart}
+            alt="فلتر زيت تويوتا الأصلي"
+            width={1024}
+            height={1024}
+            fetchPriority="high"
+            decoding="async"
+            className="relative w-full h-full object-contain animate-lux-float drop-shadow-2xl"
+            style={{ filter: "drop-shadow(0 30px 40px hsl(0 0% 0% / 0.6))" }}
+          />
+        </div>
 
-      {/* Cinematic Overlays */}
-      <div className="absolute inset-0 z-[1]" style={{
-        background: "linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 35%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.92) 100%)"
-      }} />
-      <div className="absolute inset-0 z-[1]" style={{
-        background: "linear-gradient(to left, transparent 30%, rgba(0,0,0,0.5) 100%)"
-      }} />
-      <div className="absolute inset-0 z-[1] opacity-30" style={{
-        background: "radial-gradient(ellipse at 80% 80%, hsl(var(--primary) / 0.15), transparent 60%)"
-      }} />
-
-      {/* Corner accent glow */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] z-[2] animate-fade-in">
-        <div className="w-full h-full bg-gradient-to-bl from-primary/8 via-transparent to-transparent" />
-      </div>
-
-      {/* ── Main Content ── */}
-      <div className="container mx-auto px-4 md:px-6 relative z-10 pb-8 md:pb-12 animate-fade-in">
-        <div className="max-w-[820px]">
-          {/* Accent line */}
-          <div className="w-14 h-[3px] bg-gradient-to-r from-primary to-primary/40 rounded-full mb-7" />
-
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2.5 border border-white/10 rounded-full px-5 py-2.5 mb-8 bg-white/[0.06]">
-            <Cog className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: "10s" }} />
-            <span className="text-[13px] font-bold text-white/80 tracking-wider uppercase">
-              {t("hero.badge")}
+        {/* Headline overlay (below product) */}
+        <div className="relative text-center mt-8 md:mt-10 max-w-3xl animate-lux-fade-up">
+          {/* Gold authenticity badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full border border-[hsl(var(--gold)/0.4)] bg-[hsl(var(--gold)/0.06)] backdrop-blur-sm">
+            <ShieldCheck className="w-4 h-4 text-gold" />
+            <span className="text-gold font-tajawal font-bold text-sm tracking-wide">
+              موزع تويوتا المعتمد رسمياً
             </span>
-            <ShieldCheck className="w-4 h-4 text-primary" />
           </div>
 
-          {/* Title */}
-          <h1 className="text-[1.75rem] sm:text-[2rem] md:text-[2.75rem] lg:text-[3.5rem] font-black text-white leading-[1.45] md:leading-[1.4] tracking-tight mb-6">
-            <span className="inline-block">{t("hero.title1")}</span>
-            <br />
-            <span className="inline-block">{t("hero.title2")} </span>
-            <span className="inline-block relative">
-              <span className="relative z-10 text-primary" style={{ textShadow: "0 0 20px hsl(var(--primary) / 0.3)" }}>
-                {t("hero.title3")}
-              </span>
-              <span className="absolute -bottom-1.5 left-0 right-0 h-[5px] bg-primary/15 rounded-full" />
-            </span>
-            <span className="inline-block"> {t("hero.title4")}</span>
+          <h1
+            className="font-tajawal font-black text-white leading-[1.05]"
+            style={{ fontSize: "clamp(36px, 6vw, 68px)" }}
+          >
+            قطع غيار تويوتا{" "}
+            <span className="text-toyota-red">الأصلية</span>
           </h1>
 
-          {/* Description */}
-          <p
-            className="text-white/70 text-[15px] md:text-[1.1rem] leading-[2] max-w-[640px] mb-10 font-medium animate-fade-in"
-            style={{ animationDelay: "0.3s", animationFillMode: "both" }}
-            dangerouslySetInnerHTML={{ __html: t("hero.desc") }}
-          />
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-12 animate-fade-in" style={{ animationDelay: "0.5s", animationFillMode: "both" }}>
-            {isDealer ? (
-              <>
-                <Button
-                  size="lg"
-                  className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)] hover:-translate-y-0.5 active:scale-[0.97]"
-                  asChild
-                >
-                  <Link to="/dealer">
-                    <LayoutDashboard className="w-5 h-5" />
-                    {t("hero.dealer_dashboard") || "لوحة التحكم"}
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer hover:-translate-y-0.5 active:scale-[0.97]"
-                  asChild
-                >
-                  <Link to="/products">
-                    <ShoppingCart className="w-5 h-5" />
-                    {t("hero.quick_order") || "اطلب الآن"}
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  size="lg"
-                  className="text-[15px] px-8 py-6 gap-2.5 font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 w-full sm:w-auto shadow-[0_8px_30px_-4px_hsl(var(--primary)/0.4)] hover:shadow-[0_12px_40px_-4px_hsl(var(--primary)/0.5)] hover:-translate-y-0.5 active:scale-[0.97]"
-                  asChild
-                >
-                  <Link to="/products">
-                    <Package className="w-5 h-5" />
-                    {t("hero.browse_products")}
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-[15px] px-8 py-6 gap-2.5 font-bold border border-white/10 text-white bg-white/[0.06] hover:bg-white/[0.12] hover:border-white/20 transition-all duration-300 w-full sm:w-auto cursor-pointer hover:-translate-y-0.5 active:scale-[0.97]"
-                  onClick={() => document.getElementById("coverage")?.scrollIntoView({ behavior: "smooth" })}
-                >
-                  <MapPin className="w-5 h-5" />
-                  {t("hero.our_branches")}
-                </Button>
-              </>
-            )}
+          {/* Red divider */}
+          <div className="flex items-center justify-center gap-3 my-5">
+            <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-toyota-red" />
+            <span className="w-1.5 h-1.5 rounded-full bg-toyota-red shadow-red-glow" />
+            <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-toyota-red" />
           </div>
 
-          {/* Lead Capture — visitors only (no auth) */}
-          {!user && <HeroLeadCapture />}
+          <p className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide">
+            ضمان الجودة. ضمان الأمان.{" "}
+            <span className="text-white font-bold">ضمان تويوتا.</span>
+          </p>
 
-
-          {/* Stats */}
-          <div className="flex items-center gap-0 animate-fade-in" style={{ animationDelay: "0.7s", animationFillMode: "both" }}>
-            {stats.map((stat, i) => (
-              <div key={stat.label} className="flex items-center">
-                <div className="flex flex-col items-center px-5 md:px-7">
-                  <AnimatedCounter value={stat.value} suffix={stat.suffix} delay={1.3 + i * 0.3} />
-                  <span className="text-white/35 text-[11px] md:text-xs mt-1.5 font-semibold tracking-wide">
-                    {stat.label}
-                  </span>
-                </div>
-                {i < stats.length - 1 && (
-                  <div className="w-px h-10 bg-gradient-to-b from-transparent via-white/15 to-transparent" />
-                )}
-              </div>
-            ))}
+          {/* CTA */}
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/parts-by-type"
+              className="group relative inline-flex items-center gap-3 px-9 py-4 rounded-full bg-toyota-red text-white font-tajawal font-black text-lg shadow-red-glow transition-all duration-300 hover:scale-105 hover:shadow-[0_0_80px_hsl(var(--toyota-red)/0.7)]"
+            >
+              <span>تسوّق الآن</span>
+              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+              <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/20 pointer-events-none" />
+            </Link>
+            <Link
+              to="/genuine-parts"
+              className="font-tajawal font-bold text-white/70 hover:text-white text-base px-6 py-3 border-b border-transparent hover:border-toyota-red transition-all"
+            >
+              تعرّف على ضمان الأصالة →
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Bottom red accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] z-20">
-        <div className="w-full h-full bg-gradient-to-r from-primary/60 via-primary to-primary/60" />
-      </div>
-
-      {/* Scroll indicator */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center animate-fade-in" style={{ animationDelay: "2s", animationFillMode: "both" }}>
-        <div className="w-6 h-9 rounded-full border-2 border-white/15 flex items-start justify-center p-1.5">
-          <div className="w-1 h-2 bg-primary rounded-full animate-bounce" />
-        </div>
-      </div>
+      {/* Bottom red hairline */}
+      <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-70" />
     </section>
   );
 };
