@@ -59,27 +59,37 @@ const AboutBrief = () => {
   const ArrowIcon = isAr ? ArrowLeft : ArrowRight;
 
   return (
-    <section id="about" className="relative py-28 md:py-36 bg-secondary overflow-hidden">
+    <section id="about" className="relative py-24 md:py-32 bg-carbon overflow-hidden font-tajawal">
+      {/* Red hairlines */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-toyota-red/40 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-toyota-red/20 to-transparent" />
+
+      {/* Ambient red glow */}
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-toyota-red/10 blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-toyota-red/10 blur-[140px] pointer-events-none" />
+
+      {/* Mechanical accents */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
         {mechanicalAccents.map((part, i) => (
-          <motion.div key={i} className="absolute" style={{ left: part.x, top: part.y }} initial={{ opacity: 0 }} animate={{ opacity: [0, 0.06, 0.04, 0.06, 0], rotate: [0, part.rotate] }} transition={{ duration: part.duration, repeat: Infinity, ease: "linear" }}>
-            <part.icon style={{ width: part.size, height: part.size }} className="text-secondary-foreground/10" strokeWidth={1} />
+          <motion.div key={i} className="absolute" style={{ left: part.x, top: part.y }} initial={{ opacity: 0 }} animate={{ opacity: [0, 0.08, 0.05, 0.08, 0], rotate: [0, part.rotate] }} transition={{ duration: part.duration, repeat: Infinity, ease: "linear" }}>
+            <part.icon style={{ width: part.size, height: part.size }} className="text-white/10" strokeWidth={1} />
           </motion.div>
         ))}
       </div>
 
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`, backgroundSize: "80px 80px" }} />
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `linear-gradient(hsl(var(--toyota-red)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--toyota-red)) 1px, transparent 1px)`, backgroundSize: "80px 80px" }} />
 
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="text-center mb-20">
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-secondary-foreground leading-tight mb-4">
-            {t("about.header")} <span className="text-primary">{t("about.header_highlight")}</span>
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="text-center mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white leading-tight mb-4">
+            {t("about.header")} <span className="text-toyota-red">{t("about.header_highlight")}</span>
           </h2>
-          <p className="text-secondary-foreground/50 text-sm leading-relaxed max-w-md mx-auto">{t("about.sub")}</p>
+          <p className="text-white/50 text-sm md:text-base leading-relaxed max-w-md mx-auto">{t("about.sub")}</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start mb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start mb-20">
+
           <motion.div className="lg:col-span-7 order-1" initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
             <div className="space-y-8 mb-10">
               {isAr ? (
