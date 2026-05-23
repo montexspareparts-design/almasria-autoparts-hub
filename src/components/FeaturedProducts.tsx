@@ -13,7 +13,12 @@ import { Link } from "react-router-dom";
 
 const DAILY_LIMIT = 20;
 
-const FeaturedProducts = () => {
+interface FeaturedProductsProps {
+  categorySlugs?: string[];
+}
+
+const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
+
   const { addItem } = useCart();
   const { user, isDealer, dealerAccount } = useAuth();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
