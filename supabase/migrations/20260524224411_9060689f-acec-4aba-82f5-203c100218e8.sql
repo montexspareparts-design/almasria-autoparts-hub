@@ -1,0 +1,2 @@
+DROP TRIGGER IF EXISTS trg_notify_on_reporter_submit ON public.reporter_daily_reports;
+DROP TRIGGER IF EXISTS trg_notify_on_reporter_submit_ins ON public.reporter_daily_reports;
