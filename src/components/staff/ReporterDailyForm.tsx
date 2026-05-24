@@ -256,12 +256,6 @@ export default function ReporterDailyForm() {
         .select().maybeSingle();
       if (error) throw error;
       if (saved) setData(saved as ReportData);
-      // إرسال رسالة واتساب للإدارة بتفاصيل التقرير (fire-and-forget)
-      if (saved?.id) {
-        supabase.functions
-          .invoke("notify-reporter-report-whatsapp", { body: { report_id: saved.id } })
-          .catch((e) => console.error("WA notify failed:", e));
-      }
       setConfirmOpen(false);
       setPreviewOpen(false);
       setThankYouOpen(true); // اعرض شاشة الشكر بدل الـ toast
