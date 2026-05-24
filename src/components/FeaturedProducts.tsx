@@ -113,9 +113,11 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
         let q = supabase
           .from("products")
           .select("*, product_categories(name_ar)")
-          .in("id", topIds.slice(0, 60))
+          .in("id", topIds.slice(0, 100))
           .eq("is_active", true)
-          .gt("stock_quantity", 0);
+          .gt("stock_quantity", 0)
+          .not("image_url", "is", null)
+          .neq("image_url", "");
         if (categoryIds) q = q.in("category_id", categoryIds);
         const { data } = await q;
         topProducts = (data || []).sort(
@@ -126,18 +128,41 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
       if (topProducts.length >= 8) return topProducts.slice(0, 8);
 
       const excludeIds = topProducts.map((p) => p.id);
+
+      // Fallback 1: Toyota Genuine parts with images
+      let gq = supabase
+        .from("products")
+        .select("*, product_categories(name_ar)")
+        .eq("is_active", true)
+        .eq("brand", "toyota_genuine")
+        .gt("stock_quantity", 0)
+        .not("image_url", "is", null)
+        .neq("image_url", "")
+        .not("id", "in", `(${excludeIds.length ? excludeIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
+        .order("created_at", { ascending: false })
+        .limit(8 - topProducts.length);
+      if (categoryIds) gq = gq.in("category_id", categoryIds);
+      const { data: genuine } = await gq;
+
+      let combined = [...topProducts, ...(genuine || [])];
+      if (combined.length >= 8) return combined.slice(0, 8);
+
+      // Fallback 2: any other in-stock with image
+      const excludeIds2 = combined.map((p) => p.id);
       let fq = supabase
         .from("products")
         .select("*, product_categories(name_ar)")
         .eq("is_active", true)
         .gt("stock_quantity", 0)
-        .not("id", "in", `(${excludeIds.length ? excludeIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
+        .not("image_url", "is", null)
+        .neq("image_url", "")
+        .not("id", "in", `(${excludeIds2.length ? excludeIds2.join(",") : "00000000-0000-0000-0000-000000000000"})`)
         .order("created_at", { ascending: false })
-        .limit(8 - topProducts.length);
+        .limit(8 - combined.length);
       if (categoryIds) fq = fq.in("category_id", categoryIds);
       const { data: fillers } = await fq;
 
-      return [...topProducts, ...(fillers || [])].slice(0, 8);
+      return [...combined, ...(fillers || [])].slice(0, 8);
     },
   });
 
