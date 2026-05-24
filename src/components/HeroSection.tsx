@@ -147,9 +147,9 @@ const HeroSection = () => {
           {/* Floating part-number chip */}
           <div className="absolute top-4 right-2 md:top-8 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
                style={{ animationDelay: "0.6s" }}>
-            <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
-              PART # <span className="text-toyota-red">YZZN2</span>
-            </span>
+          <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
+            PART # <span className="text-toyota-red">90915-YZZN2</span>
+          </span>
           </div>
           {/* Floating "Iridium" chip */}
           <div className="hidden sm:block absolute bottom-6 left-2 md:bottom-10 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
