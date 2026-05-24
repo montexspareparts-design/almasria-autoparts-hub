@@ -102,8 +102,6 @@ const Index = () => {
       <Navbar />
       <HeroSection />
 
-      {/* Luxury trust strip — eager (above the fold) */}
-      <Suspense fallback={<SectionFallback />}><TrustBadgesStrip /></Suspense>
 
       {/* Below-the-fold — load when scrolled near */}
       <LazySection><AboutBrief /></LazySection>
