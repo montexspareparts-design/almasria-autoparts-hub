@@ -78,3 +78,6 @@ verify_jwt = false
 
 [functions.verify-email-otp-reset]
 verify_jwt = false
+
+[functions.notify-reporter-report-whatsapp]
+verify_jwt = false
