@@ -64,7 +64,7 @@ const WhyGenuineSection = () => {
               كل قطعة بتطلبها هي قطعة تويوتا الأصلية — بضمان الوكالة وضمان راحة بالك.
             </p>
             <Link
-              to="/genuine-parts"
+              to="/products/genuine-toyota-parts"
               className="inline-flex items-center gap-2 mt-8 px-7 py-3.5 rounded-full bg-white text-carbon font-tajawal font-black hover:bg-toyota-red hover:text-white transition-colors"
             >
               تعرّف على ضمان الأصالة ←
