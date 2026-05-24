@@ -83,8 +83,12 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
   // When categorySlugs provided → filter by those categories instead.
   const catKey = categorySlugs?.join(",") || "all";
   const { data: products, isLoading } = useQuery({
-    queryKey: ["popular_products_v2", catKey],
+    queryKey: ["popular_products_v3", catKey],
     queryFn: async () => {
+      // Exclude brand-logo placeholders (they're not real product images)
+      const isRealImage = (url: string | null) =>
+        !!url && url.trim() !== "" && !url.includes("/brands/") && !url.includes("placeholder");
+
       // Resolve category ids if filtering
       let categoryIds: string[] | null = null;
       if (categorySlugs && categorySlugs.length) {
@@ -113,23 +117,24 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
         let q = supabase
           .from("products")
           .select("*, product_categories(name_ar)")
-          .in("id", topIds.slice(0, 100))
+          .in("id", topIds.slice(0, 200))
           .eq("is_active", true)
           .gt("stock_quantity", 0)
           .not("image_url", "is", null)
-          .neq("image_url", "");
+          .neq("image_url", "")
+          .not("image_url", "ilike", "%/brands/%");
         if (categoryIds) q = q.in("category_id", categoryIds);
         const { data } = await q;
-        topProducts = (data || []).sort(
-          (a: any, b: any) => (counts[b.id] || 0) - (counts[a.id] || 0)
-        );
+        topProducts = (data || [])
+          .filter((p: any) => isRealImage(p.image_url))
+          .sort((a: any, b: any) => (counts[b.id] || 0) - (counts[a.id] || 0));
       }
 
       if (topProducts.length >= 8) return topProducts.slice(0, 8);
 
       const excludeIds = topProducts.map((p) => p.id);
 
-      // Fallback 1: Toyota Genuine parts with images
+      // Fallback 1: Toyota Genuine parts with real images
       let gq = supabase
         .from("products")
         .select("*, product_categories(name_ar)")
@@ -138,16 +143,17 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
         .gt("stock_quantity", 0)
         .not("image_url", "is", null)
         .neq("image_url", "")
+        .not("image_url", "ilike", "%/brands/%")
         .not("id", "in", `(${excludeIds.length ? excludeIds.join(",") : "00000000-0000-0000-0000-000000000000"})`)
         .order("created_at", { ascending: false })
-        .limit(8 - topProducts.length);
+        .limit((8 - topProducts.length) * 2);
       if (categoryIds) gq = gq.in("category_id", categoryIds);
       const { data: genuine } = await gq;
 
-      let combined = [...topProducts, ...(genuine || [])];
+      let combined = [...topProducts, ...((genuine || []).filter((p: any) => isRealImage(p.image_url)))];
       if (combined.length >= 8) return combined.slice(0, 8);
 
-      // Fallback 2: any other in-stock with image
+      // Fallback 2: any other in-stock with real image
       const excludeIds2 = combined.map((p) => p.id);
       let fq = supabase
         .from("products")
@@ -156,15 +162,17 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
         .gt("stock_quantity", 0)
         .not("image_url", "is", null)
         .neq("image_url", "")
+        .not("image_url", "ilike", "%/brands/%")
         .not("id", "in", `(${excludeIds2.length ? excludeIds2.join(",") : "00000000-0000-0000-0000-000000000000"})`)
         .order("created_at", { ascending: false })
-        .limit(8 - combined.length);
+        .limit((8 - combined.length) * 2);
       if (categoryIds) fq = fq.in("category_id", categoryIds);
       const { data: fillers } = await fq;
 
-      return [...combined, ...(fillers || [])].slice(0, 8);
+      return [...combined, ...((fillers || []).filter((p: any) => isRealImage(p.image_url)))].slice(0, 8);
     },
   });
+
 
 
   const handleAdd = (product: any, e: React.MouseEvent) => {
