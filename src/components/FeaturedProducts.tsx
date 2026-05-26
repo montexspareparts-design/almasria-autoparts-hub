@@ -261,7 +261,7 @@ const FeaturedProducts = ({ categorySlugs }: FeaturedProductsProps = {}) => {
               {/* Content */}
               <div className="p-2.5 sm:p-4 relative z-10">
                 <p className="text-[8px] sm:text-[10px] font-mono text-white/40 mb-1">
-                  {product.sku}
+                  <bdi>{product.part_number || product.sku}</bdi>
                 </p>
                 <h4 className="text-[11px] sm:text-sm font-black text-white leading-relaxed mb-2 line-clamp-2 min-h-[2.2rem]">
                   {product.name_ar}
