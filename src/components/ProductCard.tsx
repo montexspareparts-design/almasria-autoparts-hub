@@ -165,13 +165,13 @@ const ProductCard = memo(({
               </Link>
             )}
           </div>
-          {/* SKU — single line, logical alignment so it sits at the inline-start in both RTL and LTR */}
+          {/* Part Number — single line, logical alignment so it sits at the inline-start in both RTL and LTR */}
           <div className="w-full text-start overflow-hidden">
             <bdi
-              title={product.sku}
+              title={(product as any).part_number || product.sku}
               className="inline-block max-w-full truncate align-middle text-[8px] sm:text-[10px] font-mono bg-muted/40 text-muted-foreground/70 px-1.5 sm:px-2 py-0.5 rounded-md leading-none tracking-widest whitespace-nowrap select-all"
             >
-              {product.sku}
+              {(product as any).part_number || product.sku}
             </bdi>
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
@@ -376,15 +376,15 @@ const ProductCard = memo(({
       {/* ── Content Section ── refined editorial typography */}
       <div className="relative flex-1 flex flex-col p-3.5 sm:p-5 z-[2] text-right" onClick={(e) => e.stopPropagation()}>
 
-        {/* SKU strip — monospaced, quietly elegant, sits above the title like a reference number */}
+        {/* Part Number strip — monospaced, quietly elegant, sits above the title like a reference number */}
         <div className="mb-1.5 flex items-center justify-end gap-2">
           <bdi
-            title={product.sku}
+            title={(product as any).part_number || product.sku}
             className="inline-block max-w-[70%] truncate align-middle text-[9px] sm:text-[10px] font-mono
               text-[hsl(210_8%_45%)] tracking-[0.18em] leading-none whitespace-nowrap select-all
               uppercase"
           >
-            {product.sku}
+            {(product as any).part_number || product.sku}
           </bdi>
           <span aria-hidden className="h-px flex-1 bg-gradient-to-l from-transparent via-border/60 to-transparent" />
         </div>
