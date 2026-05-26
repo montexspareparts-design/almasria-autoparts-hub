@@ -621,10 +621,11 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     const baseFilter = (p: any) => {
       const normalizedName = normalizeArabic(p.name_ar || "");
       const skuLower = (p.sku || "").toLowerCase();
+      const partNumberLower = (p.part_number || "").toLowerCase();
       const nameEnLower = (p.name_en || "").toLowerCase();
       const descArNorm = normalizeArabic(p.description_ar || "");
       const modelsText = normalizeArabic((p.compatible_models || []).join(" "));
-      const allText = `${normalizedName} ${skuLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
+      const allText = `${normalizedName} ${skuLower} ${partNumberLower} ${nameEnLower} ${descArNorm} ${modelsText}`;
 
       // When searching, show results from ALL brands (cross-brand search)
       const hasActiveSearch = !!rawSearch;
@@ -635,7 +636,10 @@ export function useProductListing(options: UseProductListingOptions = {}) {
         const textToSearch = expandAliases(searchYear ? searchWithoutYear : rawSearch);
         if (textToSearch) {
           const searchWords = textToSearch.trim().split(/\s+/).filter((w: string) => w.length > 0);
-          matchesSearch = searchWords.every((word: string) => fuzzyMatchWord(word, allText));
+          // Direct substring match on part_number — part numbers contain hyphens/codes that fuzzy match may miss
+          const rawLower = rawSearch.toLowerCase();
+          const directPartNumberHit = partNumberLower && partNumberLower.includes(rawLower);
+          matchesSearch = directPartNumberHit || searchWords.every((word: string) => fuzzyMatchWord(word, allText));
         }
       }
 
@@ -652,7 +656,8 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       }
 
       const matchesYear = !filters.year || p.name_ar.includes(filters.year);
-      const matchesPartNumber = !filters.partNumber || skuLower.includes(filters.partNumber.toLowerCase());
+      const filterPN = filters.partNumber?.toLowerCase();
+      const matchesPartNumber = !filterPN || partNumberLower.includes(filterPN) || skuLower.includes(filterPN);
       const price = p.base_price;
       const matchesPriceMin = !filters.priceMin || price >= Number(filters.priceMin);
       const matchesPriceMax = !filters.priceMax || price <= Number(filters.priceMax);
