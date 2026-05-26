@@ -192,6 +192,7 @@ export const getSearchRelevanceScore = (query: string, product: {
   description_ar?: string | null;
   compatible_models?: string[] | null;
   sku?: string | null;
+  part_number?: string | null;
   available_quantity?: number | null;
   stock_quantity?: number | null;
   image_url?: string | null;
@@ -497,7 +498,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name_ar, name_en, sku, image_url, base_price, stock_quantity, safety_stock, max_order_cap, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
+        .select("id, name_ar, name_en, sku, part_number, image_url, base_price, stock_quantity, safety_stock, max_order_cap, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
         .eq("is_active", true)
         .order("created_at", { ascending: false })
         .limit(800);
