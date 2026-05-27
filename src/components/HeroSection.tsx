@@ -23,6 +23,32 @@ const HeroSection = () => {
     []
   );
 
+  // gold sparkle stars scattered around hero
+  const sparkles = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        top: `${(i * 37 + 8) % 90}%`,
+        left: `${(i * 71 + 5) % 95}%`,
+        delay: `${(i * 0.4) % 4}s`,
+        size: 6 + (i % 3) * 2,
+      })),
+    []
+  );
+
+  // floating geometric shards (small rotated squares)
+  const shards = useMemo(
+    () =>
+      Array.from({ length: 8 }).map((_, i) => ({
+        top: `${(i * 43 + 15) % 85}%`,
+        left: `${(i * 61 + 10) % 90}%`,
+        delay: `${(i * 0.9) % 6}s`,
+        size: 8 + (i % 3) * 4,
+        rot: (i * 47) % 360,
+      })),
+    []
+  );
+
+
   return (
     <section
       id="hero"
