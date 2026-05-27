@@ -608,3 +608,53 @@ html.hc-mode a:not(.no-hc-underline) {
     linear-gradient(90deg, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
   background-size: 60px 60px;
 }
+
+/* === Cinematic enhancements === */
+@keyframes lux-scan-beam {
+  0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  10%  { opacity: 0.55; }
+  90%  { opacity: 0.55; }
+  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+}
+.animate-lux-scan-beam { animation: lux-scan-beam 6.5s ease-in-out 1.5s infinite; }
+
+@keyframes lux-orbit-spin   { to { transform: rotate(360deg); } }
+@keyframes lux-orbit-spin-r { to { transform: rotate(-360deg); } }
+.animate-lux-orbit-spin   { animation: lux-orbit-spin 50s linear infinite; }
+.animate-lux-orbit-spin-r { animation: lux-orbit-spin-r 70s linear infinite; }
+
+@keyframes lux-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50%      { opacity: 1; transform: scale(1)   rotate(180deg); }
+}
+.animate-lux-twinkle { animation: lux-twinkle 3.5s ease-in-out infinite; }
+
+@keyframes lux-flare-pulse {
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.95); }
+  50%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.1);  }
+}
+.animate-lux-flare { animation: lux-flare-pulse 5s ease-in-out infinite; }
+
+@keyframes lux-callout-in {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0);   }
+}
+.animate-lux-callout { animation: lux-callout-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes lux-dash-flow {
+  to { stroke-dashoffset: -200; }
+}
+.animate-lux-dash-flow { animation: lux-dash-flow 4s linear infinite; }
+
+@keyframes lux-shard-drift {
+  0%, 100% { transform: translate(0,0) rotate(0deg); opacity: 0.25; }
+  50%      { transform: translate(8px,-14px) rotate(20deg); opacity: 0.55; }
+}
+.animate-lux-shard { animation: lux-shard-drift 9s ease-in-out infinite; }
+
+@keyframes lux-ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-lux-ticker { animation: lux-ticker 40s linear infinite; }
+

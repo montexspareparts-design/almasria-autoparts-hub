@@ -23,6 +23,32 @@ const HeroSection = () => {
     []
   );
 
+  // gold sparkle stars scattered around hero
+  const sparkles = useMemo(
+    () =>
+      Array.from({ length: 14 }).map((_, i) => ({
+        top: `${(i * 37 + 8) % 90}%`,
+        left: `${(i * 71 + 5) % 95}%`,
+        delay: `${(i * 0.4) % 4}s`,
+        size: 6 + (i % 3) * 2,
+      })),
+    []
+  );
+
+  // floating geometric shards (small rotated squares)
+  const shards = useMemo(
+    () =>
+      Array.from({ length: 8 }).map((_, i) => ({
+        top: `${(i * 43 + 15) % 85}%`,
+        left: `${(i * 61 + 10) % 90}%`,
+        delay: `${(i * 0.9) % 6}s`,
+        size: 8 + (i % 3) * 4,
+        rot: (i * 47) % 360,
+      })),
+    []
+  );
+
+
   return (
     <section
       id="hero"
@@ -92,6 +118,88 @@ const HeroSection = () => {
         <span className="h-16 w-px bg-gradient-to-b from-gold/60 via-transparent to-transparent" />
       </div>
 
+      {/* === CINEMATIC LAYERS === */}
+
+      {/* Diagonal red scan beam — sweeps across the hero */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden z-[5]">
+        <div
+          className="absolute -top-1/2 left-0 h-[200%] w-[18%] animate-lux-scan-beam"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, hsl(var(--toyota-red) / 0.08) 35%, hsl(var(--toyota-red) / 0.35) 50%, hsl(var(--toyota-red) / 0.08) 65%, transparent 100%)",
+            filter: "blur(2px)",
+            mixBlendMode: "screen",
+          }}
+        />
+      </div>
+
+      {/* Lens flare pinpoint */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
+        style={{
+          background:
+            "radial-gradient(circle, hsl(44 90% 70% / 0.35) 0%, hsl(var(--toyota-red) / 0.12) 30%, transparent 65%)",
+          filter: "blur(28px)",
+          transform: "translate(-50%,-50%)",
+        }}
+      />
+
+      {/* Gold sparkle stars */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[6]">
+        {sparkles.map((s, i) => (
+          <Sparkles
+            key={`sp-${i}`}
+            className="absolute text-gold/70 animate-lux-twinkle"
+            style={{
+              top: s.top,
+              left: s.left,
+              width: s.size,
+              height: s.size,
+              animationDelay: s.delay,
+              filter: "drop-shadow(0 0 6px hsl(var(--gold) / 0.7))",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Floating geometric shards */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+        {shards.map((s, i) => (
+          <span
+            key={`sh-${i}`}
+            className="absolute block border border-toyota-red/30 animate-lux-shard"
+            style={{
+              top: s.top,
+              left: s.left,
+              width: s.size,
+              height: s.size,
+              transform: `rotate(${s.rot}deg)`,
+              animationDelay: s.delay,
+              boxShadow: "0 0 12px hsl(var(--toyota-red) / 0.4)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Edge ticker — top */}
+      <div aria-hidden className="pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
+        <div className="flex whitespace-nowrap animate-lux-ticker font-display font-black text-[10px] tracking-[0.5em] text-soft">
+          {Array.from({ length: 2 }).map((_, k) => (
+            <span key={k} className="flex items-center gap-6 px-6" dir="ltr">
+              <span className="text-toyota-red">●</span> TOYOTA GENUINE PARTS
+              <span className="text-gold">◆</span> OEM CERTIFIED
+              <span className="text-toyota-red">●</span> MADE IN JAPAN
+              <span className="text-gold">◆</span> EST · 1985 · CAIRO
+              <span className="text-toyota-red">●</span> AUTHORIZED DISTRIBUTOR
+              <span className="text-gold">◆</span> AL MASRIA GROUP
+              <span className="text-toyota-red">●</span> NATIONWIDE SHIPPING
+              <span className="text-gold">◆</span> 100% AUTHENTIC
+            </span>
+          ))}
+        </div>
+      </div>
+
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
         {/* MARQUEE backdrop text — slow horizontal scroll */}
         <div
@@ -134,6 +242,95 @@ const HeroSection = () => {
               filter: "blur(20px)",
             }}
           />
+
+          {/* Counter-spinning outer orbit (dashed) */}
+          <div
+            aria-hidden
+            className="absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
+          />
+
+          {/* Animated SVG blueprint — crosshair + measurement arcs */}
+          <svg
+            aria-hidden
+            viewBox="0 0 400 400"
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ overflow: "visible" }}
+          >
+            <defs>
+              <radialGradient id="hud-fade" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="hsl(var(--toyota-red))" stopOpacity="0" />
+                <stop offset="70%" stopColor="hsl(var(--toyota-red))" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="hsl(var(--toyota-red))" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* crosshair */}
+            <line x1="0" y1="200" x2="400" y2="200" stroke="hsl(var(--toyota-red) / 0.18)" strokeWidth="0.5" strokeDasharray="4 6" />
+            <line x1="200" y1="0" x2="200" y2="400" stroke="hsl(var(--toyota-red) / 0.18)" strokeWidth="0.5" strokeDasharray="4 6" />
+            {/* flowing arc top-right */}
+            <circle
+              cx="200" cy="200" r="170"
+              fill="none"
+              stroke="hsl(var(--gold) / 0.55)"
+              strokeWidth="1"
+              strokeDasharray="6 10"
+              strokeDashoffset="0"
+              className="animate-lux-dash-flow"
+              pathLength="200"
+            />
+            {/* small tick marks at cardinal points */}
+            {[0, 90, 180, 270].map((deg) => (
+              <line
+                key={deg}
+                x1="200" y1="20" x2="200" y2="34"
+                stroke="hsl(var(--gold) / 0.7)"
+                strokeWidth="1.2"
+                transform={`rotate(${deg} 200 200)`}
+              />
+            ))}
+            {/* corner registration marks */}
+            <g stroke="hsl(var(--toyota-red) / 0.6)" strokeWidth="1" fill="none">
+              <path d="M40,60 L40,40 L60,40" />
+              <path d="M360,40 L360,60 M360,40 L340,40" />
+              <path d="M40,340 L40,360 L60,360" />
+              <path d="M360,360 L340,360 M360,360 L360,340" />
+            </g>
+          </svg>
+
+          {/* HUD micro-callouts with leader lines */}
+          <div
+            aria-hidden
+            className="hidden md:block absolute top-[18%] -right-2 z-10 animate-lux-callout"
+            style={{ animationDelay: "1.1s" }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <div className="text-[9px] tracking-[0.3em] text-gold font-display font-black">OEM ✓</div>
+                <div className="text-[10px] text-white/70 font-display">QUALITY GRADE A+</div>
+              </div>
+              <div className="flex items-center">
+                <span className="block w-10 h-px bg-gradient-to-r from-gold/70 to-transparent" />
+                <span className="block w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_hsl(var(--gold))]" />
+              </div>
+            </div>
+          </div>
+
+          <div
+            aria-hidden
+            className="hidden md:block absolute bottom-[20%] -left-2 z-10 animate-lux-callout"
+            style={{ animationDelay: "1.3s" }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                <span className="block w-1.5 h-1.5 rounded-full bg-toyota-red shadow-[0_0_8px_hsl(var(--toyota-red))]" />
+                <span className="block w-10 h-px bg-gradient-to-l from-toyota-red/70 to-transparent" />
+              </div>
+              <div className="text-left">
+                <div className="text-[9px] tracking-[0.3em] text-toyota-red font-display font-black">JAPAN ◆ DENSO</div>
+                <div className="text-[10px] text-white/70 font-display">FACTORY SEALED</div>
+              </div>
+            </div>
+          </div>
+
           <img
             src={heroPart}
             alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
