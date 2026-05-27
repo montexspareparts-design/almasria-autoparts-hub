@@ -610,13 +610,6 @@ html.hc-mode a:not(.no-hc-underline) {
 }
 
 /* === Cinematic enhancements === */
-@keyframes lux-scan-beam {
-  0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
-  10%  { opacity: 0.55; }
-  90%  { opacity: 0.55; }
-  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
-}
-.animate-lux-scan-beam { animation: lux-scan-beam 6.5s ease-in-out 1.5s infinite; }
 
 @keyframes lux-orbit-spin   { to { transform: rotate(360deg); } }
 @keyframes lux-orbit-spin-r { to { transform: rotate(-360deg); } }
