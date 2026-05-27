@@ -9,6 +9,7 @@ import brandOil from "@/assets/brand-toyota-oil.webp";
 import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
+import brandFbk from "@/assets/brand-fbk-logo.webp";
 
 const brands = [
   { id: "toyota_genuine", nameAr: "قطع غيار تويوتا الأصلية", nameEn: "Toyota Genuine Parts", code: "OEM", logo: brandGenuine, href: "/products/toyota-genuine", scale: 1 },
@@ -16,6 +17,7 @@ const brands = [
   { id: "mtx_aftermarket", nameAr: "MTX Aftermarket", nameEn: "MTX Aftermarket", code: "MTX", logo: brandMtx, href: "/products/mtx-aftermarket", scale: 1.5 },
   { id: "denso", nameAr: "دينسو", nameEn: "DENSO", code: "DNS", logo: brandDenso, href: "/products/denso", scale: 1 },
   { id: "aisin", nameAr: "أيسن", nameEn: "AISIN", code: "ASN", logo: brandAisin, href: "/products/aisin", scale: 1 },
+  { id: "fbk", nameAr: "FBK فرامل", nameEn: "FBK Brakes", code: "FBK", logo: brandFbk, href: "/products/fbk", scale: 1.2 },
 ];
 
 const ProductsShowcase = () => {
