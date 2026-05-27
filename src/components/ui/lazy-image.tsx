@@ -75,6 +75,10 @@ export const LazyImage = ({
   const [visible, setVisible] = useState(eager);
   const [loaded, setLoaded] = useState(() => (src ? loadedCache.has(src) : false));
   const [errored, setErrored] = useState(false);
+  // Fallback chain: optimized (Supabase render) → raw (Supabase object) → placeholder.
+  // Some JPEGs are rejected by the render endpoint with "Invalid source image" (422)
+  // even though the raw object serves fine; retry once before giving up.
+  const [useRaw, setUseRaw] = useState(false);
 
   useEffect(() => {
     if (eager || visible || !ref.current) return;
@@ -98,6 +102,7 @@ export const LazyImage = ({
   // Reset state when src changes
   useEffect(() => {
     if (!src) return;
+    setUseRaw(false);
     if (loadedCache.has(src)) {
       setLoaded(true);
       setErrored(false);
@@ -190,7 +195,7 @@ export const LazyImage = ({
 
       {showImage && (
         <img
-          src={optimizeSrc(src!, optimizeWidth)}
+          src={useRaw ? src! : optimizeSrc(src!, optimizeWidth)}
           alt={alt}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
@@ -212,7 +217,15 @@ export const LazyImage = ({
               finish();
             }
           }}
-          onError={() => setErrored(true)}
+          onError={() => {
+            // First failure on the optimized URL → retry once with the raw object URL.
+            // Only mark as errored after the raw attempt also fails.
+            if (!useRaw && src && src !== optimizeSrc(src, optimizeWidth)) {
+              setUseRaw(true);
+            } else {
+              setErrored(true);
+            }
+          }}
           className={cn(
             // Blur-to-sharp on first decode: image starts blurred and
             // crisps in 600ms once the file is decoded. Skeleton above
