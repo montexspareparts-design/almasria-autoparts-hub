@@ -195,7 +195,7 @@ export const LazyImage = ({
 
       {showImage && (
         <img
-          src={optimizeSrc(src!, optimizeWidth)}
+          src={useRaw ? src! : optimizeSrc(src!, optimizeWidth)}
           alt={alt}
           loading={eager ? "eager" : "lazy"}
           decoding="async"
@@ -217,7 +217,15 @@ export const LazyImage = ({
               finish();
             }
           }}
-          onError={() => setErrored(true)}
+          onError={() => {
+            // First failure on the optimized URL → retry once with the raw object URL.
+            // Only mark as errored after the raw attempt also fails.
+            if (!useRaw && src && src !== optimizeSrc(src, optimizeWidth)) {
+              setUseRaw(true);
+            } else {
+              setErrored(true);
+            }
+          }}
           className={cn(
             // Blur-to-sharp on first decode: image starts blurred and
             // crisps in 600ms once the file is decoded. Skeleton above
