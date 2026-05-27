@@ -118,22 +118,6 @@ const HeroSection = () => {
         <span className="h-16 w-px bg-gradient-to-b from-gold/60 via-transparent to-transparent" />
       </div>
 
-      {/* === CINEMATIC LAYERS === */}
-
-      {/* Diagonal red scan beam — sweeps across the hero */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden z-[5]">
-        <div
-          className="absolute -top-1/2 left-0 h-[200%] w-[18%] animate-lux-scan-beam"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 0%, hsl(var(--toyota-red) / 0.08) 35%, hsl(var(--toyota-red) / 0.35) 50%, hsl(var(--toyota-red) / 0.08) 65%, transparent 100%)",
-            filter: "blur(2px)",
-            mixBlendMode: "screen",
-          }}
-        />
-      </div>
-
-      {/* Lens flare pinpoint */}
       <div
         aria-hidden
         className="pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
