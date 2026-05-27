@@ -102,6 +102,7 @@ export const LazyImage = ({
   // Reset state when src changes
   useEffect(() => {
     if (!src) return;
+    setUseRaw(false);
     if (loadedCache.has(src)) {
       setLoaded(true);
       setErrored(false);
