@@ -75,6 +75,10 @@ export const LazyImage = ({
   const [visible, setVisible] = useState(eager);
   const [loaded, setLoaded] = useState(() => (src ? loadedCache.has(src) : false));
   const [errored, setErrored] = useState(false);
+  // Fallback chain: optimized (Supabase render) → raw (Supabase object) → placeholder.
+  // Some JPEGs are rejected by the render endpoint with "Invalid source image" (422)
+  // even though the raw object serves fine; retry once before giving up.
+  const [useRaw, setUseRaw] = useState(false);
 
   useEffect(() => {
     if (eager || visible || !ref.current) return;
