@@ -9,6 +9,7 @@ import brandOil from "@/assets/brand-toyota-oil.webp";
 import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
+import brandFbk from "@/assets/brand-fbk-logo.webp";
 
 const brands = [
   { id: "toyota_genuine", nameAr: "قطع غيار تويوتا الأصلية", nameEn: "Toyota Genuine Parts", code: "OEM", logo: brandGenuine, href: "/products/toyota-genuine", scale: 1 },
@@ -16,6 +17,7 @@ const brands = [
   { id: "mtx_aftermarket", nameAr: "MTX Aftermarket", nameEn: "MTX Aftermarket", code: "MTX", logo: brandMtx, href: "/products/mtx-aftermarket", scale: 1.5 },
   { id: "denso", nameAr: "دينسو", nameEn: "DENSO", code: "DNS", logo: brandDenso, href: "/products/denso", scale: 1 },
   { id: "aisin", nameAr: "أيسن", nameEn: "AISIN", code: "ASN", logo: brandAisin, href: "/products/aisin", scale: 1 },
+  { id: "fbk", nameAr: "FBK فرامل", nameEn: "FBK Brakes", code: "FBK", logo: brandFbk, href: "/products/fbk", scale: 1.2 },
 ];
 
 const ProductsShowcase = () => {
@@ -113,7 +115,7 @@ const ProductsShowcase = () => {
           <div className="inline-flex items-center gap-2 px-5 py-2 mb-6 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow">
             <ShieldCheck className="w-4 h-4 text-toyota-red" />
             <span className="font-display font-black text-xs tracking-[0.25em] text-white">
-              5 AUTHORIZED BRANDS
+              6 AUTHORIZED BRANDS
             </span>
           </div>
 
@@ -135,42 +137,14 @@ const ProductsShowcase = () => {
           </p>
         </motion.div>
 
-        {/* Brands Grid - 3+2 layout */}
+        {/* Brands Grid - 3+3 layout */}
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-            {brands.slice(0, 3).map((brand, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+            {brands.map((brand, i) => (
               <BrandCard key={brand.id} brand={brand} index={i} />
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-full sm:max-w-[66%] mx-auto">
-            {brands.slice(3).map((brand, i) => (
-              <BrandCard key={brand.id} brand={brand} index={i + 3} />
-            ))}
-          </div>
         </div>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="text-center mt-14"
-        >
-          <Link
-            to="/products"
-            className="group relative inline-flex items-center gap-3 px-9 py-4 rounded-full bg-toyota-red text-white font-tajawal font-black text-base overflow-hidden animate-lux-red-pulse transition-transform duration-300 hover:scale-[1.04]"
-          >
-            <span
-              aria-hidden
-              className="absolute inset-y-0 -inset-x-4 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-lux-shimmer-sweep"
-              style={{ width: "40%" }}
-            />
-            <span className="relative">تصفح جميع المنتجات</span>
-            <ArrowLeft className="relative w-5 h-5 transition-transform group-hover:-translate-x-1.5" />
-            <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/25 pointer-events-none" />
-          </Link>
-        </motion.div>
       </div>
     </section>
   );
