@@ -118,6 +118,88 @@ const HeroSection = () => {
         <span className="h-16 w-px bg-gradient-to-b from-gold/60 via-transparent to-transparent" />
       </div>
 
+      {/* === CINEMATIC LAYERS === */}
+
+      {/* Diagonal red scan beam — sweeps across the hero */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden z-[5]">
+        <div
+          className="absolute -top-1/2 left-0 h-[200%] w-[18%] animate-lux-scan-beam"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, hsl(var(--toyota-red) / 0.08) 35%, hsl(var(--toyota-red) / 0.35) 50%, hsl(var(--toyota-red) / 0.08) 65%, transparent 100%)",
+            filter: "blur(2px)",
+            mixBlendMode: "screen",
+          }}
+        />
+      </div>
+
+      {/* Lens flare pinpoint */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
+        style={{
+          background:
+            "radial-gradient(circle, hsl(44 90% 70% / 0.35) 0%, hsl(var(--toyota-red) / 0.12) 30%, transparent 65%)",
+          filter: "blur(28px)",
+          transform: "translate(-50%,-50%)",
+        }}
+      />
+
+      {/* Gold sparkle stars */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[6]">
+        {sparkles.map((s, i) => (
+          <Sparkles
+            key={`sp-${i}`}
+            className="absolute text-gold/70 animate-lux-twinkle"
+            style={{
+              top: s.top,
+              left: s.left,
+              width: s.size,
+              height: s.size,
+              animationDelay: s.delay,
+              filter: "drop-shadow(0 0 6px hsl(var(--gold) / 0.7))",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Floating geometric shards */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+        {shards.map((s, i) => (
+          <span
+            key={`sh-${i}`}
+            className="absolute block border border-toyota-red/30 animate-lux-shard"
+            style={{
+              top: s.top,
+              left: s.left,
+              width: s.size,
+              height: s.size,
+              transform: `rotate(${s.rot}deg)`,
+              animationDelay: s.delay,
+              boxShadow: "0 0 12px hsl(var(--toyota-red) / 0.4)",
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Edge ticker — top */}
+      <div aria-hidden className="pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
+        <div className="flex whitespace-nowrap animate-lux-ticker font-display font-black text-[10px] tracking-[0.5em] text-soft">
+          {Array.from({ length: 2 }).map((_, k) => (
+            <span key={k} className="flex items-center gap-6 px-6" dir="ltr">
+              <span className="text-toyota-red">●</span> TOYOTA GENUINE PARTS
+              <span className="text-gold">◆</span> OEM CERTIFIED
+              <span className="text-toyota-red">●</span> MADE IN JAPAN
+              <span className="text-gold">◆</span> EST · 1985 · CAIRO
+              <span className="text-toyota-red">●</span> AUTHORIZED DISTRIBUTOR
+              <span className="text-gold">◆</span> AL MASRIA GROUP
+              <span className="text-toyota-red">●</span> NATIONWIDE SHIPPING
+              <span className="text-gold">◆</span> 100% AUTHENTIC
+            </span>
+          ))}
+        </div>
+      </div>
+
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
         {/* MARQUEE backdrop text — slow horizontal scroll */}
         <div
