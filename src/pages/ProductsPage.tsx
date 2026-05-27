@@ -1,3 +1,4 @@
+import ProductsShowcase from "@/components/ProductsShowcase";
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
