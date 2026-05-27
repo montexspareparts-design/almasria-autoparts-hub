@@ -418,17 +418,6 @@ const HeroSection = () => {
 
 
 
-          {/* Trust chips */}
-          <div
-            className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-soft text-xs md:text-sm font-tajawal animate-lux-stagger-in"
-            style={{ animationDelay: "1.15s" }}
-          >
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold" /> فاتورة ضريبية</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-            <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-gold" /> شحن لكل الجمهورية</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-            <span className="inline-flex items-center gap-1.5"><Award className="w-4 h-4 text-gold" /> موزع معتمد</span>
-          </div>
         </div>
 
 
