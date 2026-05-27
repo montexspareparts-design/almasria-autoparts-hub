@@ -242,6 +242,95 @@ const HeroSection = () => {
               filter: "blur(20px)",
             }}
           />
+
+          {/* Counter-spinning outer orbit (dashed) */}
+          <div
+            aria-hidden
+            className="absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
+          />
+
+          {/* Animated SVG blueprint — crosshair + measurement arcs */}
+          <svg
+            aria-hidden
+            viewBox="0 0 400 400"
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ overflow: "visible" }}
+          >
+            <defs>
+              <radialGradient id="hud-fade" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="hsl(var(--toyota-red))" stopOpacity="0" />
+                <stop offset="70%" stopColor="hsl(var(--toyota-red))" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="hsl(var(--toyota-red))" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {/* crosshair */}
+            <line x1="0" y1="200" x2="400" y2="200" stroke="hsl(var(--toyota-red) / 0.18)" strokeWidth="0.5" strokeDasharray="4 6" />
+            <line x1="200" y1="0" x2="200" y2="400" stroke="hsl(var(--toyota-red) / 0.18)" strokeWidth="0.5" strokeDasharray="4 6" />
+            {/* flowing arc top-right */}
+            <circle
+              cx="200" cy="200" r="170"
+              fill="none"
+              stroke="hsl(var(--gold) / 0.55)"
+              strokeWidth="1"
+              strokeDasharray="6 10"
+              strokeDashoffset="0"
+              className="animate-lux-dash-flow"
+              pathLength="200"
+            />
+            {/* small tick marks at cardinal points */}
+            {[0, 90, 180, 270].map((deg) => (
+              <line
+                key={deg}
+                x1="200" y1="20" x2="200" y2="34"
+                stroke="hsl(var(--gold) / 0.7)"
+                strokeWidth="1.2"
+                transform={`rotate(${deg} 200 200)`}
+              />
+            ))}
+            {/* corner registration marks */}
+            <g stroke="hsl(var(--toyota-red) / 0.6)" strokeWidth="1" fill="none">
+              <path d="M40,60 L40,40 L60,40" />
+              <path d="M360,40 L360,60 M360,40 L340,40" />
+              <path d="M40,340 L40,360 L60,360" />
+              <path d="M360,360 L340,360 M360,360 L360,340" />
+            </g>
+          </svg>
+
+          {/* HUD micro-callouts with leader lines */}
+          <div
+            aria-hidden
+            className="hidden md:block absolute top-[18%] -right-2 z-10 animate-lux-callout"
+            style={{ animationDelay: "1.1s" }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <div className="text-[9px] tracking-[0.3em] text-gold font-display font-black">OEM ✓</div>
+                <div className="text-[10px] text-white/70 font-display">QUALITY GRADE A+</div>
+              </div>
+              <div className="flex items-center">
+                <span className="block w-10 h-px bg-gradient-to-r from-gold/70 to-transparent" />
+                <span className="block w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_8px_hsl(var(--gold))]" />
+              </div>
+            </div>
+          </div>
+
+          <div
+            aria-hidden
+            className="hidden md:block absolute bottom-[20%] -left-2 z-10 animate-lux-callout"
+            style={{ animationDelay: "1.3s" }}
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex items-center">
+                <span className="block w-1.5 h-1.5 rounded-full bg-toyota-red shadow-[0_0_8px_hsl(var(--toyota-red))]" />
+                <span className="block w-10 h-px bg-gradient-to-l from-toyota-red/70 to-transparent" />
+              </div>
+              <div className="text-left">
+                <div className="text-[9px] tracking-[0.3em] text-toyota-red font-display font-black">JAPAN ◆ DENSO</div>
+                <div className="text-[10px] text-white/70 font-display">FACTORY SEALED</div>
+              </div>
+            </div>
+          </div>
+
           <img
             src={heroPart}
             alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
