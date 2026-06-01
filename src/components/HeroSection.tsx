@@ -322,8 +322,7 @@ const HeroSection = () => {
             height={1024}
             fetchPriority="high"
             decoding="async"
-            className="relative w-full h-full object-contain animate-lux-float"
-            style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
+            className="relative w-full h-full object-contain md:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
           />
           {/* Floating part-number chip (over filter - left) */}
           <div className="absolute top-4 left-2 md:top-8 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
