@@ -55,6 +55,11 @@ const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const GenuineVsCounterfeitGuide = lazy(() => import("./pages/GenuineVsCounterfeitGuide"));
+const GenuineVsMtxVsDenso = lazy(() => import("./pages/guides/GenuineVsMtxVsDenso"));
+const WhenToChangeOilFilter = lazy(() => import("./pages/guides/WhenToChangeOilFilter"));
+const WhenToChangeBrakePads = lazy(() => import("./pages/guides/WhenToChangeBrakePads"));
+const ToyotaCorollaMaintenance = lazy(() => import("./pages/guides/ToyotaCorollaMaintenance"));
+const ToyotaHiluxMaintenance = lazy(() => import("./pages/guides/ToyotaHiluxMaintenance"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 const AdminStaffActivityPage = lazy(() => import("./pages/AdminStaffActivityPage"));
@@ -166,6 +171,11 @@ const App = () => (
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="/guides/identifying-genuine-toyota-parts" element={<GenuineVsCounterfeitGuide />} />
+                    <Route path="/guides/genuine-vs-mtx-vs-denso" element={<GenuineVsMtxVsDenso />} />
+                    <Route path="/guides/when-to-change-oil-filter" element={<WhenToChangeOilFilter />} />
+                    <Route path="/guides/when-to-change-brake-pads" element={<WhenToChangeBrakePads />} />
+                    <Route path="/guides/toyota-corolla-maintenance" element={<ToyotaCorollaMaintenance />} />
+                    <Route path="/guides/toyota-hilux-maintenance" element={<ToyotaHiluxMaintenance />} />
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="/admin/staff-home" element={<Navigate to="/admin?section=my-daily-tasks" replace />} />

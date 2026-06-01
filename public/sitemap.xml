@@ -98,7 +98,32 @@
   <url>
     <loc>https://www.almasriaautoparts.com/guides/identifying-genuine-toyota-parts</loc>
     <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/guides/genuine-vs-mtx-vs-denso</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/guides/when-to-change-oil-filter</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/guides/when-to-change-brake-pads</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/guides/toyota-corolla-maintenance</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://www.almasriaautoparts.com/guides/toyota-hilux-maintenance</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
   </url>
 
   <!-- ═══ Client segments ═══ -->
