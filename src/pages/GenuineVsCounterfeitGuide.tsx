@@ -7,7 +7,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { FAQSchema, BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
+import { FAQSchema, BreadcrumbSchema, HowToSchema } from "@/components/SEOSchemaMarkup";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
