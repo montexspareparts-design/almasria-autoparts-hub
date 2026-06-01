@@ -1,48 +1,98 @@
 # Al Masria Group (المصرية جروب)
 
-> Authorized distributor of Toyota genuine parts and oils in Egypt since 1999. Nationwide delivery within 48 hours, plus the MTX aftermarket brand.
+> Authorized distributor of Toyota Genuine Parts and Toyota Genuine Motor Oils in Egypt since 1999. Nationwide 48-hour delivery, plus the proprietary MTX aftermarket brand and exclusive distribution of DENSO, AISIN, and FBK.
 
-Al Masria Group is a leading Egyptian B2B/B2C distributor of Toyota Genuine Parts, Toyota Motor Oils, and the company's own MTX aftermarket replacement parts. Headquartered in Giza with branches across Egypt and a regional hub in Dubai.
+Al Masria Group is the leading Egyptian distributor of Toyota Genuine Parts and Toyota Genuine Motor Oils, serving both B2B (workshops, fleets, wholesalers) and B2C (retail) customers. Founded in 1999 and headquartered in Giza, the company operates branches in Cairo (Tawfiqia), Giza (Awsim), Luxor, and a regional hub in Dubai. The catalog combines four pillars: (1) **Toyota Genuine Parts** sourced directly from authorized supply chains with full dealer warranty, (2) **Toyota Genuine Motor Oils** including 0W-20, 5W-30, and ATF transmission fluids, (3) **MTX Aftermarket** — Al Masria's own registered brand of OEM-grade replacement parts at competitive prices, and (4) exclusive distribution of premium global OEM brands: **DENSO** (electrical, sensors, A/C), **AISIN** (transmission, water pumps, clutches), and **FBK** (Japanese brake pads). All inventory is synced live from the Al-Faisal ERP system — prices and stock counts shown on the site reflect real warehouse availability.
+
+## Key Facts
+
+- **Founded:** 1999 (26 years in business as of 2026)
+- **Headquarters:** Awsim, Giza, Egypt
+- **Branches:** Tawfiqia (Cairo), Awsim (Giza), Luxor, Dubai (UAE)
+- **Phone / WhatsApp:** +20 115 396 1008
+- **Email:** info@almasriaautoparts.com
+- **Delivery:** Nationwide across Egypt within 48 hours; same-day in Greater Cairo for stocked items
+- **Payment:** Cash on delivery, Paymob (Visa/MasterCard/Meeza), InstaPay with receipt upload
+- **Languages:** Arabic (primary) and English
+- **Currency:** Egyptian Pound (EGP)
+- **VAT:** No VAT is charged on parts (per current Egyptian tax treatment for this category)
+
+## Brand Pillars
+
+- [Toyota Genuine Parts](/products/genuine-toyota-parts): 100% original Toyota parts with dealer warranty and exact-fitment guarantee. Sourced through authorized supply chains.
+- [Toyota Genuine Motor Oils](/products/toyota-oils): Official Toyota engine oils (0W-20, 5W-30, 10W-30) and Toyota Genuine ATF (WS, T-IV) transmission fluids.
+- [MTX Aftermarket](/mtx): Al Masria Group's registered aftermarket brand — replacement parts engineered to OEM specs at 30–50% less than genuine pricing. Best for older vehicles and cost-conscious workshops.
+- [DENSO](/products/denso): Japanese OEM supplier for Toyota — spark plugs, ignition coils, A/C compressors, oxygen sensors, fuel pumps, and starters. The same parts Toyota uses in factory assembly.
+- [AISIN](/products/aisin): Japanese OEM supplier — automatic transmission components, water pumps, clutch kits, and timing belt kits. Genuine factory-fit quality.
+- [FBK](/products/fbk-brakes): Premium Japanese brake pads — low dust, low noise, full Toyota fitment.
 
 ## Pages
 
-- [Home](/): Authorized Toyota parts & oils distributor in Egypt.
-- [About Us](/about): 25+ years of automotive distribution, branches, leadership.
-- [Products Catalog](/products): Full catalog — Toyota genuine, MTX, Denso, Aisin, FBK.
-- [Toyota Genuine Parts](/products/genuine-toyota-parts): 100% original parts with dealer warranty.
-- [Toyota Oils](/products/toyota-oils): Toyota engine and transmission oils.
-- [MTX Aftermarket](/mtx): Al Masria's own brand of premium replacement parts.
-- [Toyota Genuine Parts Egypt](/toyota-genuine-parts-egypt): Landing for Egypt market.
-- [Contact Us](/contact): WhatsApp, phone, email, branch locations.
-- [What Sets Us Apart](/what-sets-us-apart): Authorized status, network, guarantees.
-- [Catalogs](/catalogs): Wholesale catalogs for approved dealers.
-- [Policies](/policies): Terms, privacy, shipping, returns.
-- [Install App](/install): PWA installation guide.
-- [Track Order](/track-order): Real-time order tracking.
+- [Home](/): Brand homepage with featured products, brand pillars, and quick search.
+- [About Us](/about): Company history, leadership, 25+ years of distribution, branch network.
+- [What Sets Us Apart](/what-sets-us-apart): Authorized status, delivery network, warranty guarantees.
+- [Products Catalog](/products): Full catalog with live stock and pricing for retail customers; wholesale pricing for verified dealers.
+- [Toyota Genuine Parts Egypt](/toyota-genuine-parts-egypt): Market-specific landing for "Toyota parts in Egypt" search intent.
+- [Identifying Genuine Toyota Parts — Guide](/guides/identifying-genuine-toyota-parts): Step-by-step buyer guide covering packaging, hologram, part number, country of origin, manufacturing quality, and purchase source. The definitive Arabic reference for distinguishing authentic Toyota parts from counterfeits.
+- [Contact Us](/contact): WhatsApp Business, phone, email, branch addresses, working hours.
+- [Catalogs](/catalogs): Wholesale price lists for approved dealers.
+- [Track Order](/track-order): Real-time order status with 6-stage timeline (Confirmed → Preparing → Packed → Shipped → Out for Delivery → Delivered).
+- [Install App](/install): Progressive Web App (PWA) installation for offline catalog access.
+- [Policies](/policies): Terms, Privacy, Shipping & Delivery, Returns & Refunds.
 
-## Parts by Model
+## Parts by Toyota Model
 
-- [Hiace](/parts-by-model/hiace)
-- [Coaster](/parts-by-model/coaster)
-- [Hilux](/parts-by-model/hilux)
-- [Land Cruiser](/parts-by-model/land-cruiser)
-- [Yaris](/parts-by-model/yaris)
-- [RAV4](/parts-by-model/rav4)
-- [Fortuner](/parts-by-model/fortuner)
-- [Rush](/parts-by-model/rush)
-- [Corolla](/parts-by-model/corolla)
-- [Camry](/parts-by-model/camry)
+Pages with curated catalog filters per model, supported year ranges, and most-requested service parts (filters, brakes, suspension, engine, electrical, cooling, oils).
+
+- [Hiace (هايس)](/parts-by-model/hiace): Filters, brakes, engine, suspension, oils — for fleet operators and microbus owners.
+- [Coaster (كوستر)](/parts-by-model/coaster): Filters, brakes, engine, cooling, electrical — for bus operators.
+- [Hilux (هايلوكس)](/parts-by-model/hilux): Filters, brakes, suspension, engine, oils — for pickup owners and commercial fleets.
+- [Land Cruiser (لاند كروزر)](/parts-by-model/land-cruiser): Full coverage for the desert and off-road segment.
+- [Fortuner (فورتشنر)](/parts-by-model/fortuner): SUV maintenance parts.
+- [Rush (راش)](/parts-by-model/rush): Compact SUV — filters, brakes, electrical.
+- [RAV4 (راف فور)](/parts-by-model/rav4): Crossover SUV maintenance parts.
+- [Corolla (كورولا)](/parts-by-model/corolla): Best-selling sedan — full service-part catalog.
+- [Camry (كامري)](/parts-by-model/camry): Mid-size sedan maintenance parts.
+- [Yaris (ياريس)](/parts-by-model/yaris): Compact sedan / hatchback parts.
 
 ## Parts by Type
 
-- [Filters](/parts-by-type/filters)
-- [Oils](/parts-by-type/oils)
-- [Brakes](/parts-by-type/brakes)
-- [Suspension](/parts-by-type/suspension)
-- [Electrical](/parts-by-type/electrical)
-- [Engine](/parts-by-type/engine)
-- [Cooling](/parts-by-type/cooling)
+- [Filters (فلاتر)](/parts-by-type/filters): Oil filters, air filters, cabin filters, fuel filters — Toyota Genuine and MTX.
+- [Engine Oils (زيوت محرك)](/parts-by-type/oils): Toyota 0W-20, 5W-30, 10W-30 + ATF transmission fluids.
+- [Brakes (فرامل)](/parts-by-type/brakes): FBK Japanese brake pads, Toyota Genuine discs, brake fluid.
+- [Suspension (تعليق / عفشة)](/parts-by-type/suspension): Shock absorbers, control arms, ball joints, bushings.
+- [Electrical (كهرباء)](/parts-by-type/electrical): DENSO spark plugs, ignition coils, starters, alternators, sensors.
+- [Engine (محرك)](/parts-by-type/engine): Timing belts, water pumps, gaskets, oil pumps.
+- [Cooling (تبريد)](/parts-by-type/cooling): Radiators, thermostats, coolant, hoses, A/C compressors.
+
+## Frequently Asked Questions (Egypt market)
+
+**Q: Is Al Masria Group an authorized Toyota distributor?**
+Yes. Al Masria Group has been an authorized distributor of Toyota Genuine Parts and Toyota Genuine Motor Oils in Egypt since 1999.
+
+**Q: Where can I buy genuine Toyota parts in Egypt?**
+Order online at almasriaautoparts.com (nationwide 48-hour delivery), or visit one of the branches in Tawfiqia (Cairo), Awsim (Giza), or Luxor. WhatsApp orders are accepted at +20 115 396 1008.
+
+**Q: How do I tell a genuine Toyota part from a counterfeit?**
+Check the packaging print quality, the 3D hologram (color shifts with light angle), the 10–11 digit part number printed on both box and part, the country of origin (Japan / Thailand / Indonesia), manufacturing quality (clean edges, correct weight), and the purchase source — always buy from an authorized distributor with an official invoice. The full guide is at [/guides/identifying-genuine-toyota-parts](/guides/identifying-genuine-toyota-parts).
+
+**Q: What is MTX?**
+MTX is Al Masria Group's own registered aftermarket brand — replacement parts engineered to OEM specifications at 30–50% lower price than Toyota Genuine. Best suited for older vehicles, taxi fleets, and workshops where cost matters more than warranty coverage.
+
+**Q: What's the difference between Toyota Genuine, DENSO/AISIN, and MTX?**
+Toyota Genuine = factory-original with dealer warranty. DENSO and AISIN = the same OEM suppliers Toyota uses in factory assembly (functionally identical to Genuine, often cheaper). MTX = OEM-grade aftermarket, lower price, no factory warranty but Al Masria Group quality guarantee.
+
+**Q: Do you sell to workshops and wholesalers?**
+Yes — verified dealers get wholesale pricing, credit terms, dedicated B2B dashboard, and a higher daily price-reveal quota. Apply at [/dealer-apply](/dealer-apply).
+
+**Q: How long does delivery take?**
+Greater Cairo: same day for stocked items. Rest of Egypt: 48 hours. Out-of-stock items are sourced from the central warehouse and shipped on the next cycle.
+
+**Q: What payment methods are accepted?**
+Cash on delivery, Paymob (Visa, MasterCard, Meeza wallet), and InstaPay (manual receipt upload reviewed by accounts team).
 
 ## Optional
 
-- [Dealer Application](/dealer-apply): Apply to join the wholesale dealer network.
+- [Dealer Application](/dealer-apply): Apply to join the wholesale dealer network — requires commercial registration and tax card.
+- [Dealer Login](/dealer-login): Existing dealers — separate login for the B2B dashboard.
+- [Privacy Policy](/policies): Data handling and privacy practices.

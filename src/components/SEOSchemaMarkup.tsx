@@ -192,3 +192,70 @@ export const LocalBusinessSchema = () => (
     })}</script>
   </Helmet>
 );
+
+/* ── HowTo (for step-by-step guides) ── */
+interface HowToStep { name: string; text: string; image?: string }
+interface HowToSchemaProps {
+  name: string;
+  description: string;
+  totalTime?: string; // ISO 8601 e.g. "PT5M"
+  image?: string;
+  steps: HowToStep[];
+}
+
+export const HowToSchema = ({ name, description, totalTime, image, steps }: HowToSchemaProps) => (
+  <Helmet>
+    <script type="application/ld+json">{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": name,
+      "description": description,
+      ...(totalTime && { "totalTime": totalTime }),
+      ...(image && { "image": image.startsWith("http") ? image : `${SITE_URL}${image}` }),
+      "step": steps.map((s, i) => ({
+        "@type": "HowToStep",
+        "position": i + 1,
+        "name": s.name,
+        "text": s.text,
+        ...(s.image && { "image": s.image.startsWith("http") ? s.image : `${SITE_URL}${s.image}` }),
+      }))
+    })}</script>
+  </Helmet>
+);
+
+/* ── Article (for guides, blog posts) ── */
+interface ArticleSchemaProps {
+  headline: string;
+  description: string;
+  image?: string;
+  datePublished: string; // ISO date
+  dateModified?: string;
+  authorName?: string;
+}
+
+export const ArticleSchema = ({ headline, description, image, datePublished, dateModified, authorName }: ArticleSchemaProps) => (
+  <Helmet>
+    <script type="application/ld+json">{JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": headline,
+      "description": description,
+      ...(image && { "image": image.startsWith("http") ? image : `${SITE_URL}${image}` }),
+      "datePublished": datePublished,
+      "dateModified": dateModified || datePublished,
+      "author": {
+        "@type": "Organization",
+        "name": authorName || "المصرية جروب"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "المصرية جروب",
+        "logo": {
+          "@type": "ImageObject",
+          "url": `${SITE_URL}/logo.png`
+        }
+      }
+    })}</script>
+  </Helmet>
+);
+

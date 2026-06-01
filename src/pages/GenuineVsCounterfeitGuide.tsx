@@ -7,7 +7,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { FAQSchema, BreadcrumbSchema } from "@/components/SEOSchemaMarkup";
+import { FAQSchema, BreadcrumbSchema, HowToSchema } from "@/components/SEOSchemaMarkup";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -174,6 +174,17 @@ const GenuineVsCounterfeitGuide = () => {
         { name: isAr ? "الرئيسية" : "Home", url: SITE_URL },
         { name: isAr ? "التحقق من قطع غيار تويوتا" : "Identifying Genuine Toyota Parts", url: PAGE_URL },
       ]} />
+      <HowToSchema
+        name={isAr ? "كيفية التحقق من قطع غيار تويوتا الأصلية" : "How to verify Genuine Toyota Parts"}
+        description={isAr
+          ? "6 خطوات للتأكد من أصالة قطعة غيار تويوتا قبل الشراء أو التركيب."
+          : "6 steps to verify that a Toyota part is genuine before purchase or installation."}
+        totalTime="PT5M"
+        steps={checkpoints.map((c) => ({
+          name: c.title,
+          text: `${isAr ? "الأصلية" : "Genuine"}: ${c.genuine} — ${isAr ? "المقلدة" : "Counterfeit"}: ${c.fake}`,
+        }))}
+      />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
