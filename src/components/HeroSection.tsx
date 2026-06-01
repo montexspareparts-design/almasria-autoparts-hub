@@ -120,7 +120,7 @@ const HeroSection = () => {
 
       <div
         aria-hidden
-        className="pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
+        className="hidden md:block pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
         style={{
           background:
             "radial-gradient(circle, hsl(44 90% 70% / 0.35) 0%, hsl(var(--toyota-red) / 0.12) 30%, transparent 65%)",
@@ -129,8 +129,8 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Gold sparkle stars */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[6]">
+      {/* Gold sparkle stars — desktop only */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute inset-0 z-[6]">
         {sparkles.map((s, i) => (
           <Sparkles
             key={`sp-${i}`}
@@ -147,8 +147,8 @@ const HeroSection = () => {
         ))}
       </div>
 
-      {/* Floating geometric shards */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+      {/* Floating geometric shards — desktop only */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute inset-0 z-[5]">
         {shards.map((s, i) => (
           <span
             key={`sh-${i}`}
