@@ -56,22 +56,22 @@ const HeroSection = () => {
       style={{ minHeight: "100vh" }}
       aria-label="قطع غيار تويوتا الأصلية"
     >
-      {/* Animated grid */}
-      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+      {/* Animated grid — desktop only */}
+      <div aria-hidden className="hidden md:block absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
 
-      {/* Ambient red gradient */}
+      {/* Ambient red gradient — desktop only */}
       <div
         aria-hidden
-        className="absolute inset-0 opacity-70"
+        className="hidden md:block absolute inset-0 opacity-70"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.22) 0%, transparent 60%)",
         }}
       />
-      {/* Vignette */}
+      {/* Vignette — desktop only */}
       <div
         aria-hidden
-        className="absolute inset-0"
+        className="hidden md:block absolute inset-0"
         style={{
           background:
             "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.75) 100%)",
