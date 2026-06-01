@@ -56,30 +56,30 @@ const HeroSection = () => {
       style={{ minHeight: "100vh" }}
       aria-label="قطع غيار تويوتا الأصلية"
     >
-      {/* Animated grid */}
-      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+      {/* Animated grid — desktop only */}
+      <div aria-hidden className="hidden md:block absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
 
-      {/* Ambient red gradient */}
+      {/* Ambient red gradient — desktop only */}
       <div
         aria-hidden
-        className="absolute inset-0 opacity-70"
+        className="hidden md:block absolute inset-0 opacity-70"
         style={{
           background:
             "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.22) 0%, transparent 60%)",
         }}
       />
-      {/* Vignette */}
+      {/* Vignette — desktop only */}
       <div
         aria-hidden
-        className="absolute inset-0"
+        className="hidden md:block absolute inset-0"
         style={{
           background:
             "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.75) 100%)",
         }}
       />
 
-      {/* Floating particles */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Floating particles — hidden on mobile to save GPU */}
+      <div aria-hidden className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
         {particles.map((p, i) => (
           <span
             key={i}
@@ -120,7 +120,7 @@ const HeroSection = () => {
 
       <div
         aria-hidden
-        className="pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
+        className="hidden md:block pointer-events-none absolute top-[28%] left-[62%] z-[6] w-[420px] h-[420px] rounded-full animate-lux-flare"
         style={{
           background:
             "radial-gradient(circle, hsl(44 90% 70% / 0.35) 0%, hsl(var(--toyota-red) / 0.12) 30%, transparent 65%)",
@@ -129,8 +129,8 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Gold sparkle stars */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[6]">
+      {/* Gold sparkle stars — desktop only */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute inset-0 z-[6]">
         {sparkles.map((s, i) => (
           <Sparkles
             key={`sp-${i}`}
@@ -147,8 +147,8 @@ const HeroSection = () => {
         ))}
       </div>
 
-      {/* Floating geometric shards */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 z-[5]">
+      {/* Floating geometric shards — desktop only */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute inset-0 z-[5]">
         {shards.map((s, i) => (
           <span
             key={`sh-${i}`}
@@ -166,8 +166,8 @@ const HeroSection = () => {
         ))}
       </div>
 
-      {/* Edge ticker — top */}
-      <div aria-hidden className="pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
+      {/* Edge ticker — top (desktop only) */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
         <div className="flex whitespace-nowrap animate-lux-ticker font-display font-black text-[10px] tracking-[0.5em] text-soft">
           {Array.from({ length: 2 }).map((_, k) => (
             <span key={k} className="flex items-center gap-6 px-6" dir="ltr">
@@ -185,10 +185,10 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
-        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        {/* MARQUEE backdrop text — desktop only (260vw reflow kills mobile) */}
         <div
           aria-hidden
-          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
+          className="hidden md:block pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
         >
           <span
             dir="ltr"
@@ -201,25 +201,25 @@ const HeroSection = () => {
 
         {/* Product with concentric rings + glow */}
         <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
-          {/* Red glow halo */}
+          {/* Red glow halo — desktop only (50px blur is heavy on mobile) */}
           <div
             aria-hidden
-            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            className="hidden md:block absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
             style={{ filter: "blur(50px)" }}
           />
-          {/* Spinning gold ring */}
+          {/* Spinning gold ring — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
+            className="hidden md:block absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
           />
           <div
             aria-hidden
-            className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
+            className="hidden md:block absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
           />
-          {/* Highlight arc */}
+          {/* Highlight arc — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[5%] rounded-full"
+            className="hidden md:block absolute inset-[5%] rounded-full"
             style={{
               background:
                 "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
@@ -227,17 +227,17 @@ const HeroSection = () => {
             }}
           />
 
-          {/* Counter-spinning outer orbit (dashed) */}
+          {/* Counter-spinning outer orbit — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
+            className="hidden md:block absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
           />
 
-          {/* Animated SVG blueprint — crosshair + measurement arcs */}
+          {/* Animated SVG blueprint — desktop only */}
           <svg
             aria-hidden
             viewBox="0 0 400 400"
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="hidden md:block absolute inset-0 w-full h-full pointer-events-none"
             style={{ overflow: "visible" }}
           >
             <defs>
@@ -322,8 +322,7 @@ const HeroSection = () => {
             height={1024}
             fetchPriority="high"
             decoding="async"
-            className="relative w-full h-full object-contain animate-lux-float"
-            style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
+            className="relative w-full h-full object-contain md:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
           />
           {/* Floating part-number chip (over filter - left) */}
           <div className="absolute top-4 left-2 md:top-8 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
