@@ -23,6 +23,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     { label: "الشحن والتوصيل", href: "/policies?tab=delivery" },
     { label: "الإرجاع والاسترداد", href: "/policies?tab=refund" },
     { label: "دليل تمييز قطع تويوتا الأصلية", href: "/guides/identifying-genuine-toyota-parts" },
+    { label: "أصلي vs MTX vs Denso", href: "/guides/genuine-vs-mtx-vs-denso" },
+    { label: "متى تغيّر فلتر الزيت؟", href: "/guides/when-to-change-oil-filter" },
+    { label: "متى تغيّر تيل الفرامل؟", href: "/guides/when-to-change-brake-pads" },
+    { label: "صيانة تويوتا كورولا", href: "/guides/toyota-corolla-maintenance" },
+    { label: "صيانة تويوتا هايلوكس", href: "/guides/toyota-hilux-maintenance" },
     { label: t("footer.install_app"), href: "/install", icon: Download },
   ];
 
