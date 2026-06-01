@@ -165,6 +165,7 @@ const App = () => (
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/guides/identifying-genuine-toyota-parts" element={<GenuineVsCounterfeitGuide />} />
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="/admin/staff-home" element={<Navigate to="/admin?section=my-daily-tasks" replace />} />
