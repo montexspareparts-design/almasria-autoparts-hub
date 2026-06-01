@@ -78,8 +78,8 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Floating particles */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Floating particles — hidden on mobile to save GPU */}
+      <div aria-hidden className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
         {particles.map((p, i) => (
           <span
             key={i}
