@@ -185,10 +185,10 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
-        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        {/* MARQUEE backdrop text — desktop only (260vw reflow kills mobile) */}
         <div
           aria-hidden
-          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
+          className="hidden md:block pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
         >
           <span
             dir="ltr"
