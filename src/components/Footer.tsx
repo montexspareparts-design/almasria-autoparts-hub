@@ -22,6 +22,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     { label: "سياسة الخصوصية", href: "/policies?tab=privacy" },
     { label: "الشحن والتوصيل", href: "/policies?tab=delivery" },
     { label: "الإرجاع والاسترداد", href: "/policies?tab=refund" },
+    { label: "دليل تمييز قطع تويوتا الأصلية", href: "/guides/identifying-genuine-toyota-parts" },
     { label: t("footer.install_app"), href: "/install", icon: Download },
   ];
 
