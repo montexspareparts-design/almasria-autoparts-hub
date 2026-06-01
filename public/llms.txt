@@ -34,6 +34,11 @@ Al Masria Group is the leading Egyptian distributor of Toyota Genuine Parts and 
 - [Products Catalog](/products): Full catalog with live stock and pricing for retail customers; wholesale pricing for verified dealers.
 - [Toyota Genuine Parts Egypt](/toyota-genuine-parts-egypt): Market-specific landing for "Toyota parts in Egypt" search intent.
 - [Identifying Genuine Toyota Parts — Guide](/guides/identifying-genuine-toyota-parts): Step-by-step buyer guide covering packaging, hologram, part number, country of origin, manufacturing quality, and purchase source. The definitive Arabic reference for distinguishing authentic Toyota parts from counterfeits.
+- [Genuine vs MTX vs Denso — Comparison Guide](/guides/genuine-vs-mtx-vs-denso): Detailed comparison of three quality tiers (Toyota Genuine, Denso/Aisin OEM, MTX aftermarket) covering price, lifespan, warranty, and recommended use-cases per vehicle age and driving style.
+- [When to Change Oil Filter — Toyota Guide](/guides/when-to-change-oil-filter): OEM filter part numbers for Corolla, Camry, Hilux, Land Cruiser, RAV4, Yaris, plus exact intervals (5K/7.5K/10K km) per oil type, and signs of overdue replacement.
+- [When to Change Brake Pads — Toyota Guide](/guides/when-to-change-brake-pads): Front/rear pad lifespan per driving style, 7 wear signs, OEM pad part numbers for Corolla/Camry/Hilux/Land Cruiser/Hiace/Fortuner/RAV4, and Genuine vs FBK vs MTX comparison.
+- [Toyota Corolla Maintenance — Full Schedule](/guides/toyota-corolla-maintenance): 10K/20K/40K/60K/100K/150K service intervals, recommended oils per model year (5W-30/0W-20/0W-16), most-replaced parts with prices, and common problems with diagnosis.
+- [Toyota Hilux Maintenance — Heavy-Duty Guide](/guides/toyota-hilux-maintenance): Gasoline 2.7L vs Diesel 2.4 GD service differences, heavy-load extra maintenance, recommended oils (CJ-4 for diesel), suspension wear in commercial use, DPF tips.
 - [Contact Us](/contact): WhatsApp Business, phone, email, branch addresses, working hours.
 - [Catalogs](/catalogs): Wholesale price lists for approved dealers.
 - [Track Order](/track-order): Real-time order status with 6-stage timeline (Confirmed → Preparing → Packed → Shipped → Out for Delivery → Delivered).
