@@ -166,8 +166,8 @@ const HeroSection = () => {
         ))}
       </div>
 
-      {/* Edge ticker — top */}
-      <div aria-hidden className="pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
+      {/* Edge ticker — top (desktop only) */}
+      <div aria-hidden className="hidden md:block pointer-events-none absolute top-3 inset-x-0 z-[7] overflow-hidden h-5 opacity-40">
         <div className="flex whitespace-nowrap animate-lux-ticker font-display font-black text-[10px] tracking-[0.5em] text-soft">
           {Array.from({ length: 2 }).map((_, k) => (
             <span key={k} className="flex items-center gap-6 px-6" dir="ltr">
