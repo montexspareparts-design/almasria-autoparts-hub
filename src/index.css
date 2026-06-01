@@ -535,6 +535,14 @@ html.hc-mode a:not(.no-hc-underline) {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-22px) rotate(2deg); }
 }
+@keyframes hero-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@keyframes hero-bob-reverse {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(8px); }
+}
 @keyframes lux-pulse-glow {
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50% { opacity: 0.85; transform: scale(1.08); }

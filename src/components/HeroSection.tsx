@@ -322,18 +322,22 @@ const HeroSection = () => {
             height={1024}
             fetchPriority="high"
             decoding="async"
-            className="relative w-full h-full object-contain md:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
+            className="relative w-full h-full object-contain motion-safe:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
           />
-          {/* Floating part-number chip (over filter - left) */}
-          <div className="absolute top-4 left-2 md:top-8 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
-               style={{ animationDelay: "0.6s" }}>
-          <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
-            PART # <span className="text-toyota-red">90915-YZZN2</span>
-          </span>
+          {/* Floating part-number chip (over filter - left) — gentle bob */}
+          <div
+            className="absolute top-4 left-2 md:top-8 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in motion-safe:animate-[hero-bob_4.5s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.6s" }}
+          >
+            <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
+              PART # <span className="text-toyota-red">90915-YZZN2</span>
+            </span>
           </div>
-          {/* Floating "Iridium" chip (over spark plug - right) */}
-          <div className="hidden sm:block absolute bottom-6 right-2 md:bottom-10 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
-               style={{ animationDelay: "0.9s" }}>
+          {/* Floating "Iridium" chip (over spark plug - right) — counter bob */}
+          <div
+            className="absolute bottom-6 right-2 md:bottom-10 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in motion-safe:animate-[hero-bob-reverse_5s_ease-in-out_infinite]"
+            style={{ animationDelay: "0.9s" }}
+          >
             <span className="font-display font-black text-xs md:text-sm text-gold tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> IRIDIUM SPARK
             </span>
