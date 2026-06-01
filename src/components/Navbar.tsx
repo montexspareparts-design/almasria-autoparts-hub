@@ -341,15 +341,21 @@ const Navbar = () => {
                 >
                   {lang === "ar" ? "تسجيل الدخول" : "Login"}
                 </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="gap-1.5 text-[13px] font-semibold h-8 px-3"
+                <button
                   onClick={() => navigate("/dealer-login")}
+                  className="group relative inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-toyota-red text-white font-tajawal font-bold text-[13px] overflow-hidden border border-[hsl(var(--gold)/0.4)] shadow-[0_0_18px_hsl(var(--toyota-red)/0.45)] hover:shadow-[0_0_24px_hsl(var(--toyota-red)/0.7)] hover:scale-[1.03] transition-all duration-300"
                 >
-                  <Briefcase className="w-3.5 h-3.5" />
-                  {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
-                </Button>
+                  <span
+                    aria-hidden
+                    className="absolute inset-y-0 -inset-x-4 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-lux-shimmer-sweep pointer-events-none"
+                    style={{ width: "40%" }}
+                  />
+                  <Briefcase className="relative w-3.5 h-3.5 text-gold" />
+                  <span className="relative tracking-wide">
+                    {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
+                  </span>
+                  <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/20 pointer-events-none" />
+                </button>
               </>
             )}
           </div>
