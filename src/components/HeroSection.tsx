@@ -201,25 +201,25 @@ const HeroSection = () => {
 
         {/* Product with concentric rings + glow */}
         <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
-          {/* Red glow halo */}
+          {/* Red glow halo — desktop only (50px blur is heavy on mobile) */}
           <div
             aria-hidden
-            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            className="hidden md:block absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
             style={{ filter: "blur(50px)" }}
           />
-          {/* Spinning gold ring */}
+          {/* Spinning gold ring — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
+            className="hidden md:block absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
           />
           <div
             aria-hidden
-            className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
+            className="hidden md:block absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
           />
-          {/* Highlight arc */}
+          {/* Highlight arc — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[5%] rounded-full"
+            className="hidden md:block absolute inset-[5%] rounded-full"
             style={{
               background:
                 "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
@@ -227,17 +227,17 @@ const HeroSection = () => {
             }}
           />
 
-          {/* Counter-spinning outer orbit (dashed) */}
+          {/* Counter-spinning outer orbit — desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
+            className="hidden md:block absolute inset-[-4%] rounded-full border border-dotted border-[hsl(var(--toyota-red)/0.25)] animate-lux-orbit-spin-r"
           />
 
-          {/* Animated SVG blueprint — crosshair + measurement arcs */}
+          {/* Animated SVG blueprint — desktop only */}
           <svg
             aria-hidden
             viewBox="0 0 400 400"
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            className="hidden md:block absolute inset-0 w-full h-full pointer-events-none"
             style={{ overflow: "visible" }}
           >
             <defs>
