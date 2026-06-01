@@ -54,6 +54,7 @@ const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
+const GenuineVsCounterfeitGuide = lazy(() => import("./pages/GenuineVsCounterfeitGuide"));
 const DevDealerPreview = lazy(() => import("./pages/DevDealerPreview"));
 const VisitorSessionSummary = lazy(() => import("./pages/VisitorSessionSummary"));
 const AdminStaffActivityPage = lazy(() => import("./pages/AdminStaffActivityPage"));
@@ -164,6 +165,7 @@ const App = () => (
                     <Route path="/policies" element={<PoliciesPage />} />
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
+                    <Route path="/guides/identifying-genuine-toyota-parts" element={<GenuineVsCounterfeitGuide />} />
                     <Route path="/dev/dealer-preview" element={<DevDealerPreview />} />
                     <Route path="/admin/visitor/:userId" element={<VisitorSessionSummary />} />
                     <Route path="/admin/staff-home" element={<Navigate to="/admin?section=my-daily-tasks" replace />} />
