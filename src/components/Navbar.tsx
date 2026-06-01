@@ -226,8 +226,12 @@ const Navbar = () => {
               {lang === "ar" ? "EN" : "عربي"}
             </button>
             {!isDealer && !isStaffOnly && (
-              <button onClick={() => navigate("/cart")} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative">
-                <ShoppingCart className="w-[18px] h-[18px]" />
+              <button
+                onClick={() => navigate("/cart")}
+                aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
+                className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative"
+              >
+                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
                 {itemCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
                     {itemCount}
@@ -242,9 +246,10 @@ const Navbar = () => {
                 if (isStaffOnly || isAdmin) return navigate("/admin");
                 return navigate(dealerAccount ? "/dealer" : "/dealer-apply");
               }}
+              aria-label={lang === "ar" ? "حسابي" : "My account"}
               className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
             >
-              <User className="w-[18px] h-[18px]" />
+              <User className="w-[18px] h-[18px]" aria-hidden="true" />
             </button>
           </div>
 
@@ -265,9 +270,10 @@ const Navbar = () => {
             {!isDealer && !isStaffOnly && (
               <button
                 onClick={() => navigate("/cart")}
+                aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
                 className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" />
+                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
                 {itemCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-secondary">
                     {itemCount}
