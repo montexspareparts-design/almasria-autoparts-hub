@@ -1192,6 +1192,119 @@ export type Database = {
         }
         Relationships: []
       }
+      erp_sales_invoice_items: {
+        Row: {
+          discount_amount: number
+          erp_item_code: string | null
+          id: string
+          invoice_date: string
+          invoice_id: string | null
+          invoice_number: string
+          item_name: string | null
+          quantity: number
+          raw_payload: Json | null
+          received_at: string
+          sku: string | null
+          total_amount: number
+          unit: string | null
+          unit_price: number
+        }
+        Insert: {
+          discount_amount?: number
+          erp_item_code?: string | null
+          id?: string
+          invoice_date: string
+          invoice_id?: string | null
+          invoice_number: string
+          item_name?: string | null
+          quantity?: number
+          raw_payload?: Json | null
+          received_at?: string
+          sku?: string | null
+          total_amount?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Update: {
+          discount_amount?: number
+          erp_item_code?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_id?: string | null
+          invoice_number?: string
+          item_name?: string | null
+          quantity?: number
+          raw_payload?: Json | null
+          received_at?: string
+          sku?: string | null
+          total_amount?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_sales_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "erp_sales_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_sales_invoices: {
+        Row: {
+          customer_code: string | null
+          customer_name: string | null
+          discount_amount: number
+          id: string
+          invoice_date: string
+          invoice_number: string
+          net_amount: number
+          notes: string | null
+          payment_method: string | null
+          raw_payload: Json | null
+          received_at: string
+          salesman: string | null
+          tax_amount: number
+          total_amount: number
+          warehouse: string | null
+        }
+        Insert: {
+          customer_code?: string | null
+          customer_name?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_date: string
+          invoice_number: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          salesman?: string | null
+          tax_amount?: number
+          total_amount?: number
+          warehouse?: string | null
+        }
+        Update: {
+          customer_code?: string | null
+          customer_name?: string | null
+          discount_amount?: number
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          net_amount?: number
+          notes?: string | null
+          payment_method?: string | null
+          raw_payload?: Json | null
+          received_at?: string
+          salesman?: string | null
+          tax_amount?: number
+          total_amount?: number
+          warehouse?: string | null
+        }
+        Relationships: []
+      }
       erp_sync_alerts: {
         Row: {
           alert_key: string
