@@ -75,110 +75,155 @@ Deno.serve(async (req) => {
     if (!resendKey) throw new Error("RESEND_API_KEY not configured");
 
     const year = new Date().getFullYear();
+    const logoUrl = "https://almasriaautoparts.com/__l5e/assets-v1/818523be-f1b8-471a-ba23-138267801d70/almasria-logo.png";
     const html = `
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Password Reset Code</title>
+  <title>رمز التحقق — المصرية لقطع الغيار</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f6f9;padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#ecedf0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,Arial,sans-serif;">
+  <!-- Preheader (hidden) -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
+    رمز التحقق الخاص بك: ${code} — صالح لمدة 10 دقائق فقط.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ecedf0;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid #e6e9ee;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(10,10,10,0.08);">
 
-          <!-- Header -->
+          <!-- Top accent bar (luxury red → gold) -->
           <tr>
-            <td style="background:#0a1f44;padding:28px 32px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;letter-spacing:0.3px;font-family:Arial,sans-serif;">
-                Al Masria Auto Parts
-              </h1>
-              <p style="margin:6px 0 0;color:#c9d2e3;font-size:13px;font-family:Arial,sans-serif;">
-                المصرية لقطع الغيار
+            <td style="height:3px;background:linear-gradient(90deg,#0a0a0a 0%,#eb1e32 50%,#c9a84c 100%);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- Header: carbon black -->
+          <tr>
+            <td style="background-color:#0a0a0a;padding:36px 32px 32px;text-align:center;">
+              <img src="${logoUrl}" alt="Al Masria Auto Parts" width="160" style="display:block;margin:0 auto 18px;width:160px;height:auto;border:0;outline:none;text-decoration:none;" />
+              <div style="height:1px;width:48px;background:#c9a84c;margin:0 auto 14px;font-size:0;line-height:0;">&nbsp;</div>
+              <p style="margin:0;color:#c9a84c;font-size:11px;letter-spacing:4px;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:600;">
+                Toyota Genuine Parts · Since 1995
               </p>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td style="padding:40px 40px 24px;color:#1f2937;" dir="rtl">
-              <h2 style="margin:0 0 16px;font-size:18px;font-weight:600;color:#0a1f44;">
+            <td style="padding:44px 44px 16px;color:#0a0a0a;" dir="rtl">
+              <h2 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0a0a0a;letter-spacing:-0.2px;">
                 طلب إعادة تعيين كلمة المرور
               </h2>
-              <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:#374151;">
-                مرحباً،
-              </p>
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#374151;">
-                تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك. يُرجى استخدام رمز التحقق التالي لإكمال العملية:
+              <p style="margin:0 0 28px;font-size:13px;color:#6b7280;letter-spacing:0.3px;">
+                PASSWORD RESET REQUEST
               </p>
 
-              <!-- OTP Code -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+              <p style="margin:0 0 14px;font-size:15px;line-height:1.8;color:#1f2937;">
+                السيد/ة العميل،
+              </p>
+              <p style="margin:0 0 28px;font-size:15px;line-height:1.8;color:#374151;">
+                تلقّينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابكم لدى <strong style="color:#0a0a0a;">المصرية لقطع الغيار</strong>. يُرجى استخدام رمز التحقق التالي لإتمام العملية:
+              </p>
+
+              <!-- OTP Code Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
                 <tr>
-                  <td align="center" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:24px;">
-                    <div style="font-size:13px;color:#64748b;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;font-family:Arial,sans-serif;">
+                  <td align="center" style="background:#0a0a0a;border-radius:2px;padding:30px 24px;position:relative;">
+                    <div style="font-size:10px;color:#c9a84c;margin-bottom:14px;letter-spacing:5px;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:700;">
                       Verification Code
                     </div>
-                    <div style="font-size:34px;font-weight:700;letter-spacing:10px;color:#0a1f44;font-family:'Courier New',monospace;">
+                    <div style="font-size:40px;font-weight:700;letter-spacing:14px;color:#ffffff;font-family:'Courier New','Consolas',monospace;line-height:1;">
                       ${code}
                     </div>
+                    <div style="height:1px;width:36px;background:#eb1e32;margin:16px auto 0;font-size:0;line-height:0;">&nbsp;</div>
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 8px;font-size:14px;line-height:1.7;color:#374151;">
-                هذا الرمز صالح لمدة <strong style="color:#0a1f44;">10 دقائق</strong> فقط.
-              </p>
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#6b7280;">
-                إذا لم تكن أنت من قام بهذا الطلب، يمكنك تجاهل هذه الرسالة بأمان ولن يحدث أي تغيير على حسابك.
+              <!-- Validity notice -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-right:3px solid #eb1e32;background:#fafafa;">
+                <tr>
+                  <td style="padding:14px 18px;" dir="rtl">
+                    <p style="margin:0;font-size:14px;line-height:1.7;color:#374151;">
+                      صلاحية الرمز: <strong style="color:#0a0a0a;">10 دقائق</strong> من وقت استلام هذه الرسالة.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 28px;font-size:13px;line-height:1.7;color:#6b7280;">
+                إذا لم تكن أنت من قام بهذا الطلب، يُرجى تجاهل هذه الرسالة. لن يحدث أي تغيير على حسابك ما لم يُستخدم الرمز أعلاه.
               </p>
 
-              <p style="margin:24px 0 0;font-size:14px;line-height:1.7;color:#374151;">
-                مع خالص التحية،<br/>
-                <strong style="color:#0a1f44;">فريق المصرية لقطع الغيار</strong>
+              <p style="margin:28px 0 0;font-size:14px;line-height:1.7;color:#1f2937;">
+                مع خالص التقدير،<br/>
+                <strong style="color:#0a0a0a;">إدارة خدمة العملاء</strong><br/>
+                <span style="color:#6b7280;font-size:13px;">المصرية لقطع الغيار</span>
               </p>
             </td>
           </tr>
 
-          <!-- Divider -->
+          <!-- Gold divider -->
           <tr>
-            <td style="padding:0 40px;">
-              <div style="border-top:1px solid #e6e9ee;"></div>
+            <td style="padding:8px 44px 0;">
+              <div style="height:1px;background:linear-gradient(90deg,transparent 0%,#c9a84c 50%,transparent 100%);font-size:0;line-height:0;">&nbsp;</div>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:20px 40px 28px;text-align:center;" dir="rtl">
-              <p style="margin:0 0 6px;font-size:12px;color:#9ca3af;line-height:1.6;">
+            <td style="padding:24px 44px 32px;text-align:center;background:#fafafa;" dir="rtl">
+              <p style="margin:0 0 10px;font-size:11px;color:#9ca3af;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;font-weight:600;">
+                Al Masria Auto Parts
+              </p>
+              <p style="margin:0 0 14px;font-size:12px;color:#6b7280;line-height:1.7;">
+                موزع معتمد لقطع غيار تويوتا الأصلية في جمهورية مصر العربية
+              </p>
+              <p style="margin:0 0 6px;font-size:11px;color:#9ca3af;line-height:1.6;">
                 هذه رسالة آلية، يُرجى عدم الرد عليها.
               </p>
-              <p style="margin:0;font-size:12px;color:#9ca3af;">
-                © ${year} Al Masria Auto Parts. جميع الحقوق محفوظة.
+              <p style="margin:0;font-size:11px;color:#9ca3af;">
+                © ${year} Al Masria Auto Parts · جميع الحقوق محفوظة
               </p>
-              <p style="margin:8px 0 0;font-size:11px;color:#b8bfc9;">
-                <a href="https://almasriaautoparts.com" style="color:#0a1f44;text-decoration:none;">almasriaautoparts.com</a>
+              <p style="margin:10px 0 0;font-size:11px;">
+                <a href="https://almasriaautoparts.com" style="color:#0a0a0a;text-decoration:none;font-weight:600;letter-spacing:0.5px;">almasriaautoparts.com</a>
               </p>
             </td>
           </tr>
 
+          <!-- Bottom accent bar -->
+          <tr>
+            <td style="height:3px;background:linear-gradient(90deg,#c9a84c 0%,#eb1e32 50%,#0a0a0a 100%);font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
         </table>
+
+        <!-- Outside footer -->
+        <p style="margin:18px 0 0;font-size:10px;color:#9ca3af;letter-spacing:2px;text-transform:uppercase;font-family:Arial,sans-serif;">
+          Crafted with precision · Cairo, Egypt
+        </p>
       </td>
     </tr>
   </table>
 </body>
 </html>`;
 
-    const text = `Al Masria Auto Parts — المصرية لقطع الغيار
+    const text = `AL MASRIA AUTO PARTS
+المصرية لقطع الغيار — موزع تويوتا المعتمد
 
 طلب إعادة تعيين كلمة المرور
+─────────────────────────────
 
-رمز التحقق الخاص بك: ${code}
+رمز التحقق الخاص بك:  ${code}
 
-هذا الرمز صالح لمدة 10 دقائق.
+صلاحية الرمز: 10 دقائق فقط.
 إذا لم تكن أنت من قام بهذا الطلب، يُرجى تجاهل هذه الرسالة.
+
+مع خالص التقدير،
+إدارة خدمة العملاء — المصرية لقطع الغيار
 
 © ${year} Al Masria Auto Parts
 https://almasriaautoparts.com`;
