@@ -1,5 +1,32 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+const META_TOKEN = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
+const META_PHONE_ID = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
+const RECIPIENT_PHONE = "01020412358";
+
+function formatEgyptianPhone(p: string): string {
+  let c = p.replace(/[\s\-()+]/g, "").replace(/^0020/, "").replace(/^002/, "");
+  if (c.startsWith("0")) c = "2" + c;
+  if (/^1\d{9}$/.test(c)) c = "20" + c;
+  return c;
+}
+
+async function sendWhatsApp(toPhone: string, message: string) {
+  if (!META_TOKEN || !META_PHONE_ID) return { ok: false, error: "missing_credentials" };
+  const res = await fetch(`https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${META_TOKEN}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: formatEgyptianPhone(toPhone),
+      type: "text",
+      text: { body: message },
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  return { ok: res.ok, data };
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
