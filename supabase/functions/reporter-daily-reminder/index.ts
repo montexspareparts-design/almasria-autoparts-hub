@@ -7,13 +7,73 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const JOB_NAME = "reporter-daily-reminder";
+const TARGET_CAIRO_HOUR = 17;
+
+function getCairoNowParts() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+  const parts = Object.fromEntries(
+    formatter
+      .formatToParts(new Date())
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    hour: Number(parts.hour),
+    minute: Number(parts.minute),
+    timeLabel: `${parts.hour}:${parts.minute}:${parts.second}`,
+  };
+}
+
+async function claimScheduledDispatch(supabase: ReturnType<typeof createClient>, dispatchDate: string, hour: number) {
+  const { error } = await supabase.from("reporter_schedule_dispatches").insert({
+    job_name: JOB_NAME,
+    dispatch_date: dispatchDate,
+    dispatch_hour: hour,
+    trigger_source: "cron",
+    notes: "daily reminder",
+  });
+
+  if (!error) return true;
+  if (error.code === "23505") return false;
+  throw error;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const today = new Date().toISOString().slice(0, 10);
+    const payload = await req.json().catch(() => ({}));
+    const cairoNow = getCairoNowParts();
+    const isCronTrigger = payload.trigger === "cron";
+    const force = payload.force === true;
+
+    if (isCronTrigger && !force && (cairoNow.hour !== TARGET_CAIRO_HOUR || cairoNow.minute >= 15)) {
+      return new Response(JSON.stringify({ success: true, notified: 0, reason: "outside_cairo_window", cairo_time: `${cairoNow.date} ${cairoNow.timeLabel}` }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (isCronTrigger && !force) {
+      const claimed = await claimScheduledDispatch(supabase, cairoNow.date, cairoNow.hour);
+      if (!claimed) {
+        return new Response(JSON.stringify({ success: true, notified: 0, reason: "already_dispatched", report_date: cairoNow.date }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Get all reporter users
     const { data: reporters } = await supabase
@@ -33,7 +93,7 @@ Deno.serve(async (req) => {
     const { data: submitted } = await supabase
       .from("reporter_daily_reports")
       .select("user_id")
-      .eq("report_date", today)
+      .eq("report_date", cairoNow.date)
       .eq("is_submitted", true)
       .in("user_id", reporterIds);
 
