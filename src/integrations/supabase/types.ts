@@ -2831,6 +2831,36 @@ export type Database = {
         }
         Relationships: []
       }
+      reporter_schedule_dispatches: {
+        Row: {
+          created_at: string
+          dispatch_date: string
+          dispatch_hour: number
+          id: string
+          job_name: string
+          notes: string | null
+          trigger_source: string
+        }
+        Insert: {
+          created_at?: string
+          dispatch_date: string
+          dispatch_hour: number
+          id?: string
+          job_name: string
+          notes?: string | null
+          trigger_source?: string
+        }
+        Update: {
+          created_at?: string
+          dispatch_date?: string
+          dispatch_hour?: number
+          id?: string
+          job_name?: string
+          notes?: string | null
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
