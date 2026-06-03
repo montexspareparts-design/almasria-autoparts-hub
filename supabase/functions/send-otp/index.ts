@@ -107,9 +107,10 @@ Deno.serve(async (req) => {
       formattedPhone = "20" + formattedPhone;
     }
 
-    const messageBody = `كود التحقق الخاص بك في المصرية جروب: ${otp}\nصالح لمدة 5 دقائق.`;
+    const otpBannerUrl = "https://www.almasriaautoparts.com/__l5e/assets-v1/909fa734-6533-4d38-ac20-941d64b1cac4/otp-banner.png";
+    const messageCaption = `🔐 *كود التحقق الخاص بك*\n\n*${otp}*\n\nصالح لمدة 5 دقائق.\nلا تشاركه مع أي شخص.\n\n— المصرية جروب لقطع غيار تويوتا`;
 
-    // Send via Meta WhatsApp Business API
+    // Send via Meta WhatsApp Business API (image with caption for branded experience)
     const metaUrl = `https://graph.facebook.com/v21.0/${metaPhoneNumberId}/messages`;
 
     const metaRes = await fetch(metaUrl, {
@@ -122,10 +123,10 @@ Deno.serve(async (req) => {
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: formattedPhone,
-        type: "text",
-        text: {
-          preview_url: false,
-          body: messageBody,
+        type: "image",
+        image: {
+          link: otpBannerUrl,
+          caption: messageCaption,
         },
       }),
     });
