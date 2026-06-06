@@ -25,7 +25,7 @@ const enforceCanonicalHost = () => {
 };
 
 if (enforceCanonicalHost()) {
-  throw new Error("Redirecting to canonical host");
+  // Stop bootstrapping on the non-canonical host while the browser navigates.
 }
 
 const removeSplash = () => {
@@ -65,27 +65,29 @@ const registerServiceWorkerUpdateChecks = () => {
   return () => {};
 };
 
-const disposeLazyImportRecovery = setupLazyImportRecovery();
-const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
+if (!enforceCanonicalHost()) {
+  const disposeLazyImportRecovery = setupLazyImportRecovery();
+  const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+  createRoot(document.getElementById("root")!).render(
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
 
-// Remove splash reliably
-if (document.readyState === "complete") {
-  removeSplash();
-} else {
-  window.addEventListener("load", removeSplash, { once: true });
-  // Fallback if load event doesn't fire
-  setTimeout(removeSplash, 2000);
-}
+  // Remove splash reliably
+  if (document.readyState === "complete") {
+    removeSplash();
+  } else {
+    window.addEventListener("load", removeSplash, { once: true });
+    // Fallback if load event doesn't fire
+    setTimeout(removeSplash, 2000);
+  }
 
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    disposeLazyImportRecovery?.();
-    disposeServiceWorkerListeners?.();
-  });
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      disposeLazyImportRecovery?.();
+      disposeServiceWorkerListeners?.();
+    });
+  }
 }
