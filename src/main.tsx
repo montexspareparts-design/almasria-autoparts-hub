@@ -17,53 +17,64 @@ const removeSplash = () => {
   }
 };
 
-const registerServiceWorkerUpdateChecks = () => {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
-    return undefined;
+// Clean up any legacy service workers (old vite-plugin-pwa app-shell SW or
+// registerSW.js) that could keep serving stale HTML and cause endless loading.
+// Then register the lightweight push-only SW on its own scope so push
+// notifications keep working without an app-shell cache.
+const cleanupLegacyServiceWorkers = async () => {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.allSettled(
+      regs.map(async (reg) => {
+        const url = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || "";
+        // Unregister the old app-shell SW and any registerSW.js leftovers.
+        if (/\/sw\.js(\?|$)/.test(url) || /\/registerSW\.js(\?|$)/.test(url) || /\/service-worker\.js(\?|$)/.test(url)) {
+          try {
+            await reg.unregister();
+          } catch {
+            // ignore
+          }
+        }
+      }),
+    );
+  } catch {
+    // ignore – best effort cleanup
   }
-
-  let isReloading = false;
-
-  const reloadOnControllerChange = () => {
-    if (isReloading) return;
-    isReloading = true;
-    window.location.reload();
-  };
-
-  const checkForUpdates = async () => {
-    try {
-      const registration = await navigator.serviceWorker.getRegistration();
-      await registration?.update();
-    } catch {
-      // Ignore transient service worker update failures
-    }
-  };
-
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
-      void checkForUpdates();
-    }
-  };
-
-  const handleWindowFocus = () => {
-    void checkForUpdates();
-  };
-
-  navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
-  document.addEventListener("visibilitychange", handleVisibilityChange);
-  window.addEventListener("focus", handleWindowFocus);
-
-  void checkForUpdates();
-
-  return () => {
-    navigator.serviceWorker.removeEventListener("controllerchange", reloadOnControllerChange);
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-    window.removeEventListener("focus", handleWindowFocus);
-  };
 };
 
+const registerPushServiceWorker = async () => {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  if (!import.meta.env.PROD) return;
+  // Refuse registration inside Lovable preview/iframe contexts.
+  try {
+    if (window.top !== window.self) return;
+  } catch {
+    return;
+  }
+  const host = window.location.hostname;
+  if (
+    host.startsWith("id-preview--") ||
+    host.startsWith("preview--") ||
+    host === "lovableproject.com" ||
+    host.endsWith(".lovableproject.com") ||
+    host === "lovableproject-dev.com" ||
+    host.endsWith(".lovableproject-dev.com") ||
+    host === "beta.lovable.dev" ||
+    host.endsWith(".beta.lovable.dev")
+  ) {
+    return;
+  }
+  try {
+    await navigator.serviceWorker.register("/sw-push.js", { scope: "/" });
+  } catch {
+    // Push is non-critical; never block the app on it.
+  }
+};
+
+void cleanupLegacyServiceWorkers().then(registerPushServiceWorker);
+
 const disposeLazyImportRecovery = setupLazyImportRecovery();
-const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
@@ -75,7 +86,5 @@ requestAnimationFrame(removeSplash);
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     disposeLazyImportRecovery?.();
-    disposeServiceWorkerListeners?.();
   });
 }
-
