@@ -9,6 +9,25 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 installMobileErrorReporter();
 initHighContrastEarly();
 
+const enforceCanonicalHost = () => {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (window.location.hostname !== "almasriaautoparts.com") {
+    return false;
+  }
+
+  const canonicalUrl = new URL(window.location.href);
+  canonicalUrl.hostname = "www.almasriaautoparts.com";
+  window.location.replace(canonicalUrl.toString());
+  return true;
+};
+
+if (enforceCanonicalHost()) {
+  throw new Error("Redirecting to canonical host");
+}
+
 const removeSplash = () => {
   const splash = document.getElementById("splash-screen");
   if (splash) {
