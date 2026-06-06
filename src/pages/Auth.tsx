@@ -13,7 +13,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
-import { startGoogleOAuth } from "@/lib/googleOAuth";
+import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
@@ -69,6 +69,8 @@ const Auth = () => {
     let mounted = true;
 
     const handleAuthRedirect = async (userId: string) => {
+      const oauthReturnTo = consumeOAuthReturnTo();
+
       // Check dealer + admin status
       const [{ data: dealer }, { data: roles }] = await Promise.all([
         supabase.from("dealer_accounts").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
@@ -107,7 +109,7 @@ const Auth = () => {
       } else if (hasDealer) {
         navigate("/dealer", { replace: true });
       } else {
-        navigate("/", { replace: true });
+        navigate(oauthReturnTo === "/dealer-login" ? "/" : oauthReturnTo || "/", { replace: true });
       }
     };
 
