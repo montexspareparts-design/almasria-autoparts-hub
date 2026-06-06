@@ -14,6 +14,19 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+/**
+ * Helper to get SW registration with a timeout to prevent hanging the app 
+ * if service workers are in a broken state.
+ */
+async function getSafeRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegistration | null> {
+  if (!("serviceWorker" in navigator)) return null;
+  
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs))
+  ]);
+}
+
 export async function requestPushPermission(): Promise<boolean> {
   if (!("Notification" in window) || !("serviceWorker" in navigator)) {
     console.log("Push notifications not supported");
@@ -26,7 +39,8 @@ export async function requestPushPermission(): Promise<boolean> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await getSafeRegistration();
+    if (!registration) return false;
 
     // Check if already subscribed
     let subscription = await registration.pushManager.getSubscription();
@@ -72,7 +86,9 @@ async function saveSubscription(subscription: PushSubscription) {
 export async function isPushSubscribed(): Promise<boolean> {
   if (!("serviceWorker" in navigator)) return false;
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await getSafeRegistration();
+    if (!registration) return false;
+    
     const subscription = await registration.pushManager.getSubscription();
     return !!subscription;
   } catch {
@@ -83,7 +99,9 @@ export async function isPushSubscribed(): Promise<boolean> {
 export async function unsubscribePush(): Promise<boolean> {
   if (!("serviceWorker" in navigator)) return false;
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await getSafeRegistration();
+    if (!registration) return false;
+
     const subscription = await registration.pushManager.getSubscription();
     if (subscription) {
       await subscription.unsubscribe();

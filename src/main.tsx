@@ -17,49 +17,33 @@ const removeSplash = () => {
   }
 };
 
+/**
+ * Service worker update logic.
+ * We rely on vite-plugin-pwa (autoUpdate) for the core registration and reload.
+ * This helper just provides a safe way to check for updates occasionally.
+ */
 const registerServiceWorkerUpdateChecks = () => {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
     return undefined;
   }
 
-  let isReloading = false;
-
-  const reloadOnControllerChange = () => {
-    if (isReloading) return;
-    isReloading = true;
-    window.location.reload();
-  };
-
   const checkForUpdates = async () => {
     try {
       const registration = await navigator.serviceWorker.getRegistration();
-      await registration?.update();
+      if (registration) {
+        await registration.update();
+      }
     } catch {
       // Ignore transient service worker update failures
     }
   };
 
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
-      void checkForUpdates();
-    }
-  };
-
-  const handleWindowFocus = () => {
-    void checkForUpdates();
-  };
-
-  navigator.serviceWorker.addEventListener("controllerchange", reloadOnControllerChange);
-  document.addEventListener("visibilitychange", handleVisibilityChange);
-  window.addEventListener("focus", handleWindowFocus);
-
+  // Only check for updates once on mount to avoid reload loops
   void checkForUpdates();
 
-  return () => {
-    navigator.serviceWorker.removeEventListener("controllerchange", reloadOnControllerChange);
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
-    window.removeEventListener("focus", handleWindowFocus);
-  };
+  // We remove the manual controllerchange listener as it is redundant 
+  // with vite-plugin-pwa's 'autoUpdate' mode and can cause loops.
+  return () => {};
 };
 
 const disposeLazyImportRecovery = setupLazyImportRecovery();
@@ -70,7 +54,15 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ErrorBoundary>
 );
-requestAnimationFrame(removeSplash);
+
+// Remove splash reliably
+if (document.readyState === "complete") {
+  removeSplash();
+} else {
+  window.addEventListener("load", removeSplash, { once: true });
+  // Fallback if load event doesn't fire
+  setTimeout(removeSplash, 2000);
+}
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
@@ -78,4 +70,3 @@ if (import.meta.hot) {
     disposeServiceWorkerListeners?.();
   });
 }
-
