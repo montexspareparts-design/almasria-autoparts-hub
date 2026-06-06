@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 
 type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
@@ -123,8 +124,11 @@ const DealerLogin = () => {
   const handleLogout = async () => { setRemembered(false); await supabase.auth.signOut(); setApplicationStatus(null); };
 
   const handleGoogleLogin = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/dealer-login` });
-    if (result.error) toast({ title: "خطأ", description: String(result.error), variant: "destructive" });
+    try {
+      startGoogleOAuth(`${window.location.origin}/dealer-login`);
+    } catch (error) {
+      toast({ title: "خطأ", description: String(error), variant: "destructive" });
+    }
   };
 
   // ─── Block staff from seeing dealer portal ───

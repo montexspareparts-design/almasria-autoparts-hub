@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +13,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import logo from "@/assets/logo.webp";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
@@ -230,8 +230,12 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (error) toast({ title: "خطأ في تسجيل الدخول بجوجل", description: String(error), variant: "destructive" });
+    try {
+      startGoogleOAuth(window.location.origin);
+      return;
+    } catch (error) {
+      toast({ title: "خطأ في تسجيل الدخول بجوجل", description: String(error), variant: "destructive" });
+    }
     setGoogleLoading(false);
   };
 

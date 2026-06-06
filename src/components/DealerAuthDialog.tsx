@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 
 type AuthMethod = "phone" | "email";
 
@@ -126,11 +127,10 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
   };
 
   const handleGoogleLogin = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast({ title: "خطأ", description: String(result.error), variant: "destructive" });
+    try {
+      startGoogleOAuth(window.location.origin);
+    } catch (error) {
+      toast({ title: "خطأ", description: String(error), variant: "destructive" });
     }
   };
 
