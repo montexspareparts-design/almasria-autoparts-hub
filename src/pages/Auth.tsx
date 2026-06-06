@@ -231,7 +231,7 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      startGoogleOAuth(window.location.origin);
+      await startGoogleOAuth(`${window.location.origin}${window.location.pathname}`);
       return;
     } catch (error) {
       toast({ title: "خطأ في تسجيل الدخول بجوجل", description: String(error), variant: "destructive" });
