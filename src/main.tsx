@@ -17,74 +17,56 @@ const removeSplash = () => {
   }
 };
 
-// Clean up any legacy service workers (old vite-plugin-pwa app-shell SW or
-// registerSW.js) that could keep serving stale HTML and cause endless loading.
-// Then register the lightweight push-only SW on its own scope so push
-// notifications keep working without an app-shell cache.
-const cleanupLegacyServiceWorkers = async () => {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-  try {
-    const regs = await navigator.serviceWorker.getRegistrations();
-    await Promise.allSettled(
-      regs.map(async (reg) => {
-        const url = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || "";
-        // Unregister the old app-shell SW and any registerSW.js leftovers.
-        if (/\/sw\.js(\?|$)/.test(url) || /\/registerSW\.js(\?|$)/.test(url) || /\/service-worker\.js(\?|$)/.test(url)) {
-          try {
-            await reg.unregister();
-          } catch {
-            // ignore
-          }
-        }
-      }),
-    );
-  } catch {
-    // ignore – best effort cleanup
+/**
+ * Service worker update logic.
+ * We rely on vite-plugin-pwa (autoUpdate) for the core registration and reload.
+ * This helper just provides a safe way to check for updates occasionally.
+ */
+const registerServiceWorkerUpdateChecks = () => {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return undefined;
   }
-};
 
-const registerPushServiceWorker = async () => {
-  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
-  if (!import.meta.env.PROD) return;
-  // Refuse registration inside Lovable preview/iframe contexts.
-  try {
-    if (window.top !== window.self) return;
-  } catch {
-    return;
-  }
-  const host = window.location.hostname;
-  if (
-    host.startsWith("id-preview--") ||
-    host.startsWith("preview--") ||
-    host === "lovableproject.com" ||
-    host.endsWith(".lovableproject.com") ||
-    host === "lovableproject-dev.com" ||
-    host.endsWith(".lovableproject-dev.com") ||
-    host === "beta.lovable.dev" ||
-    host.endsWith(".beta.lovable.dev")
-  ) {
-    return;
-  }
-  try {
-    await navigator.serviceWorker.register("/sw-push.js", { scope: "/" });
-  } catch {
-    // Push is non-critical; never block the app on it.
-  }
-};
+  const checkForUpdates = async () => {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        await registration.update();
+      }
+    } catch {
+      // Ignore transient service worker update failures
+    }
+  };
 
-void cleanupLegacyServiceWorkers().then(registerPushServiceWorker);
+  // Only check for updates once on mount to avoid reload loops
+  void checkForUpdates();
+
+  // We remove the manual controllerchange listener as it is redundant 
+  // with vite-plugin-pwa's 'autoUpdate' mode and can cause loops.
+  return () => {};
+};
 
 const disposeLazyImportRecovery = setupLazyImportRecovery();
+const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <App />
   </ErrorBoundary>
 );
-requestAnimationFrame(removeSplash);
+
+// Remove splash reliably
+if (document.readyState === "complete") {
+  removeSplash();
+} else {
+  window.addEventListener("load", removeSplash, { once: true });
+  // Fallback if load event doesn't fire
+  setTimeout(removeSplash, 2000);
+}
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     disposeLazyImportRecovery?.();
+    disposeServiceWorkerListeners?.();
   });
 }
