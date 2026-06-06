@@ -125,7 +125,7 @@ const DealerLogin = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      startGoogleOAuth(`${window.location.origin}/dealer-login`);
+      await startGoogleOAuth(`${window.location.origin}/dealer-login`);
     } catch (error) {
       toast({ title: "خطأ", description: String(error), variant: "destructive" });
     }

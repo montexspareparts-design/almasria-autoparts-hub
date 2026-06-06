@@ -128,7 +128,7 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
 
   const handleGoogleLogin = async () => {
     try {
-      startGoogleOAuth(window.location.origin);
+      await startGoogleOAuth(`${window.location.origin}${window.location.pathname}`);
     } catch (error) {
       toast({ title: "خطأ", description: String(error), variant: "destructive" });
     }
