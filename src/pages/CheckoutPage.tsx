@@ -35,14 +35,14 @@ const governorates = [
 // Arabic governorate → Bosta city name (English) for pricing API
 const BOSTA_CITY_MAP: Record<string, string> = {
   "القاهرة": "Cairo", "الجيزة": "Giza", "الإسكندرية": "Alexandria",
-  "القليوبية": "Qalyubia", "الشرقية": "Sharkia", "الدقهلية": "Dakahlia",
+  "القليوبية": "Qalyubia", "الشرقية": "Sharqia", "الدقهلية": "Dakahlia",
   "البحيرة": "Beheira", "المنوفية": "Monufia", "الغربية": "Gharbia",
-  "كفر الشيخ": "KafrElSheikh", "دمياط": "Damietta", "بورسعيد": "PortSaid",
-  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "NorthSinai",
-  "جنوب سيناء": "SouthSinai", "الفيوم": "Fayoum", "بني سويف": "BeniSuef",
+  "كفر الشيخ": "Kafr El Sheikh", "دمياط": "Damietta", "بورسعيد": "Port Said",
+  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "North Sinai",
+  "جنوب سيناء": "South Sinai", "الفيوم": "Fayoum", "بني سويف": "Beni Suef",
   "المنيا": "Minya", "أسيوط": "Assiut", "سوهاج": "Sohag",
   "قنا": "Qena", "الأقصر": "Luxor", "أسوان": "Aswan",
-  "البحر الأحمر": "RedSea", "الوادي الجديد": "NewValley", "مطروح": "Marsa Matrouh",
+  "البحر الأحمر": "Red Sea", "الوادي الجديد": "New Valley", "مطروح": "Matrouh",
 };
 
 const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store };
@@ -83,33 +83,44 @@ const CheckoutPage = () => {
   const [bostaLoading, setBostaLoading] = useState(false);
   const [bostaError, setBostaError] = useState<string | null>(null);
 
-  // Auto-calc Bosta fee whenever governorate changes (or shipping switches to bosta)
+  // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
     if (!form.governorate) { setBostaFee(null); setShippingCost(0); return; }
     const dropOffCity = BOSTA_CITY_MAP[form.governorate];
     if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
-    let cancelled = false;
-    setBostaLoading(true); setBostaError(null);
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
-          body: { dropOffCity, cod: payment === "cod" ? total : 0 },
-        });
-        if (cancelled) return;
-        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
-        const fee = Number((data as any)?.fee);
-        if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
-        setBostaFee(fee);
-        setShippingCost(fee);
-      } catch (e: any) {
-        if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
-      } finally {
-        if (!cancelled) setBostaLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [shipping, form.governorate, payment, total, setShippingCost]);
+
+    const timer = setTimeout(() => {
+      let cancelled = false;
+      setBostaLoading(true); setBostaError(null);
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
+            body: {
+              dropOffCity,
+              dropOffAreaAr: form.city,
+              dropOffAddressAr: form.address,
+              cod: payment === "cod" ? total : 0,
+            },
+          });
+          if (cancelled) return;
+          if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+          if ((data as any)?.out_of_coverage) throw new Error((data as any)?.error || "المنطقة خارج تغطية Bosta");
+          const fee = Number((data as any)?.fee);
+          if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
+          setBostaFee(fee);
+          setShippingCost(fee);
+        } catch (e: any) {
+          if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
+        } finally {
+          if (!cancelled) setBostaLoading(false);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost]);
 
   const orderTotal = total;
 
@@ -134,6 +145,10 @@ const CheckoutPage = () => {
     }
     if (!form.name || !form.phone || !form.governorate || !form.address) {
       toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
+    }
+    if (shipping === "bosta" && (bostaError || bostaFee == null)) {
+      toast({ title: "يرجى مراجعة بيانات الشحن", description: bostaError || "لم يتم حساب تكلفة الشحن", variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -593,7 +608,10 @@ const CheckoutPage = () => {
                     {/* CTA — Hero-style shimmer */}
                     <motion.div whileTap={{ scale: 0.98 }} className="mt-5">
                       <button
-                        disabled={submitting}
+                        disabled={
+                          submitting ||
+                          (shipping === "bosta" && (bostaLoading || bostaFee == null || bostaError != null))
+                        }
                         onClick={handleSubmit}
                         className="group relative w-full h-14 rounded-xl bg-toyota-red text-white font-tajawal font-black text-base overflow-hidden animate-lux-red-pulse transition-all duration-300 hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2 border border-[hsl(var(--gold)/0.45)]"
                       >
