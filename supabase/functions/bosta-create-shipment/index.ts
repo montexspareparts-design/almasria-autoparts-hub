@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
       type: 10,
       specs: {
         packageType: "Parcel",
-        size: "Normal",
+        size: "MEDIUM",
         packageDetails: { itemsCount: (items || []).reduce((s: number, i: any) => s + Number(i.quantity || 1), 0), description },
       },
       notes: order.notes || "",
