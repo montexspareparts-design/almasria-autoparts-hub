@@ -95,6 +95,39 @@ export type Database = {
         }
         Relationships: []
       }
+      bosta_webhook_events: {
+        Row: {
+          created_at: string
+          delivery_id: string | null
+          error: string | null
+          event_type: string | null
+          id: string
+          payload: Json
+          processed: boolean
+          tracking_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_id?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload: Json
+          processed?: boolean
+          tracking_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_id?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          tracking_number?: string | null
+        }
+        Relationships: []
+      }
       bundle_items: {
         Row: {
           bundle_id: string
@@ -1622,6 +1655,9 @@ export type Database = {
       }
       orders: {
         Row: {
+          bosta_delivery_id: string | null
+          bosta_status: string | null
+          bosta_tracking_number: string | null
           coupon_code: string | null
           coupon_discount: number | null
           created_at: string
@@ -1647,6 +1683,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bosta_delivery_id?: string | null
+          bosta_status?: string | null
+          bosta_tracking_number?: string | null
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
@@ -1672,6 +1711,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bosta_delivery_id?: string | null
+          bosta_status?: string | null
+          bosta_tracking_number?: string | null
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string
@@ -2860,6 +2902,59 @@ export type Database = {
           trigger_source?: string
         }
         Relationships: []
+      }
+      shipments: {
+        Row: {
+          carrier: string
+          created_at: string
+          delivery_id: string | null
+          id: string
+          last_event: Json | null
+          order_id: string
+          pricing_amount: number | null
+          raw_response: Json | null
+          status: string
+          status_code: number | null
+          tracking_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          carrier?: string
+          created_at?: string
+          delivery_id?: string | null
+          id?: string
+          last_event?: Json | null
+          order_id: string
+          pricing_amount?: number | null
+          raw_response?: Json | null
+          status?: string
+          status_code?: number | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          created_at?: string
+          delivery_id?: string | null
+          id?: string
+          last_event?: Json | null
+          order_id?: string
+          pricing_amount?: number | null
+          raw_response?: Json | null
+          status?: string
+          status_code?: number | null
+          tracking_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
