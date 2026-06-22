@@ -32,11 +32,20 @@ const governorates = [
   "الوادي الجديد", "مطروح",
 ];
 
-const shippingOptions = [
-  { id: "standard", label: "شحن عادي", desc: "3-5 أيام عمل", cost: 50, icon: Truck },
-  { id: "express", label: "شحن سريع", desc: "1-2 يوم عمل", cost: 100, icon: Zap },
-  { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store },
-];
+// Arabic governorate → Bosta city name (English) for pricing API
+const BOSTA_CITY_MAP: Record<string, string> = {
+  "القاهرة": "Cairo", "الجيزة": "Giza", "الإسكندرية": "Alexandria",
+  "القليوبية": "Qalyubia", "الشرقية": "Sharkia", "الدقهلية": "Dakahlia",
+  "البحيرة": "Beheira", "المنوفية": "Monufia", "الغربية": "Gharbia",
+  "كفر الشيخ": "KafrElSheikh", "دمياط": "Damietta", "بورسعيد": "PortSaid",
+  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "NorthSinai",
+  "جنوب سيناء": "SouthSinai", "الفيوم": "Fayoum", "بني سويف": "BeniSuef",
+  "المنيا": "Minya", "أسيوط": "Assiut", "سوهاج": "Sohag",
+  "قنا": "Qena", "الأقصر": "Luxor", "أسوان": "Aswan",
+  "البحر الأحمر": "RedSea", "الوادي الجديد": "NewValley", "مطروح": "Marsa Matrouh",
+};
+
+const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store };
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
