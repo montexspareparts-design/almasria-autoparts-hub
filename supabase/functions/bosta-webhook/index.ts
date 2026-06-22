@@ -3,10 +3,29 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
+const WEBHOOK_SECRET = Deno.env.get("BOSTA_WEBHOOK_SECRET");
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    // Verify Bosta webhook secret. Bosta sends it in one of these headers/fields.
+    if (WEBHOOK_SECRET) {
+      const provided =
+        req.headers.get("x-bosta-signature") ||
+        req.headers.get("x-webhook-secret") ||
+        req.headers.get("authorization") ||
+        req.headers.get("x-api-key") ||
+        new URL(req.url).searchParams.get("secret");
+      const cleaned = (provided || "").replace(/^Bearer\s+/i, "").trim();
+      if (cleaned !== WEBHOOK_SECRET) {
+        console.warn("bosta-webhook: invalid secret", { provided: cleaned ? "***" : "(none)" });
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const payload = await req.json().catch(() => ({}));
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
