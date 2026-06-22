@@ -43,11 +43,7 @@ Deno.serve(async (req) => {
       .select("role")
       .eq("user_id", userData.user.id)
       .in("role", ["admin", "moderator"]);
-    if (!roles || roles.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const isStaff = !!roles && roles.length > 0;
 
     const { order_id } = await req.json();
     if (!order_id) {
@@ -65,6 +61,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Authorization: staff OR owner of the order
+    if (!isStaff && order.user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Idempotency: if shipment already exists for this order, return it
+    const { data: existingShip } = await admin
+      .from("shipments")
+      .select("tracking_number, delivery_id, status")
+      .eq("order_id", order_id).eq("carrier", "bosta").maybeSingle();
+    if (existingShip?.tracking_number) {
+      return new Response(JSON.stringify({
+        success: true, already_exists: true,
+        tracking_number: existingShip.tracking_number,
+        delivery_id: existingShip.delivery_id,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { data: profile } = await admin
       .from("profiles").select("full_name, phone").eq("user_id", order.user_id).maybeSingle();
 
@@ -78,7 +94,8 @@ Deno.serve(async (req) => {
 
     // Build Bosta payload (production v2 schema)
     // type: 10 = Send (delivery), 25 = CashCollection, etc.
-    const cod = Number(order.payment_method === "cash_on_delivery" ? order.total_amount : 0);
+    const codMethods = ["cash_on_delivery", "cod"];
+    const cod = Number(codMethods.includes(order.payment_method) ? order.total_amount : 0);
 
     const phone = (profile?.phone || "").replace(/\D/g, "");
     const normalizedPhone = phone.startsWith("20") ? phone : (phone.startsWith("0") ? "2" + phone : "20" + phone);

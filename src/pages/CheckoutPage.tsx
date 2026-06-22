@@ -183,6 +183,20 @@ const CheckoutPage = () => {
       if (itemsErr) throw itemsErr;
 
       pushOrderToERP(order.id);
+
+      // Auto-create Bosta shipment so it shows up in Bosta dashboard immediately
+      if (shipping === "bosta") {
+        supabase.functions
+          .invoke("bosta-create-shipment", { body: { order_id: order.id } })
+          .then(({ data, error }) => {
+            if (error || (data as any)?.error) {
+              console.error("Bosta auto-create failed:", error || (data as any)?.error);
+            } else {
+              console.log("Bosta shipment created:", (data as any)?.tracking_number);
+            }
+          });
+      }
+
       const paymentUrl = payment !== "cod"
         ? `${window.location.origin}/payment?order_id=${order.id}&amount=${orderTotal}`
         : undefined;
