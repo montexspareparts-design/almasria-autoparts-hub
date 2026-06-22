@@ -81,3 +81,11 @@ verify_jwt = false
 
 [functions.notify-reporter-report-whatsapp]
 verify_jwt = false
+[functions.bosta-webhook]
+verify_jwt = false
+
+[functions.bosta-track-shipment]
+verify_jwt = false
+
+[functions.bosta-calc-pricing]
+verify_jwt = false
