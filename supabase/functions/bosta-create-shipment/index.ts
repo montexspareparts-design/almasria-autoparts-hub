@@ -6,6 +6,58 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 const BOSTA_API_KEY = Deno.env.get("BOSTA_API_KEY");
 const BOSTA_BASE = "https://app.bosta.co/api/v2";
 
+const BOSTA_CITY_MAP: Record<string, string> = {
+  "القاهرة": "Cairo", "الجيزة": "Giza", "الإسكندرية": "Alexandria",
+  "القليوبية": "Qalyubia", "الشرقية": "Sharqia", "الدقهلية": "Dakahlia",
+  "البحيرة": "Beheira", "المنوفية": "Monufia", "الغربية": "Gharbia",
+  "كفر الشيخ": "Kafr El Sheikh", "دمياط": "Damietta", "بورسعيد": "Port Said",
+  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "North Sinai",
+  "جنوب سيناء": "South Sinai", "الفيوم": "Fayoum", "بني سويف": "Beni Suef",
+  "المنيا": "Minya", "أسيوط": "Assiut", "سوهاج": "Sohag",
+  "قنا": "Qena", "الأقصر": "Luxor", "أسوان": "Aswan",
+  "البحر الأحمر": "Red Sea", "الوادي الجديد": "New Valley", "مطروح": "Matrouh",
+};
+
+const toEnglishDigits = (value: string) => value
+  .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+  .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+
+const normalizeEgyptianMobile = (value?: string | null) => {
+  if (!value) return null;
+  const text = toEnglishDigits(String(value));
+  const phoneLike = /(?:\+?20|0020)?[\s\-.]*(?:0?1)[\s\-.]*[0125](?:[\s\-.]*\d){8}/g;
+  const candidates = text.match(phoneLike) || [text];
+
+  for (const candidate of candidates) {
+    let phone = candidate.replace(/\D/g, "");
+    if (phone.startsWith("0020")) phone = phone.slice(4);
+    else if (phone.startsWith("20") && phone.length >= 12) phone = phone.slice(2);
+    if (phone.length === 10 && phone.startsWith("1")) phone = `0${phone}`;
+    if (/^01[0125]\d{8}$/.test(phone)) return phone;
+  }
+  return null;
+};
+
+const firstValidPhone = (...values: Array<string | null | undefined>) => {
+  for (const value of values) {
+    const phone = normalizeEgyptianMobile(value);
+    if (phone) return phone;
+  }
+  return null;
+};
+
+const parseShippingAddress = (address?: string | null) => {
+  const lines = String(address || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const firstLineParts = (lines[0] || "").split(" - ");
+  const locationParts = (lines[1] || "").split(",").map((part) => part.trim()).filter(Boolean);
+  return {
+    name: firstLineParts[0] || null,
+    area: locationParts[0] || null,
+    governorate: locationParts[1] || null,
+    addressLine: lines.slice(2).join("، ") || lines[2] || null,
+  };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
