@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -32,11 +32,20 @@ const governorates = [
   "الوادي الجديد", "مطروح",
 ];
 
-const shippingOptions = [
-  { id: "standard", label: "شحن عادي", desc: "3-5 أيام عمل", cost: 50, icon: Truck },
-  { id: "express", label: "شحن سريع", desc: "1-2 يوم عمل", cost: 100, icon: Zap },
-  { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store },
-];
+// Arabic governorate → Bosta city name (English) for pricing API
+const BOSTA_CITY_MAP: Record<string, string> = {
+  "القاهرة": "Cairo", "الجيزة": "Giza", "الإسكندرية": "Alexandria",
+  "القليوبية": "Qalyubia", "الشرقية": "Sharkia", "الدقهلية": "Dakahlia",
+  "البحيرة": "Beheira", "المنوفية": "Monufia", "الغربية": "Gharbia",
+  "كفر الشيخ": "KafrElSheikh", "دمياط": "Damietta", "بورسعيد": "PortSaid",
+  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "NorthSinai",
+  "جنوب سيناء": "SouthSinai", "الفيوم": "Fayoum", "بني سويف": "BeniSuef",
+  "المنيا": "Minya", "أسيوط": "Assiut", "سوهاج": "Sohag",
+  "قنا": "Qena", "الأقصر": "Luxor", "أسوان": "Aswan",
+  "البحر الأحمر": "RedSea", "الوادي الجديد": "NewValley", "مطروح": "Marsa Matrouh",
+};
+
+const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store };
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
@@ -59,7 +68,7 @@ const CheckoutPage = () => {
   const { items, subtotal, discount, couponCode, couponDiscount, total, clearCart, setShippingCost } = useCart();
   const { user, loading: authLoading } = useAuth();
 
-  const [shipping, setShipping] = useState("standard");
+  const [shipping, setShipping] = useState<"bosta" | "pickup">("bosta");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
   const [paymobClientSecret] = useState<string | null>(null);
@@ -70,7 +79,38 @@ const CheckoutPage = () => {
     name: "", phone: "", email: "", governorate: "", city: "", address: "", notes: "",
   });
 
-  const selectedShipping = shippingOptions.find((s) => s.id === shipping)!;
+  const [bostaFee, setBostaFee] = useState<number | null>(null);
+  const [bostaLoading, setBostaLoading] = useState(false);
+  const [bostaError, setBostaError] = useState<string | null>(null);
+
+  // Auto-calc Bosta fee whenever governorate changes (or shipping switches to bosta)
+  useEffect(() => {
+    if (shipping !== "bosta") { setShippingCost(0); return; }
+    if (!form.governorate) { setBostaFee(null); setShippingCost(0); return; }
+    const dropOffCity = BOSTA_CITY_MAP[form.governorate];
+    if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
+    let cancelled = false;
+    setBostaLoading(true); setBostaError(null);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
+          body: { dropOffCity, cod: payment === "cod" ? total : 0 },
+        });
+        if (cancelled) return;
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+        const fee = Number((data as any)?.fee);
+        if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
+        setBostaFee(fee);
+        setShippingCost(fee);
+      } catch (e: any) {
+        if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
+      } finally {
+        if (!cancelled) setBostaLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [shipping, form.governorate, payment, total, setShippingCost]);
+
   const orderTotal = total;
 
   if (authLoading) {
@@ -82,9 +122,8 @@ const CheckoutPage = () => {
   }
 
   const handleShippingChange = (val: string) => {
-    setShipping(val);
-    const opt = shippingOptions.find((s) => s.id === val);
-    setShippingCost(opt?.cost ?? 0);
+    setShipping(val as "bosta" | "pickup");
+    if (val === "pickup") setShippingCost(0);
   };
 
   const handleSubmit = async () => {
@@ -355,8 +394,20 @@ const CheckoutPage = () => {
                 {sectionHeader(<Truck className="w-5 h-5 text-gold" />, "طريقة الشحن", "اختر الأنسب لك", 2)}
                 <div className="p-6 md:p-7">
                   <RadioGroup value={shipping} onValueChange={handleShippingChange} className="space-y-3">
-                    {shippingOptions.map((opt) => {
+                    {[
+                      {
+                        id: "bosta" as const,
+                        label: "شحن للمنزل عبر Bosta",
+                        desc: form.governorate
+                          ? (bostaLoading ? "جاري حساب التكلفة..." : (bostaError || `التوصيل إلى ${form.governorate}`))
+                          : "اختر المحافظة لحساب التكلفة",
+                        cost: bostaFee,
+                        icon: Truck,
+                      },
+                      { id: PICKUP_OPTION.id as "pickup", label: PICKUP_OPTION.label, desc: PICKUP_OPTION.desc, cost: 0, icon: PICKUP_OPTION.icon },
+                    ].map((opt) => {
                       const active = shipping === opt.id;
+                      const isBostaPending = opt.id === "bosta" && (bostaLoading || opt.cost == null);
                       return (
                         <label
                           key={opt.id}
@@ -379,9 +430,10 @@ const CheckoutPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`font-black text-sm ${active ? 'text-toyota-red' : 'text-white'}`}>
-                              {opt.cost === 0 ? "مجاني" : `${opt.cost} ج.م`}
+                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : `${opt.cost} ج.م`}
                             </span>
-                            {active && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                            {active && !isBostaPending && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                            {isBostaPending && active && <Loader2 className="w-4 h-4 text-gold animate-spin" />}
                           </div>
                         </label>
                       );
@@ -504,7 +556,7 @@ const CheckoutPage = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-soft">الشحن</span>
-                      <span className="font-bold text-white/90">{selectedShipping.cost === 0 ? "مجاني ✨" : `${selectedShipping.cost} ج.م`}</span>
+                      <span className="font-bold text-white/90">{shipping === "pickup" ? "مجاني ✨" : (bostaLoading ? "جاري الحساب..." : bostaFee != null ? `${bostaFee} ج.م` : "—")}</span>
                     </div>
                   </div>
 
