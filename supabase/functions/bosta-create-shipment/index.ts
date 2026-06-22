@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: profile } = await admin
-      .from("profiles").select("full_name, phone").eq("user_id", order.user_id).maybeSingle();
+      .from("profiles").select("full_name, phone, email").eq("user_id", order.user_id).maybeSingle();
 
     const { data: items } = await admin
       .from("order_items").select("quantity, name_ar").eq("order_id", order_id);
@@ -144,24 +144,27 @@ Deno.serve(async (req) => {
       .join(", ")
       .slice(0, 250) || "قطع غيار سيارات";
 
+    const shippingDetails = parseShippingAddress(order.shipping_address);
+
     // Build Bosta payload (production v2 schema)
     // type: 10 = Send (delivery), 25 = CashCollection, etc.
     const codMethods = ["cash_on_delivery", "cod"];
     const cod = Number(codMethods.includes(order.payment_method) ? order.total_amount : 0);
 
-    // Normalize to Egyptian 11-digit mobile (01XXXXXXXXX) — Bosta's expected format
-    let phone = (profile?.phone || "").replace(/\D/g, "");
-    if (phone.startsWith("0020")) phone = phone.slice(4);
-    else if (phone.startsWith("20") && phone.length > 10) phone = phone.slice(2);
-    if (phone.length === 10 && phone.startsWith("1")) phone = "0" + phone;
-    const isValidEgMobile = /^01[0125]\d{8}$/.test(phone);
-    if (!isValidEgMobile) {
+    const normalizedPhone = firstValidPhone(profile?.phone, order.shipping_address, order.notes);
+    if (!normalizedPhone) {
       return new Response(JSON.stringify({
         error: "رقم الموبايل غير صالح للشحن. برجاء تحديث رقم العميل بصيغة 01XXXXXXXXX قبل إنشاء الشحنة.",
         phone_received: profile?.phone || null,
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const normalizedPhone = phone;
+
+    const receiverName = shippingDetails.name || profile?.full_name || profile?.email?.split("@")[0] || "عميل";
+    const receiverParts = receiverName.trim().split(/\s+/).filter(Boolean);
+    const governorateAr = order.shipping_governorate || shippingDetails.governorate || "القاهرة";
+    const bostaCity = BOSTA_CITY_MAP[governorateAr] || governorateAr || "Cairo";
+    const area = shippingDetails.area || order.shipping_governorate || "";
+    const addressLine = shippingDetails.addressLine || order.shipping_address || "";
 
     const bostaPayload: any = {
       type: 10,
@@ -173,18 +176,18 @@ Deno.serve(async (req) => {
       notes: order.notes || "",
       cod,
       dropOffAddress: {
-        city: order.shipping_city || order.shipping_governorate || "Cairo",
-        zone: order.shipping_area || order.shipping_city || "",
-        district: order.shipping_area || "",
-        firstLine: order.shipping_address_line1 || order.shipping_address || "",
-        secondLine: order.shipping_address_line2 || "",
-        buildingNumber: order.shipping_building || "",
-        floor: order.shipping_floor || "",
-        apartment: order.shipping_apartment || "",
+        city: bostaCity,
+        zone: area,
+        district: area,
+        firstLine: addressLine,
+        secondLine: order.shipping_address || "",
+        buildingNumber: "",
+        floor: "",
+        apartment: "",
       },
       receiver: {
-        firstName: (profile?.full_name || "عميل").split(" ")[0] || "عميل",
-        lastName: (profile?.full_name || "").split(" ").slice(1).join(" ") || "-",
+        firstName: receiverParts[0] || "عميل",
+        lastName: receiverParts.slice(1).join(" ") || "-",
         phone: normalizedPhone,
       },
       businessReference: order.order_number,
