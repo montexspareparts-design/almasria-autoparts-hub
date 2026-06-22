@@ -68,7 +68,7 @@ const CheckoutPage = () => {
   const { items, subtotal, discount, couponCode, couponDiscount, total, clearCart, setShippingCost } = useCart();
   const { user, loading: authLoading } = useAuth();
 
-  const [shipping, setShipping] = useState("standard");
+  const [shipping, setShipping] = useState<"bosta" | "pickup">("bosta");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
   const [paymobClientSecret] = useState<string | null>(null);
@@ -79,7 +79,38 @@ const CheckoutPage = () => {
     name: "", phone: "", email: "", governorate: "", city: "", address: "", notes: "",
   });
 
-  const selectedShipping = shippingOptions.find((s) => s.id === shipping)!;
+  const [bostaFee, setBostaFee] = useState<number | null>(null);
+  const [bostaLoading, setBostaLoading] = useState(false);
+  const [bostaError, setBostaError] = useState<string | null>(null);
+
+  // Auto-calc Bosta fee whenever governorate changes (or shipping switches to bosta)
+  useEffect(() => {
+    if (shipping !== "bosta") { setShippingCost(0); return; }
+    if (!form.governorate) { setBostaFee(null); setShippingCost(0); return; }
+    const dropOffCity = BOSTA_CITY_MAP[form.governorate];
+    if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
+    let cancelled = false;
+    setBostaLoading(true); setBostaError(null);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
+          body: { dropOffCity, cod: payment === "cod" ? total : 0 },
+        });
+        if (cancelled) return;
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+        const fee = Number((data as any)?.fee);
+        if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
+        setBostaFee(fee);
+        setShippingCost(fee);
+      } catch (e: any) {
+        if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
+      } finally {
+        if (!cancelled) setBostaLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [shipping, form.governorate, payment, total, setShippingCost]);
+
   const orderTotal = total;
 
   if (authLoading) {
@@ -91,9 +122,8 @@ const CheckoutPage = () => {
   }
 
   const handleShippingChange = (val: string) => {
-    setShipping(val);
-    const opt = shippingOptions.find((s) => s.id === val);
-    setShippingCost(opt?.cost ?? 0);
+    setShipping(val as "bosta" | "pickup");
+    if (val === "pickup") setShippingCost(0);
   };
 
   const handleSubmit = async () => {
