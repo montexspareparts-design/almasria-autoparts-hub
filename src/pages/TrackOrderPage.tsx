@@ -23,6 +23,8 @@ interface OrderData {
   shipping_address: string | null;
   shipping_governorate: string | null;
   notes: string | null;
+  bosta_tracking_number?: string | null;
+  bosta_status?: string | null;
   items: {
     id: string;
     quantity: number;
@@ -77,7 +79,7 @@ const TrackOrderPage = () => {
       // Build query — if user is logged in, filter by user_id for security
       let query = supabase
         .from("orders")
-        .select("id, order_number, status, total_amount, created_at, updated_at, payment_method, shipping_address, shipping_governorate, notes")
+        .select("id, order_number, status, total_amount, created_at, updated_at, payment_method, shipping_address, shipping_governorate, notes, bosta_tracking_number, bosta_status")
         .eq("order_number", trimmed);
 
       if (user) {
@@ -254,6 +256,28 @@ const TrackOrderPage = () => {
                             </div>
                           );
                         })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bosta tracking */}
+                  {order.bosta_tracking_number && (
+                    <div className="mt-4 bg-muted/40 border border-border rounded-xl p-3 text-sm">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-0.5">رقم بوليصة Bosta</p>
+                          <p className="font-mono font-bold text-foreground" dir="ltr">{order.bosta_tracking_number}</p>
+                          {order.bosta_status && (
+                            <p className="text-xs text-muted-foreground mt-1">الحالة: {order.bosta_status}</p>
+                          )}
+                        </div>
+                        <a
+                          href={`https://bosta.co/tracking-shipment/${order.bosta_tracking_number}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline font-semibold"
+                        >
+                          تتبع مباشرة على Bosta ←
+                        </a>
                       </div>
                     </div>
                   )}
