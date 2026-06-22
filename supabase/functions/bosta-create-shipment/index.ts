@@ -43,11 +43,7 @@ Deno.serve(async (req) => {
       .select("role")
       .eq("user_id", userData.user.id)
       .in("role", ["admin", "moderator"]);
-    if (!roles || roles.length === 0) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const isStaff = !!roles && roles.length > 0;
 
     const { order_id } = await req.json();
     if (!order_id) {
