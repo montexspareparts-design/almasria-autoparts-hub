@@ -35,14 +35,14 @@ const governorates = [
 // Arabic governorate → Bosta city name (English) for pricing API
 const BOSTA_CITY_MAP: Record<string, string> = {
   "القاهرة": "Cairo", "الجيزة": "Giza", "الإسكندرية": "Alexandria",
-  "القليوبية": "Qalyubia", "الشرقية": "Sharkia", "الدقهلية": "Dakahlia",
+  "القليوبية": "Qalyubia", "الشرقية": "Sharqia", "الدقهلية": "Dakahlia",
   "البحيرة": "Beheira", "المنوفية": "Monufia", "الغربية": "Gharbia",
-  "كفر الشيخ": "KafrElSheikh", "دمياط": "Damietta", "بورسعيد": "PortSaid",
-  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "NorthSinai",
-  "جنوب سيناء": "SouthSinai", "الفيوم": "Fayoum", "بني سويف": "BeniSuef",
+  "كفر الشيخ": "Kafr El Sheikh", "دمياط": "Damietta", "بورسعيد": "Port Said",
+  "الإسماعيلية": "Ismailia", "السويس": "Suez", "شمال سيناء": "North Sinai",
+  "جنوب سيناء": "South Sinai", "الفيوم": "Fayoum", "بني سويف": "Beni Suef",
   "المنيا": "Minya", "أسيوط": "Assiut", "سوهاج": "Sohag",
   "قنا": "Qena", "الأقصر": "Luxor", "أسوان": "Aswan",
-  "البحر الأحمر": "RedSea", "الوادي الجديد": "NewValley", "مطروح": "Marsa Matrouh",
+  "البحر الأحمر": "Red Sea", "الوادي الجديد": "New Valley", "مطروح": "Matrouh",
 };
 
 const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", desc: "القاهرة - المعادي", cost: 0, icon: Store };
