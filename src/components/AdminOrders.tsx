@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import InvoicePreviewDialog from "@/components/admin/InvoicePreviewDialog";
+import BostaShipmentPanel from "@/components/admin/BostaShipmentPanel";
 import { Eye } from "lucide-react";
 
 // SLA threshold for first contact (minutes)
@@ -830,6 +831,15 @@ const AdminOrders = () => {
                               {({ ossim: "أوسيم", luxor: "الأقصر", tawfiqia: "التوفيقية" } as Record<string, string>)[(order as any).pickup_branch] || (order as any).pickup_branch}
                             </span>
                           </div>
+                        )}
+
+                        {/* Bosta shipping — only when not pickup */}
+                        {!(order as any).pickup_branch && (
+                          <BostaShipmentPanel
+                            orderId={order.id}
+                            initialTrackingNumber={(order as any).bosta_tracking_number}
+                            initialStatus={(order as any).bosta_status}
+                          />
                         )}
 
                         {/* Order Items */}
