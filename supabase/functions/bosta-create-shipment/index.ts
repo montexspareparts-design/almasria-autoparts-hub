@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
       receiver: {
         firstName: (profile?.full_name || "عميل").split(" ")[0] || "عميل",
         lastName: (profile?.full_name || "").split(" ").slice(1).join(" ") || "-",
-        phone: normalizedPhone || "201000000000",
+        phone: normalizedPhone,
       },
       businessReference: order.order_number,
     };
