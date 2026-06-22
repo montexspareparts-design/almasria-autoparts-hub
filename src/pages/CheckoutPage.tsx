@@ -394,8 +394,20 @@ const CheckoutPage = () => {
                 {sectionHeader(<Truck className="w-5 h-5 text-gold" />, "طريقة الشحن", "اختر الأنسب لك", 2)}
                 <div className="p-6 md:p-7">
                   <RadioGroup value={shipping} onValueChange={handleShippingChange} className="space-y-3">
-                    {shippingOptions.map((opt) => {
+                    {[
+                      {
+                        id: "bosta" as const,
+                        label: "شحن للمنزل عبر Bosta",
+                        desc: form.governorate
+                          ? (bostaLoading ? "جاري حساب التكلفة..." : (bostaError || `التوصيل إلى ${form.governorate}`))
+                          : "اختر المحافظة لحساب التكلفة",
+                        cost: bostaFee,
+                        icon: Truck,
+                      },
+                      { id: PICKUP_OPTION.id as "pickup", label: PICKUP_OPTION.label, desc: PICKUP_OPTION.desc, cost: 0, icon: PICKUP_OPTION.icon },
+                    ].map((opt) => {
                       const active = shipping === opt.id;
+                      const isBostaPending = opt.id === "bosta" && (bostaLoading || opt.cost == null);
                       return (
                         <label
                           key={opt.id}
@@ -418,9 +430,10 @@ const CheckoutPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`font-black text-sm ${active ? 'text-toyota-red' : 'text-white'}`}>
-                              {opt.cost === 0 ? "مجاني" : `${opt.cost} ج.م`}
+                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : `${opt.cost} ج.م`}
                             </span>
-                            {active && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                            {active && !isBostaPending && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                            {isBostaPending && active && <Loader2 className="w-4 h-4 text-gold animate-spin" />}
                           </div>
                         </label>
                       );
