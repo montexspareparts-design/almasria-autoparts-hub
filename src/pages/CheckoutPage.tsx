@@ -556,7 +556,7 @@ const CheckoutPage = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-soft">الشحن</span>
-                      <span className="font-bold text-white/90">{selectedShipping.cost === 0 ? "مجاني ✨" : `${selectedShipping.cost} ج.م`}</span>
+                      <span className="font-bold text-white/90">{shipping === "pickup" ? "مجاني ✨" : (bostaLoading ? "جاري الحساب..." : bostaFee != null ? `${bostaFee} ج.م` : "—")}</span>
                     </div>
                   </div>
 
