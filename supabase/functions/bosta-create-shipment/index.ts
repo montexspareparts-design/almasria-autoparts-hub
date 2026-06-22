@@ -97,8 +97,19 @@ Deno.serve(async (req) => {
     const codMethods = ["cash_on_delivery", "cod"];
     const cod = Number(codMethods.includes(order.payment_method) ? order.total_amount : 0);
 
-    const phone = (profile?.phone || "").replace(/\D/g, "");
-    const normalizedPhone = phone.startsWith("20") ? phone : (phone.startsWith("0") ? "2" + phone : "20" + phone);
+    // Normalize to Egyptian 11-digit mobile (01XXXXXXXXX) — Bosta's expected format
+    let phone = (profile?.phone || "").replace(/\D/g, "");
+    if (phone.startsWith("0020")) phone = phone.slice(4);
+    else if (phone.startsWith("20") && phone.length > 10) phone = phone.slice(2);
+    if (phone.length === 10 && phone.startsWith("1")) phone = "0" + phone;
+    const isValidEgMobile = /^01[0125]\d{8}$/.test(phone);
+    if (!isValidEgMobile) {
+      return new Response(JSON.stringify({
+        error: "رقم الموبايل غير صالح للشحن. برجاء تحديث رقم العميل بصيغة 01XXXXXXXXX قبل إنشاء الشحنة.",
+        phone_received: profile?.phone || null,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const normalizedPhone = phone;
 
     const bostaPayload: any = {
       type: 10,
