@@ -94,7 +94,8 @@ Deno.serve(async (req) => {
 
     // Build Bosta payload (production v2 schema)
     // type: 10 = Send (delivery), 25 = CashCollection, etc.
-    const cod = Number(order.payment_method === "cash_on_delivery" ? order.total_amount : 0);
+    const codMethods = ["cash_on_delivery", "cod"];
+    const cod = Number(codMethods.includes(order.payment_method) ? order.total_amount : 0);
 
     const phone = (profile?.phone || "").replace(/\D/g, "");
     const normalizedPhone = phone.startsWith("20") ? phone : (phone.startsWith("0") ? "2" + phone : "20" + phone);
