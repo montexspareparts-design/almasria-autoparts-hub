@@ -61,6 +61,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Authorization: staff OR owner of the order
+    if (!isStaff && order.user_id !== userData.user.id) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Idempotency: if shipment already exists for this order, return it
+    const { data: existingShip } = await admin
+      .from("shipments")
+      .select("tracking_number, delivery_id, status")
+      .eq("order_id", order_id).eq("carrier", "bosta").maybeSingle();
+    if (existingShip?.tracking_number) {
+      return new Response(JSON.stringify({
+        success: true, already_exists: true,
+        tracking_number: existingShip.tracking_number,
+        delivery_id: existingShip.delivery_id,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     const { data: profile } = await admin
       .from("profiles").select("full_name, phone").eq("user_id", order.user_id).maybeSingle();
 
