@@ -83,33 +83,44 @@ const CheckoutPage = () => {
   const [bostaLoading, setBostaLoading] = useState(false);
   const [bostaError, setBostaError] = useState<string | null>(null);
 
-  // Auto-calc Bosta fee whenever governorate changes (or shipping switches to bosta)
+  // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
     if (!form.governorate) { setBostaFee(null); setShippingCost(0); return; }
     const dropOffCity = BOSTA_CITY_MAP[form.governorate];
     if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
-    let cancelled = false;
-    setBostaLoading(true); setBostaError(null);
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
-          body: { dropOffCity, cod: payment === "cod" ? total : 0 },
-        });
-        if (cancelled) return;
-        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
-        const fee = Number((data as any)?.fee);
-        if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
-        setBostaFee(fee);
-        setShippingCost(fee);
-      } catch (e: any) {
-        if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
-      } finally {
-        if (!cancelled) setBostaLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [shipping, form.governorate, payment, total, setShippingCost]);
+
+    const timer = setTimeout(() => {
+      let cancelled = false;
+      setBostaLoading(true); setBostaError(null);
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
+            body: {
+              dropOffCity,
+              dropOffAreaAr: form.city,
+              dropOffAddressAr: form.address,
+              cod: payment === "cod" ? total : 0,
+            },
+          });
+          if (cancelled) return;
+          if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+          if ((data as any)?.out_of_coverage) throw new Error((data as any)?.error || "المنطقة خارج تغطية Bosta");
+          const fee = Number((data as any)?.fee);
+          if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
+          setBostaFee(fee);
+          setShippingCost(fee);
+        } catch (e: any) {
+          if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
+        } finally {
+          if (!cancelled) setBostaLoading(false);
+        }
+      })();
+      return () => { cancelled = true; };
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost]);
 
   const orderTotal = total;
 
