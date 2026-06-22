@@ -608,7 +608,10 @@ const CheckoutPage = () => {
                     {/* CTA — Hero-style shimmer */}
                     <motion.div whileTap={{ scale: 0.98 }} className="mt-5">
                       <button
-                        disabled={submitting}
+                        disabled={
+                          submitting ||
+                          (shipping === "bosta" && (bostaLoading || bostaFee == null || bostaError != null))
+                        }
                         onClick={handleSubmit}
                         className="group relative w-full h-14 rounded-xl bg-toyota-red text-white font-tajawal font-black text-base overflow-hidden animate-lux-red-pulse transition-all duration-300 hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2 border border-[hsl(var(--gold)/0.45)]"
                       >
