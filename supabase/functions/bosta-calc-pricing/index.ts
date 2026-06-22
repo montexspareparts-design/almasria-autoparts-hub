@@ -1,23 +1,49 @@
 // Calculate Bosta shipping fees for a given destination city.
 // Public (no auth) — used by checkout.
-// Tries multiple Bosta pricing endpoints. Falls back to a static governorate
-// rate table when Bosta's API is unavailable so checkout never blocks.
+// Uses the official Bosta Pricing Annex (1.5A) zone-based rate card.
+// Tries Bosta's live pricing API first; falls back to the contractual rate
+// card so checkout never blocks.
+//
+// Rate card (Forward Delivery, EGP, before VAT) — Pickup from Zone 1:
+//   Z1 Cairo & Giza .................. 85
+//   Z2 Alexandria + suburbs .......... 92
+//   Z3 Delta & Canal ................. 99
+//   Z4 Fayoum/BeniSuef/Minya/Asyut/Sohag 114
+//   Z5 Qena/Luxor/Aswan/RedSea/Matrouh 131
+//   Z6 North Coast ................... 135
+//   Z7 Sharm El Sheikh / New Valley .. 151
+// + 14% VAT
+// + COD fee: 1% of amount exceeding 2000 EGP
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const BOSTA_API_KEY = Deno.env.get("BOSTA_API_KEY");
 const BOSTA_BASE = "https://app.bosta.co/api/v2";
+const VAT_RATE = 0.14;
 
-// Static fallback (EGP) — kept conservative & realistic; used only if Bosta
-// pricing API is unreachable/unsupported for this account.
-const FALLBACK_FEES: Record<string, number> = {
-  Cairo: 60, Giza: 60, Alexandria: 75, Qalyubia: 70, Sharqia: 80,
-  Dakahlia: 85, Gharbia: 80, Monufia: 80, Beheira: 85, "Kafr El Sheikh": 90,
-  Damietta: 90, "Port Said": 90, Ismailia: 85, Suez: 85, "North Coast": 110,
-  Matrouh: 130, "Red Sea": 130, "South Sinai": 140, "North Sinai": 140,
-  Fayoum: 90, "Beni Suef": 95, Minya: 100, Assiut: 110, Sohag: 120,
-  Qena: 130, Luxor: 140, Aswan: 150, "New Valley": 160,
+// Forward Delivery base price per zone (EGP, before VAT)
+const ZONE_BASE: Record<number, number> = {
+  1: 85, 2: 92, 3: 99, 4: 114, 5: 131, 6: 135, 7: 151,
 };
-const DEFAULT_FALLBACK = 90;
+
+// Map governorate (English name as used by checkout) → Bosta zone
+const CITY_TO_ZONE: Record<string, number> = {
+  // Zone 1
+  Cairo: 1, Giza: 1,
+  // Zone 2
+  Alexandria: 2,
+  // Zone 3 — Delta & Canal
+  Qalyubia: 3, Monufia: 3, Sharqia: 3, Gharbia: 3, Dakahlia: 3,
+  Beheira: 3, Damietta: 3, "Kafr El Sheikh": 3, "Port Said": 3,
+  Ismailia: 3, Suez: 3,
+  // Zone 4
+  Fayoum: 4, "Beni Suef": 4, Minya: 4, Assiut: 4, Sohag: 4,
+  // Zone 5
+  Qena: 5, Luxor: 5, Aswan: 5, "Red Sea": 5, Matrouh: 5,
+  // Zone 6
+  "North Coast": 6,
+  // Zone 7
+  "South Sinai": 7, "North Sinai": 7, "New Valley": 7,
+};
 
 async function tryFetch(path: string, body: Record<string, unknown>) {
   const res = await fetch(`${BOSTA_BASE}${path}`, {
@@ -32,6 +58,11 @@ async function tryFetch(path: string, body: Record<string, unknown>) {
 function extractFee(raw: any): number | null {
   return raw?.data?.shipmentFees ?? raw?.data?.priceBeforeVat ?? raw?.data?.price
     ?? raw?.shipmentFees ?? raw?.price ?? raw?.data?.total ?? null;
+}
+
+function calcCodFee(cod: number): number {
+  if (!cod || cod <= 2000) return 0;
+  return Math.round((cod - 2000) * 0.01);
 }
 
 Deno.serve(async (req) => {
@@ -66,13 +97,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    let source: "bosta" | "fallback" = "bosta";
+    let source: "bosta" | "rate_card" = "bosta";
+    let zone: number | null = null;
+    let baseFee = 0;
+    let vat = 0;
+    let codFee = 0;
+
     if (fee == null) {
-      source = "fallback";
-      fee = FALLBACK_FEES[dropOffCity] ?? DEFAULT_FALLBACK;
+      source = "rate_card";
+      zone = CITY_TO_ZONE[dropOffCity] ?? 3; // default to Delta zone if unknown
+      baseFee = ZONE_BASE[zone];
+      vat = Math.round(baseFee * VAT_RATE);
+      codFee = calcCodFee(Number(cod) || 0);
+      fee = baseFee + vat + codFee;
     }
 
-    return new Response(JSON.stringify({ success: true, fee, source, lastError }), {
+    return new Response(JSON.stringify({
+      success: true, fee, source, zone, baseFee, vat, codFee, lastError,
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
