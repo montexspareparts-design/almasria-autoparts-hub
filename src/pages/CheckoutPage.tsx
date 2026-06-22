@@ -147,6 +147,10 @@ const CheckoutPage = () => {
       toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
       return;
     }
+    if (shipping === "bosta" && (bostaError || bostaFee == null)) {
+      toast({ title: "يرجى مراجعة بيانات الشحن", description: bostaError || "لم يتم حساب تكلفة الشحن", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
       const orderNumber = await generateOrderNumber();
