@@ -131,6 +131,8 @@ const DealerDashboard = () => {
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
+    bulk_upload: "رفع طلب من Excel",
+    loyalty: "برنامج الولاء والمكافآت",
   };
 
   const renderContent = () => {
