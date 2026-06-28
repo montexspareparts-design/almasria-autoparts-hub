@@ -171,6 +171,9 @@ const MyProfilePage = () => {
             </div>
           ) : (
             <div className="space-y-5">
+              {/* Loyalty Program */}
+              <LoyaltyCard />
+
               {/* Personal Info */}
               <Card>
                 <CardHeader className="pb-3">
