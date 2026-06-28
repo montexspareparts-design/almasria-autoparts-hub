@@ -93,8 +93,8 @@ const DealerBulkOrder = () => {
     const ok = rows.filter(r => r.status === "matched" && r.matched);
     let added = 0;
     for (const r of ok) {
-      const res = await cart.addItem(r.matched!.product_id, r.qty);
-      if (res !== false) added++;
+      await cart.addItem(r.matched!.product_id, r.qty);
+      added++;
     }
     await supabase.from("dealer_bulk_uploads").insert({
       user_id: user.id,
