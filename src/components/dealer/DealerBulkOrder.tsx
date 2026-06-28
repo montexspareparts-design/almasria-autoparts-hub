@@ -74,9 +74,10 @@ const DealerBulkOrder = () => {
       const prodMap = new Map((products ?? []).map(p => [p.sku, p]));
       const result: ParsedRow[] = parsed.map(p => {
         const m = prodMap.get(p.sku);
-        if (!m) return { ...p, status: "unmatched" };
-        if ((m.stock_quantity ?? 0) <= 0) return { ...p, matched: m, status: "out_of_stock" };
-        return { ...p, matched: m, status: "matched" };
+        if (!m) return { sku: p.sku, qty: p.qty, status: "unmatched" as const };
+        const matched = { product_id: m.id, name_ar: m.name_ar, base_price: Number(m.base_price), stock_quantity: m.stock_quantity };
+        if ((m.stock_quantity ?? 0) <= 0) return { sku: p.sku, qty: p.qty, matched, status: "out_of_stock" as const };
+        return { sku: p.sku, qty: p.qty, matched, status: "matched" as const };
       });
       setRows(result);
     } catch (e) {
