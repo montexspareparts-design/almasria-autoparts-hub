@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Search, ClipboardList, FileText, Receipt,
   Heart, Upload, Bell, Tag, Settings, LogOut, User, CreditCard,
   ListPlus, Scale, ChevronDown, ChevronUp, Package, Zap,
-  BarChart3, ShoppingCart, Shield, Eye, Languages
+  BarChart3, ShoppingCart, Shield, Eye, Languages, FileSpreadsheet, Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,7 +29,7 @@ export type DealerTab =
   | "quotes" | "priced_today" | "cart" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
-  | "shopping_lists" | "compare";
+  | "shopping_lists" | "compare" | "bulk_upload" | "loyalty";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
@@ -110,6 +110,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الأدوات",
       defaultOpen: true,
       items: [
+        { id: "bulk_upload", label: "رفع طلب Excel", icon: FileSpreadsheet, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
+        { id: "loyalty", label: "برنامج الولاء", icon: Trophy, iconColor: "text-yellow-600", iconBg: "bg-yellow-500/10" },
         { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
         { id: "compare", label: "مقارنة المنتجات", icon: Scale, iconColor: "text-teal-600", iconBg: "bg-teal-500/10" },
         { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package, iconColor: "text-orange-600", iconBg: "bg-orange-500/10" },

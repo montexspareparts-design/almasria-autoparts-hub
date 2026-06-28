@@ -8,6 +8,7 @@ import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import AnimatedPrice from "@/components/ui/animated-price";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import PriceDropAlertButton from "@/components/PriceDropAlertButton";
 
 // accent = اللون المميز للبراند (يستخدم في ring + dot على base أسود فاخر موحد)
 const brandRouteMap: Record<string, { label: string; accent: string; path: string }> = {
@@ -451,6 +452,13 @@ const ProductCard = memo(({
         {/* Alert button for out-of-stock — dealers only */}
         {!stockAvailable && user && isDealer && (
           <StockAlertButton productId={product.id} userId={user.id} productName={product.name_ar} />
+        )}
+
+        {/* Price drop alert — visible to all logged-in customers when price visible */}
+        {stockAvailable && canSeePrice && price != null && !isDealer && (
+          <div className="mt-2 flex justify-center">
+            <PriceDropAlertButton productId={product.id} currentPrice={Number(price)} />
+          </div>
         )}
       </div>
     </div>

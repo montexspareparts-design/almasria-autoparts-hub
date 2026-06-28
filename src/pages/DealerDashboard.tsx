@@ -36,6 +36,8 @@ const DealerBottomCarousel = lazy(() => import("@/components/dealer/DealerBottom
 const DealerBusinessBanner = lazy(() => import("@/components/dealer/DealerBusinessBanner"));
 const DealerPersonalStats = lazy(() => import("@/components/dealer/DealerPersonalStats"));
 const DealerKeyboardShortcuts = lazy(() => import("@/components/dealer/DealerKeyboardShortcuts"));
+const DealerBulkOrder = lazy(() => import("@/components/dealer/DealerBulkOrder"));
+const LoyaltyCard = lazy(() => import("@/components/LoyaltyCard"));
 
 const DealerDashboard = () => {
   const { user, dealerAccount, isDealer, loading: authLoading, signOut } = useAuth();
@@ -131,6 +133,8 @@ const DealerDashboard = () => {
     offers: "العروض الخاصة",
     catalogs: "الكتالوجات",
     settings: "إعدادات الحساب",
+    bulk_upload: "رفع طلب من Excel",
+    loyalty: "برنامج الولاء والمكافآت",
   };
 
   const renderContent = () => {
@@ -191,6 +195,8 @@ const DealerDashboard = () => {
       case "shopping_lists": return <DealerShoppingLists />;
       case "compare": return <DealerProductCompare />;
       case "settings": return <DealerAccountSettings />;
+      case "bulk_upload": return <DealerBulkOrder />;
+      case "loyalty": return <LoyaltyCard />;
       default: return null;
     }
   };
