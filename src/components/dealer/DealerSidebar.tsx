@@ -29,7 +29,7 @@ export type DealerTab =
   | "quotes" | "priced_today" | "cart" | "orders" | "invoices" | "price_lists"
   | "favorites" | "quick_order" | "notifications" | "offers"
   | "catalogs" | "settings" | "statement" | "payment" | "stock_alerts"
-  | "shopping_lists" | "compare";
+  | "shopping_lists" | "compare" | "bulk_upload" | "loyalty";
 
 interface DealerSidebarProps {
   activeTab: DealerTab;
