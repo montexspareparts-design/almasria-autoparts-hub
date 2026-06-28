@@ -8,6 +8,7 @@ import { ImageBadge, ImageBadgeColumn } from "@/components/ui/image-badge";
 import AnimatedPrice from "@/components/ui/animated-price";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import PriceDropAlertButton from "@/components/PriceDropAlertButton";
 
 // accent = اللون المميز للبراند (يستخدم في ring + dot على base أسود فاخر موحد)
 const brandRouteMap: Record<string, { label: string; accent: string; path: string }> = {
