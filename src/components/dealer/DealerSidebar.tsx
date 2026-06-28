@@ -110,6 +110,8 @@ const DealerSidebar = ({ activeTab, onTabChange, dealerName, tier, onSignOut, un
       label: "الأدوات",
       defaultOpen: true,
       items: [
+        { id: "bulk_upload", label: "رفع طلب Excel", icon: FileSpreadsheet, iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
+        { id: "loyalty", label: "برنامج الولاء", icon: Trophy, iconColor: "text-yellow-600", iconBg: "bg-yellow-500/10" },
         { id: "shopping_lists", label: "قوائم الشراء", icon: ListPlus, iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
         { id: "compare", label: "مقارنة المنتجات", icon: Scale, iconColor: "text-teal-600", iconBg: "bg-teal-500/10" },
         { id: "stock_alerts", label: "تنبيهات المخزون", icon: Package, iconColor: "text-orange-600", iconBg: "bg-orange-500/10" },
