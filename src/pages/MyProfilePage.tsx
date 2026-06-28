@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X } from "lucide-react";
 import { recoverPhoneFromChannels, type RecoveredPhone } from "@/lib/recoverPhone";
+import LoyaltyCard from "@/components/LoyaltyCard";
 
 const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
 
