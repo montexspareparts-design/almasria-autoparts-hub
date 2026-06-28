@@ -195,6 +195,8 @@ const DealerDashboard = () => {
       case "shopping_lists": return <DealerShoppingLists />;
       case "compare": return <DealerProductCompare />;
       case "settings": return <DealerAccountSettings />;
+      case "bulk_upload": return <DealerBulkOrder />;
+      case "loyalty": return <LoyaltyCard />;
       default: return null;
     }
   };
