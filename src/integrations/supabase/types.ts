@@ -780,6 +780,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dealer_bulk_uploads: {
+        Row: {
+          added_to_cart: number
+          created_at: string
+          filename: string | null
+          id: string
+          matched_count: number
+          total_rows: number
+          unmatched_skus: Json | null
+          user_id: string
+        }
+        Insert: {
+          added_to_cart?: number
+          created_at?: string
+          filename?: string | null
+          id?: string
+          matched_count?: number
+          total_rows?: number
+          unmatched_skus?: Json | null
+          user_id: string
+        }
+        Update: {
+          added_to_cart?: number
+          created_at?: string
+          filename?: string | null
+          id?: string
+          matched_count?: number
+          total_rows?: number
+          unmatched_skus?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dealer_cart_items: {
         Row: {
           created_at: string
@@ -1484,6 +1517,68 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_points: {
+        Row: {
+          balance: number
+          lifetime_earned: number
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          lifetime_earned?: number
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          lifetime_earned?: number
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          points: number
+          reason: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          points: number
+          reason?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          points?: number
+          reason?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_bundles: {
         Row: {
           bundle_price: number
@@ -1983,6 +2078,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "price_change_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_drop_alerts: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          last_notified_price: number | null
+          product_id: string
+          reference_price: number
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_notified_price?: number | null
+          product_id: string
+          reference_price: number
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          last_notified_price?: number | null
+          product_id?: string
+          reference_price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_drop_alerts_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
