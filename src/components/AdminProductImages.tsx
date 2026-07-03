@@ -69,12 +69,16 @@ const AdminProductImages = () => {
 
       let query = supabase
         .from("products")
-        .select("id, name_ar, sku, brand, image_url, product_categories(name_ar)", { count: "exact" })
+        .select("id, name_ar, sku, part_number, brand, image_url, product_categories(name_ar)", { count: "exact" })
         .order("name_ar")
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
       if (search) {
-        query = query.or(`name_ar.ilike.%${search}%,sku.ilike.%${search}%`);
+        const term = search.trim();
+        const cleaned = term.replace(/[\s-]/g, "");
+        query = query.or(
+          `name_ar.ilike.%${term}%,sku.ilike.%${term}%,part_number.ilike.%${term}%,part_number.ilike.%${cleaned}%`
+        );
       }
 
       if (missingImageOnly) {
