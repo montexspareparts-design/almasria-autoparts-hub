@@ -1,18 +1,28 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+/**
+ * Production Capacitor configuration.
+ *
+ * NOTE: `server.url` is intentionally NOT set. The iOS app bundles the
+ * built web assets from `dist/` locally (offline-capable shell). The
+ * backend (Supabase, Paymob, WhatsApp, etc.) continues to run from its
+ * existing production infrastructure via normal HTTPS calls.
+ *
+ * If a developer needs live-reload during local development against the
+ * Lovable sandbox, they can temporarily add:
+ *   server: { url: 'https://<sandbox>.lovableproject.com', cleartext: true }
+ * but this MUST be removed before an App Store archive.
+ */
 const config: CapacitorConfig = {
-  appId: 'app.lovable.351088b163e6468aa6c4d76c390fdd77',
-  appName: 'المصرية جروب',
+  appId: 'com.almasria.autoparts',
+  appName: 'Al Masria Auto Parts',
   webDir: 'dist',
-  server: {
-    url: 'https://351088b1-63e6-468a-a6c4-d76c390fdd77.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
   ios: {
     backgroundColor: '#FFFFFF',
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
-    scheme: 'المصرية جروب',
+    scheme: 'Al Masria Auto Parts',
+    limitsNavigationsToAppBoundDomains: false,
   },
   plugins: {
     SplashScreen: {
@@ -24,6 +34,10 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
+    },
+    Keyboard: {
+      resize: 'native',
+      resizeOnFullScreen: true,
     },
   },
 };
