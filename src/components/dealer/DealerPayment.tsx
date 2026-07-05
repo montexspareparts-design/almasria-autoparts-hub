@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPaymobReturnUrl } from "@/lib/paymob";
+import { isNativeIOS } from "@/lib/native";
 
 type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
 
