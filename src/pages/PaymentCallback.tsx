@@ -47,14 +47,15 @@ const PaymentCallback = () => {
         setAmountDisplay(egp);
       }
 
-      // Authoritative source of truth = the order row (updated by paymob-webhook).
-      // Never trust URL params alone — they are trivially spoofable.
+      // Authoritative source of truth = the order + latest payment
+      // transaction (updated by paymob-webhook). Never trust URL params
+      // alone — they are trivially spoofable.
       const fetchOrderStatus = async (): Promise<"paid" | "failed" | "pending" | null> => {
         if (!merchantOrderId || !user) return null;
         try {
           const { data: order } = await supabase
             .from("orders")
-            .select("id, order_number, payment_status, status")
+            .select("id, order_number, status")
             .eq("order_number", merchantOrderId)
             .eq("user_id", user.id)
             .single();
@@ -63,14 +64,29 @@ const PaymentCallback = () => {
             setOrderId(order.id);
             setOrderNumber(order.order_number);
           }
-          const ps = String((order as { payment_status?: string }).payment_status || "").toLowerCase();
-          if (ps === "paid") return "paid";
-          if (ps === "failed" || ps === "cancelled") return "failed";
+
+          const { data: tx } = await supabase
+            .from("payment_transactions")
+            .select("status")
+            .eq("order_number", merchantOrderId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const orderStatus = String(order.status || "").toLowerCase();
+          const txStatus = String(tx?.status || "").toLowerCase();
+
+          if (txStatus === "success" ||
+              ["processing", "shipped", "delivered"].includes(orderStatus)) {
+            return "paid";
+          }
+          if (txStatus === "failed" || orderStatus === "cancelled") return "failed";
           return "pending";
         } catch {
           return null;
         }
       };
+
 
       const authoritative = await fetchOrderStatus();
 
