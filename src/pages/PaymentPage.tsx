@@ -27,7 +27,7 @@ interface PaymentMethodOption {
   color: string;
 }
 
-const PAYMENT_METHODS: PaymentMethodOption[] = [
+const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: "card",
     label: "بطاقة بنكية",
@@ -53,6 +53,10 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
     color: "text-green-600",
   },
 ];
+
+const PAYMENT_METHODS = isNativeIOS()
+  ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
+  : ALL_PAYMENT_METHODS;
 
 const ERROR_MESSAGES: Record<string, string> = {
   "DECLINED": "تم رفض البطاقة. جرب بطاقة أخرى أو طريقة دفع مختلفة.",
