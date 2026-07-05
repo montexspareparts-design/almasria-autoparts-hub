@@ -11,9 +11,10 @@ import { Separator } from "@/components/ui/separator";
 import CarModelSelector from "@/components/CarModelSelector";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X } from "lucide-react";
+import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X, Trash2, ShieldAlert } from "lucide-react";
 import { recoverPhoneFromChannels, type RecoveredPhone } from "@/lib/recoverPhone";
 import LoyaltyCard from "@/components/LoyaltyCard";
+import DeleteAccountDialog from "@/components/DeleteAccountDialog";
 
 const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
 
@@ -37,6 +38,7 @@ const MyProfilePage = () => {
   const [isGoogleUser, setIsGoogleUser] = useState(false);
   const [recoveredPhone, setRecoveredPhone] = useState<RecoveredPhone | null>(null);
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -381,6 +383,33 @@ const MyProfilePage = () => {
                   <><Save className="w-5 h-5" /> حفظ التعديلات</>
                 )}
               </Button>
+
+              {/* Danger zone — permanent account deletion */}
+              <Card className="border-destructive/30 bg-destructive/[0.03]">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                    <ShieldAlert className="w-4 h-4" />
+                    الخصوصية وحذف الحساب
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-xs leading-6 text-muted-foreground">
+                    يمكنك حذف حسابك وبياناتك الشخصية نهائيًا من داخل التطبيق.
+                    الإجراء نهائي ولا يمكن التراجع عنه. قد يتم الاحتفاظ بسجلات
+                    الطلبات والفواتير بشكل مجهول الهوية عند الحاجة القانونية.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDeleteOpen(true)}
+                    className="w-full h-11 gap-2 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive font-bold"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    حذف الحساب نهائيًا
+                  </Button>
+                </CardContent>
+              </Card>
+              <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
             </div>
           )}
         </div>
