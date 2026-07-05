@@ -116,7 +116,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
         const waUrl = waPhone
           ? `https://wa.me/${waPhone}?text=${encodeURIComponent(caption)}`
           : `https://wa.me/?text=${encodeURIComponent(caption)}`;
-        window.open(waUrl, "_blank");
+        openWhatsApp(waUrl);
         toast({ title: "تم حفظ الصورة ✓ — ارفعها في شات الواتساب المفتوح" });
       }, "image/png");
     } catch (e) {
