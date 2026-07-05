@@ -881,7 +881,7 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                           variant="outline"
                           size="sm"
                           className={`text-xs rounded-xl h-9 gap-1.5 border-border/40 ${order.status === "delivered" && items && items.length > 0 ? "" : "flex-1 w-full"}`}
-                          onClick={() => window.open(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`, "_blank")}
+                          onClick={() => openWhatsApp(`https://wa.me/201000000000?text=استفسار عن الطلب رقم ${order.order_number}`)}
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
                           استفسار عن الطلب

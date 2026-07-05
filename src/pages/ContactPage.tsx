@@ -137,7 +137,7 @@ const ContactPage = () => {
       "",
       parsed.data.message,
     ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines)}`, "_blank");
+    openWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines)}`);
   };
 
   return (

@@ -206,7 +206,7 @@ const DealerPricedToday = ({ onConvertToOrder, sharedCart }: DealerPricedTodayPr
     });
     const total = itemsToShare.reduce((s, i) => s + getEffectivePrice(i) * i.quantity, 0);
     lines.push("━━━━━━━━━━━━━━━━━━━━━━", `💰 *الإجمالي: ${total.toLocaleString("en-US")} ج.م*`, "", "— المصرية جروب لقطع غيار وزيوت تويوتا");
-    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+    openWhatsApp(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`);
   };
 
   const handleDownloadPdf = async () => {
