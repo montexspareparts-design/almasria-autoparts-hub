@@ -22,7 +22,7 @@ type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
 const INSTAPAY_LINK = "https://ipn.eg/S/drmado/instapay/0AGxRP";
 const INSTAPAY_ADDRESS = "drmado@instapay";
 
-const PAYMENT_METHODS: {
+const ALL_PAYMENT_METHODS: {
   id: PaymentMethod;
   label: string;
   desc: string;
@@ -63,6 +63,10 @@ const PAYMENT_METHODS: {
     iconBg: "bg-emerald-600",
   },
 ];
+
+const PAYMENT_METHODS = isNativeIOS()
+  ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
+  : ALL_PAYMENT_METHODS;
 
 interface DealerPaymentProps {
   targetOrderId?: string;
