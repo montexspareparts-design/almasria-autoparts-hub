@@ -63,17 +63,6 @@
 				<string>com.almasria.autoparts</string>
 			</array>
 		</dict>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.googleusercontent.apps</string>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<!-- REPLACE with REVERSED_CLIENT_ID from GoogleService-Info.plist, e.g. com.googleusercontent.apps.1234567890-abc123 -->
-				<string>REPLACE_WITH_REVERSED_CLIENT_ID</string>
-			</array>
-		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
