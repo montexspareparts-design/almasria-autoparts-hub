@@ -1126,6 +1126,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          bundle_id: string | null
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bundle_id?: string | null
+          created_at?: string
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bundle_id?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_password_reset_otps: {
         Row: {
           attempts: number
