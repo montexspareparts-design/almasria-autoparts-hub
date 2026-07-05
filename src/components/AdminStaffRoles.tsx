@@ -327,34 +327,31 @@ const AdminStaffRoles = () => {
     setViewedPassword(null);
     setLoadingPassword(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      // Get the latest stored password for this staff member
-      const { data, error } = await supabase
-        .from("staff_passwords")
-        .select("id, initial_password, created_at")
-        .eq("staff_user_id", member.user_id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      // Reveal-and-purge RPC: returns the password once, then permanently
+      // clears the stored plaintext value. Server-side admin check + audit log.
+      const { data, error } = await supabase.rpc("reveal_staff_initial_password", {
+        p_staff_user_id: member.user_id,
+      });
       if (error) throw error;
       if (!data) {
         setViewedPassword(null);
+        toast({
+          title: "لا توجد كلمة مرور محفوظة",
+          description: "تم عرضها ومسحها مسبقًا. استخدم إعادة التعيين لإنشاء كلمة جديدة.",
+        });
       } else {
-        setViewedPassword({ password: data.initial_password, created_at: data.created_at });
-        // Audit: mark as viewed
-        if (user) {
-          await supabase.from("staff_passwords").update({
-            viewed_by: user.id,
-            viewed_at: new Date().toISOString(),
-          }).eq("id", data.id);
-        }
+        setViewedPassword({ password: data as string, created_at: new Date().toISOString() });
+        toast({
+          title: "تم عرض كلمة المرور",
+          description: "تم مسحها من قاعدة البيانات لأسباب أمنية. انسخها الآن.",
+        });
       }
     } catch (err: any) {
       toast({ title: "خطأ في جلب كلمة المرور", description: err.message, variant: "destructive" });
     }
     setLoadingPassword(false);
   };
+
 
   const handleFullDelete = async () => {
     if (!deleteTarget) return;
