@@ -66,7 +66,12 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
       const pageWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
-      pdf.save(`عرض-سعر-${order.order_number}.pdf`);
+      const blob = pdf.output("blob");
+      await saveAndShareFile(
+        { kind: "blob", blob },
+        `عرض-سعر-${order.order_number}.pdf`,
+        { dialogTitle: `عرض سعر ${order.order_number}` }
+      );
       toast({ title: "تم تحميل الـ PDF ✓" });
     } catch (e) {
       toast({ title: "فشل التحميل", variant: "destructive" });
