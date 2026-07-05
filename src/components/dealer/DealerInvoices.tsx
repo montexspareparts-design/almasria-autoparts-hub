@@ -49,6 +49,13 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
   };
 
   const handlePrint = async (inv: Invoice) => {
+    // On native iOS, `window.open("", "_blank") + window.print()` is not
+    // supported inside WKWebView. Fall back to generating the PDF and
+    // opening the system Share Sheet, which offers "Print" natively.
+    if (isNativePlatform()) {
+      await handleDownloadPDF(inv);
+      return;
+    }
     // Fetch order items with product details
     const { data: items } = await supabase
       .from("order_items")
@@ -57,6 +64,7 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
 
     const discount = Number(inv.coupon_discount || 0);
     const total = Number(inv.total_amount);
