@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Receipt, Calendar, Tag, Package, Printer, FileDown, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { isNativePlatform, openExternal, saveAndShareFile } from "@/lib/native";
+import { toast } from "@/hooks/use-toast";
 
 interface Invoice {
   id: string;
