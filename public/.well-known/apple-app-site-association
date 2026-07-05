@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["REPLACE_WITH_TEAM_ID.com.almasria.autoparts"],
+        "appIDs": ["UBWB3M7HX6.com.almasria.autoparts"],
         "components": [
           { "/": "/payment-callback*", "comment": "Paymob return URL" },
           { "/": "/auth-callback*", "comment": "OAuth callback" },
@@ -12,6 +12,6 @@
     ]
   },
   "webcredentials": {
-    "apps": ["REPLACE_WITH_TEAM_ID.com.almasria.autoparts"]
+    "apps": ["UBWB3M7HX6.com.almasria.autoparts"]
   }
 }
