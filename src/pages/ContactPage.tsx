@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { openWhatsApp } from "@/lib/native";
 import { Helmet } from "react-helmet-async";
 import { Phone, Mail, MessageCircle, MapPin, Send, Clock, Building2, Globe, Navigation, BadgeCheck, Headphones, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";

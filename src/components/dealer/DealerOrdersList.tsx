@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { openWhatsApp } from "@/lib/native";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";

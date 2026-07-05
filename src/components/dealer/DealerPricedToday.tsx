@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { openWhatsApp } from "@/lib/native";
 import { LazyImage } from "@/components/ui/lazy-image";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";

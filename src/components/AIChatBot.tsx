@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useMemo } from "react";
+import { openWhatsApp } from "@/lib/native";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X, Send, Loader2, Trash2, Share2, ImagePlus, Mic, MicOff, Volume2, VolumeX, MapPin } from "lucide-react";
