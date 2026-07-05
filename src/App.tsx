@@ -21,6 +21,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
+import NativeBootstrap from "@/components/NativeBootstrap";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
