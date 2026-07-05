@@ -5,6 +5,7 @@ import { Download, Image as ImageIcon, MessageCircle, Loader2, Printer } from "l
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { openWhatsApp, saveAndShareFile } from "@/lib/native";
 
 interface InvoiceItem {
   name_ar?: string;
