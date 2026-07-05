@@ -116,11 +116,27 @@ Deno.serve(async (req) => {
         return json(401, { error: "كلمة المرور غير صحيحة" });
       }
     } else {
-      // OAuth users (Google/Apple/phone) — require explicit typed confirmation
+      // OAuth users (Google/Apple) — require typed phrase AND a fresh sign-in
+      // within the last 10 minutes. This forces the user to complete a real
+      // provider re-authentication right before deletion, without breaking
+      // the native iOS OAuth flow.
       if ((confirmPhrase ?? "").trim() !== "حذف حسابي نهائيا") {
         return json(400, { error: 'يجب كتابة العبارة: حذف حسابي نهائيا' });
       }
+      const lastSignInAt = userData.user.last_sign_in_at
+        ? new Date(userData.user.last_sign_in_at).getTime()
+        : 0;
+      const ageMs = Date.now() - lastSignInAt;
+      const TEN_MIN = 10 * 60 * 1000;
+      if (!lastSignInAt || ageMs > TEN_MIN) {
+        return json(401, {
+          error:
+            "لتأكيد هويتك، يرجى تسجيل الخروج وتسجيل الدخول مرة أخرى بحساب Google خلال آخر 10 دقائق ثم إعادة المحاولة",
+          code: "reauth_required",
+        });
+      }
     }
+
 
     const admin = createClient(supabaseUrl, serviceKey);
 
