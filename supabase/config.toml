@@ -70,6 +70,9 @@ verify_jwt = false
 [functions.notify-staff-push]
 verify_jwt = false
 
+[functions.delete-my-account]
+verify_jwt = true
+
 [functions.summarize-support-conversation]
 verify_jwt = false
 
