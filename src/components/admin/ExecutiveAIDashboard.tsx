@@ -173,7 +173,8 @@ export default function ExecutiveAIDashboard() {
         doc.text(wrapped, 40, y);
       }
 
-      doc.save(`executive-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const fname = `executive-summary-${new Date().toISOString().slice(0, 10)}.pdf`;
+      await saveAndShareFile({ kind: "blob", blob: doc.output("blob") }, fname);
       toast({ title: "تم", description: "تم تحميل التقرير بصيغة PDF" });
     } catch (e: any) {
       toast({ title: "فشل تصدير PDF", description: e.message, variant: "destructive" });
