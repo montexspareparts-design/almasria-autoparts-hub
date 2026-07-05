@@ -245,6 +245,13 @@ Deno.serve(async (req) => {
     // Step 3: Generate payment key
     // ========================================
     console.log(`Step 3: Generating payment key for method: ${paymentMethod}...`);
+
+    // Forward the client-supplied return URL to Paymob so the iframe/wallet
+    // redirects back to our canonical HTTPS callback (which iOS then picks
+    // up as a Universal Link and hands to the app). Falls back to the
+    // per-integration URL configured in the Paymob dashboard.
+    const redirectionUrl = body.return_url || undefined;
+
     const paymentKeyRes = await fetch(`${PAYMOB_BASE}/api/acceptance/payment_keys`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -271,6 +278,7 @@ Deno.serve(async (req) => {
         currency: "EGP",
         integration_id: parseInt(activeIntegrationId),
         lock_order_when_paid: true,
+        ...(redirectionUrl ? { redirection_url: redirectionUrl } : {}),
       }),
     });
 
