@@ -133,6 +133,7 @@ const App = () => (
                <Suspense fallback={null}>
                  <ImpersonationBanner />
                </Suspense>
+               <NativeBootstrap />
                <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
