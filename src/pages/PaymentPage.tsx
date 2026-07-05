@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
+import { isNativePlatform, openExternal } from "@/lib/native";
 
 type PaymentMethod = "card" | "wallet" | "kiosk";
 
