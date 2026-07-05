@@ -198,17 +198,17 @@ const AdminLeads = () => {
         setPreflight({ kind: "no_account", lead });
         return;
       }
-      const { data: pw } = await supabase
-        .from("dealer_passwords" as any)
-        .select("initial_password")
-        .eq("dealer_account_id", (account as any).id)
-        .maybeSingle();
-      const stored = (pw as any)?.initial_password as string | undefined;
+      // Reveal-and-purge RPC — returns the stored password once, then clears it.
+      const { data: pwData } = await supabase.rpc("reveal_dealer_initial_password", {
+        p_dealer_account_id: (account as any).id,
+      });
+      const stored = (pwData as string | null) || undefined;
       if (stored) {
         setPreflight({ kind: "has_password", lead, password: stored });
       } else {
         setPreflight({ kind: "no_password", lead });
       }
+
     } catch (e: any) {
       toast({ title: "خطأ", description: e?.message || "فشل الفحص", variant: "destructive" });
     } finally {
@@ -257,39 +257,44 @@ const AdminLeads = () => {
     setLeadAttempts(map);
   }, []);
 
-  // Fetch credentials for converted leads
+  // Check which converted leads still have credentials on file — WITHOUT reading
+  // the plaintext password in bulk. The password is only revealed via the
+  // reveal-and-purge RPC when the admin explicitly clicks "view credentials".
   const fetchLeadCredentials = useCallback(async (leadsList: Lead[]) => {
     const convertedLeads = leadsList.filter(l => l.status === "converted" && l.erp_customer_code);
     if (convertedLeads.length === 0) return;
-    
+
     const erpCodes = convertedLeads.map(l => l.erp_customer_code!);
-    // Get dealer account IDs by ERP codes
     const { data: accounts } = await supabase
       .from("dealer_accounts")
       .select("id, erp_customer_code")
       .in("erp_customer_code", erpCodes);
-    
+
     const creds: Record<string, LeadCredentials> = {};
     if (accounts && accounts.length > 0) {
       const accountIds = accounts.map(a => a.id);
-      const { data: passwords } = await supabase
+      // Only ask which dealer_account_ids have a non-null initial_password.
+      // We deliberately do NOT select the password column here.
+      const { data: hasRows } = await supabase
         .from("dealer_passwords" as any)
-        .select("dealer_account_id, initial_password")
-        .in("dealer_account_id", accountIds);
+        .select("dealer_account_id")
+        .in("dealer_account_id", accountIds)
+        .not("initial_password", "is", null);
+      const withCreds = new Set(((hasRows as any[]) || []).map((r: any) => r.dealer_account_id));
 
       for (const lead of convertedLeads) {
         const account = accounts.find(a => a.erp_customer_code === lead.erp_customer_code);
-        if (!account) continue; // no dealer account → skip (no creds row)
-        const pw = (passwords as any[])?.find((p: any) => p.dealer_account_id === account?.id);
+        if (!account) continue;
         const cleanPhone = lead.phone.replace(/\D/g, "");
-        if (pw?.initial_password) {
-          creds[lead.id] = { username: cleanPhone, password: pw.initial_password };
+        if (withCreds.has(account.id)) {
+          // Placeholder — real password is fetched on demand via viewCredentials()
+          creds[lead.id] = { username: cleanPhone, password: "••••••••" };
         }
-        // If no stored password → leave undefined so UI shows "عرض/إنشاء" button
       }
     }
     setLeadCredentials(creds);
   }, []);
+
 
   useEffect(() => { 
     fetchLeads();
@@ -584,30 +589,37 @@ const AdminLeads = () => {
     });
   };
 
-  // View stored credentials for a converted lead
+  // View stored credentials for a converted lead — reveal-and-purge
   const viewCredentials = async (lead: Lead) => {
     const { data: account } = await supabase
       .from("dealer_accounts")
       .select("id")
       .eq("erp_customer_code", lead.erp_customer_code)
       .maybeSingle();
-    
-    if (account) {
-      const { data: pw } = await supabase
-        .from("dealer_passwords" as any)
-        .select("initial_password")
-        .eq("dealer_account_id", account.id)
-        .maybeSingle();
-      
-      if ((pw as any)?.initial_password) {
-        setCredentials({ username: lead.phone, password: (pw as any).initial_password, phone: lead.phone });
-      } else {
-        toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
-      }
-    } else {
+
+    if (!account) {
       toast({ title: "تنبيه", description: "حساب التاجر غير موجود", variant: "destructive" });
+      return;
+    }
+
+    const { data: pw, error } = await supabase.rpc("reveal_dealer_initial_password", {
+      p_dealer_account_id: account.id,
+    });
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+    if (pw) {
+      setCredentials({ username: lead.phone, password: pw as string, phone: lead.phone });
+      toast({
+        title: "تم عرض كلمة المرور",
+        description: "تم مسحها من قاعدة البيانات لأسباب أمنية — انسخها الآن.",
+      });
+    } else {
+      toast({ title: "تنبيه", description: "كلمة المرور غير محفوظة. استخدم إعادة التعيين.", variant: "destructive" });
     }
   };
+
 
   // Reset password for a converted lead
   const resetPassword = async (lead: Lead) => {

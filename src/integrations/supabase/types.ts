@@ -883,6 +883,8 @@ export type Database = {
           dealer_account_id: string
           id: string
           initial_password: string
+          purged_at: string | null
+          view_count: number
           viewed_at: string | null
           viewed_by: string | null
         }
@@ -891,6 +893,8 @@ export type Database = {
           dealer_account_id: string
           id?: string
           initial_password: string
+          purged_at?: string | null
+          view_count?: number
           viewed_at?: string | null
           viewed_by?: string | null
         }
@@ -899,6 +903,8 @@ export type Database = {
           dealer_account_id?: string
           id?: string
           initial_password?: string
+          purged_at?: string | null
+          view_count?: number
           viewed_at?: string | null
           viewed_by?: string | null
         }
@@ -3281,7 +3287,9 @@ export type Database = {
           created_by: string | null
           id: string
           initial_password: string
+          purged_at: string | null
           staff_user_id: string
+          view_count: number
           viewed_at: string | null
           viewed_by: string | null
         }
@@ -3290,7 +3298,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           initial_password: string
+          purged_at?: string | null
           staff_user_id: string
+          view_count?: number
           viewed_at?: string | null
           viewed_by?: string | null
         }
@@ -3299,7 +3309,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           initial_password?: string
+          purged_at?: string | null
           staff_user_id?: string
+          view_count?: number
           viewed_at?: string | null
           viewed_by?: string | null
         }
@@ -4232,6 +4244,10 @@ export type Database = {
         Returns: boolean
       }
       cron_take_daily_erp_baseline: { Args: never; Returns: undefined }
+      dealer_has_credentials: {
+        Args: { p_dealer_account_id: string }
+        Returns: boolean
+      }
       erp_intraday_baseline_status: {
         Args: never
         Returns: {
@@ -4585,6 +4601,14 @@ export type Database = {
           has_baseline: boolean
           latest_snapshot: string
         }[]
+      }
+      reveal_dealer_initial_password: {
+        Args: { p_dealer_account_id: string }
+        Returns: string
+      }
+      reveal_staff_initial_password: {
+        Args: { p_staff_user_id: string }
+        Returns: string
       }
       search_all_products_for_shortage: {
         Args: { _q: string }
