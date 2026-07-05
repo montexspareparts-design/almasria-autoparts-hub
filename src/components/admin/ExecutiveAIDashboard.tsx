@@ -14,6 +14,7 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
+import { saveAndShareFile } from "@/lib/native";
 import FinancialIntelligencePanel from "./FinancialIntelligencePanel";
 import SalesFunnelPanel from "./SalesFunnelPanel";
 import RealProfitPanel from "./RealProfitPanel";
