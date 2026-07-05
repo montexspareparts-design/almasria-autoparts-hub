@@ -265,6 +265,12 @@ const PaymentCallback = () => {
                 )}
               </motion.div>
 
+              {fromNativeApp && (
+                <Button onClick={handleReturnToApp} className="w-full" variant="default">
+                  العودة إلى التطبيق
+                </Button>
+              )}
+
               {/* Timeline hint */}
               <motion.div
                 initial={{ opacity: 0 }}
