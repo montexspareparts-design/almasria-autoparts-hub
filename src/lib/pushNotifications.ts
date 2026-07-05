@@ -45,8 +45,8 @@ async function getSafeRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegis
 }
 
 export async function requestPushPermission(): Promise<boolean> {
-  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-    console.log("Push notifications not supported");
+  if (!isWebPushSupported()) {
+    console.log("Push notifications not supported on this platform");
     return false;
   }
 
