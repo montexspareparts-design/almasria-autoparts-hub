@@ -288,7 +288,12 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`فاتورة-${inv.order_number}.pdf`);
+      const blob = pdf.output("blob");
+      await saveAndShareFile(
+        { kind: "blob", blob },
+        `فاتورة-${inv.order_number}.pdf`,
+        { dialogTitle: `فاتورة ${inv.order_number}` }
+      );
     } catch (err) {
       console.error("PDF generation error:", err);
     } finally {
