@@ -812,7 +812,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                           .map((m) => (m.role === "user" ? `🙋 العميل: ${getTextContent(m.content)}` : `🤖 المساعد: ${getTextContent(m.content)}`))
                           .join("\n\n");
                         const waUrl = `https://wa.me/201153961008?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
-                        window.open(waUrl, "_blank");
+                        openWhatsApp(waUrl);
                       }}
                       className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"
                       title="مشاركة المحادثة عبر واتساب"
