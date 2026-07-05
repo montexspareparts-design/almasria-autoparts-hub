@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { openWhatsApp } from "@/lib/native";
 import { Helmet } from "react-helmet-async";
 import { Phone, Mail, MessageCircle, MapPin, Send, Clock, Building2, Globe, Navigation, BadgeCheck, Headphones, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -136,7 +137,7 @@ const ContactPage = () => {
       "",
       parsed.data.message,
     ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines)}`, "_blank");
+    openWhatsApp(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines)}`);
   };
 
   return (

@@ -5,6 +5,7 @@ import { Download, Image as ImageIcon, MessageCircle, Loader2, Printer } from "l
 import { useToast } from "@/hooks/use-toast";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { openWhatsApp, saveAndShareFile } from "@/lib/native";
 
 interface InvoiceItem {
   name_ar?: string;
@@ -65,7 +66,12 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
       const pageWidth = pdf.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * pageWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
-      pdf.save(`عرض-سعر-${order.order_number}.pdf`);
+      const blob = pdf.output("blob");
+      await saveAndShareFile(
+        { kind: "blob", blob },
+        `عرض-سعر-${order.order_number}.pdf`,
+        { dialogTitle: `عرض سعر ${order.order_number}` }
+      );
       toast({ title: "تم تحميل الـ PDF ✓" });
     } catch (e) {
       toast({ title: "فشل التحميل", variant: "destructive" });
@@ -110,7 +116,7 @@ export default function InvoicePreviewDialog({ open, onOpenChange, order }: Invo
         const waUrl = waPhone
           ? `https://wa.me/${waPhone}?text=${encodeURIComponent(caption)}`
           : `https://wa.me/?text=${encodeURIComponent(caption)}`;
-        window.open(waUrl, "_blank");
+        openWhatsApp(waUrl);
         toast({ title: "تم حفظ الصورة ✓ — ارفعها في شات الواتساب المفتوح" });
       }, "image/png");
     } catch (e) {

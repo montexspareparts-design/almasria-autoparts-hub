@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { openWhatsApp } from "@/lib/native";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -292,7 +293,7 @@ const DealerNotificationsList = ({ userId, onNavigate }: { userId: string; onNav
                   // Contact request — extract phone and open WhatsApp
                   const contactPhone = n.message.match(/الرقم:\s*([\d+]+)/)?.[1];
                   if (isContact && contactPhone) {
-                    window.open(`https://wa.me/${contactPhone.replace(/^0/, "20")}`, "_blank");
+                    openWhatsApp(`https://wa.me/${contactPhone.replace(/^0/, "20")}`);
                     return;
                   }
 

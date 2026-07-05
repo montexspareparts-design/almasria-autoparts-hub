@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
+import { isNativePlatform, openExternal } from "@/lib/native";
 
 type PaymentMethod = "card" | "wallet" | "kiosk";
 
@@ -157,13 +158,28 @@ const PaymentPage = () => {
       }
 
       if (selectedMethod === "card" && data.iframe_url) {
+        if (isNativePlatform()) {
+          // On native, open the Paymob iframe URL in the system browser
+          // (Safari View Controller) so the user can complete card entry
+          // and Paymob's redirect targets can navigate freely. The public
+          // return URL (`https://almasriaautoparts.com/payment-callback`)
+          // hands control back to the app via the custom-scheme deep link.
+          await openExternal(data.iframe_url);
+          setStep("pay");
+          setLoading(false);
+          return;
+        }
         window.location.href = data.iframe_url;
         return;
       } else if (selectedMethod === "wallet" && data.wallet_redirect_url) {
         setWalletRedirectUrl(data.wallet_redirect_url);
         setStep("pay");
         // Redirect to wallet app
-        window.location.href = data.wallet_redirect_url;
+        if (isNativePlatform()) {
+          await openExternal(data.wallet_redirect_url);
+        } else {
+          window.location.href = data.wallet_redirect_url;
+        }
       } else if (selectedMethod === "wallet" && !data.wallet_redirect_url) {
         setStep("pay");
         // Wallet initiated, waiting for user to approve on phone

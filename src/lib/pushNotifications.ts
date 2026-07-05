@@ -1,7 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isNativePlatform } from "@/lib/native";
 
 // VAPID public key - this is safe to expose (it's a public key)
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
+
+/**
+ * Feature-gate for Web Push. On native Capacitor iOS the WKWebView does
+ * NOT support the Web Push API (no PushManager, no service-worker push).
+ * Every entry point in this module must early-return via this check so we
+ * never request permission, subscribe, or block on `serviceWorker.ready`
+ * inside the native shell. A future native push implementation should use
+ * `@capacitor/push-notifications` (APNs) instead — out of scope here.
+ */
+export const isWebPushSupported = (): boolean => {
+  if (isNativePlatform()) return false;
+  if (typeof window === "undefined") return false;
+  return "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
+};
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -28,8 +45,8 @@ async function getSafeRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegis
 }
 
 export async function requestPushPermission(): Promise<boolean> {
-  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-    console.log("Push notifications not supported");
+  if (!isWebPushSupported()) {
+    console.log("Push notifications not supported on this platform");
     return false;
   }
 

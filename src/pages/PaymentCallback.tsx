@@ -8,7 +8,8 @@ import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { normalizePaymobOrderReference } from "@/lib/paymob";
+import { normalizePaymobOrderReference, PAYMOB_NATIVE_FLAG } from "@/lib/paymob";
+import { APP_URL_SCHEME, openExternal } from "@/lib/native";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -28,11 +29,15 @@ const PaymentCallback = () => {
   );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
+  const fromNativeApp = searchParams.get("src") === "ios";
 
   useEffect(() => {
+    let cancelled = false;
+    let attempts = 0;
+
     const processCallback = async () => {
-      const isSuccess = success === "true" && txnResponseCode === "APPROVED";
-      const isPending = pending === "true";
+      const isSuccessQuery = success === "true" && txnResponseCode === "APPROVED";
+      const isPendingQuery = pending === "true";
 
       setTxnIdDisplay(txnId);
       setOrderNumber(merchantOrderId);
@@ -42,31 +47,91 @@ const PaymentCallback = () => {
         setAmountDisplay(egp);
       }
 
-      if (merchantOrderId && user) {
+      // Authoritative source of truth = the order + latest payment
+      // transaction (updated by paymob-webhook). Never trust URL params
+      // alone — they are trivially spoofable.
+      const fetchOrderStatus = async (): Promise<"paid" | "failed" | "pending" | null> => {
+        if (!merchantOrderId || !user) return null;
         try {
           const { data: order } = await supabase
             .from("orders")
-            .select("id, order_number")
+            .select("id, order_number, status")
             .eq("order_number", merchantOrderId)
             .eq("user_id", user.id)
             .single();
-
-          if (order) {
+          if (!order) return null;
+          if (!cancelled) {
             setOrderId(order.id);
             setOrderNumber(order.order_number);
           }
+
+          const { data: tx } = await supabase
+            .from("payment_transactions")
+            .select("status")
+            .eq("order_number", merchantOrderId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const orderStatus = String(order.status || "").toLowerCase();
+          const txStatus = String(tx?.status || "").toLowerCase();
+
+          if (txStatus === "success" ||
+              ["processing", "shipped", "delivered"].includes(orderStatus)) {
+            return "paid";
+          }
+          if (txStatus === "failed" || orderStatus === "cancelled") return "failed";
+          return "pending";
         } catch {
-          // Non-critical
+          return null;
         }
+      };
+
+
+      const authoritative = await fetchOrderStatus();
+
+      // If the URL says "failed" and the DB agrees (or has no info), mark failed.
+      if (!isSuccessQuery && !isPendingQuery && authoritative !== "paid") {
+        if (!cancelled) setStatus("failed");
+        return;
       }
 
-      if (isPending) setStatus("pending");
-      else if (isSuccess) setStatus("success");
-      else setStatus("failed");
+      // Poll for up to ~30s if the webhook hasn't landed yet.
+      if (authoritative === "paid") {
+        if (!cancelled) setStatus("success");
+        return;
+      }
+      if (isPendingQuery || authoritative === "pending" || isSuccessQuery) {
+        if (!cancelled) setStatus("pending");
+        const poll = async () => {
+          if (cancelled || attempts >= 10) return;
+          attempts += 1;
+          await new Promise((r) => setTimeout(r, 3000));
+          const s = await fetchOrderStatus();
+          if (cancelled) return;
+          if (s === "paid") setStatus("success");
+          else if (s === "failed") setStatus("failed");
+          else if (attempts < 10) poll();
+        };
+        poll();
+        return;
+      }
+
+      if (!cancelled) setStatus("failed");
     };
 
     processCallback();
+    return () => {
+      cancelled = true;
+    };
   }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents]);
+
+  const handleReturnToApp = () => {
+    // Deep link back into the native app if the user is on the public web
+    // callback but the payment was started from the iOS app.
+    openExternal(`${APP_URL_SCHEME}://payment-callback?order=${encodeURIComponent(merchantOrderId || "")}`);
+  };
+
 
   const handleRetryPayment = () => {
     if (orderId) navigate(`/payment?order_id=${orderId}`);
@@ -199,6 +264,12 @@ const PaymentCallback = () => {
                   </div>
                 )}
               </motion.div>
+
+              {fromNativeApp && (
+                <Button onClick={handleReturnToApp} className="w-full" variant="default">
+                  العودة إلى التطبيق
+                </Button>
+              )}
 
               {/* Timeline hint */}
               <motion.div

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download, Receipt, Calendar, Tag, Package, Printer, FileDown, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { isNativePlatform, openExternal, saveAndShareFile } from "@/lib/native";
+import { toast } from "@/hooks/use-toast";
 
 interface Invoice {
   id: string;
@@ -47,6 +49,13 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
   };
 
   const handlePrint = async (inv: Invoice) => {
+    // On native iOS, `window.open("", "_blank") + window.print()` is not
+    // supported inside WKWebView. Fall back to generating the PDF and
+    // opening the system Share Sheet, which offers "Print" natively.
+    if (isNativePlatform()) {
+      await handleDownloadPDF(inv);
+      return;
+    }
     // Fetch order items with product details
     const { data: items } = await supabase
       .from("order_items")
@@ -55,6 +64,7 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
 
     const discount = Number(inv.coupon_discount || 0);
     const total = Number(inv.total_amount);
@@ -278,7 +288,12 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`فاتورة-${inv.order_number}.pdf`);
+      const blob = pdf.output("blob");
+      await saveAndShareFile(
+        { kind: "blob", blob },
+        `فاتورة-${inv.order_number}.pdf`,
+        { dialogTitle: `فاتورة ${inv.order_number}` }
+      );
     } catch (err) {
       console.error("PDF generation error:", err);
     } finally {
@@ -431,7 +446,7 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
                       )}
 
                       {inv.invoice_url && (
-                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => window.open(inv.invoice_url!, "_blank")}>
+                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => openExternal(inv.invoice_url!)}>
                           <Download className="w-4 h-4" />
                         </Button>
                       )}

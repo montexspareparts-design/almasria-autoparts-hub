@@ -14,6 +14,7 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
+import { saveAndShareFile } from "@/lib/native";
 import FinancialIntelligencePanel from "./FinancialIntelligencePanel";
 import SalesFunnelPanel from "./SalesFunnelPanel";
 import RealProfitPanel from "./RealProfitPanel";
@@ -172,7 +173,8 @@ export default function ExecutiveAIDashboard() {
         doc.text(wrapped, 40, y);
       }
 
-      doc.save(`executive-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+      const fname = `executive-summary-${new Date().toISOString().slice(0, 10)}.pdf`;
+      await saveAndShareFile({ kind: "blob", blob: doc.output("blob") }, fname);
       toast({ title: "تم", description: "تم تحميل التقرير بصيغة PDF" });
     } catch (e: any) {
       toast({ title: "فشل تصدير PDF", description: e.message, variant: "destructive" });
