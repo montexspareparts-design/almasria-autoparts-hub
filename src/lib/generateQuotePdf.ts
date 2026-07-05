@@ -186,7 +186,12 @@ export const generateQuotePdf = async (data: QuoteData) => {
       heightLeft -= (pdfHeight - 10);
     }
 
-    pdf.save(`quote-${data.quoteNumber}.pdf`);
+    const blob = pdf.output("blob");
+    await saveAndShareFile(
+      { kind: "blob", blob },
+      `quote-${data.quoteNumber}.pdf`,
+      { dialogTitle: `عرض السعر ${data.quoteNumber}` }
+    );
   } catch (error) {
     console.error("Error generating PDF:", error);
   } finally {
