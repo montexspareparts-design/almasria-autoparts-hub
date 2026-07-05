@@ -446,7 +446,7 @@ const DealerInvoices = ({ userId }: { userId: string }) => {
                       )}
 
                       {inv.invoice_url && (
-                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => window.open(inv.invoice_url!, "_blank")}>
+                        <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => openExternal(inv.invoice_url!)}>
                           <Download className="w-4 h-4" />
                         </Button>
                       )}
