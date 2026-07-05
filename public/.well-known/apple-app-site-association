@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.com.almasria.autoparts"],
+        "components": [
+          { "/": "/payment-callback*", "comment": "Paymob return URL" },
+          { "/": "/auth-callback*", "comment": "OAuth callback" },
+          { "/": "/reset-password*", "comment": "Password reset link" }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.com.almasria.autoparts"]
+  }
+}
