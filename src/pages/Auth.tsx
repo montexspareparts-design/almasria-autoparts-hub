@@ -14,6 +14,7 @@ import logo from "@/assets/logo.webp";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
+import AppleSignInButton from "@/components/AppleSignInButton";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
@@ -306,6 +307,11 @@ const Auth = () => {
                   </>
                 )}
               </Button>
+
+              {/* Apple Sign In (native iOS only) */}
+              <AppleSignInButton className="mt-3" />
+
+
 
               {/* Divider */}
               <div className="relative my-4 sm:my-5">

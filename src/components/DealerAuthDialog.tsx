@@ -15,6 +15,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
+import AppleSignInButton from "@/components/AppleSignInButton";
 
 type AuthMethod = "phone" | "email";
 
@@ -172,6 +173,11 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
                 </svg>
                 الدخول بحساب جوجل
               </Button>
+
+              {/* Apple Sign In (native iOS only) */}
+              <AppleSignInButton className="mb-4" onSuccess={() => onOpenChange(false)} />
+
+
 
               <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
