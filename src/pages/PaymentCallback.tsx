@@ -8,7 +8,8 @@ import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { normalizePaymobOrderReference } from "@/lib/paymob";
+import { normalizePaymobOrderReference, PAYMOB_NATIVE_FLAG } from "@/lib/paymob";
+import { APP_URL_SCHEME, openExternal } from "@/lib/native";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
