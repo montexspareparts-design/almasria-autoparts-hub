@@ -45,7 +45,18 @@ export default function DeleteAccountDialog({ open, onOpenChange }: Props) {
       });
       if (error || !data?.success) {
         const msg = (data as any)?.error || error?.message || "فشل الحذف";
-        toast.error(msg);
+        const code = (data as any)?.code;
+        if (code === "reauth_required") {
+          toast.error(msg, {
+            action: {
+              label: "تسجيل الخروج الآن",
+              onClick: async () => { try { await signOut(); } catch {} navigate("/auth"); },
+            },
+            duration: 10000,
+          });
+        } else {
+          toast.error(msg);
+        }
         setLoading(false);
         return;
       }
