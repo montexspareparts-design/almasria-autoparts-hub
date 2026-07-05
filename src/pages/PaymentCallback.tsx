@@ -29,11 +29,15 @@ const PaymentCallback = () => {
   );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
+  const fromNativeApp = searchParams.get("src") === "ios";
 
   useEffect(() => {
+    let cancelled = false;
+    let attempts = 0;
+
     const processCallback = async () => {
-      const isSuccess = success === "true" && txnResponseCode === "APPROVED";
-      const isPending = pending === "true";
+      const isSuccessQuery = success === "true" && txnResponseCode === "APPROVED";
+      const isPendingQuery = pending === "true";
 
       setTxnIdDisplay(txnId);
       setOrderNumber(merchantOrderId);
@@ -43,31 +47,75 @@ const PaymentCallback = () => {
         setAmountDisplay(egp);
       }
 
-      if (merchantOrderId && user) {
+      // Authoritative source of truth = the order row (updated by paymob-webhook).
+      // Never trust URL params alone — they are trivially spoofable.
+      const fetchOrderStatus = async (): Promise<"paid" | "failed" | "pending" | null> => {
+        if (!merchantOrderId || !user) return null;
         try {
           const { data: order } = await supabase
             .from("orders")
-            .select("id, order_number")
+            .select("id, order_number, payment_status, status")
             .eq("order_number", merchantOrderId)
             .eq("user_id", user.id)
             .single();
-
-          if (order) {
+          if (!order) return null;
+          if (!cancelled) {
             setOrderId(order.id);
             setOrderNumber(order.order_number);
           }
+          const ps = String((order as { payment_status?: string }).payment_status || "").toLowerCase();
+          if (ps === "paid") return "paid";
+          if (ps === "failed" || ps === "cancelled") return "failed";
+          return "pending";
         } catch {
-          // Non-critical
+          return null;
         }
+      };
+
+      const authoritative = await fetchOrderStatus();
+
+      // If the URL says "failed" and the DB agrees (or has no info), mark failed.
+      if (!isSuccessQuery && !isPendingQuery && authoritative !== "paid") {
+        if (!cancelled) setStatus("failed");
+        return;
       }
 
-      if (isPending) setStatus("pending");
-      else if (isSuccess) setStatus("success");
-      else setStatus("failed");
+      // Poll for up to ~30s if the webhook hasn't landed yet.
+      if (authoritative === "paid") {
+        if (!cancelled) setStatus("success");
+        return;
+      }
+      if (isPendingQuery || authoritative === "pending" || isSuccessQuery) {
+        if (!cancelled) setStatus("pending");
+        const poll = async () => {
+          if (cancelled || attempts >= 10) return;
+          attempts += 1;
+          await new Promise((r) => setTimeout(r, 3000));
+          const s = await fetchOrderStatus();
+          if (cancelled) return;
+          if (s === "paid") setStatus("success");
+          else if (s === "failed") setStatus("failed");
+          else if (attempts < 10) poll();
+        };
+        poll();
+        return;
+      }
+
+      if (!cancelled) setStatus("failed");
     };
 
     processCallback();
+    return () => {
+      cancelled = true;
+    };
   }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents]);
+
+  const handleReturnToApp = () => {
+    // Deep link back into the native app if the user is on the public web
+    // callback but the payment was started from the iOS app.
+    openExternal(`${APP_URL_SCHEME}://payment-callback?order=${encodeURIComponent(merchantOrderId || "")}`);
+  };
+
 
   const handleRetryPayment = () => {
     if (orderId) navigate(`/payment?order_id=${orderId}`);
