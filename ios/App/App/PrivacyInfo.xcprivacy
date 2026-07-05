@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    Al Masria Auto Parts – Privacy Manifest
+    Audited plugins: @capacitor/core, @capacitor/ios (no Preferences,
+    Filesystem, Camera, Geolocation, Contacts, Bluetooth, Push, etc.).
+    The app does NOT track users across apps/websites and does NOT
+    collect data linked to the user from native code. All business data
+    is handled by the web layer over HTTPS to the existing backend.
+    Capacitor's WebView internally uses NSUserDefaults, which triggers
+    the CA92.1 Required Reason declaration ("Access info from same app").
+  -->
+  <key>NSPrivacyTracking</key>
+  <false/>
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>
