@@ -98,8 +98,9 @@ const ClientRegister = () => {
       if (!userId) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: form.email,
-          password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
+          password: form.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: { full_name: form.fullName, phone: form.phone, email: form.email },
           },
         });
