@@ -52,8 +52,8 @@
     <!-- Camera for VIN capture / part photo identify. Optional hardware. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <!-- Photo picker on Android 13+ (READ_MEDIA_IMAGES is used by newer picker fallbacks). -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- No READ_MEDIA_IMAGES: app relies on system photo picker / ACTION_OPEN_DOCUMENT / <input type="file">,
+         none of which require broad photo-library permission. -->
 
     <!-- Package visibility (Android 11+): allow launching phone dialer, mailto,
          WhatsApp, and HTTPS URLs from the app. -->
