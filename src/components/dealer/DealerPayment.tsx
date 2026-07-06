@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { buildPaymobReturnUrl } from "@/lib/paymob";
-import { isNativeIOS } from "@/lib/native";
+import { isNativePlatform } from "@/lib/native";
 
 type PaymentMethod = "card" | "wallet" | "kiosk" | "instapay";
 
@@ -64,7 +64,9 @@ const ALL_PAYMENT_METHODS: {
   },
 ];
 
-const PAYMENT_METHODS = isNativeIOS()
+// Hide Kiosk on ALL native mobile apps (iOS + Android) — production Kiosk
+// Integration ID is not yet verified for the native shells. Web is unaffected.
+const PAYMENT_METHODS = isNativePlatform()
   ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
   : ALL_PAYMENT_METHODS;
 

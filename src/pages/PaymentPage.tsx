@@ -54,7 +54,8 @@ const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   },
 ];
 
-const PAYMENT_METHODS = isNativeIOS()
+// Hide Kiosk on ALL native mobile apps (iOS + Android). Web is unaffected.
+const PAYMENT_METHODS = isNativePlatform()
   ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
   : ALL_PAYMENT_METHODS;
 
