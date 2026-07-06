@@ -34,6 +34,15 @@ const formSchema = z.object({
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
   email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
+  password: z.string()
+    .min(8, "كلمة المرور يجب ألا تقل عن 8 أحرف")
+    .max(72, "كلمة المرور طويلة جداً")
+    .regex(/[A-Za-z]/, "يجب أن تحتوي كلمة المرور على حرف واحد على الأقل")
+    .regex(/[0-9]/, "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل"),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: "كلمتا المرور غير متطابقتين",
+  path: ["confirmPassword"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -50,6 +59,8 @@ const ClientRegister = () => {
     governorate: "",
     email: "",
     clientType: "" as any,
+    password: "",
+    confirmPassword: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
