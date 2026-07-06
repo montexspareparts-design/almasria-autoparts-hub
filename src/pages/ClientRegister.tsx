@@ -34,6 +34,15 @@ const formSchema = z.object({
   governorate: z.string().min(1, "يرجى اختيار المحافظة"),
   email: z.string().trim().email("بريد إلكتروني غير صحيح").min(1, "البريد الإلكتروني مطلوب").max(255),
   clientType: z.enum(["wholesale", "company", "distributor"], { required_error: "يرجى اختيار نوع العميل" }),
+  password: z.string()
+    .min(8, "كلمة المرور يجب ألا تقل عن 8 أحرف")
+    .max(72, "كلمة المرور طويلة جداً")
+    .regex(/[A-Za-z]/, "يجب أن تحتوي كلمة المرور على حرف واحد على الأقل")
+    .regex(/[0-9]/, "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل"),
+  confirmPassword: z.string(),
+}).refine((d) => d.password === d.confirmPassword, {
+  message: "كلمتا المرور غير متطابقتين",
+  path: ["confirmPassword"],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -50,6 +59,8 @@ const ClientRegister = () => {
     governorate: "",
     email: "",
     clientType: "" as any,
+    password: "",
+    confirmPassword: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,8 +98,9 @@ const ClientRegister = () => {
       if (!userId) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: form.email,
-          password: form.phone.replace(/\D/g, "").slice(-8).padStart(8, "0"),
+          password: form.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: { full_name: form.fullName, phone: form.phone, email: form.email },
           },
         });
@@ -305,6 +317,40 @@ const ClientRegister = () => {
                   required
                 />
               </div>
+
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password">كلمة المرور <span className="text-primary">*</span></Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="8 أحرف على الأقل، تحتوي على حرف ورقم"
+                  className="text-right"
+                  autoComplete="new-password"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  8 أحرف على الأقل، وتحتوي على حرف واحد ورقم واحد على الأقل.
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">تأكيد كلمة المرور <span className="text-primary">*</span></Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  placeholder="أعد إدخال كلمة المرور"
+                  className="text-right"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
 
               {/* Client Type */}
               <div className="space-y-3">
