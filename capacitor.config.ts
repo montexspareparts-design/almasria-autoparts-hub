@@ -24,6 +24,12 @@ const config: CapacitorConfig = {
     scheme: 'Al Masria Auto Parts',
     limitsNavigationsToAppBoundDomains: false,
   },
+  android: {
+    backgroundColor: '#FFFFFF',
+    allowMixedContent: false,
+    captureInput: true,
+    webContentsDebuggingEnabled: false,
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

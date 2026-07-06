@@ -47,7 +47,10 @@ async function getSafeRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegis
  * the existing row via upsert on (user_id, token).
  */
 export async function registerNativePush(): Promise<boolean> {
-  if (!isNativePlatform()) return false;
+  // Phase 1 Android release: native push is iOS-only. On Android we skip
+  // registration (no permission prompt, no APNs/FCM call). Existing web
+  // push (VAPID service worker) is untouched.
+  if (!isNativeIOS()) return false;
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
@@ -109,7 +112,9 @@ export async function registerNativePush(): Promise<boolean> {
 // ============================================================================
 
 export async function requestPushPermission(): Promise<boolean> {
-  if (isNativePlatform()) return registerNativePush();
+  if (isNativeIOS()) return registerNativePush();
+  // Native Android: no push in this release phase — fall through to web
+  // path which is a no-op inside a WebView anyway.
 
   if (!isWebPushSupported()) {
     console.log("Push notifications not supported on this platform");
