@@ -318,6 +318,40 @@ const ClientRegister = () => {
                 />
               </div>
 
+              {/* Password */}
+              <div className="space-y-2">
+                <Label htmlFor="password">كلمة المرور <span className="text-primary">*</span></Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="8 أحرف على الأقل، تحتوي على حرف ورقم"
+                  className="text-right"
+                  autoComplete="new-password"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  8 أحرف على الأقل، وتحتوي على حرف واحد ورقم واحد على الأقل.
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">تأكيد كلمة المرور <span className="text-primary">*</span></Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  placeholder="أعد إدخال كلمة المرور"
+                  className="text-right"
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
+
               {/* Client Type */}
               <div className="space-y-3">
                 <Label>نوع العميل <span className="text-primary">*</span></Label>
