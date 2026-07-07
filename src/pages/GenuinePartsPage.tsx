@@ -61,10 +61,8 @@ const GenuinePartsPage = () => {
             نوفّر قطع غيار تويوتا الأصلية عبر قنوات توريد رسمية ووفق معايير المصنع (OEM)، مع تغطية وطنية وتسليم خلال 48&nbsp;ساعة.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="font-bold gap-2" asChild><Link to="/contact#quote">اطلب عرض سعر</Link></Button>
-            <Button size="lg" variant="outline" className="font-bold gap-2 border-white/20 text-white bg-white/5 hover:bg-white/10" asChild>
-              <a href="#genuine-products">تصفح المنتجات<ChevronLeft className="w-4 h-4" /></a>
-            </Button>
+            <Link to="/contact#quote" className="glass-pill glass-pill-primary">اطلب عرض سعر</Link>
+            <a href="#genuine-products" className="glass-pill">تصفح المنتجات<ChevronLeft className="w-4 h-4" /></a>
           </div>
         </div>
       </section>
