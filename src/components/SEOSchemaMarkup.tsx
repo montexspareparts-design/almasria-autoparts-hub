@@ -40,7 +40,7 @@ export const OrganizationSchema = () => (
           "addressCountry": "AE"
         }
       ],
-      "sameAs": ["https://wa.me/201153961008"],
+      "sameAs": ["https://wa.me/201034806288"],
       "areaServed": {
         "@type": "Country",
         "name": "Egypt"

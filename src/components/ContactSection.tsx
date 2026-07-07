@@ -10,7 +10,7 @@ import ProductCompare from "./ProductCompare";
 const contactInfo = [
   { icon: Mail, label: "البريد العام", value: "info@almasriaautoparts.com", href: "mailto:info@almasriaautoparts.com" },
   { icon: Mail, label: "بريد المبيعات", value: "sales.team@almasriaautoparts.com", href: "mailto:sales.team@almasriaautoparts.com" },
-  { icon: MessageCircle, label: "واتساب بيزنس", value: "01032104861", href: "https://wa.me/201032104861" },
+  { icon: MessageCircle, label: "واتساب بيزنس", value: "01032104861", href: "https://wa.me/201034806288" },
   { icon: Clock, label: "مواعيد العمل", value: "من 9 صباحًا حتى 7 مساءً", href: undefined },
 ];
 
@@ -126,7 +126,7 @@ const ContactSection = () => {
                 <h4 className="font-bold text-foreground text-lg mb-2">تواصل سريع عبر واتساب</h4>
                 <p className="text-muted-foreground text-sm mb-4">احصل على رد فوري من فريق المبيعات</p>
                 <motion.a
-                  href="https://wa.me/201032104861"
+                  href="https://wa.me/201034806288"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-[hsl(142,70%,40%)] text-white font-bold rounded-xl hover:bg-[hsl(142,70%,35%)] transition-colors"

@@ -182,7 +182,7 @@ const PartRequestForm = ({ defaultModel, compact }: PartRequestFormProps) => {
   };
 
   const whatsappHref = (mode: "success" | "error" | "draft") =>
-    `https://wa.me/201153961008?text=${buildWhatsAppMessage(mode)}`;
+    `https://wa.me/201034806288?text=${buildWhatsAppMessage(mode)}`;
 
   if (submitted) {
     return (

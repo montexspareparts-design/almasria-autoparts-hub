@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
       await supabase.from("notifications").insert({
         user_id: order.user_id,
         title: "✅ تم استلام الدفع بنجاح — طلب #" + orderNumber,
-        message: `تم تأكيد دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}. طلبك قيد التجهيز الآن!\nللاستفسار تواصل معنا: https://wa.me/201153961008?text=${encodeURIComponent("استفسار عن طلب #" + orderNumber)}`,
+        message: `تم تأكيد دفع ${amountEgp} ج.م عبر ${payMethod}${cardInfo} للطلب #${orderNumber}. طلبك قيد التجهيز الآن!\nللاستفسار تواصل معنا: https://wa.me/201034806288?text=${encodeURIComponent("استفسار عن طلب #" + orderNumber)}`,
         type: "payment_success",
       });
 

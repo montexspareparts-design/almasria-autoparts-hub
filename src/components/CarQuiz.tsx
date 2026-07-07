@@ -298,7 +298,7 @@ const CarQuiz = () => {
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button asChild className="gap-2 red-glow">
-                  <a href="https://wa.me/201032104861" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/201034806288" target="_blank" rel="noopener noreferrer">
                     <Sparkles className="w-4 h-4" />
                     تواصل معانا
                   </a>

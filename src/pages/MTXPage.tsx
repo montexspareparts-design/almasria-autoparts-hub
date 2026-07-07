@@ -250,7 +250,7 @@ const MTXPage = () => {
             <p className="text-dark-section-foreground/50 text-lg mb-10 max-w-xl mx-auto">انضم لأكثر من 2000 عميل يثقون في منتجات المصرية جروب</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="gap-3 font-bold text-base px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 group" asChild>
-                <a href="https://wa.me/201153961008?text=أريد كتالوج MTX" target="_blank" rel="noopener noreferrer">اطلب كتالوج MTX<ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" /></a>
+                <a href="https://wa.me/201034806288?text=أريد كتالوج MTX" target="_blank" rel="noopener noreferrer">اطلب كتالوج MTX<ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" /></a>
               </Button>
               <Button size="lg" variant="outline" className="gap-2 font-bold border-dark-section-foreground/20 text-dark-section-foreground hover:bg-dark-section-foreground/10" asChild>
                 <Link to="/dealer-apply">انضم كتاجر</Link>

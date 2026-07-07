@@ -369,7 +369,7 @@ const GenuineVsCounterfeitGuide = () => {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10">
-                <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/201034806288" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-4 h-4 me-2" aria-hidden="true" />
                   {isAr ? "تواصل واتساب" : "WhatsApp Us"}
                 </a>
