@@ -86,7 +86,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-carbon">
       <SEOHead
         titleAr="قطع غيار وزيوت تويوتا الأصلية في مصر"
         titleEn="Toyota Genuine Parts & Oils — Egypt"
