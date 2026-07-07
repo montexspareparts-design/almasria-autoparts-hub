@@ -117,7 +117,7 @@ const PartnershipsSection = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15, type: "spring", stiffness: 150 }}
                   whileHover={{ scale: 1.08, boxShadow: "0 10px 30px hsl(355 90% 48% / 0.15)" }}
-                  className="text-center p-4 bg-secondary/30 rounded-lg transition-colors hover:bg-secondary/50 cursor-default"
+                  className="text-center p-4 glass-panel-ios rounded-xl cursor-default"
                 >
                   <motion.div
                     className="text-3xl font-black text-primary"
