@@ -136,6 +136,7 @@ const App = () => (
                </Suspense>
                <NativeBootstrap />
                <Suspense fallback={<PageLoader />}>
+                  <AnimatedRoutes>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
