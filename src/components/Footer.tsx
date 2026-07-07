@@ -73,7 +73,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 </a>
               </li>
               <li>
-                <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("footer_link")} className="font-tajawal flex items-center gap-2.5 text-sm text-white/50 hover:text-toyota-red transition-colors">
+                <a href="https://wa.me/201034806288" target="_blank" rel="noopener noreferrer" onClick={() => trackClickWhatsApp("footer_link")} className="font-tajawal flex items-center gap-2.5 text-sm text-white/50 hover:text-toyota-red transition-colors">
                   <MessageCircle className="w-4 h-4 text-toyota-red flex-shrink-0" />{t("footer.whatsapp")}
                 </a>
               </li>

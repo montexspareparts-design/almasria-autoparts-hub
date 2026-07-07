@@ -210,7 +210,7 @@ const GuideArticleLayout = ({
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">{ctaSubtitle}</p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild size="lg" className="gap-2">
-                <a href="https://wa.me/201153961008" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/201034806288" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5" />
                   واتساب فوري
                 </a>

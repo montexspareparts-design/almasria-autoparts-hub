@@ -91,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-xs text-muted-foreground pt-2 border-t border-border">
             للدعم:{" "}
             <a
-              href="https://wa.me/201000000000"
+              href="https://wa.me/201034806288"
               className="text-primary hover:underline"
             >
               تواصل عبر واتساب

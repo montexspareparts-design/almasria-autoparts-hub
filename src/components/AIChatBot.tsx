@@ -388,7 +388,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     });
 
     if (!resp.ok) {
-      const fallbackMsg = "عذراً، المساعد الذكي غير متاح حالياً 😊\n\nلكن فريق المبيعات موجود لخدمتك! تواصل معانا مباشرة:\n\n📞 **فرع القاهرة (التوفيقية)**: 01032104861\n📞 **فرع الجيزة (أوسيم)**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: [اضغط هنا](https://wa.me/201032104861)\n\n⏰ مواعيد العمل: من 9 صباحاً لـ 7 مساءً\n\n_يمكنك المحاولة مرة تانية بعد دقيقة_ 🔄";
+      const fallbackMsg = "عذراً، المساعد الذكي غير متاح حالياً 😊\n\nلكن فريق المبيعات موجود لخدمتك! تواصل معانا مباشرة:\n\n📞 **فرع القاهرة (التوفيقية)**: 01032104861\n📞 **فرع الجيزة (أوسيم)**: 01153961008\n📞 **فرع الأقصر**: 01016177204\n📱 **واتساب**: [اضغط هنا](https://wa.me/201034806288)\n\n⏰ مواعيد العمل: من 9 صباحاً لـ 7 مساءً\n\n_يمكنك المحاولة مرة تانية بعد دقيقة_ 🔄";
       setMessages((prev) => [...prev, { role: "assistant", content: fallbackMsg }]);
       return;
     }
@@ -649,7 +649,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
             setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nاكتبلي الاسم تاني:` }]);
           } else {
             signupStateRef.current = { step: "idle" };
-            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nلو حابب تجرب تاني قولي **اعملي حساب**، أو تواصل معانا على [واتساب](https://wa.me/201032104861).` }]);
+            setMessages(prev => [...prev, { role: "assistant", content: `❌ ${errMsg}\n\nلو حابب تجرب تاني قولي **اعملي حساب**، أو تواصل معانا على [واتساب](https://wa.me/201034806288).` }]);
           }
         }
         return;
@@ -678,8 +678,8 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
         setMessages(prev => [...prev, { role: "user", content: text }]);
         const ok = await createSupportRequest(text);
         const reply = ok
-          ? "✅ **تم إرسال طلب التواصل لفريقنا!**\n\nموظف من فريق الدعم هيتواصل معاك خلال دقائق.\n\nلو الموضوع عاجل جداً، تقدر تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)"
-          : "حصلت مشكلة في إرسال الطلب 😔. تواصل معانا مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201032104861)";
+          ? "✅ **تم إرسال طلب التواصل لفريقنا!**\n\nموظف من فريق الدعم هيتواصل معاك خلال دقائق.\n\nلو الموضوع عاجل جداً، تقدر تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201034806288)"
+          : "حصلت مشكلة في إرسال الطلب 😔. تواصل معانا مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201034806288)";
         setMessages(prev => [...prev, { role: "assistant", content: reply }]);
         return;
       }
@@ -689,12 +689,12 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
         setMessages(prev => [...prev, { role: "user", content: text }]);
         const ok = await createSupportRequest(text, phone);
         const reply = ok
-          ? `✅ **تم إرسال طلب التواصل!**\n\nسجلنا رقمك (${phone}) وموظف هيتصل بك في أقرب وقت.\n\nلو الموضوع عاجل:\n📞 [اتصال مباشر](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)`
-          : "حصلت مشكلة. تواصل معانا مباشرة:\n📱 [واتساب](https://wa.me/201032104861)";
+          ? `✅ **تم إرسال طلب التواصل!**\n\nسجلنا رقمك (${phone}) وموظف هيتصل بك في أقرب وقت.\n\nلو الموضوع عاجل:\n📞 [اتصال مباشر](tel:01032104861)\n📱 [واتساب](https://wa.me/201034806288)`
+          : "حصلت مشكلة. تواصل معانا مباشرة:\n📱 [واتساب](https://wa.me/201034806288)";
         setMessages(prev => [...prev, { role: "assistant", content: reply }]);
         return;
       }
-      const askPhoneMsg = "تمام! 🤝 عشان موظف يتواصل معاك، ابعتلي **رقم موبايلك** كده في رسالة (مثال: 01012345678) وهنتصل بك في أسرع وقت.\n\nأو لو حابب تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201032104861)";
+      const askPhoneMsg = "تمام! 🤝 عشان موظف يتواصل معاك، ابعتلي **رقم موبايلك** كده في رسالة (مثال: 01012345678) وهنتصل بك في أسرع وقت.\n\nأو لو حابب تتواصل دلوقتي:\n📞 [اتصال](tel:01032104861)\n📱 [واتساب](https://wa.me/201034806288)";
       setMessages(prev => [
         ...prev,
         { role: "user", content: text },
@@ -712,7 +712,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
         const ok = await createSupportRequest(`طلب تواصل من الشات بوت — رقم العميل: ${phoneOnly}`, phoneOnly);
         const reply = ok
           ? `✅ **تم تسجيل رقمك!**\n\nموظف من فريقنا هيتواصل معاك على ${phoneOnly} في أقرب وقت 👌`
-          : "حصلت مشكلة في حفظ الرقم. جرب تاني أو تواصل معانا على 📱 [واتساب](https://wa.me/201032104861)";
+          : "حصلت مشكلة في حفظ الرقم. جرب تاني أو تواصل معانا على 📱 [واتساب](https://wa.me/201034806288)";
         setMessages(prev => [...prev, { role: "assistant", content: reply }]);
         return;
       }
@@ -756,7 +756,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
       await streamChat(updatedMessages);
     } catch (e) {
       console.error("Chat error:", e);
-      const errorMsg = "حصل مشكلة في الاتصال 😅\n\nممكن تكون مشكلة مؤقتة — جرب تاني بعد شوية.\n\nأو تواصل مع فريق المبيعات مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201032104861)";
+      const errorMsg = "حصل مشكلة في الاتصال 😅\n\nممكن تكون مشكلة مؤقتة — جرب تاني بعد شوية.\n\nأو تواصل مع فريق المبيعات مباشرة:\n📞 01032104861\n📱 [واتساب](https://wa.me/201034806288)";
       setMessages((prev) => [...prev, { role: "assistant", content: errorMsg }]);
     } finally {
       setIsLoading(false);
@@ -811,7 +811,7 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
                         const text = messages
                           .map((m) => (m.role === "user" ? `🙋 العميل: ${getTextContent(m.content)}` : `🤖 المساعد: ${getTextContent(m.content)}`))
                           .join("\n\n");
-                        const waUrl = `https://wa.me/201153961008?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
+                        const waUrl = `https://wa.me/201034806288?text=${encodeURIComponent("📋 محادثة من المساعد الذكي:\n\n" + text)}`;
                         openWhatsApp(waUrl);
                       }}
                       className="p-1.5 rounded-lg hover:bg-primary-foreground/20 transition-colors"

@@ -379,7 +379,7 @@ const TrackOrderPage = () => {
                 {/* WhatsApp support */}
                 <div className="text-center pt-2">
                   <a
-                    href={`https://wa.me/201000000000?text=${encodeURIComponent(`استفسار عن الطلب رقم: ${order.order_number}`)}`}
+                    href={`https://wa.me/201034806288?text=${encodeURIComponent(`استفسار عن الطلب رقم: ${order.order_number}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors"
