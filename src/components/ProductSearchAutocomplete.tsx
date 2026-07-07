@@ -352,7 +352,7 @@ const ProductSearchAutocomplete = ({
                       مسح البحث وإعادة المحاولة
                     </button>
                     <a
-                      href={`https://wa.me/201027815696?text=${encodeURIComponent(`أبحث عن قطعة: ${value}`)}`}
+                      href={`https://wa.me/201034806288?text=${encodeURIComponent(`أبحث عن قطعة: ${value}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold transition-colors flex items-center justify-center gap-2"

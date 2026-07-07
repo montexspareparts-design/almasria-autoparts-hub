@@ -4326,8 +4326,8 @@ const AdminCustomerIntelligence = () => {
                         : `أهلاً ${customerName}، من المصرية جروب لقطع غيار تويوتا. كيف يمكنني خدمتك اليوم؟`;
                       const emailSubject = `متابعة من المصرية جروب لقطع غيار تويوتا`;
                       const emailBody = topSearchQuery
-                        ? `أهلاً ${customerName},\n\nلاحظنا اهتمامك بـ "${topSearchQuery}" على موقعنا. يسعدنا مساعدتك في إيجاد القطعة المناسبة.\n\nللتواصل: 01027815696\nمع تحيات،\nفريق المصرية جروب`
-                        : `أهلاً ${customerName},\n\nنود التواصل معك بخصوص خدمتك من المصرية جروب لقطع غيار تويوتا.\n\nللتواصل: 01027815696\nمع تحيات،\nفريق المصرية جروب`;
+                        ? `أهلاً ${customerName},\n\nلاحظنا اهتمامك بـ "${topSearchQuery}" على موقعنا. يسعدنا مساعدتك في إيجاد القطعة المناسبة.\n\nللتواصل: 01034806288\nمع تحيات،\nفريق المصرية جروب`
+                        : `أهلاً ${customerName},\n\nنود التواصل معك بخصوص خدمتك من المصرية جروب لقطع غيار تويوتا.\n\nللتواصل: 01034806288\nمع تحيات،\nفريق المصرية جروب`;
                       const noteDraft = quickNoteDraft[profile.user_id] || "";
                       const selectedType = quickNoteType[profile.user_id] || "phone";
                       const isSavingNote = savingQuickNote === profile.user_id;

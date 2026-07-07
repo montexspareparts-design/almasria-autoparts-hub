@@ -464,7 +464,7 @@ export default function VisitorSessionSummary() {
   }, [sessions, searches, comms, notes, orders]);
 
   const buildQuoteWhatsApp = (productLabel: string) => {
-    const phone = "201027815696"; // WhatsMeta CRM number
+    const phone = "201034806288"; // WhatsMeta CRM number
     const customer = profile?.full_name || "العميل";
     const text = encodeURIComponent(
       `طلب عرض سعر للعميل: ${customer}\nالمنتج: ${productLabel}\n${profile?.phone ? `هاتف العميل: ${profile.phone}` : ""}`
@@ -521,7 +521,7 @@ export default function VisitorSessionSummary() {
       `يسعدنا تجهيز عرض سعر مخصص ليك بناءً على احتياجاتك.`,
       `لو تقدر تبعتلنا موديل وسنة السيارة ورقم القطعة (لو متاح)، نرجعلك بأفضل سعر فوراً.`,
       ``,
-      `للتواصل المباشر عبر واتساب: https://wa.me/201027815696`,
+      `للتواصل المباشر عبر واتساب: https://wa.me/201034806288`,
       `الموقع: https://almasriaautoparts.com`,
       ``,
       `تحياتنا،`,
