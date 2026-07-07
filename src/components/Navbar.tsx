@@ -172,10 +172,10 @@ const Navbar = () => {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 20 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 glass-ios-strong ${
         scrolled
-          ? "bg-carbon/75 backdrop-blur-xl shadow-lg shadow-black/40 border-b border-toyota-red/20"
-          : "bg-carbon/40 backdrop-blur-md border-b border-white/5"
+          ? "shadow-lg shadow-black/40"
+          : ""
       }`}
     >
       <div className="container mx-auto px-3 md:px-5">
