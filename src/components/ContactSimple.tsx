@@ -52,25 +52,24 @@ const ContactSimple = () => {
           transition={{ delay: 0.35, duration: 0.5 }}
           className="flex flex-col sm:flex-row gap-3 justify-center"
         >
-          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
-            <Button size="lg" className="text-base px-10 py-7 font-tajawal font-black shadow-xl shadow-toyota-red/30 hover:shadow-toyota-red/40 text-lg bg-toyota-red hover:bg-toyota-red/90 text-white" asChild>
-              <Link to="/contact#quote">
-                اطلب عرض سعر الآن
-              </Link>
-            </Button>
+          <motion.div
+            whileHover={{ scale: 1.06, y: -3 }}
+            whileTap={{ scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          >
+            <Link to="/contact#quote" className="glass-pill glass-pill-primary font-tajawal text-lg px-10 py-5">
+              اطلب عرض سعر الآن
+            </Link>
           </motion.div>
-          <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} transition={{ duration: 0.2 }}>
-            <Button
-              size="lg"
-              variant="outline"
-              className="text-base px-10 py-7 gap-3 font-tajawal font-black border-2 border-white/15 bg-white/[0.04] text-white hover:bg-toyota-red/10 hover:border-toyota-red/60 hover:text-white text-lg"
-              asChild
-            >
-              <Link to="/contact">
-                <Phone className="w-5 h-5" strokeWidth={2.5} />
-                تواصل معنا
-              </Link>
-            </Button>
+          <motion.div
+            whileHover={{ scale: 1.06, y: -3 }}
+            whileTap={{ scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          >
+            <Link to="/contact" className="glass-pill font-tajawal text-lg px-10 py-5">
+              <Phone className="w-5 h-5" strokeWidth={2.5} />
+              تواصل معنا
+            </Link>
           </motion.div>
         </motion.div>
       </div>

@@ -190,17 +190,11 @@ const ToyotaPartsEgypt = () => {
             سواء كنت تبحث عن قطع غيار تويوتا بالجملة أو تحتاج إلى توريد منتظم لمركز صيانتك، فريقنا جاهز لخدمتك.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="text-base px-8 py-6 gap-2.5 font-bold" asChild>
-              <Link to="/contact">
-                اطلب عرض سعر
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2.5 font-bold border-secondary-foreground/15 text-secondary-foreground hover:bg-secondary-foreground/10" asChild>
-              <Link to="/contact">
-                <Phone className="w-5 h-5" />
-                تواصل مع فريق المبيعات
-              </Link>
-            </Button>
+            <Link to="/contact" className="glass-pill glass-pill-primary">اطلب عرض سعر</Link>
+            <Link to="/contact" className="glass-pill">
+              <Phone className="w-5 h-5" />
+              تواصل مع فريق المبيعات
+            </Link>
           </div>
         </div>
       </section>

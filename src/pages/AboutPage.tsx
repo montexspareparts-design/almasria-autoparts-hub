@@ -302,16 +302,12 @@ const AboutPage = () => {
             ابدأ شراكتك مع <span className="text-primary">المصرية جروب</span>
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="w-full sm:w-auto font-bold gap-2" asChild>
-              <Link to="/contact#quote" aria-label="اطلب عرض سعر من المصرية جروب">
-                اطلب عرض سعر
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto font-bold gap-2 border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10" asChild>
-              <Link to="/contact" aria-label="تواصل مع فريق مبيعات المصرية جروب">
-                تواصل مع فريق المبيعات
-              </Link>
-            </Button>
+            <Link to="/contact#quote" aria-label="اطلب عرض سعر من المصرية جروب" className="glass-pill glass-pill-primary w-full sm:w-auto">
+              اطلب عرض سعر
+            </Link>
+            <Link to="/contact" aria-label="تواصل مع فريق مبيعات المصرية جروب" className="glass-pill w-full sm:w-auto">
+              تواصل مع فريق المبيعات
+            </Link>
           </div>
         </div>
       </section>
