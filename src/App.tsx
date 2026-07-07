@@ -22,6 +22,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import NativeBootstrap from "@/components/NativeBootstrap";
+import AnimatedRoutes from "@/components/AnimatedRoutes";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
