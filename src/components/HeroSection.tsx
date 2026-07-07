@@ -75,16 +75,16 @@ const HeroSection = () => {
 
         {/* Line 1 (Arabic) */}
         <h1
-          className="font-almarai font-black leading-[0.86] tracking-[-0.045em] text-white"
-          style={{ fontSize: "clamp(64px, 13.5vw, 220px)" }}
+          className="font-almarai font-black leading-[0.88] tracking-[-0.04em] text-white"
+          style={{ fontSize: "clamp(52px, 10.5vw, 168px)" }}
         >
           قطع غيار تويوتا
         </h1>
 
         {/* Line 2 — outlined + red word */}
         <div
-          className="mt-2 md:mt-4 font-almarai font-black leading-[0.86] tracking-[-0.045em]"
-          style={{ fontSize: "clamp(64px, 13.5vw, 220px)" }}
+          className="mt-1 md:mt-2 font-almarai font-black leading-[0.88] tracking-[-0.04em]"
+          style={{ fontSize: "clamp(52px, 10.5vw, 168px)" }}
         >
           <span className="text-mega-outline">100%</span>{" "}
           <span className="text-toyota-red">الأصلية</span>
