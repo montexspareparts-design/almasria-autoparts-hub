@@ -172,22 +172,22 @@ const Navbar = () => {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5, type: "spring", stiffness: 100, damping: 20 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 glass-ios-strong ${
         scrolled
-          ? "bg-carbon/75 backdrop-blur-xl shadow-lg shadow-black/40 border-b border-toyota-red/20"
-          : "bg-carbon/40 backdrop-blur-md border-b border-white/5"
+          ? "shadow-lg shadow-black/40"
+          : ""
       }`}
     >
       <div className="container mx-auto px-3 md:px-5">
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Mobile: Hamburger */}
           <button
-            className="lg:hidden text-secondary-foreground p-2.5 -ml-2 relative z-10 touch-manipulation"
+            className="lg:hidden glass-icon rounded-full text-white/90 h-9 w-9 flex items-center justify-center relative z-10 touch-manipulation"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={isOpen}
           >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isOpen ? <X className="w-[17px] h-[17px]" /> : <Menu className="w-[17px] h-[17px]" />}
           </button>
 
           {/* Logo */}
@@ -221,25 +221,27 @@ const Navbar = () => {
           </div>
 
           {/* Mobile: Right Icons */}
-          <div className="flex lg:hidden items-center gap-0.5 relative z-10">
-            <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
+          <div className="flex lg:hidden items-center gap-1.5 relative z-10">
+            <button onClick={toggleLang} className="glass-icon rounded-full text-white/90 hover:text-white h-9 min-w-[38px] px-2 touch-manipulation text-[11px] font-bold flex items-center justify-center">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
             {!isDealer && !isStaffOnly && (
               <button
                 onClick={() => navigate("/cart")}
                 aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
-                className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative"
+                className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center touch-manipulation relative"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
+                <ShoppingCart className="w-[17px] h-[17px]" aria-hidden="true" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none ring-2 ring-black/50">
                     {itemCount}
                   </span>
                 )}
               </button>
             )}
-            <NotificationBell />
+            <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
+              <NotificationBell />
+            </div>
             <button
               onClick={() => {
                 if (!user) return navigate("/auth");
@@ -247,9 +249,9 @@ const Navbar = () => {
                 return navigate(dealerAccount ? "/dealer" : "/dealer-apply");
               }}
               aria-label={lang === "ar" ? "حسابي" : "My account"}
-              className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
+              className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center touch-manipulation"
             >
-              <User className="w-[18px] h-[18px]" aria-hidden="true" />
+              <User className="w-[17px] h-[17px]" aria-hidden="true" />
             </button>
           </div>
 
@@ -271,11 +273,11 @@ const Navbar = () => {
               <button
                 onClick={() => navigate("/cart")}
                 aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
-                className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
+                className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center relative"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
+                <ShoppingCart className="w-[17px] h-[17px]" aria-hidden="true" />
                 {itemCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-secondary">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-black/50">
                     {itemCount}
                   </span>
                 )}
@@ -283,7 +285,9 @@ const Navbar = () => {
             )}
 
             {/* Notifications */}
-            <NotificationBell />
+            <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
+              <NotificationBell />
+            </div>
 
             {user ? (
               <>
@@ -330,7 +334,7 @@ const Navbar = () => {
                 {/* Logout */}
                 <button
                   onClick={() => signOut()}
-                  className="text-secondary-foreground/40 hover:text-primary transition-colors p-2 rounded-lg hover:bg-primary/5"
+                  className="glass-icon rounded-full text-white/70 hover:text-primary h-9 w-9 flex items-center justify-center"
                   title={lang === "ar" ? "تسجيل الخروج" : "Logout"}
                 >
                   <LogOut className="w-4 h-4" />
