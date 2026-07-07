@@ -1,335 +1,222 @@
+import { ArrowLeft, Info, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useMemo } from "react";
+import heroPart from "@/assets/hero-toyota-part.png";
 
 /**
- * HeroSection — "Engineering Blueprint" concept.
- *
- * A living Toyota OEM technical schematic. On the left, a hand-drawn SVG
- * brake-disc + caliper assembly draws itself in, orbited by a rotating radar
- * sweep and pulsing red hotspots that point to real Toyota part numbers with
- * Arabic callouts. The right side carries a bold Arabic headline over a
- * blueprint grid. No generic gradients, no stock photos, no metaballs — pure
- * catalog-engineer aesthetic that only makes sense for a genuine-parts brand.
+ * Luxury Hero — Rolex / premium product feel.
+ * Carbon black, animated grid, floating particles, marquee backdrop text,
+ * spinning gold ring around the product, shimmer CTA.
  */
-
-const CALLOUTS = [
-  { top: "12%", right: "6%",  code: "90915-YZZD4", label: "فلتر زيت أصلي",   side: "r" },
-  { top: "34%", right: "2%",  code: "43512-0K180", label: "طبلة فرامل أمامي", side: "r" },
-  { top: "60%", right: "8%",  code: "90919-01247", label: "بوجيه دنسو",       side: "r" },
-  { top: "82%", right: "14%", code: "16100-49847", label: "طلمبة مياه أيسِن",  side: "r" },
-];
-
 const HeroSection = () => {
+  // pre-generate particle positions (stable per mount)
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 18 }).map((_, i) => ({
+        left: `${(i * 53) % 100}%`,
+        delay: `${(i * 0.7) % 14}s`,
+        duration: `${10 + ((i * 1.3) % 10)}s`,
+        size: 2 + (i % 3),
+      })),
+    []
+  );
+
   return (
     <section
       id="hero"
-      dir="rtl"
-      className="relative w-full min-h-[100vh] overflow-hidden isolate bg-[#07080a] text-white"
-      aria-label="قطع غيار تويوتا الأصلية — مخطط هندسي حي"
+      className="relative w-full bg-carbon overflow-hidden"
+      style={{ minHeight: "100vh" }}
+      aria-label="قطع غيار تويوتا الأصلية"
     >
-      {/* Blueprint grid */}
+      {/* Animated grid */}
+      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+
+      {/* Ambient red gradient */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-        }}
-      />
-      {/* Sub-grid */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.18]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
-          backgroundSize: "14px 14px",
-        }}
-      />
-      {/* Red ambient wash */}
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 opacity-70"
         style={{
           background:
-            "radial-gradient(700px 500px at 25% 45%, hsl(var(--toyota-red) / 0.20), transparent 65%), radial-gradient(600px 400px at 90% 90%, hsl(var(--toyota-red) / 0.10), transparent 60%)",
+            "radial-gradient(ellipse 80% 60% at 50% 55%, hsl(353 92% 48% / 0.22) 0%, transparent 60%)",
         }}
       />
       {/* Vignette */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.65) 100%)" }}
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 30%, hsl(0 0% 0% / 0.75) 100%)",
+        }}
       />
 
-      {/* Top rail — technical metadata */}
-      <div className="absolute top-24 left-0 right-0 z-20 px-6 md:px-10 lg:px-14 flex items-center justify-between font-mono text-[10px] md:text-[11px] tracking-[0.3em] text-white/45" dir="ltr">
-        <div className="flex items-center gap-6">
-          <span className="text-toyota-red">◆</span>
-          <span>DOC · TMC-EG / REV.2026</span>
-          <span className="hidden md:inline text-white/25">/</span>
-          <span className="hidden md:inline">SHEET 01 OF 04</span>
-        </div>
-        <div className="flex items-center gap-6">
-          <span className="hidden md:inline">SCALE 1:1</span>
-          <span className="hidden md:inline text-white/25">/</span>
-          <span>AL MASRIA · AUTHORIZED</span>
-          <span className="w-2 h-2 rounded-full bg-toyota-red animate-pulse" />
-        </div>
+      {/* Floating particles */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+        {particles.map((p, i) => (
+          <span
+            key={i}
+            className="absolute bottom-0 rounded-full bg-toyota-red"
+            style={{
+              left: p.left,
+              width: p.size,
+              height: p.size,
+              animation: `lux-particle ${p.duration} linear ${p.delay} infinite`,
+              boxShadow: "0 0 8px hsl(var(--toyota-red) / 0.8)",
+            }}
+          />
+        ))}
       </div>
 
-      <div className="relative z-10 max-w-[1500px] mx-auto px-6 md:px-10 lg:px-14 pt-40 md:pt-44 pb-40 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-        {/* TEXT SIDE (right in RTL, first column visually right) */}
-        <div className="lg:col-span-6 order-2 lg:order-2">
-          <div className="inline-flex items-center gap-3 rounded-none border border-white/15 bg-white/[0.02] px-3 py-1.5 mb-8">
-            <span className="w-1.5 h-1.5 bg-toyota-red" />
-            <span className="font-mono text-[10.5px] tracking-[0.28em] text-white/70" dir="ltr">
-              TOYOTA · GENUINE PARTS · EGYPT
+      {/* Top red hairline */}
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
+
+      <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
+        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        <div
+          aria-hidden
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
+        >
+          <span
+            dir="ltr"
+            className="font-display font-black tracking-tighter text-mega-outline"
+            style={{ fontSize: "clamp(72px, 14vw, 220px)", letterSpacing: "-0.04em" }}
+          >
+            TOYOTA GENUINE PARTS · TOYOTA GENUINE PARTS · TOYOTA GENUINE PARTS ·
+          </span>
+        </div>
+
+        {/* Product with concentric rings + glow */}
+        <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
+          {/* Red glow halo */}
+          <div
+            aria-hidden
+            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            style={{ filter: "blur(50px)" }}
+          />
+          {/* Spinning gold ring */}
+          <div
+            aria-hidden
+            className="absolute inset-[8%] rounded-full border border-dashed border-[hsl(var(--gold)/0.25)] animate-lux-ring-spin"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
+          />
+          {/* Highlight arc */}
+          <div
+            aria-hidden
+            className="absolute inset-[5%] rounded-full"
+            style={{
+              background:
+                "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
+              filter: "blur(20px)",
+            }}
+          />
+          <img
+            src={heroPart}
+            alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
+            width={1536}
+            height={1024}
+            fetchPriority="high"
+            decoding="async"
+            className="relative w-full h-full object-contain animate-lux-float"
+            style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
+          />
+          {/* Floating part-number chip */}
+          <div className="absolute top-4 right-2 md:top-8 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
+               style={{ animationDelay: "0.6s" }}>
+            <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
+              PART # <span className="text-toyota-red">YZZN2</span>
+            </span>
+          </div>
+          {/* Floating "Iridium" chip */}
+          <div className="hidden sm:block absolute bottom-6 left-2 md:bottom-10 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
+               style={{ animationDelay: "0.9s" }}>
+            <span className="font-display font-black text-xs md:text-sm text-gold tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> IRIDIUM SPARK
+            </span>
+          </div>
+        </div>
+
+        {/* Headline overlay (below product) */}
+        <div className="relative text-center mt-8 md:mt-10 max-w-3xl">
+          {/* Gold authenticity badge */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 mb-5 rounded-full border border-[hsl(var(--gold)/0.45)] bg-[hsl(var(--gold)/0.08)] backdrop-blur-sm animate-lux-badge-pulse animate-lux-stagger-in"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-gold opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-gold" />
+            </span>
+            <span className="text-gold font-tajawal font-bold text-sm tracking-wide">
+              موزع تويوتا المعتمد رسمياً
             </span>
           </div>
 
           <h1
-            className="font-almarai font-black leading-[0.95] tracking-[-0.02em]"
-            style={{ fontSize: "clamp(44px, 6.4vw, 96px)" }}
+            className="font-tajawal font-black text-white leading-[1.05] animate-lux-stagger-in"
+            style={{ fontSize: "clamp(36px, 6vw, 68px)", animationDelay: "0.3s" }}
           >
-            هندسة يابانية.
-            <br />
-            <span className="relative inline-block">
-              <span className="text-toyota-red">قطعة</span>{" "}
-              <span className="text-white/95">أصلية</span>
-              <svg
-                aria-hidden
-                className="absolute -bottom-3 right-0 left-0 w-full h-3"
-                viewBox="0 0 400 12" preserveAspectRatio="none"
-              >
-                <path
-                  d="M2 8 L 200 8 L 210 3 L 220 8 L 398 8"
-                  stroke="hsl(var(--toyota-red))"
-                  strokeWidth="1.5"
-                  fill="none"
-                  strokeDasharray="600"
-                  strokeDashoffset="600"
-                  style={{ animation: "lux-draw 2s ease-out 0.6s forwards" }}
-                />
-              </svg>
-            </span>
-            <br />
-            <span className="font-almarai text-white/70" style={{ fontSize: "0.72em" }}>
-              كل رقم بارت له قصة.
-            </span>
+            قطع غيار تويوتا <span className="text-toyota-red">الأصلية</span>
           </h1>
 
-          <p className="mt-8 max-w-lg font-plex-ar text-[15px] md:text-[16.5px] leading-[2] text-white/65">
-            نحن لا نبيع «قطع غيار» — نحن نُسلّم رقم البارت الصحيح لمحرّكك،
-            مختومًا من تويوتا موتور اليابان، ومدعومًا بضمان الوكيل، ومسنودًا
-            بأربعين عامًا من العمل الهادئ في السوق المصري.
+          {/* Red divider */}
+          <div
+            className="flex items-center justify-center gap-3 my-5 animate-lux-stagger-in"
+            style={{ animationDelay: "0.45s" }}
+          >
+            <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-toyota-red" />
+            <span className="w-1.5 h-1.5 rounded-full bg-toyota-red shadow-red-glow" />
+            <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-toyota-red" />
+          </div>
+
+          <p
+            className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
+            style={{ animationDelay: "0.6s" }}
+          >
+            ضمان الجودة. ضمان الأمان.{" "}
+            <span className="text-white font-bold">ضمان تويوتا.</span>
           </p>
 
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+          {/* CTAs */}
+          <div
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 animate-lux-stagger-in"
+            style={{ animationDelay: "0.8s" }}
+          >
             <Link
               to="/products"
-              className="group inline-flex items-center gap-3 bg-toyota-red hover:bg-[hsl(var(--toyota-red-glow))] px-8 py-4 font-plex-ar font-semibold text-white text-[15px] transition-all"
-              style={{
-                clipPath: "polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%)",
-                boxShadow: "0 20px 50px -15px hsl(var(--toyota-red) / 0.7)",
-              }}
+              className="group relative inline-flex items-center gap-3 px-9 py-4 rounded-full bg-toyota-red text-white font-tajawal font-black text-lg overflow-hidden animate-lux-red-pulse transition-transform duration-300 hover:scale-[1.04]"
             >
-              افتح الكتالوج
-              <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1.5" />
+              {/* shimmer sweep */}
+              <span
+                aria-hidden
+                className="absolute inset-y-0 -inset-x-4 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-lux-shimmer-sweep"
+                style={{ width: "40%" }}
+              />
+              <span className="relative">تسوّق الآن</span>
+              <ArrowLeft className="relative w-5 h-5 transition-transform group-hover:-translate-x-1.5" />
+              <span aria-hidden className="absolute inset-0 rounded-full ring-1 ring-white/25 pointer-events-none" />
             </Link>
             <Link
-              to="/dealer-login"
-              className="group inline-flex items-center gap-3 border border-white/20 hover:border-white/50 px-8 py-4 font-plex-ar font-medium text-white/85 hover:text-white text-[15px] transition-all"
+              to="/about"
+              className="group inline-flex items-center gap-2 font-tajawal font-bold text-white/70 hover:text-white text-base px-6 py-3 rounded-full border border-white/15 hover:border-toyota-red/60 backdrop-blur-sm transition-all"
             >
-              أنا تاجر جملة
+              <Info className="w-4 h-4" />
+              <span>من نحن</span>
             </Link>
           </div>
-
-          {/* Meta strip */}
-          <div className="mt-10 grid grid-cols-3 max-w-md gap-6 font-mono text-white/55" dir="ltr">
-            <div className="border-r border-white/10 pr-4">
-              <div className="text-white font-almarai font-black text-2xl">1985</div>
-              <div className="text-[10px] tracking-[0.2em] mt-1">EST · CAIRO</div>
-            </div>
-            <div className="border-r border-white/10 pr-4">
-              <div className="text-white font-almarai font-black text-2xl">12K+</div>
-              <div className="text-[10px] tracking-[0.2em] mt-1">PART NUMBERS</div>
-            </div>
-            <div>
-              <div className="text-toyota-red font-almarai font-black text-2xl">100%</div>
-              <div className="text-[10px] tracking-[0.2em] mt-1">GENUINE OEM</div>
-            </div>
-          </div>
         </div>
 
-        {/* BLUEPRINT DIAGRAM SIDE */}
-        <div className="lg:col-span-6 order-1 lg:order-1 relative">
-          <div className="relative w-full aspect-square max-w-[620px] mx-auto">
-            {/* Rotating scan ring */}
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{ animation: "lux-spin-slow 24s linear infinite" }}
-            >
-              <svg viewBox="0 0 600 600" className="w-full h-full">
-                <defs>
-                  <linearGradient id="scan" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="hsl(var(--toyota-red))" stopOpacity="0" />
-                    <stop offset="100%" stopColor="hsl(var(--toyota-red))" stopOpacity="0.7" />
-                  </linearGradient>
-                </defs>
-                <circle cx="300" cy="300" r="285" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4 8" />
-                <path d="M 300 15 A 285 285 0 0 1 585 300" fill="none" stroke="url(#scan)" strokeWidth="2" />
-              </svg>
-            </div>
-
-            {/* Static schematic */}
-            <svg viewBox="0 0 600 600" className="absolute inset-0 w-full h-full">
-              <defs>
-                <radialGradient id="discGrad" cx="0.5" cy="0.5" r="0.5">
-                  <stop offset="0%" stopColor="#1a1a20" />
-                  <stop offset="70%" stopColor="#0a0a0c" />
-                  <stop offset="100%" stopColor="#050506" />
-                </radialGradient>
-                <linearGradient id="caliperGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--toyota-red))" />
-                  <stop offset="100%" stopColor="hsl(0 70% 30%)" />
-                </linearGradient>
-              </defs>
-
-              {/* Outer ticks */}
-              <g stroke="rgba(255,255,255,0.25)" strokeWidth="1">
-                {Array.from({ length: 60 }).map((_, i) => {
-                  const a = (i / 60) * Math.PI * 2;
-                  const r1 = 262, r2 = i % 5 === 0 ? 250 : 256;
-                  const x1 = 300 + Math.cos(a) * r1;
-                  const y1 = 300 + Math.sin(a) * r1;
-                  const x2 = 300 + Math.cos(a) * r2;
-                  const y2 = 300 + Math.sin(a) * r2;
-                  return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} opacity={i % 5 === 0 ? 0.55 : 0.2} />;
-                })}
-              </g>
-
-              {/* Concentric rings */}
-              <circle cx="300" cy="300" r="240" fill="none" stroke="rgba(255,255,255,0.08)" strokeDasharray="2 6" />
-              <circle cx="300" cy="300" r="200" fill="url(#discGrad)" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5"
-                style={{ animation: "lux-draw 2.4s ease-out both", strokeDasharray: 1300, strokeDashoffset: 0 }} />
-              <circle cx="300" cy="300" r="170" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
-              <circle cx="300" cy="300" r="150" fill="none" stroke="rgba(255,255,255,0.12)" strokeDasharray="4 4" />
-
-              {/* Drilled cooling holes on the disc */}
-              {Array.from({ length: 24 }).map((_, i) => {
-                const a = (i / 24) * Math.PI * 2;
-                const r = 185;
-                const x = 300 + Math.cos(a) * r;
-                const y = 300 + Math.sin(a) * r;
-                return <circle key={i} cx={x} cy={y} r="4" fill="#050506" stroke="rgba(255,255,255,0.35)" strokeWidth="0.8" />;
-              })}
-
-              {/* Lug nuts */}
-              {Array.from({ length: 5 }).map((_, i) => {
-                const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
-                const r = 90;
-                const x = 300 + Math.cos(a) * r;
-                const y = 300 + Math.sin(a) * r;
-                return (
-                  <g key={i}>
-                    <circle cx={x} cy={y} r="10" fill="#111" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                    <circle cx={x} cy={y} r="4" fill="rgba(255,255,255,0.15)" />
-                  </g>
-                );
-              })}
-
-              {/* Hub */}
-              <circle cx="300" cy="300" r="40" fill="#0a0a0c" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
-              <circle cx="300" cy="300" r="24" fill="#000" stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
-              <text x="300" y="304" textAnchor="middle" fill="hsl(var(--toyota-red))" fontFamily="monospace" fontSize="10" letterSpacing="2">TMC</text>
-
-              {/* Brake caliper arc (top-right) */}
-              <path
-                d="M 300 88 A 212 212 0 0 1 512 300 L 490 300 A 190 190 0 0 0 300 110 Z"
-                fill="url(#caliperGrad)"
-                opacity="0.92"
-                style={{ animation: "lux-draw 2.6s ease-out 0.4s both" }}
-              />
-              <text
-                x="405" y="150"
-                fill="white" fontFamily="monospace" fontSize="9" letterSpacing="3"
-                transform="rotate(45 405 150)"
-              >TOYOTA</text>
-
-              {/* Center dimension line */}
-              <g stroke="rgba(255,255,255,0.4)" strokeWidth="0.75" fontFamily="monospace" fontSize="9" fill="rgba(255,255,255,0.6)">
-                <line x1="100" y1="500" x2="500" y2="500" strokeDasharray="3 3" />
-                <line x1="100" y1="495" x2="100" y2="505" />
-                <line x1="500" y1="495" x2="500" y2="505" />
-                <text x="300" y="516" textAnchor="middle">Ø 296 mm</text>
-              </g>
-
-              {/* Pulsing hotspots */}
-              {[
-                { x: 300, y: 100 },
-                { x: 500, y: 300 },
-                { x: 300, y: 500 },
-                { x: 100, y: 300 },
-              ].map((p, i) => (
-                <g key={i}>
-                  <circle cx={p.x} cy={p.y} r="4" fill="hsl(var(--toyota-red))" />
-                  <circle cx={p.x} cy={p.y} r="10" fill="none" stroke="hsl(var(--toyota-red))" strokeWidth="1.2"
-                    style={{ animation: `lux-pulse-ring 2.4s ease-out ${i * 0.4}s infinite`, transformOrigin: `${p.x}px ${p.y}px` }} />
-                </g>
-              ))}
-            </svg>
-
-            {/* Radial callouts overlay (HTML for crisp Arabic type) */}
-            {CALLOUTS.map((c, i) => (
-              <div
-                key={c.code}
-                className="absolute z-10 opacity-0"
-                style={{
-                  top: c.top,
-                  right: c.right,
-                  animation: `lux-fade-up 0.7s ease-out ${1.2 + i * 0.25}s forwards`,
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="h-px w-10 bg-toyota-red/60" />
-                  <div className="border-r border-toyota-red/70 pr-3">
-                    <div className="font-mono text-[10px] tracking-[0.2em] text-toyota-red" dir="ltr">
-                      {c.code}
-                    </div>
-                    <div className="font-plex-ar text-[12px] text-white/85 mt-0.5">
-                      {c.label}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Scroll cue */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-lux-scroll-cue">
+          <span className="text-soft text-[10px] tracking-[0.3em] font-display font-bold">SCROLL</span>
+          <ChevronDown className="w-4 h-4 text-soft" />
         </div>
       </div>
 
-      {/* Bottom rail */}
-      <div className="absolute bottom-0 inset-x-0 z-20 border-t border-white/10 bg-black/50 backdrop-blur">
-        <div className="max-w-[1500px] mx-auto px-6 md:px-10 lg:px-14 py-4 flex items-center justify-between font-mono text-[10.5px] tracking-[0.28em] text-white/60" dir="ltr">
-          <div className="flex items-center gap-6">
-            <span className="text-toyota-red">●</span>
-            <span>TOYOTA</span>
-            <span className="text-white/20">/</span>
-            <span>DENSO</span>
-            <span className="text-white/20">/</span>
-            <span>AISIN</span>
-            <span className="text-white/20">/</span>
-            <span>MTX</span>
-          </div>
-          <div className="hidden md:flex items-center gap-4 text-white/45">
-            <span>SCROLL</span>
-            <span className="w-6 h-px bg-white/40" />
-            <span>↓</span>
-          </div>
-        </div>
-      </div>
+      {/* Bottom red hairline */}
+      <div className="absolute bottom-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
     </section>
   );
 };
