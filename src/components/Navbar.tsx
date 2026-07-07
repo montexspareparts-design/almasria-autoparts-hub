@@ -182,12 +182,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-14 md:h-16">
           {/* Mobile: Hamburger */}
           <button
-            className="lg:hidden text-secondary-foreground p-2.5 -ml-2 relative z-10 touch-manipulation"
+            className="lg:hidden glass-icon rounded-full text-white/90 h-9 w-9 flex items-center justify-center relative z-10 touch-manipulation"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={isOpen}
           >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isOpen ? <X className="w-[17px] h-[17px]" /> : <Menu className="w-[17px] h-[17px]" />}
           </button>
 
           {/* Logo */}
