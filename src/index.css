@@ -689,6 +689,83 @@ html.hc-mode a:not(.no-hc-underline) {
     55%, 100% { left: 130%; }
   }
 
+  /* ─── Glass performance guards ───────────────────────────────────
+     Composite on GPU, downgrade blur on small screens, and provide
+     opaque fallbacks for browsers or users that can't afford the
+     backdrop-filter cost. Keeps low-end Android smooth. */
+  .glass-ios,
+  .glass-ios-strong,
+  .glass-icon,
+  .glass-card-ios,
+  .glass-panel-ios,
+  .glass-pill {
+    transform: translateZ(0);
+    will-change: backdrop-filter, transform;
+    contain: paint;
+  }
+
+  /* Mobile: cut blur radius ~50%, drop saturate, kill heavy shadows */
+  @media (max-width: 768px) {
+    .glass-ios,
+    .glass-pill {
+      -webkit-backdrop-filter: blur(12px) saturate(1.4);
+      backdrop-filter: blur(12px) saturate(1.4);
+    }
+    .glass-ios-strong {
+      -webkit-backdrop-filter: blur(14px) saturate(1.4);
+      backdrop-filter: blur(14px) saturate(1.4);
+    }
+    .glass-icon {
+      -webkit-backdrop-filter: blur(10px) saturate(1.4);
+      backdrop-filter: blur(10px) saturate(1.4);
+    }
+    .glass-card-ios,
+    .glass-panel-ios {
+      -webkit-backdrop-filter: blur(10px) saturate(1.3);
+      backdrop-filter: blur(10px) saturate(1.3);
+    }
+    /* Kill the continuous shimmer on mobile — it repaints forever */
+    .glass-pill-primary::after { animation: none; display: none; }
+  }
+
+  /* Touch devices: skip hover transforms (they only fire on sticky-hover) */
+  @media (hover: none) {
+    .glass-icon:hover,
+    .glass-pill:hover,
+    .glass-card-ios:hover,
+    .glass-panel-ios:hover {
+      transform: none;
+    }
+  }
+
+  /* Reduced motion: kill shimmer + speed up transitions */
+  @media (prefers-reduced-motion: reduce) {
+    .glass-pill-primary::after { animation: none; }
+    .glass-icon, .glass-pill, .glass-card-ios, .glass-panel-ios {
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Reduced transparency (iOS/macOS accessibility): opaque fallback */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-ios, .glass-ios-strong, .glass-icon, .glass-pill {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: hsl(var(--carbon) / 0.92);
+    }
+    .glass-card-ios { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .glass-panel-ios { background: rgba(20,20,25,0.9); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
+  /* No backdrop-filter support: opaque fallback so contrast survives */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass-ios, .glass-ios-strong, .glass-icon, .glass-pill {
+      background: hsl(var(--carbon) / 0.92);
+    }
+    .glass-card-ios { background: #fff; }
+    .glass-panel-ios { background: rgba(20,20,25,0.9); }
+  }
+
   .bg-spotlight { background: var(--gradient-spotlight); }
   .bg-red-glow { background: var(--gradient-red-glow); }
   .shadow-red-glow { box-shadow: var(--shadow-red-glow); }
