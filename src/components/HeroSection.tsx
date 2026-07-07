@@ -367,11 +367,11 @@ const HeroSection = () => {
           </div>
 
           <p
-            className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
+            className="font-readex font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
             style={{ animationDelay: "0.6s" }}
           >
             ضمان الجودة. ضمان الأمان.{" "}
-            <span className="text-white font-bold">ضمان تويوتا.</span>
+            <span className="text-white font-semibold">ضمان تويوتا.</span>
           </p>
 
           {/* CTAs */}
