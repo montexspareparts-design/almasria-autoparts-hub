@@ -200,6 +200,7 @@ const App = () => (
                     <Route path="/admin/staff-activity" element={<AdminStaffActivityPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  </AnimatedRoutes>
                </Suspense>
               </PermissionRequestProvider>
             </CartProvider>
