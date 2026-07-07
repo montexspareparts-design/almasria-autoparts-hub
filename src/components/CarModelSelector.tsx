@@ -47,7 +47,8 @@ const CarModelSelector = ({ carModel, carYear, onModelChange, onYearChange, requ
             <SelectTrigger className="text-right h-11">
               <SelectValue placeholder="اختر الموديل" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[100] bg-popover" position="popper" sideOffset={4}>
+
               {toyotaModels.map((model) => (
                 <SelectItem key={model.value} value={model.value}>
                   {model.label}
@@ -64,7 +65,7 @@ const CarModelSelector = ({ carModel, carYear, onModelChange, onYearChange, requ
             <SelectTrigger className="text-right h-11">
               <SelectValue placeholder="السنة" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[100] bg-popover" position="popper" sideOffset={4}>
               {years.map((year) => (
                 <SelectItem key={year} value={String(year)}>
                   {year}
