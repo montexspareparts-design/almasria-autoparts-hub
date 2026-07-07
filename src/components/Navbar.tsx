@@ -273,11 +273,11 @@ const Navbar = () => {
               <button
                 onClick={() => navigate("/cart")}
                 aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
-                className="relative text-secondary-foreground/60 hover:text-secondary-foreground transition-colors p-2 rounded-lg hover:bg-secondary-foreground/5"
+                className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center relative"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
+                <ShoppingCart className="w-[17px] h-[17px]" aria-hidden="true" />
                 {itemCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-secondary">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-black min-w-[15px] h-[15px] rounded-full flex items-center justify-center leading-none ring-2 ring-black/50">
                     {itemCount}
                   </span>
                 )}
@@ -285,7 +285,9 @@ const Navbar = () => {
             )}
 
             {/* Notifications */}
-            <NotificationBell />
+            <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
+              <NotificationBell />
+            </div>
 
             {user ? (
               <>
