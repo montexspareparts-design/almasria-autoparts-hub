@@ -1,8 +1,11 @@
 import { ArrowLeft, Info, ChevronDown, Sparkles, ShieldCheck, Truck, Award } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
 import brandLogo from "@/assets/almasria-logo.png";
+
+// 3D hero product — lazy so the main bundle stays lean.
+const Hero3D = lazy(() => import("@/components/hero/Hero3D"));
 
 /**
  * Luxury Hero — Rolex / premium product feel.
@@ -315,15 +318,34 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <img
-            src={heroPart}
-            alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
-            width={1536}
-            height={1024}
-            fetchPriority="high"
-            decoding="async"
-            className="relative w-full h-full object-contain motion-safe:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
-          />
+          {/* 3D product experience — falls back to hero image on reduced-motion / low-end */}
+          <Suspense
+            fallback={
+              <img
+                src={heroPart}
+                alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
+                width={1536}
+                height={1024}
+                fetchPriority="high"
+                decoding="async"
+                className="relative w-full h-full object-contain motion-safe:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
+              />
+            }
+          >
+            <Hero3D
+              fallback={
+                <img
+                  src={heroPart}
+                  alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
+                  width={1536}
+                  height={1024}
+                  fetchPriority="high"
+                  decoding="async"
+                  className="relative w-full h-full object-contain motion-safe:animate-lux-float md:[filter:drop-shadow(0_30px_50px_hsl(0_0%_0%/0.7))]"
+                />
+              }
+            />
+          </Suspense>
           {/* Floating part-number chip (over filter - left) — gentle bob */}
           <div
             className="absolute top-4 left-2 md:top-8 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in motion-safe:animate-[hero-bob_4.5s_ease-in-out_infinite]"
