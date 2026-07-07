@@ -444,28 +444,28 @@ const WhatSetsUsApartPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
-                <Button size="lg" className="gap-3 font-bold text-lg px-10 py-6 bg-gradient-to-l from-primary to-[hsl(355,80%,55%)] text-white shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:shadow-2xl relative overflow-hidden group" asChild>
-                  <a href="https://wa.me/201034806288" target="_blank" rel="noopener noreferrer">
-                    <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
-                    <MessageCircle className="w-5 h-5" />
-                    تواصل معنا
-                  </a>
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="gap-3 font-bold text-base px-8 py-6 border-[hsl(var(--section-dark-foreground))]/15 text-[hsl(var(--section-dark-foreground))] hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-                  asChild
-                >
-                  <a href="/#contact">
-                    <ArrowLeft className="w-4 h-4" />
-                    اطلب عرض سعر
-                  </a>
-                </Button>
-              </motion.div>
+              <motion.a
+                href="https://wa.me/201034806288"
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.06, y: -3 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="glass-pill glass-pill-primary"
+              >
+                <MessageCircle className="w-5 h-5" />
+                تواصل معنا
+              </motion.a>
+              <motion.a
+                href="/#contact"
+                whileHover={{ scale: 1.06, y: -3 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="glass-pill"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                اطلب عرض سعر
+              </motion.a>
             </div>
           </motion.div>
         </div>
