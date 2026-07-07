@@ -1,165 +1,191 @@
-import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Truck, BadgeCheck, Wrench } from "lucide-react";
+import heroImage from "@/assets/hero-toyota-parts.jpg";
 
 /**
- * HeroSection — Noomo-Labs inspired.
+ * HeroSection — Al Masria · Toyota Genuine Parts.
  *
- * Composition:
- *   - Fullscreen WebGL fluid metaballs (cursor-reactive) as living backdrop
- *   - Massive condensed Arabic display type as the hero
- *   - Mono-typed meta rows in the four corners (timestamp, coordinates)
- *   - Sparse underlined CTA links (not chunky buttons) — Noomo signature
- *   - Bottom scroll strip with live ticker
+ * Editorial split composition:
+ *   - Right column (RTL primary): Arabic-first headline, subline, CTAs, trust chips
+ *   - Left column: cinematic product photograph with vignette + red rim glow
+ *   - Bottom strip: authorized-brand rail (Toyota / DENSO / AISIN / MTX)
  *
- * Nothing else. No shards, sparkles, HUD, marquee, or gold rings — the
- * shader carries the visual weight, typography carries the message.
+ * No shaders, no marquee, no gimmicks. Just relevance, breathing room, and craft.
  */
 
-const HeroFluid = lazy(() => import("@/components/hero/HeroFluid"));
+const trustChips = [
+  { icon: BadgeCheck, label: "موزّع معتمد" },
+  { icon: ShieldCheck, label: "ضمان الوكيل" },
+  { icon: Truck, label: "شحن لكل مصر" },
+  { icon: Wrench, label: "خبرة منذ 1985" },
+];
 
 const HeroSection = () => {
   return (
     <section
       id="hero"
       dir="rtl"
-      className="relative w-full min-h-screen bg-[#050506] text-white overflow-hidden isolate"
-      aria-label="قطع غيار تويوتا الأصلية"
+      className="relative w-full min-h-[92vh] overflow-hidden isolate bg-[#0a0a0c] text-white"
+      aria-label="قطع غيار تويوتا الأصلية — المصرية"
     >
-      {/* Living backdrop */}
-      <Suspense fallback={null}>
-        <HeroFluid />
-      </Suspense>
-
-      {/* Fine dot-grid overlay — Noomo signature */}
+      {/* Ambient background wash */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-[1] opacity-[0.22] mix-blend-overlay"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(1200px 700px at 85% 20%, hsl(0 78% 42% / 0.18), transparent 60%), radial-gradient(900px 600px at 10% 90%, hsl(45 60% 45% / 0.08), transparent 60%)",
+        }}
+      />
+      {/* Fine dot grid */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-[0.12]"
         style={{
           backgroundImage:
-            "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
-          backgroundSize: "22px 22px",
+            "radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
         }}
       />
 
-      {/* Top-left mono meta */}
-      <div
-        className="absolute top-24 left-6 md:top-28 md:left-10 z-20 font-mono text-[10px] md:text-[11px] tracking-[0.24em] text-white/55"
-        dir="ltr"
-      >
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-toyota-red animate-pulse" />
-          <span>[ AL MASRIA · TOYOTA GENUINE ]</span>
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-10 lg:px-14 pt-28 md:pt-32 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          {/* TEXT SIDE — right in RTL */}
+          <div className="lg:col-span-6 order-2 lg:order-1">
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/12 bg-white/[0.03] backdrop-blur px-4 py-1.5 mb-7">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inset-0 rounded-full bg-toyota-red animate-ping opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-toyota-red" />
+              </span>
+              <span className="font-plex-ar text-[12px] tracking-wide text-white/75">
+                موزّع تويوتا المعتمد في مصر · منذ 1985
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1
+              className="font-almarai font-black text-white leading-[1.05]"
+              style={{ fontSize: "clamp(38px, 5.6vw, 78px)" }}
+            >
+              قطع غيار تويوتا
+              <br />
+              <span className="text-toyota-red">الأصلية</span>{" "}
+              <span className="text-white/85">بضمان الوكيل</span>
+            </h1>
+
+            {/* Sub */}
+            <p className="mt-7 max-w-xl font-plex-ar text-[15px] md:text-[17px] leading-[1.9] text-white/70">
+              كل قطعة مختومة من المصنع — تويوتا، دنسو، أيسِن، ومونتكس.
+              أسعار الوكيل، شحن معتمد لجميع محافظات مصر، وخبرة أربعين عامًا
+              في خدمة أسطول تويوتا المصري.
+            </p>
+
+            {/* Trust chips */}
+            <div className="mt-8 flex flex-wrap gap-2.5">
+              {trustChips.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5"
+                >
+                  <Icon className="w-3.5 h-3.5 text-toyota-red" strokeWidth={2.4} />
+                  <span className="font-plex-ar text-[12.5px] text-white/80">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link
+                to="/products"
+                className="group inline-flex items-center gap-3 rounded-full bg-toyota-red hover:bg-toyota-red/90 px-7 py-3.5 font-plex-ar font-semibold text-white text-[15px] transition-all shadow-[0_10px_30px_-10px_hsl(0_82%_45%/0.6)] hover:shadow-[0_14px_40px_-10px_hsl(0_82%_45%/0.75)]"
+              >
+                تصفّح قطع الغيار
+                <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" />
+              </Link>
+              <Link
+                to="/dealer-login"
+                className="group inline-flex items-center gap-3 rounded-full border border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.06] px-7 py-3.5 font-plex-ar font-medium text-white/85 hover:text-white text-[15px] transition-all"
+              >
+                دخول تجّار الجملة
+              </Link>
+            </div>
+
+            {/* Fine print */}
+            <div className="mt-8 flex items-center gap-6 font-plex-ar text-[12.5px] text-white/45">
+              <span>‎+٤٠ عامًا من الخبرة</span>
+              <span className="h-3 w-px bg-white/15" />
+              <span>‎+١٢٬٠٠٠ قطعة أصلية</span>
+              <span className="h-3 w-px bg-white/15" />
+              <span>‎+٥٠٠ تاجر معتمد</span>
+            </div>
+          </div>
+
+          {/* IMAGE SIDE */}
+          <div className="lg:col-span-6 order-1 lg:order-2 relative">
+            <div className="relative aspect-[4/3] w-full rounded-[28px] overflow-hidden border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)]">
+              <img
+                src={heroImage}
+                alt="قطع غيار تويوتا الأصلية — فلتر زيت وطبلة فرامل وبوجيه دنسو وطلمبة مياه أيسِن"
+                width={1920}
+                height={1280}
+                className="w-full h-full object-cover"
+                style={{ animation: "lux-kenburns 22s ease-in-out infinite alternate" }}
+              />
+              {/* Corner tag */}
+              <div className="absolute top-4 left-4 rounded-full bg-black/60 backdrop-blur border border-white/15 px-3 py-1.5 font-mono text-[10px] tracking-[0.2em] text-white/85" dir="ltr">
+                <span className="text-toyota-red">●</span> TOYOTA GENUINE
+              </div>
+              {/* Bottom vignette so the image grounds into the page */}
+              <div
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(180deg, transparent 55%, rgba(10,10,12,0.55) 100%)",
+                }}
+              />
+            </div>
+
+            {/* Floating stat card */}
+            <div className="hidden md:flex absolute -bottom-6 -right-6 items-center gap-4 rounded-2xl bg-[#111114]/90 backdrop-blur border border-white/10 px-5 py-4 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.6)]">
+              <div className="flex flex-col">
+                <span className="font-almarai font-black text-2xl text-white leading-none">
+                  ١٠٠٪
+                </span>
+                <span className="font-plex-ar text-[11px] text-white/60 mt-1">
+                  أصلية ومختومة
+                </span>
+              </div>
+              <div className="h-10 w-px bg-white/10" />
+              <div className="flex flex-col">
+                <span className="font-almarai font-black text-2xl text-toyota-red leading-none">
+                  ٤٠+
+                </span>
+                <span className="font-plex-ar text-[11px] text-white/60 mt-1">
+                  عامًا من الثقة
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="mt-1.5 text-white/35">EST · 1985 / CAIRO · EGYPT</div>
       </div>
 
-      {/* Top-right mono meta */}
-      <div
-        className="absolute top-24 right-6 md:top-28 md:right-10 z-20 font-mono text-[10px] md:text-[11px] tracking-[0.24em] text-white/55 text-right"
-        dir="ltr"
-      >
-        <div>[ 30.0444° N / 31.2357° E ]</div>
-        <div className="mt-1.5 text-white/35">v.2026 · GENUINE / OEM</div>
-      </div>
-
-      {/* CENTER — massive display type */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
-        {/* eyebrow */}
-        <div
-          className="font-mono text-[10px] md:text-[11px] tracking-[0.4em] text-white/55 mb-6 md:mb-8"
-          dir="ltr"
-        >
-          [ CHAPTER · 01 ] — SINCE 1985
-        </div>
-
-        {/* Line 1 (Arabic) */}
-        <h1
-          className="font-almarai font-black leading-[0.88] tracking-[-0.04em] text-white"
-          style={{ fontSize: "clamp(52px, 10.5vw, 168px)" }}
-        >
-          قطع غيار تويوتا
-        </h1>
-
-        {/* Line 2 — outlined + red word */}
-        <div
-          className="mt-1 md:mt-2 font-almarai font-black leading-[0.88] tracking-[-0.04em]"
-          style={{ fontSize: "clamp(52px, 10.5vw, 168px)" }}
-        >
-          <span className="text-mega-outline">100%</span>{" "}
-          <span className="text-toyota-red">الأصلية</span>
-        </div>
-
-        {/* subline */}
-        <p
-          className="mt-8 md:mt-10 max-w-xl font-plex-ar text-sm md:text-base text-white/60 leading-relaxed"
-        >
-          موزّع معتمد لقطع غيار تويوتا الأصلية في مصر — منذ أربعين عامًا.
-          كل قطعة مختومة من المصنع، مضمونة بضمان الوكيل.
-        </p>
-
-        {/* CTAs — Noomo-style underlined links, not buttons */}
-        <div className="mt-10 md:mt-14 flex items-center gap-8 md:gap-14" dir="ltr">
-          <Link
-            to="/products"
-            className="group inline-flex items-center gap-3 font-mono text-xs md:text-sm tracking-[0.25em] text-white uppercase relative"
-          >
-            <span className="relative">
-              Shop Now
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-white/70 origin-left scale-x-100 group-hover:scale-x-0 transition-transform duration-500" />
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-toyota-red origin-right scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-            </span>
-            <ArrowUpLeft className="w-4 h-4 transition-transform duration-500 group-hover:-translate-x-1 group-hover:-translate-y-1 text-toyota-red" />
-          </Link>
-          <Link
-            to="/about"
-            className="group inline-flex items-center gap-3 font-mono text-xs md:text-sm tracking-[0.25em] text-white/60 hover:text-white uppercase relative"
-          >
-            <span className="relative">
-              About Us
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-white/25 group-hover:bg-white/70 transition-colors" />
-            </span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Bottom-left mono */}
-      <div
-        className="absolute bottom-8 left-6 md:bottom-10 md:left-10 z-20 font-mono text-[10px] md:text-[11px] tracking-[0.24em] text-white/45"
-        dir="ltr"
-      >
-        [ SCROLL / EXPLORE ↓ ]
-      </div>
-
-      {/* Bottom-right mono */}
-      <div
-        className="absolute bottom-8 right-6 md:bottom-10 md:right-10 z-20 font-mono text-[10px] md:text-[11px] tracking-[0.24em] text-white/45 text-right"
-        dir="ltr"
-      >
-        <div>[ 100% OEM · MADE IN JAPAN ]</div>
-      </div>
-
-      {/* Bottom ticker */}
-      <div
-        aria-hidden
-        className="absolute bottom-0 inset-x-0 z-[15] border-t border-white/10 bg-black/40 backdrop-blur-md overflow-hidden h-8"
-      >
-        <div
-          className="flex whitespace-nowrap font-mono text-[10px] tracking-[0.35em] text-white/70 items-center h-full"
-          style={{ animation: "lux-ticker 42s linear infinite" }}
-        >
-          {Array.from({ length: 3 }).map((_, k) => (
-            <span key={k} className="flex items-center gap-8 px-8" dir="ltr">
-              <span className="text-toyota-red">●</span> TOYOTA GENUINE
-              <span>◆</span> DENSO
-              <span className="text-toyota-red">●</span> AISIN
-              <span>◆</span> MTX
-              <span className="text-toyota-red">●</span> AUTHORIZED DISTRIBUTOR
-              <span>◆</span> AL MASRIA GROUP · CAIRO · EST 1985
-              <span className="text-toyota-red">●</span> NATIONWIDE SHIPPING
-              <span>◆</span> 100% AUTHENTIC
-            </span>
-          ))}
+      {/* Bottom brand rail */}
+      <div className="relative z-10 border-t border-white/8 bg-black/40 backdrop-blur">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10 lg:px-14 py-5 flex flex-wrap items-center justify-between gap-6">
+          <span className="font-plex-ar text-[12px] text-white/45">
+            علامات معتمدة لدينا
+          </span>
+          <div className="flex items-center gap-8 md:gap-12 font-mono text-[13px] tracking-[0.28em] text-white/75" dir="ltr">
+            <span>TOYOTA</span>
+            <span className="text-white/20">/</span>
+            <span>DENSO</span>
+            <span className="text-white/20">/</span>
+            <span>AISIN</span>
+            <span className="text-white/20">/</span>
+            <span>MTX</span>
+          </div>
         </div>
       </div>
     </section>

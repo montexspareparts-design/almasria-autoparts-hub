@@ -904,3 +904,8 @@ html.hc-mode a:not(.no-hc-underline) {
 }
 .animate-lux-ticker { animation: lux-ticker 40s linear infinite; }
 
+
+@keyframes lux-kenburns {
+  0%   { transform: scale(1.02) translate(0, 0); }
+  100% { transform: scale(1.08) translate(-1.5%, -1%); }
+}
