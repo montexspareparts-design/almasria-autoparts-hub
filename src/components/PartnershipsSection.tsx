@@ -102,7 +102,7 @@ const PartnershipsSection = () => {
             whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, type: "spring", stiffness: 60 }}
-            className="bg-secondary-foreground/5 border border-primary/20 rounded-xl p-8"
+            className="glass-panel-ios rounded-2xl p-8"
             style={{ perspective: "1000px" }}
           >
             <h4 className="text-xl font-bold text-dark-section-foreground mb-6 text-center">
