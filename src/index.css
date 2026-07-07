@@ -521,6 +521,8 @@ html.hc-mode a:not(.no-hc-underline) {
   .bg-toyota-red { background-color: hsl(var(--toyota-red)); }
   .font-display { font-family: "Space Grotesk", "Tajawal", sans-serif; }
   .font-tajawal { font-family: "Tajawal", "Cairo", sans-serif; }
+  .font-readex { font-family: "Readex Pro", "IBM Plex Sans Arabic", "Cairo", sans-serif; font-feature-settings: "ss01", "ss02"; }
+  .font-kufi { font-family: "Noto Kufi Arabic", "Cairo", sans-serif; }
   .bg-spotlight { background: var(--gradient-spotlight); }
   .bg-red-glow { background: var(--gradient-red-glow); }
   .shadow-red-glow { box-shadow: var(--shadow-red-glow); }
