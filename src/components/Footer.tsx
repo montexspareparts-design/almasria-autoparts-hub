@@ -32,11 +32,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
   ];
 
   return (
-    <footer className="relative bg-carbon text-white border-t border-white/10 overflow-hidden">
+    <footer ref={ref} className="relative glass-ios-strong text-white overflow-hidden">
       {/* Hairline accent */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/40 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-toyota-red/50 to-transparent" />
       {/* Ambient glow */}
-      <div className="absolute -top-32 left-1/3 w-[400px] h-[400px] bg-toyota-red/[0.04] rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -top-32 left-1/3 w-[400px] h-[400px] bg-toyota-red/[0.06] rounded-full blur-[120px] pointer-events-none" />
+      {/* Inner top highlight */}
+      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-white/[0.06] to-transparent pointer-events-none" />
 
       <div className="container mx-auto px-4 py-14 pb-24 md:pb-14 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
