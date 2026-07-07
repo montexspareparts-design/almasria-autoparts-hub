@@ -350,10 +350,10 @@ const HeroSection = () => {
 
 
           <h1
-            className="font-tajawal font-black text-white leading-[1.05] animate-lux-stagger-in"
-            style={{ fontSize: "clamp(36px, 6vw, 68px)", animationDelay: "0.3s" }}
+            className="font-readex font-bold text-white leading-[1.15] tracking-[-0.01em] animate-lux-stagger-in"
+            style={{ fontSize: "clamp(34px, 5.6vw, 64px)", animationDelay: "0.3s" }}
           >
-            قطع غيار تويوتا <span className="text-toyota-red">الأصلية</span>
+            قطع غيار تويوتا <span className="text-toyota-red font-bold">الأصلية</span>
           </h1>
 
           {/* Red divider */}
@@ -367,11 +367,11 @@ const HeroSection = () => {
           </div>
 
           <p
-            className="font-tajawal font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
+            className="font-readex font-medium text-soft text-lg md:text-2xl tracking-wide animate-lux-stagger-in"
             style={{ animationDelay: "0.6s" }}
           >
             ضمان الجودة. ضمان الأمان.{" "}
-            <span className="text-white font-bold">ضمان تويوتا.</span>
+            <span className="text-white font-semibold">ضمان تويوتا.</span>
           </p>
 
           {/* CTAs */}
