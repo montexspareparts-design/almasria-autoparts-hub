@@ -287,9 +287,11 @@ const Navbar = () => {
             )}
 
             {/* Notifications */}
-            <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
-              <NotificationBell />
-            </div>
+            {user && (
+              <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
+                <NotificationBell />
+              </div>
+            )}
 
             {user ? (
               <>
