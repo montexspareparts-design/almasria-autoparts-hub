@@ -102,7 +102,7 @@ const PartnershipsSection = () => {
             whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, type: "spring", stiffness: 60 }}
-            className="bg-secondary-foreground/5 border border-primary/20 rounded-xl p-8"
+            className="glass-panel-ios rounded-2xl p-8"
             style={{ perspective: "1000px" }}
           >
             <h4 className="text-xl font-bold text-dark-section-foreground mb-6 text-center">
@@ -117,7 +117,7 @@ const PartnershipsSection = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15, type: "spring", stiffness: 150 }}
                   whileHover={{ scale: 1.08, boxShadow: "0 10px 30px hsl(355 90% 48% / 0.15)" }}
-                  className="text-center p-4 bg-secondary/30 rounded-lg transition-colors hover:bg-secondary/50 cursor-default"
+                  className="text-center p-4 glass-panel-ios rounded-xl cursor-default"
                 >
                   <motion.div
                     className="text-3xl font-black text-primary"

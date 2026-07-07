@@ -98,12 +98,7 @@ const ProductCard = memo(({
     return (
       <div
         dir="rtl"
-        className="group relative bg-card rounded-2xl overflow-hidden cursor-pointer flex
-          border border-border/40
-          shadow-[0_2px_8px_rgba(0,0,0,0.04)]
-          hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-          hover:border-primary/30
-          transition-all duration-500"
+        className="group relative glass-card-ios rounded-2xl overflow-hidden cursor-pointer flex"
         onClick={() => onProductClick(product)}
       >
         {/* Image — fixed square frame across breakpoints, consistent inner padding.
@@ -261,13 +256,7 @@ const ProductCard = memo(({
       dir="rtl"
       onPointerMove={handleTiltMove}
       onPointerLeave={handleTiltLeave}
-      className="card-tilt group relative bg-card cursor-pointer flex flex-col rounded-[22px] overflow-hidden
-        ring-1 ring-border/40
-        shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_18px_-8px_rgba(15,23,42,0.08)]
-        hover:ring-[hsl(40_80%_55%/0.55)]
-        hover:shadow-[0_28px_55px_-20px_rgba(15,23,42,0.28),0_12px_24px_-12px_rgba(40,30,10,0.18),0_0_0_1px_hsl(40_80%_55%/0.15)]
-        transition-[box-shadow,border-color] duration-500
-        will-change-transform"
+      className="card-tilt group relative glass-card-ios cursor-pointer flex flex-col rounded-[22px] overflow-hidden will-change-transform"
       onClick={() => onProductClick(product)}
     >
       {/* ── Top gold hairline (reveals on hover — signature accent) ── */}
