@@ -334,7 +334,7 @@ const Navbar = () => {
                 {/* Logout */}
                 <button
                   onClick={() => signOut()}
-                  className="text-secondary-foreground/40 hover:text-primary transition-colors p-2 rounded-lg hover:bg-primary/5"
+                  className="glass-icon rounded-full text-white/70 hover:text-primary h-9 w-9 flex items-center justify-center"
                   title={lang === "ar" ? "تسجيل الخروج" : "Logout"}
                 >
                   <LogOut className="w-4 h-4" />
