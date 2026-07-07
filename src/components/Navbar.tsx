@@ -11,9 +11,9 @@ import NotificationBell from "@/components/NotificationBell";
 import DealerAuthDialog from "@/components/DealerAuthDialog";
 
 const mobileMenuVariants = {
-  hidden: { opacity: 0, height: 0 },
-  visible: { opacity: 1, height: "auto", transition: { duration: 0.3, ease: "easeOut" as const } },
-  exit: { opacity: 0, height: 0, transition: { duration: 0.2, ease: "easeIn" as const } },
+  hidden: { opacity: 0, height: 0, filter: "blur(8px)" },
+  visible: { opacity: 1, height: "auto", filter: "blur(0px)", transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const } },
+  exit: { opacity: 0, height: 0, filter: "blur(6px)", transition: { duration: 0.22, ease: [0.4, 0, 1, 1] as const } },
 };
 
 const linkVariants = {
@@ -378,11 +378,12 @@ const Navbar = () => {
               {/* Backdrop overlay (click outside to close) */}
               <motion.div
                 key="nav-backdrop"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="lg:hidden fixed inset-0 top-14 bg-black/50 backdrop-blur-sm -z-[1]"
+                initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                animate={{ opacity: 1, backdropFilter: "blur(14px)" }}
+                exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="lg:hidden fixed inset-0 top-14 bg-black/40 -z-[1]"
+                style={{ WebkitBackdropFilter: "blur(14px)" }}
                 onClick={() => setIsOpen(false)}
                 aria-hidden="true"
               />

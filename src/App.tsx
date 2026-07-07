@@ -22,6 +22,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import NativeBootstrap from "@/components/NativeBootstrap";
+import AnimatedRoutes from "@/components/AnimatedRoutes";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -135,6 +136,7 @@ const App = () => (
                </Suspense>
                <NativeBootstrap />
                <Suspense fallback={<PageLoader />}>
+                  <AnimatedRoutes>
                   <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
@@ -198,6 +200,7 @@ const App = () => (
                     <Route path="/admin/staff-activity" element={<AdminStaffActivityPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
+                  </AnimatedRoutes>
                </Suspense>
               </PermissionRequestProvider>
             </CartProvider>
