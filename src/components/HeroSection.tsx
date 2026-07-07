@@ -350,10 +350,10 @@ const HeroSection = () => {
 
 
           <h1
-            className="font-cairo font-black text-white leading-[1.15] tracking-[-0.01em] animate-lux-stagger-in"
-            style={{ fontSize: "clamp(38px, 6.2vw, 72px)", animationDelay: "0.3s" }}
+            className="font-almarai font-extrabold text-white leading-[1.2] tracking-[-0.02em] animate-lux-stagger-in"
+            style={{ fontSize: "clamp(36px, 5.8vw, 68px)", animationDelay: "0.3s" }}
           >
-            قطع غيار تويوتا <span className="text-toyota-red font-black">الأصلية</span>
+            قطع غيار تويوتا <span className="text-toyota-red font-extrabold">الأصلية</span>
           </h1>
 
           {/* Red divider */}
