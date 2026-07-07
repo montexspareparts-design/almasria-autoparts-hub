@@ -122,20 +122,67 @@ const HeroSection = () => {
             className="relative w-full h-full object-contain animate-lux-float"
             style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
           />
-          {/* Floating part-number chip */}
-          <div className="absolute top-4 right-2 md:top-8 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-toyota-red/40 shadow-red-glow animate-lux-stagger-in"
+          {/* Floating part-number chip (top-left over filter) */}
+          <div className="absolute top-4 left-4 md:top-8 md:left-10 px-3 py-1.5 rounded-full bg-carbon/85 backdrop-blur-md border border-toyota-red/50 shadow-red-glow animate-lux-stagger-in"
                style={{ animationDelay: "0.6s" }}>
-            <span className="font-display font-black text-xs md:text-sm text-white tracking-wider">
-              PART # <span className="text-toyota-red">YZZN2</span>
+            <span dir="ltr" className="font-display font-black text-xs md:text-sm text-white tracking-wider">
+              PART # <span className="text-toyota-red">90915-YZZN2</span>
             </span>
           </div>
-          {/* Floating "Iridium" chip */}
-          <div className="hidden sm:block absolute bottom-6 left-2 md:bottom-10 md:left-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
-               style={{ animationDelay: "0.9s" }}>
+          {/* OEM / QUALITY GRADE A callout (top-right, near spark plug) */}
+          <div className="hidden sm:block absolute top-10 right-2 md:top-14 md:right-6 text-right animate-lux-stagger-in"
+               style={{ animationDelay: "0.75s" }}>
+            <div dir="ltr" className="font-display font-black text-[10px] md:text-xs tracking-[0.25em] text-white/90">
+              <span className="text-toyota-red">✓</span> O E M
+            </div>
+            <div dir="ltr" className="font-display font-black text-[10px] md:text-xs tracking-[0.2em] text-white/70 mt-0.5">
+              +QUALITY GRADE A
+            </div>
+          </div>
+          {/* JAPAN · DENSO · FACTORY SEALED (bottom-left, under filter) */}
+          <div className="hidden sm:block absolute bottom-8 left-4 md:bottom-14 md:left-8 animate-lux-stagger-in"
+               style={{ animationDelay: "0.85s" }}>
+            <div dir="ltr" className="font-display font-black text-[10px] md:text-xs tracking-[0.25em] text-toyota-red">
+              JAPAN <span className="text-white/80">◆</span> DENSO
+            </div>
+            <div dir="ltr" className="font-display font-black text-[10px] md:text-xs tracking-[0.2em] text-white/85 mt-0.5">
+              FACTORY SEALED
+            </div>
+          </div>
+          {/* Floating "Iridium" chip (bottom-right, near spark plug) */}
+          <div className="hidden sm:block absolute bottom-6 right-2 md:bottom-10 md:right-6 px-3 py-1.5 rounded-full bg-carbon/80 backdrop-blur-md border border-[hsl(var(--gold)/0.5)] animate-lux-stagger-in"
+               style={{ animationDelay: "0.95s" }}>
             <span className="font-display font-black text-xs md:text-sm text-gold tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> IRIDIUM SPARK
             </span>
           </div>
+        </div>
+
+        {/* Floating diamond decorations */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {[
+            { top: "18%", left: "6%", size: 10, delay: "0s" },
+            { top: "10%", left: "42%", size: 8, delay: "1.2s" },
+            { top: "22%", right: "8%", size: 10, delay: "2.4s" },
+            { top: "48%", left: "3%", size: 12, delay: "0.8s" },
+            { top: "52%", right: "4%", size: 12, delay: "1.6s" },
+            { bottom: "22%", left: "10%", size: 9, delay: "2s" },
+            { bottom: "28%", right: "12%", size: 9, delay: "0.4s" },
+          ].map((d, i) => (
+            <span
+              key={i}
+              className="absolute border border-white/25 rotate-45"
+              style={{
+                top: d.top,
+                bottom: d.bottom,
+                left: d.left,
+                right: d.right,
+                width: d.size,
+                height: d.size,
+                animation: `lux-float 6s ease-in-out ${d.delay} infinite`,
+              }}
+            />
+          ))}
         </div>
 
         {/* Headline overlay (below product) */}
