@@ -41,55 +41,55 @@ void main(){
   vec2 mouseOrb = uMouse;
   mouseOrb.x   *= res.x / res.y;
 
-  vec2 b1 = mouseOrb * 0.75;
-  vec2 b2 = vec2(sin(t*1.0) * 0.65,  cos(t*1.3) * 0.42);
-  vec2 b3 = vec2(cos(t*0.7) * 0.55, -sin(t*0.9) * 0.55);
-  vec2 b4 = vec2(sin(t*1.1 + 2.0) * 0.80, cos(t*0.8 + 1.0) * 0.30);
-  vec2 b5 = vec2(cos(t*1.4 + 4.0) * 0.45, sin(t*0.6 + 2.0) * 0.65);
-  vec2 b6 = vec2(sin(t*0.5 + 1.5) * 0.30, cos(t*1.1 + 3.0) * 0.35);
-  vec2 b7 = vec2(cos(t*0.9 + 5.0) * 0.70, sin(t*1.5 + 0.5) * 0.20);
+  vec2 b1 = mouseOrb * 0.70;
+  vec2 b2 = vec2(sin(t*1.0) * 0.75,  cos(t*1.3) * 0.50);
+  vec2 b3 = vec2(cos(t*0.7) * 0.65, -sin(t*0.9) * 0.60);
+  vec2 b4 = vec2(sin(t*1.1 + 2.0) * 0.90, cos(t*0.8 + 1.0) * 0.35);
+  vec2 b5 = vec2(cos(t*1.4 + 4.0) * 0.55, sin(t*0.6 + 2.0) * 0.75);
+  vec2 b6 = vec2(sin(t*0.5 + 1.5) * 0.35, cos(t*1.1 + 3.0) * 0.40);
+  vec2 b7 = vec2(cos(t*0.9 + 5.0) * 0.80, sin(t*1.5 + 0.5) * 0.25);
 
   float f = 0.0;
-  f += metaball(uv, b1, 0.30);
-  f += metaball(uv, b2, 0.22);
-  f += metaball(uv, b3, 0.20);
-  f += metaball(uv, b4, 0.18);
-  f += metaball(uv, b5, 0.19);
-  f += metaball(uv, b6, 0.14);
-  f += metaball(uv, b7, 0.12);
+  f += metaball(uv, b1, 0.18);
+  f += metaball(uv, b2, 0.13);
+  f += metaball(uv, b3, 0.12);
+  f += metaball(uv, b4, 0.11);
+  f += metaball(uv, b5, 0.12);
+  f += metaball(uv, b6, 0.09);
+  f += metaball(uv, b7, 0.08);
 
-  // Gooey threshold
-  float edge = smoothstep(0.92, 1.08, f);
-  float core = smoothstep(1.15, 1.55, f);
-  float halo = smoothstep(0.55, 1.10, f);
+  // Tighter gooey threshold — blobs are smaller, more defined
+  float edge = smoothstep(0.85, 1.05, f);
+  float core = smoothstep(1.15, 1.60, f);
+  float halo = smoothstep(0.45, 0.95, f);
 
-  // Brand palette
-  vec3 bg     = vec3(0.024, 0.024, 0.030);     // near-black carbon
-  vec3 red    = vec3(0.870, 0.080, 0.090);     // toyota red
-  vec3 hot    = vec3(1.000, 0.520, 0.180);     // ember/orange hot core
-  vec3 gold   = vec3(0.980, 0.780, 0.320);     // gold flicker
+  // Brand palette — DEEPER, darker, less fiery
+  vec3 bg     = vec3(0.020, 0.020, 0.024);
+  vec3 red    = vec3(0.780, 0.070, 0.080);
+  vec3 hot    = vec3(0.960, 0.320, 0.140);
+  vec3 gold   = vec3(0.940, 0.720, 0.280);
 
-  vec3 blob = mix(red, hot, core);
-  blob      = mix(blob, gold, core * core * 0.35);
+  vec3 blob = mix(red, hot, core * 0.7);
+  blob      = mix(blob, gold, core * core * 0.25);
 
   vec3 color = bg;
-  // Outer red halo (soft glow beyond the surface)
-  color += halo * red * 0.22;
+  // Very soft outer glow (much dimmer than before)
+  color += halo * red * 0.08;
   // Blob body
   color = mix(color, blob, edge);
 
-  // Rim highlight — thin bright edge just at the surface
-  float rim = smoothstep(0.98, 1.05, f) * (1.0 - smoothstep(1.05, 1.12, f));
-  color += rim * vec3(1.0, 0.85, 0.6) * 0.35;
+  // Thin rim highlight
+  float rim = smoothstep(0.96, 1.02, f) * (1.0 - smoothstep(1.02, 1.08, f));
+  color += rim * vec3(1.0, 0.75, 0.5) * 0.25;
 
-  // Vignette
-  color *= 1.0 - 0.55 * smoothstep(0.4, 1.2, length(uv));
+  // Stronger vignette to darken the edges where the type sits
+  color *= 1.0 - 0.70 * smoothstep(0.25, 1.15, length(uv));
 
   // Film grain
   float g = hash(gl_FragCoord.xy + uTime) - 0.5;
-  color += g * 0.025;
+  color += g * 0.02;
 
-  // Intro reveal (fade + slight lift)
+  // Intro reveal
   color *= smoothstep(0.0, 1.0, uReveal);
 
   outColor = vec4(color, 1.0);
