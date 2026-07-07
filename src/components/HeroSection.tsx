@@ -1,8 +1,11 @@
 import { ArrowLeft, Info, ChevronDown, Sparkles, ShieldCheck, Truck, Award } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import heroPart from "@/assets/hero-toyota-part.png";
 import brandLogo from "@/assets/almasria-logo.png";
+
+// 3D hero product — lazy so the main bundle stays lean.
+const Hero3D = lazy(() => import("@/components/hero/Hero3D"));
 
 /**
  * Luxury Hero — Rolex / premium product feel.
