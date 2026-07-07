@@ -350,8 +350,8 @@ const HeroSection = () => {
 
 
           <h1
-            className="font-readex font-bold text-white leading-[1.15] tracking-[-0.01em] animate-lux-stagger-in"
-            style={{ fontSize: "clamp(34px, 5.6vw, 64px)", animationDelay: "0.3s" }}
+            className="font-kufi font-bold text-white leading-[1.2] tracking-[-0.015em] animate-lux-stagger-in"
+            style={{ fontSize: "clamp(34px, 5.4vw, 62px)", animationDelay: "0.3s" }}
           >
             قطع غيار تويوتا <span className="text-toyota-red font-bold">الأصلية</span>
           </h1>
