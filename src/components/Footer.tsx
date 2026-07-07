@@ -86,7 +86,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             </ul>
           </div>
         </div>
-        <div className="mt-10 pt-6 border-t border-white/10 text-center font-tajawal text-xs text-white/35">
+        <div className="mt-10 glass-ios rounded-full px-6 py-3 text-center font-tajawal text-xs text-white/70 max-w-2xl mx-auto">
           © {new Date().getFullYear()} {t("footer.copyright")}
         </div>
       </div>
