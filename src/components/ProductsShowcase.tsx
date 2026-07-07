@@ -17,7 +17,7 @@ const brands = [
   { id: "mtx_aftermarket", nameAr: "MTX Aftermarket", nameEn: "MTX Aftermarket", code: "MTX", origin: "CHINA", since: "1985", logo: brandMtx, href: "/products/mtx-aftermarket", scale: 1.5 },
   { id: "denso", nameAr: "دينسو", nameEn: "DENSO", code: "DNS", origin: "JAPAN", since: "1949", logo: brandDenso, href: "/products/denso", scale: 1 },
   { id: "aisin", nameAr: "أيسن", nameEn: "AISIN", code: "ASN", origin: "JAPAN", since: "1965", logo: brandAisin, href: "/products/aisin", scale: 1 },
-  { id: "fbk", nameAr: "FBK فرامل", nameEn: "FBK Brakes", code: "FBK", origin: "MALAYSIA", since: "1948", logo: brandFbk, href: "/products/fbk", scale: 0.95 },
+  { id: "fbk", nameAr: "FBK فرامل", nameEn: "FBK Brakes", code: "FBK", origin: "MALAYSIA", since: "1948", logo: brandFbk, href: "/products/fbk-brakes", scale: 0.95 },
 ];
 
 const taglines = [
