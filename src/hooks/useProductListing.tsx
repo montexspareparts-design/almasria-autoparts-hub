@@ -365,12 +365,16 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     };
   }, []);
 
-  // Set brand filter from options
+  // Sync brand filter whenever the page's brandFilter prop changes (e.g. switching
+  // between /products/denso -> /products/aisin without unmounting the component).
   useEffect(() => {
-    if (brandFilter && !filters.brandKey) {
-      setFilters(prev => ({ ...prev, brandKey: brandFilter }));
-    }
+    setFilters((prev) => {
+      if (prev.brandKey === (brandFilter || null)) return prev;
+      return { ...prev, brandKey: brandFilter || null, categoryId: null, search: "" };
+    });
+    setCurrentPage(1);
   }, [brandFilter]);
+
 
   /* ── Dealer daily views ── */
   const { data: viewedProductIds = [] } = useQuery({
