@@ -521,8 +521,8 @@ html.hc-mode a:not(.no-hc-underline) {
   .bg-toyota-red { background-color: hsl(var(--toyota-red)); }
   .font-display { font-family: "Space Grotesk", "Tajawal", sans-serif; }
   .font-tajawal { font-family: "Tajawal", "Cairo", sans-serif; }
-  .font-readex { font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif; }
-  .font-kufi { font-family: "Reem Kufi", "Noto Kufi Arabic", "Cairo", sans-serif; letter-spacing: -0.005em; }
+  .font-almarai { font-family: "Almarai", "IBM Plex Sans Arabic", "Cairo", sans-serif; }
+  .font-plex-ar { font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif; }
   .bg-spotlight { background: var(--gradient-spotlight); }
   .bg-red-glow { background: var(--gradient-red-glow); }
   .shadow-red-glow { box-shadow: var(--shadow-red-glow); }
