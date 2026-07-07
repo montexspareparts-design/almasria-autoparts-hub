@@ -98,12 +98,7 @@ const ProductCard = memo(({
     return (
       <div
         dir="rtl"
-        className="group relative bg-card rounded-2xl overflow-hidden cursor-pointer flex
-          border border-border/40
-          shadow-[0_2px_8px_rgba(0,0,0,0.04)]
-          hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-          hover:border-primary/30
-          transition-all duration-500"
+        className="group relative glass-card-ios rounded-2xl overflow-hidden cursor-pointer flex"
         onClick={() => onProductClick(product)}
       >
         {/* Image — fixed square frame across breakpoints, consistent inner padding.
