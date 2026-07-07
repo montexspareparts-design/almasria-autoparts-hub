@@ -221,25 +221,27 @@ const Navbar = () => {
           </div>
 
           {/* Mobile: Right Icons */}
-          <div className="flex lg:hidden items-center gap-0.5 relative z-10">
-            <button onClick={toggleLang} className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation text-[11px] font-bold">
+          <div className="flex lg:hidden items-center gap-1.5 relative z-10">
+            <button onClick={toggleLang} className="glass-icon rounded-full text-white/90 hover:text-white h-9 min-w-[38px] px-2 touch-manipulation text-[11px] font-bold flex items-center justify-center">
               {lang === "ar" ? "EN" : "عربي"}
             </button>
             {!isDealer && !isStaffOnly && (
               <button
                 onClick={() => navigate("/cart")}
                 aria-label={lang === "ar" ? `سلة المشتريات${itemCount > 0 ? ` (${itemCount} عنصر)` : ""}` : `Shopping cart${itemCount > 0 ? ` (${itemCount} items)` : ""}`}
-                className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation relative"
+                className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center touch-manipulation relative"
               >
-                <ShoppingCart className="w-[18px] h-[18px]" aria-hidden="true" />
+                <ShoppingCart className="w-[17px] h-[17px]" aria-hidden="true" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none">
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center leading-none ring-2 ring-black/50">
                     {itemCount}
                   </span>
                 )}
               </button>
             )}
-            <NotificationBell />
+            <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
+              <NotificationBell />
+            </div>
             <button
               onClick={() => {
                 if (!user) return navigate("/auth");
@@ -247,9 +249,9 @@ const Navbar = () => {
                 return navigate(dealerAccount ? "/dealer" : "/dealer-apply");
               }}
               aria-label={lang === "ar" ? "حسابي" : "My account"}
-              className="text-secondary-foreground/70 hover:text-primary transition-colors p-2 touch-manipulation"
+              className="glass-icon rounded-full text-white/90 hover:text-white h-9 w-9 flex items-center justify-center touch-manipulation"
             >
-              <User className="w-[18px] h-[18px]" aria-hidden="true" />
+              <User className="w-[17px] h-[17px]" aria-hidden="true" />
             </button>
           </div>
 
