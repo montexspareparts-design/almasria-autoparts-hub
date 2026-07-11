@@ -1,0 +1,36 @@
+workflows:
+  ionic-ios-release:
+    name: Ionic iOS App Store Build
+    instance_type: mac_mini_m1
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.almasria.autoparts # اكتب هنا الـ Bundle ID الخاص بالتطبيق بالظبط
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm install
+      - name: Build Web Assets
+        script: |
+          npm run build
+      - name: Sync Capacitor iOS
+        script: |
+          npx cap sync ios
+      - name: CocoaPods Install
+        script: |
+          cd ios/App && pod install
+      - name: Build IPA (Xcode Build)
+        script: |
+          xcode-project build-ipa \
+            --workspace ios/App/App.xcworkspace \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
