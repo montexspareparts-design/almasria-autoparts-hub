@@ -25,6 +25,11 @@ workflows:
             npx cap add ios
           fi
           npx cap sync ios
+      - name: Set up Code Signing
+        script: |
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Build IPA (Xcode Build)
         script: |
           xcode-project build-ipa \
