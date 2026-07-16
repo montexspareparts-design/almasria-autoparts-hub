@@ -19,8 +19,14 @@ workflows:
       - name: Build Web Assets
         script: |
           npm run build
-      - name: Sync Capacitor iOS
+      - name: Prepare iOS Platform
         script: |
+          # التحقق مما إذا كان مجلد ios أو ملف Podfile غير موجودين وإعادة إنشائهما تلقائياً
+          if [ ! -d "ios" ] || [ ! -f "ios/App/Podfile" ]; then
+            echo "iOS directory or Podfile is missing. Recreating iOS platform..."
+            rm -rf ios
+            npx cap add ios
+          fi
           npx cap sync ios
       - name: Build IPA (Xcode Build)
         script: |
