@@ -9,7 +9,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.almasria.autoparts
-        team_id: UBWB3M7HX6
       node: latest
       xcode: latest
       cocoapods: default
