@@ -20,7 +20,6 @@ workflows:
           npm run build
       - name: Prepare iOS Platform
         script: |
-          # مسحنا أمر الـ Pods، هنكتفي بتهيئة المشروع وعمل Sync فقط
           if [ ! -d "ios" ]; then
             echo "⚠️ iOS Platform is missing! Recreating from scratch..."
             npx cap add ios
@@ -28,10 +27,8 @@ workflows:
           npx cap sync ios
       - name: Build IPA (Xcode Build)
         script: |
-          # لو الخطوة دي ضربت برضه وقالت مفيش Workspace،
-          # هنغير كلمة workspace ونخليها project وتبقى App.xcodeproj
           xcode-project build-ipa \
-            --workspace ios/App/App.xcworkspace \
+            --project ios/App/App.xcodeproj \
             --scheme App
     artifacts:
       - build/ios/ipa/*.ipa
