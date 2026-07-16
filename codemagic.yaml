@@ -21,13 +21,21 @@ workflows:
           npm run build
       - name: Prepare iOS Platform
         script: |
-          # التحقق مما إذا كان مجلد ios أو ملف Podfile غير موجودين وإعادة إنشائهما تلقائياً
-          if [ ! -d "ios" ] || [ ! -f "ios/App/Podfile" ]; then
-            echo "iOS directory or Podfile is missing. Recreating iOS platform..."
+          echo "=== Checking Directory Contents ==="
+          ls -la
+          
+          # التحقق من وجود مجلد الـ ios وملف الـ Workspace الأساسي
+          if [ ! -d "ios" ] || [ ! -d "ios/App/App.xcworkspace" ]; then
+            echo "⚠️ iOS Platform or Workspace is missing! Recreating from scratch..."
             rm -rf ios
             npx cap add ios
           fi
+          
+          echo "=== Syncing Capacitor iOS ==="
           npx cap sync ios
+          
+          echo "=== Installing Pods ==="
+          cd ios/App && pod install
       - name: Build IPA (Xcode Build)
         script: |
           xcode-project build-ipa \
