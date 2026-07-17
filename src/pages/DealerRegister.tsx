@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Lock, UserPlus, CheckCircle2, Building2, Users, ShoppingBag, Loader2, Eye, EyeOff } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SIGNUP_MESSAGES, mapAuthError, logSignupError } from "@/lib/signupErrors";
 
 const governorates = [
   "القاهرة", "الجيزة", "الإسكندرية", "الشرقية", "الدقهلية", "البحيرة",
