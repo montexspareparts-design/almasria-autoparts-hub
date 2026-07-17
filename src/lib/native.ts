@@ -272,21 +272,45 @@ export const registerDeepLinkListener = (
         return;
       }
 
-      // OAuth callback: Supabase returns tokens in the URL hash.
-      if (path === "/auth-callback" && (parsed.hash || parsed.search)) {
+      // OAuth callback: Supabase may return tokens in the hash (implicit)
+      // OR a `?code=...` for the default PKCE flow. Handle both.
+      if (path === "/auth-callback") {
         try {
+          const { supabase } = await supabaseImportPromise();
+
           const hash = parsed.hash?.startsWith("#") ? parsed.hash.slice(1) : parsed.hash;
-          const params = new URLSearchParams(hash || parsed.search.slice(1));
-          const access_token = params.get("access_token");
-          const refresh_token = params.get("refresh_token");
-          if (access_token && refresh_token) {
-            const { supabase } = await supabaseImportPromise();
+          const hashParams = hash ? new URLSearchParams(hash) : null;
+          const queryParams = parsed.search ? new URLSearchParams(parsed.search.slice(1)) : null;
+
+          const access_token = hashParams?.get("access_token");
+          const refresh_token = hashParams?.get("refresh_token");
+          const code = queryParams?.get("code");
+          const oauthErr =
+            queryParams?.get("error_description") ||
+            queryParams?.get("error") ||
+            hashParams?.get("error_description") ||
+            hashParams?.get("error");
+
+          console.info("[deeplink] auth-callback", {
+            hasCode: !!code,
+            hasHashTokens: !!(access_token && refresh_token),
+            hasError: !!oauthErr,
+          });
+
+          if (oauthErr) {
+            console.warn("[deeplink] oauth provider error", oauthErr);
+          } else if (access_token && refresh_token) {
             await supabase.auth.setSession({ access_token, refresh_token });
+          } else if (code) {
+            // PKCE default flow — exchange the authorization code for a session.
+            const { error: exErr } = await supabase.auth.exchangeCodeForSession(raw);
+            if (exErr) console.warn("[deeplink] exchangeCodeForSession failed", exErr.message);
           }
         } catch (err) {
           console.warn("[deeplink] failed to hydrate oauth session", err);
         }
       }
+
 
       // Close the in-app Safari view before navigating.
       await closeInAppBrowser();
