@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { SIGNUP_MESSAGES, mapAuthError, logSignupError } from "@/lib/signupErrors";
 
 const governorates = [
   "القاهرة", "الجيزة", "الإسكندرية", "الشرقية", "الدقهلية", "البحيرة",
