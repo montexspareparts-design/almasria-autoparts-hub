@@ -66,100 +66,120 @@ const ClientRegister = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
     const result = formSchema.safeParse(form);
     if (!result.success) {
-      toast.error(result.error.issues[0].message);
+      toast.error(result.error.issues[0]?.message || SIGNUP_MESSAGES.missingField);
       return;
     }
 
     setLoading(true);
 
     try {
-      // Check for duplicate phone/email
-      const { data: dupCheck } = await supabase.rpc("check_dealer_application_exists", {
-        _phone: form.phone,
-        _email: form.email,
-      });
-      const dupResult = dupCheck as any;
-      if (dupResult?.phone_exists) {
-        toast.error("رقم الهاتف مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
-        setLoading(false);
-        return;
-      }
-      if (dupResult?.email_exists) {
-        toast.error("البريد الإلكتروني مسجل بالفعل في طلب سابق. يرجى تسجيل الدخول.");
-        setLoading(false);
-        return;
-      }
-
-      // If user not logged in, create account with phone as password
-      let userId = user?.id;
-
-      if (!userId) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: { full_name: form.fullName, phone: form.phone, email: form.email },
-          },
-        });
-        if (authError) {
-          if (authError.message.includes("already registered")) {
-            toast.error("هذا البريد أو الرقم مسجل بالفعل. يرجى تسجيل الدخول.");
-          } else {
-            toast.error("حدث خطأ أثناء إنشاء الحساب: " + authError.message);
-          }
+      // 1) Duplicate check — never throw on RPC failure, treat as pass-through
+      try {
+        const { data: dupCheck, error: dupErr } = await supabase.rpc(
+          "check_dealer_application_exists",
+          { _phone: form.phone, _email: form.email }
+        );
+        if (dupErr) logSignupError("dup-rpc", dupErr);
+        const dupResult = dupCheck as any;
+        if (dupResult?.phone_exists) {
+          toast.error(SIGNUP_MESSAGES.phoneExists);
           setLoading(false);
           return;
         }
-        userId = authData.user?.id;
+        if (dupResult?.email_exists) {
+          toast.error(SIGNUP_MESSAGES.emailExists);
+          setLoading(false);
+          return;
+        }
+      } catch (dupCatch) {
+        logSignupError("dup-catch", dupCatch);
+      }
+
+      // 2) Create auth user if not logged in
+      let userId = user?.id;
+
+      if (!userId) {
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: form.email,
+            password: form.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+              data: { full_name: form.fullName, phone: form.phone, email: form.email },
+            },
+          });
+          if (authError) {
+            logSignupError("auth-signup", authError);
+            toast.error(mapAuthError(authError));
+            setLoading(false);
+            return;
+          }
+          userId = authData?.user?.id;
+        } catch (authCatch) {
+          logSignupError("auth-catch", authCatch);
+          toast.error(mapAuthError(authCatch));
+          setLoading(false);
+          return;
+        }
       }
 
       if (!userId) {
-        toast.error("حدث خطأ. يرجى المحاولة مرة أخرى.");
+        toast.error(SIGNUP_MESSAGES.fallback);
         setLoading(false);
         return;
       }
 
-      // Map client type
+      // 3) Insert dealer application
       const clientTypeMap: Record<string, string> = {
         wholesale: "wholesale",
         company: "company",
         distributor: "distributor",
       };
 
-      const { error: appError } = await supabase.from("dealer_applications").insert({
-        user_id: userId,
-        business_name: form.businessName,
-        legal_name: form.fullName,
-        commercial_register_no: "pending",
-        tax_card_no: "pending",
-        phone: form.phone,
-        email: form.email || "",
-        governorate: form.governorate,
-        detailed_address: form.governorate,
-        client_type: clientTypeMap[form.clientType] as any,
-        agreed_terms: true,
-        agreed_pricing_policy: true,
-        agreed_market_protection: true,
-        agreed_return_policy: true,
-      });
+      try {
+        const { error: appError } = await supabase.from("dealer_applications").insert({
+          user_id: userId,
+          business_name: form.businessName,
+          legal_name: form.fullName,
+          commercial_register_no: "pending",
+          tax_card_no: "pending",
+          phone: form.phone,
+          email: form.email || "",
+          governorate: form.governorate,
+          detailed_address: form.governorate,
+          client_type: clientTypeMap[form.clientType] as any,
+          agreed_terms: true,
+          agreed_pricing_policy: true,
+          agreed_market_protection: true,
+          agreed_return_policy: true,
+        });
 
-      if (appError) {
-        if (appError.message.includes("row-level security")) {
-          toast.error("يرجى تسجيل الدخول أولاً أو المحاولة مرة أخرى.");
-        } else {
-          toast.error("حدث خطأ أثناء إرسال الطلب.");
+        if (appError) {
+          logSignupError("app-insert", appError);
+          const msg = String(appError.message || "").toLowerCase();
+          if (msg.includes("duplicate") || msg.includes("unique")) {
+            toast.error(SIGNUP_MESSAGES.duplicateApplication);
+          } else {
+            toast.error(mapAuthError(appError));
+          }
+          setLoading(false);
+          return;
         }
+      } catch (appCatch) {
+        logSignupError("app-catch", appCatch);
+        toast.error(mapAuthError(appCatch));
         setLoading(false);
         return;
       }
 
       setSubmitted(true);
-    } catch {
-      toast.error("حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.");
+    } catch (err) {
+      logSignupError("outer", err);
+      toast.error(mapAuthError(err));
     } finally {
       setLoading(false);
     }
