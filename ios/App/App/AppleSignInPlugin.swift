@@ -106,10 +106,17 @@ public class AppleSignInPlugin: CAPPlugin, CAPBridgedPlugin,
     public func presentationAnchor(
         for controller: ASAuthorizationController
     ) -> ASPresentationAnchor {
-        DispatchQueue.main.sync {
-            self.bridge?.viewController?.view.window
-                ?? UIApplication.shared.windows.first
-                ?? ASPresentationAnchor()
+        // Apple invokes this on the main thread. Do NOT use
+        // DispatchQueue.main.sync here — it deadlocks the app.
+        if let window = self.bridge?.viewController?.view.window {
+            return window
         }
+        if let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow }) {
+            return keyWindow
+        }
+        return UIApplication.shared.windows.first ?? ASPresentationAnchor()
     }
 }
