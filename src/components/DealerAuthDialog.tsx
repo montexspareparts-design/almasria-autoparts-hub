@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
+import { mapLoginError } from "@/lib/loginErrors";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 
