@@ -302,8 +302,9 @@ export const registerDeepLinkListener = (
           } else if (access_token && refresh_token) {
             await supabase.auth.setSession({ access_token, refresh_token });
           } else if (code) {
-            // PKCE default flow — exchange the authorization code for a session.
-            const { error: exErr } = await supabase.auth.exchangeCodeForSession(raw);
+            // PKCE flow — exchange the authorization code (string only, not the full URL)
+            // for a session. Requires the verifier stored at signInWithOAuth time.
+            const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
             if (exErr) console.warn("[deeplink] exchangeCodeForSession failed", exErr.message);
           }
         } catch (err) {
