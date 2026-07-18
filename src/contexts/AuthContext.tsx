@@ -193,18 +193,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           setTimeout(async () => {
             try {
-              const [{ data: dealer }, { data: roles }] = await Promise.all([
-                supabase
-                  .from("dealer_accounts")
-                  .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types, business_type")
-                  .eq("user_id", session.user.id)
-                  .eq("is_active", true)
-                  .maybeSingle(),
-                supabase
-                  .from("user_roles")
-                  .select("role")
-                  .eq("user_id", session.user.id),
-              ]);
+              let dealer: any = null;
+              let roles: any[] = [];
+              try {
+                const [dealerRes, rolesRes] = await Promise.all([
+                  supabase
+                    .from("dealer_accounts")
+                    .select("id, tier, is_active, custom_discount, min_order_amount, vehicle_types, business_type")
+                    .eq("user_id", session.user.id)
+                    .eq("is_active", true)
+                    .maybeSingle(),
+                  supabase
+                    .from("user_roles")
+                    .select("role")
+                    .eq("user_id", session.user.id),
+                ]);
+                dealer = dealerRes?.data ?? null;
+                roles = rolesRes?.data ?? [];
+              } catch (queryErr) {
+                console.error("[AuthContext] role/dealer lookup failed:", queryErr);
+              }
 
               setDealerAccount(dealer as any);
 
@@ -220,7 +228,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (isFreshSignIn) {
                   const existingSessionId = localStorage.getItem(SESSION_KEY);
                   if (!existingSessionId) {
-                    await registerDealerSession(dealer.id);
+                    try { await registerDealerSession(dealer.id); } catch (e) { console.error(e); }
                   }
                 }
                 startSessionMonitor(dealer.id);
@@ -249,22 +257,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const COMPLETE_PROFILE_KEY = "complete-profile-shown";
               const provider = session.user.app_metadata?.provider;
               if (provider === "google" && !hasAdmin && !hasModerator && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
-                const { data: profile } = await supabase
-                  .from("profiles")
-                  .select("phone")
-                  .eq("user_id", session.user.id)
-                  .maybeSingle();
-                if (!profile?.phone) {
-                  setShowCompleteProfile(true);
-                  localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
+                try {
+                  const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("phone")
+                    .eq("user_id", session.user.id)
+                    .maybeSingle();
+                  if (!profile?.phone) {
+                    setShowCompleteProfile(true);
+                    localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
+                  }
+                } catch (e) {
+                  console.error("[AuthContext] profile lookup failed:", e);
                 }
               }
+            } catch (outerErr) {
+              console.error("[AuthContext] post-sign-in handler crashed:", outerErr);
             } finally {
               // CRITICAL: only mark loading=false AFTER roles are resolved,
               // otherwise gated routes (e.g. /admin) see isModerator=false and bounce to /dealer.
               setLoading(false);
             }
           }, 0);
+
         } else {
           setDealerAccount(null);
           setIsAdmin(false);
