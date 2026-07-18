@@ -71,49 +71,51 @@ const Auth = () => {
     let mounted = true;
 
     const handleAuthRedirect = async (userId: string) => {
-      const oauthReturnTo = consumeOAuthReturnTo();
+      try {
+        const oauthReturnTo = consumeOAuthReturnTo();
 
-      // Check dealer + admin status
-      const [{ data: dealer }, { data: roles }] = await Promise.all([
-        supabase.from("dealer_accounts").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId),
-      ]);
-      const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
-      const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
-      const hasReporter = roles?.some((r) => r.role === "reporter") ?? false;
-      const hasDealer = !!dealer;
-      const isReporterOnly = hasReporter && !hasAdmin && !hasModerator;
+        // Check dealer + admin status
+        const [dealerRes, rolesRes] = await Promise.all([
+          supabase.from("dealer_accounts").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
+          supabase.from("user_roles").select("role").eq("user_id", userId),
+        ]);
+        const dealer = dealerRes?.data ?? null;
+        const roles = rolesRes?.data ?? [];
+        const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
+        const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
+        const hasReporter = roles?.some((r) => r.role === "reporter") ?? false;
+        const hasDealer = !!dealer;
+        const isReporterOnly = hasReporter && !hasAdmin && !hasModerator;
 
-      if (!mounted) return;
-      markSessionActive();
+        if (!mounted) return;
+        markSessionActive();
 
-      // Reporter-only (Al-Faisal staff) → locked to daily report page, no site access
-      if (isReporterOnly) {
-        navigate("/admin/daily-report", { replace: true });
-        return;
-      }
+        if (isReporterOnly) {
+          navigate("/admin/daily-report", { replace: true });
+          return;
+        }
 
-      // Both roles → check saved preference or show dialog via AuthContext
-      if (hasDealer && hasAdmin) {
-        const savedRole = localStorage.getItem("almasria_last_role");
-        if (savedRole === "admin") {
+        if (hasDealer && hasAdmin) {
+          const savedRole = localStorage.getItem("almasria_last_role");
+          if (savedRole === "admin") navigate("/admin", { replace: true });
+          else if (savedRole === "dealer") navigate("/dealer", { replace: true });
+          else navigate("/", { replace: true });
+        } else if (hasAdmin) {
           navigate("/admin", { replace: true });
-        } else if (savedRole === "dealer") {
+        } else if (hasModerator) {
+          navigate("/admin", { replace: true });
+        } else if (hasDealer) {
           navigate("/dealer", { replace: true });
         } else {
-          navigate("/", { replace: true });
+          navigate(oauthReturnTo === "/dealer-login" ? "/" : oauthReturnTo || "/", { replace: true });
         }
-      } else if (hasAdmin) {
-        navigate("/admin", { replace: true });
-      } else if (hasModerator) {
-        // Moderators (employees) go straight to admin panel — no B2C/B2B UI
-        navigate("/admin", { replace: true });
-      } else if (hasDealer) {
-        navigate("/dealer", { replace: true });
-      } else {
-        navigate(oauthReturnTo === "/dealer-login" ? "/" : oauthReturnTo || "/", { replace: true });
+      } catch (e) {
+        // Post-login lookups must NEVER crash the app. Route safely to home.
+        console.error("[Auth] post-login routing failed:", e);
+        if (mounted) navigate("/", { replace: true });
       }
     };
+
 
     const syncSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
