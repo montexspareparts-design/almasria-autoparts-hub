@@ -67,30 +67,32 @@ const DealerAuthDialog = ({ open, onOpenChange, defaultTab = "login" }: DealerAu
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    try {
+      const authEmail = authMethod === "email" ? email.trim() : phoneToEmail(phone);
+      const loginEmailCandidates = buildLoginEmailCandidates(phone, authMethod === "phone");
+      const { data, error } = await signInWithPossibleEmails(
+        authMethod === "phone" && loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+        password,
+      );
 
-    const authEmail = authMethod === "email" ? email.trim() : phoneToEmail(phone);
-    const loginEmailCandidates = buildLoginEmailCandidates(phone, authMethod === "phone");
-    const { data, error } = await signInWithPossibleEmails(
-      authMethod === "phone" && loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
-      password,
-    );
-
-    if (error) {
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: authMethod === "phone"
-          ? "رقم الهاتف أو كلمة المرور غير صحيحة"
-          : "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-        variant: "destructive",
-      });
-    } else if (data.user) {
-      setRememberedFlag(rememberMe);
-      toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-      resetForm();
-      onOpenChange(false);
+      if (error) {
+        const mapped = mapLoginError(error);
+        toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+      } else if (data.user) {
+        setRememberedFlag(rememberMe);
+        toast({ title: "تم تسجيل الدخول بنجاح ✅" });
+        resetForm();
+        onOpenChange(false);
+      }
+    } catch (e) {
+      console.error("[DealerAuthDialog] login crashed:", e);
+      const mapped = mapLoginError(e);
+      toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
