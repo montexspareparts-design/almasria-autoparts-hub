@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
+import { mapLoginError } from "@/lib/loginErrors";
 import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 
