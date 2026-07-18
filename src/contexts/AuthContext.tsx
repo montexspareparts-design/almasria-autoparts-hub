@@ -253,17 +253,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
               }
 
-              // Check if Google user needs to complete phone (only once)
+              // Check if Google user needs to complete phone (only once).
+              // Also backfills a missing profile row for first-time OAuth users
+              // whose handle_new_user trigger did not run for any reason.
               const COMPLETE_PROFILE_KEY = "complete-profile-shown";
               const provider = session.user.app_metadata?.provider;
-              if (provider === "google" && !hasAdmin && !hasModerator && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
+              if (provider === "google" && !hasAdmin && !hasModerator) {
                 try {
                   const { data: profile } = await supabase
                     .from("profiles")
                     .select("phone")
                     .eq("user_id", session.user.id)
                     .maybeSingle();
-                  if (!profile?.phone) {
+
+                  if (!profile) {
+                    // Safe backfill so later UPDATE/UPSERT calls always succeed.
+                    try {
+                      await supabase
+                        .from("profiles")
+                        .upsert(
+                          {
+                            user_id: session.user.id,
+                            email: session.user.email ?? null,
+                            full_name:
+                              (session.user.user_metadata as any)?.full_name ??
+                              (session.user.user_metadata as any)?.name ??
+                              "",
+                          },
+                          { onConflict: "user_id" }
+                        );
+                    } catch (backfillErr) {
+                      console.error("[AuthContext] profile backfill failed:", backfillErr);
+                    }
+                  }
+
+                  if (!profile?.phone && !localStorage.getItem(COMPLETE_PROFILE_KEY)) {
                     setShowCompleteProfile(true);
                     localStorage.setItem(COMPLETE_PROFILE_KEY, "1");
                   }
