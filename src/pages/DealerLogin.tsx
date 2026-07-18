@@ -113,21 +113,31 @@ const DealerLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true);
-    const authEmail = getAuthEmail();
-    const loginEmailCandidates = buildLoginEmailCandidates(identifier, isPhone(identifier));
-    const { data, error } = await signInWithPossibleEmails(
-      loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
-      password,
-    );
-    if (error) { toast({ title: "بيانات غير صحيحة", description: "رقم الهاتف/البريد أو كلمة المرور خطأ", variant: "destructive" }); }
-    else if (data.user) {
-      setRemembered(rememberMe);
-      markSessionActive();
-      toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-      checkDealerStatus(data.user.id);
+    try {
+      const authEmail = getAuthEmail();
+      const loginEmailCandidates = buildLoginEmailCandidates(identifier, isPhone(identifier));
+      const { data, error } = await signInWithPossibleEmails(
+        loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+        password,
+      );
+      if (error) {
+        const mapped = mapLoginError(error);
+        toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+      } else if (data.user) {
+        setRemembered(rememberMe);
+        markSessionActive();
+        toast({ title: "تم تسجيل الدخول بنجاح ✅" });
+        checkDealerStatus(data.user.id);
+      }
+    } catch (e) {
+      console.error("[DealerLogin] submit crashed:", e);
+      const mapped = mapLoginError(e);
+      toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   const handleLogout = async () => { setRemembered(false); await supabase.auth.signOut(); setApplicationStatus(null); };
 
