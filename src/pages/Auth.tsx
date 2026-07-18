@@ -142,95 +142,102 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const authEmail = getAuthEmail();
+    try {
+      const authEmail = getAuthEmail();
 
-    if (isLogin) {
-      const loginEmailCandidates = buildLoginEmailCandidates(credential, loginMethod === "phone");
-      const { error } = await signInWithPossibleEmails(
-        loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
-        password,
-      );
-      if (error) {
-        const attempts = loginAttempts + 1;
-        setLoginAttempts(attempts);
-        if (attempts >= MAX_LOGIN_ATTEMPTS) {
-          setLockedUntil(Date.now() + LOCKOUT_DURATION);
-          setLoginAttempts(0);
-          toast({ title: "تم قفل تسجيل الدخول مؤقتاً", variant: "destructive" });
+      if (isLogin) {
+        const loginEmailCandidates = buildLoginEmailCandidates(credential, loginMethod === "phone");
+        const { error } = await signInWithPossibleEmails(
+          loginEmailCandidates.length ? loginEmailCandidates : [authEmail],
+          password,
+        );
+        if (error) {
+          const attempts = loginAttempts + 1;
+          setLoginAttempts(attempts);
+          if (attempts >= MAX_LOGIN_ATTEMPTS) {
+            setLockedUntil(Date.now() + LOCKOUT_DURATION);
+            setLoginAttempts(0);
+            toast({ title: "تم قفل تسجيل الدخول مؤقتاً", variant: "destructive" });
+          } else {
+            const mapped = mapLoginError(error);
+            toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+          }
         } else {
-          toast({ title: "بيانات الدخول غير صحيحة", description: "تأكد من رقم الهاتف/البريد وكلمة المرور. لو نسيت كلمة المرور اضغط على \"نسيت كلمة المرور\".", variant: "destructive" });
+          setLoginAttempts(0); setLockedUntil(null);
+          setRememberedFlag(rememberMe);
+          markSessionActive();
+          toast({ title: "تم تسجيل الدخول بنجاح ✅" });
+          // Redirect is handled by the useEffect auth listener
         }
       } else {
-        setLoginAttempts(0); setLockedUntil(null);
-        setRememberedFlag(rememberMe);
-        markSessionActive();
-        toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-        // Redirect is handled by the useEffect auth listener
-      }
-    } else {
-      // Phone is now REQUIRED when registering with email (to enable contact/WhatsApp follow-up)
-      const trimmedOptionalPhone = optionalPhone.trim();
-      if (!credIsPhone) {
-        if (!trimmedOptionalPhone) {
-          toast({ title: "رقم الموبايل مطلوب", description: "أدخل رقم موبايلك علشان نقدر نتواصل معاك ونرسل عروض الأسعار", variant: "destructive" });
-          setLoading(false);
-          return;
+        // Phone is now REQUIRED when registering with email (to enable contact/WhatsApp follow-up)
+        const trimmedOptionalPhone = optionalPhone.trim();
+        if (!credIsPhone) {
+          if (!trimmedOptionalPhone) {
+            toast({ title: "رقم الموبايل مطلوب", description: "أدخل رقم موبايلك علشان نقدر نتواصل معاك ونرسل عروض الأسعار", variant: "destructive" });
+            return;
+          }
+          if (!/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
+            toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
+            return;
+          }
         }
-        if (!/^01[0-9]{9}$/.test(trimmedOptionalPhone)) {
-          toast({ title: "رقم موبايل غير صحيح", description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم", variant: "destructive" });
-          setLoading(false);
-          return;
-        }
-      }
 
-      const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
+        const finalPhone = credIsPhone ? credential : trimmedOptionalPhone;
 
-      // ✋ Strict duplicate phone check before signup
-      if (finalPhone) {
-        const { data: phoneTaken, error: checkErr } = await supabase.rpc("phone_already_registered", { _phone: finalPhone });
-        if (checkErr) {
-          console.error("phone check error:", checkErr);
-        }
-        if (phoneTaken === true) {
-          toast({
-            title: "رقم الموبايل مسجل من قبل",
-            description: "الرقم ده مستخدم في حساب تاني. سجّل دخول أو اضغط \"نسيت كلمة المرور\" لاسترجاع حسابك.",
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
-        }
-      }
-
-      const { error } = await supabase.auth.signUp({
-        email: authEmail, password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone: finalPhone || "",
-            address,
-            email: !credIsPhone ? credential : "",
-            car_model: carModel || null,
-            car_year: carYear ? parseInt(carYear) : null,
-            whatsapp_opt_in: !!finalPhone && whatsappOptIn,
-          },
-        },
-      });
-      if (error) {
-        toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
-      } else {
-        // 🎉 Fire welcome WhatsApp (non-blocking)
+        // ✋ Strict duplicate phone check before signup
         if (finalPhone) {
-          supabase.functions.invoke("notify-retail-welcome", {
-            body: { phone: finalPhone, name: fullName },
-          }).catch((e) => console.error("welcome wa failed:", e));
+          try {
+            const { data: phoneTaken, error: checkErr } = await supabase.rpc("phone_already_registered", { _phone: finalPhone });
+            if (checkErr) console.error("phone check error:", checkErr);
+            if (phoneTaken === true) {
+              toast({
+                title: "رقم الموبايل مسجل من قبل",
+                description: "الرقم ده مستخدم في حساب تاني. سجّل دخول أو اضغط \"نسيت كلمة المرور\" لاسترجاع حسابك.",
+                variant: "destructive",
+              });
+              return;
+            }
+          } catch (e) {
+            console.error("phone check threw:", e);
+          }
         }
-        toast({ title: "تم إنشاء الحساب ✅", description: "بعتنالك رسالة ترحيب على واتساب. سجّل دخول دلوقتي." });
-        setMode("login");
+
+        const { error } = await supabase.auth.signUp({
+          email: authEmail, password,
+          options: {
+            data: {
+              full_name: fullName,
+              phone: finalPhone || "",
+              address,
+              email: !credIsPhone ? credential : "",
+              car_model: carModel || null,
+              car_year: carYear ? parseInt(carYear) : null,
+              whatsapp_opt_in: !!finalPhone && whatsappOptIn,
+            },
+          },
+        });
+        if (error) {
+          toast({ title: error.message.includes("already registered") ? "الحساب مسجل بالفعل" : "خطأ", description: error.message.includes("already registered") ? "سجّل دخول بدلاً من ذلك" : error.message, variant: "destructive" });
+        } else {
+          if (finalPhone) {
+            supabase.functions.invoke("notify-retail-welcome", {
+              body: { phone: finalPhone, name: fullName },
+            }).catch((e) => console.error("welcome wa failed:", e));
+          }
+          toast({ title: "تم إنشاء الحساب ✅", description: "بعتنالك رسالة ترحيب على واتساب. سجّل دخول دلوقتي." });
+          setMode("login");
+        }
       }
+    } catch (e) {
+      console.error("[Auth] submit crashed:", e);
+      const mapped = mapLoginError(e);
+      toast({ title: mapped.title, description: mapped.description, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
