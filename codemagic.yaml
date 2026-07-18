@@ -25,6 +25,10 @@ workflows:
             npx cap add ios
           fi
           npx cap sync ios
+      - name: Auto-increment Build Number (Auto-pilot)
+        script: |
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
       - name: Set up Code Signing
         script: |
           keychain initialize
