@@ -81,20 +81,35 @@ export const AddPhonePrompt = () => {
     if (!userId) return;
 
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({ phone: trimmed, whatsapp_opt_in: whatsappOptIn })
-      .eq("user_id", userId);
-    setSaving(false);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(
+          { user_id: userId, phone: trimmed, whatsapp_opt_in: whatsappOptIn },
+          { onConflict: "user_id" }
+        );
 
-    if (error) {
-      toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
-      return;
+      if (error) {
+        const msg = /duplicate|unique/i.test(error.message || "")
+          ? "رقم الهاتف مسجل بالفعل بحساب آخر."
+          : "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.";
+        toast({ title: msg, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+
+      toast({ title: "تم حفظ رقم الموبايل ✅", description: "هنقدر نتواصل معاك بشكل أسرع دلوقتي" });
+      localStorage.setItem(SKIP_KEY, userId);
+      setSaving(false);
+      setOpen(false);
+    } catch (err) {
+      console.error("[AddPhonePrompt] save failed:", err);
+      toast({
+        title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+      setSaving(false);
     }
-
-    toast({ title: "تم حفظ رقم الموبايل ✅", description: "هنقدر نتواصل معاك بشكل أسرع دلوقتي" });
-    localStorage.setItem(SKIP_KEY, userId);
-    setOpen(false);
   };
 
   const handleSkip = () => {
