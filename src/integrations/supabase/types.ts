@@ -3954,6 +3954,24 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_assignable_staff: {
+        Row: {
+          created_at: string
+          sort_order: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          sort_order: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_conversations: {
         Row: {
           assigned_to: string | null
@@ -4260,6 +4278,10 @@ export type Database = {
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }
       bulk_update_product_prices: { Args: { _items: Json }; Returns: Json }
       bulk_upsert_wholesale_prices: { Args: { _items: Json }; Returns: Json }
+      can_reply_whatsapp_conversation: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_dealer_application_exists: {
         Args: { _email?: string; _phone?: string }
         Returns: Json
