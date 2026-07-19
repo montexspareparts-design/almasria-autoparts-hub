@@ -62,6 +62,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Per-conversation permission: admins/moderators (e.g. Karam) reply to all;
+    // other staff can reply ONLY to conversations assigned to them.
+    const { data: canReply } = await supabase.rpc("can_reply_whatsapp_conversation", {
+      _user_id: user.id,
+      _conversation_id: conversationId,
+    });
+    if (!canReply) {
+      return new Response(JSON.stringify({
+        error: "هذه المحادثة غير مسندة إليك. تواصل مع المشرف (كرم).",
+      }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const to = formatPhone(phone);
 
     // Build Meta payload
