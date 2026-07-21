@@ -16,7 +16,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import { mapLoginError } from "@/lib/loginErrors";
-import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 
 type AuthMethod = "phone" | "email" | "auto";
@@ -76,32 +76,15 @@ const DealerLogin = () => {
     }
   }, []);
 
-  // Hard guard: staff (admin/moderator) must NEVER see the dealer portal — redirect immediately
   useEffect(() => {
-    if (!authLoading && user && (isAdmin || isModerator)) {
-      navigate("/admin", { replace: true });
+    if (!authLoading && user && !isAdmin && !isModerator && !dealerAccount) {
+      checkDealerApplication(user.id);
     }
-  }, [authLoading, user, isAdmin, isModerator, navigate]);
+  }, [authLoading, user, isAdmin, isModerator, dealerAccount]);
 
-  useEffect(() => { if (user && !isAdmin && !isModerator) checkDealerStatus(user.id); }, [user, isAdmin, isModerator]);
-
-  const checkDealerStatus = async (userId: string) => {
+  const checkDealerApplication = async (userId: string) => {
     setCheckingStatus(true);
     try {
-      const oauthReturnTo = consumeOAuthReturnTo();
-
-      // Staff (admin/moderator) should go directly to the admin panel
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
-      const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
-      if (hasAdmin || hasModerator) { navigate("/admin"); return; }
-
-      const { data: da } = await supabase.from("dealer_accounts").select("id, is_active, tier").eq("user_id", userId).eq("is_active", true).maybeSingle();
-      if (da) { navigate("/dealer"); return; }
-      if (oauthReturnTo && oauthReturnTo !== "/dealer-login") {
-        navigate(oauthReturnTo, { replace: true });
-        return;
-      }
       const { data: app } = await supabase.from("dealer_applications").select("id, status, business_name, created_at, review_notes").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       setApplicationStatus(app);
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
@@ -127,7 +110,6 @@ const DealerLogin = () => {
         setRemembered(rememberMe);
         markSessionActive();
         toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-        checkDealerStatus(data.user.id);
       }
     } catch (e) {
       console.error("[DealerLogin] submit crashed:", e);

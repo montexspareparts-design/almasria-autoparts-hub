@@ -42,47 +42,19 @@ export const AddPhonePrompt = ({ open, userId, onCompleted, onSkipped }: AddPhon
       if (!userId) return;
 
       setSaving(true);
-      const { data: taken, error: checkError } = await supabase.rpc("phone_already_registered", { _phone: trimmed });
-      if (checkError) {
-        console.warn("[PHONE] duplicate check failed", checkError.message);
-      }
-
-      if (taken === true) {
-        const { data: mine } = await supabase
-          .from("profiles")
-          .select("phone")
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (mine?.phone !== trimmed) {
-          toast({ title: "رقم الهاتف مسجل بالفعل بحساب آخر.", variant: "destructive" });
-          setSaving(false);
-          return;
-        }
-      }
-
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(
-          { user_id: userId, phone: trimmed },
-          { onConflict: "user_id" }
-        );
+      const { error } = await supabase.rpc("save_my_profile_phone", {
+        _phone: trimmed,
+        _whatsapp_opt_in: whatsappOptIn,
+      });
 
       if (error) {
-        console.error("[PAUTH] ADD_PHONE_UPSERT_FAIL:", error);
-        const msg = /duplicate|unique/i.test(error.message || "")
+        console.error("[PAUTH] ADD_PHONE_SAVE_FAIL:", error);
+        const msg = /duplicate|unique|already/i.test(error.message || "")
           ? "رقم الهاتف مسجل بالفعل بحساب آخر."
           : "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.";
         toast({ title: msg, variant: "destructive" });
         setSaving(false);
         return;
-      }
-
-      const { error: consentError } = await supabase
-        .from("profiles")
-        .update({ whatsapp_opt_in: whatsappOptIn } as never)
-        .eq("user_id", userId);
-      if (consentError) {
-        console.warn("[PHONE] WhatsApp consent save failed", consentError.message);
       }
 
       toast({ title: "تم حفظ رقم الموبايل ✅", description: "هنقدر نتواصل معاك بشكل أسرع دلوقتي" });

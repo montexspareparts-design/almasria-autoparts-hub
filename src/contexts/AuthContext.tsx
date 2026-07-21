@@ -398,11 +398,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (postAuthState !== "READY" || !user) return;
     if (location.pathname !== "/auth" && location.pathname !== "/dealer-login") return;
 
+    if (
+      location.pathname === "/dealer-login" &&
+      !isReporterOnly &&
+      !effectiveIsAdmin &&
+      !effectiveIsModerator &&
+      !effectiveIsDealer
+    ) {
+      return;
+    }
+
     const target = routeForReadyUser();
     if (lastLoginTargetRef.current === target && location.pathname === target) return;
     lastLoginTargetRef.current = target;
     navigate(target, { replace: true });
-  }, [location.pathname, navigate, postAuthState, routeForReadyUser, user]);
+  }, [effectiveIsAdmin, effectiveIsDealer, effectiveIsModerator, isReporterOnly, location.pathname, navigate, postAuthState, routeForReadyUser, user]);
 
   const contextValue = useMemo<AuthContextType>(() => ({
     user,
