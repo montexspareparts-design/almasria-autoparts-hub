@@ -29,7 +29,7 @@ const HeroSection = () => {
       aria-label="قطع غيار تويوتا الأصلية"
     >
       {/* Animated grid */}
-      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60 hidden md:block" />
 
       {/* Ambient red gradient */}
       <div
