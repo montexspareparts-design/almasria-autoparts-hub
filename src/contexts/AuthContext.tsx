@@ -130,6 +130,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const flowIdRef = useRef(0);
   const lastLoginTargetRef = useRef<string | null>(null);
+  const pathnameRef = useRef(location.pathname);
+
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  }, [location.pathname]);
 
   const clearAllAuthStorage = useCallback(() => {
     localStorage.removeItem(SESSION_KEY);
@@ -307,7 +312,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (dealer && hasAdmin) {
         const savedRole = localStorage.getItem("almasria_last_role");
         const dismissed = localStorage.getItem("almasria_role_dismissed");
-        const isAlreadyOnAdminRoute = location.pathname.startsWith("/admin");
+        const isAlreadyOnAdminRoute = pathnameRef.current.startsWith("/admin");
         if (savedRole !== "dealer" && savedRole !== "admin" && dismissed !== "1" && !isAlreadyOnAdminRoute) {
           setShowRoleSelection(true);
         }
@@ -319,7 +324,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       recordDiagnostic("pauth", error, "AuthContext.resolvePostAuth");
       setPostAuthState("RECOVERABLE_ERROR");
     }
-  }, [clearAllAuthStorage, clearSessionCheck, ensureProfile, location.pathname, registerDealerSession, resetAuthData, startSessionMonitor]);
+  }, [clearAllAuthStorage, clearSessionCheck, ensureProfile, registerDealerSession, resetAuthData, startSessionMonitor]);
 
   const refreshAuthProfile = useCallback(async () => {
     const { data: { session: currentSession }, error } = await supabase.auth.getSession();

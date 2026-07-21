@@ -1,13 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
-import { isNativePlatform, isNativeIOS } from "@/lib/native";
+import { isNativePlatform } from "@/lib/native";
 
 // VAPID public key - this is safe to expose (it's a public key)
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
 
 /**
- * Feature-gate for Web Push. On native Capacitor iOS the WKWebView does
- * NOT support the Web Push API — native path uses APNs via
- * `@capacitor/push-notifications` and the `device_tokens` table.
+ * Feature-gate for Web Push. Native Capacitor builds never use the browser
+ * Push API, and native push is disabled for this release.
  */
 export const isWebPushSupported = (): boolean => {
   if (isNativePlatform()) return false;
