@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Phone, ShieldCheck, ArrowRight, Loader2, Mail, Eye, EyeOff, Clock, CheckCircle2, XCircle, AlertCircle, ArrowLeft } from "lucide-react";
@@ -34,7 +34,6 @@ const setRemembered = (val: boolean) => {
 };
 // Session flag: set on login, cleared on browser close (via sessionStorage)
 const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
-const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const statusConfig = {
   pending: { label: "قيد المراجعة", icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -55,26 +54,6 @@ const DealerLogin = () => {
   const [applicationStatus, setApplicationStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [rememberMe, setRememberMe] = useState(isRemembered());
-  const autoLoginAttempted = useRef(false);
-
-  // On mount: if "remember me" was NOT checked and there's no active session flag,
-  // sign out to prevent stale sessions from persisting across browser restarts
-  useEffect(() => {
-    if (!autoLoginAttempted.current) {
-      autoLoginAttempted.current = true;
-      if (!isRemembered() && !isSessionActive()) {
-        // User didn't want to be remembered and browser was restarted — clear session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            supabase.auth.signOut();
-          }
-        });
-      } else if (isSessionActive() || isRemembered()) {
-        // Mark session as active for this browser tab
-        markSessionActive();
-      }
-    }
-  }, []);
 
   useEffect(() => {
     if (!authLoading && user && !isAdmin && !isModerator && !dealerAccount) {
