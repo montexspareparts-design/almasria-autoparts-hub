@@ -87,10 +87,10 @@ const HeroSection = () => {
 
         {/* Product with concentric rings + glow */}
         <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
-          {/* Red glow halo */}
+          {/* Red glow halo — heavy blur, desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow hidden md:block"
             style={{ filter: "blur(50px)" }}
           />
           {/* Spinning gold ring */}
@@ -102,10 +102,10 @@ const HeroSection = () => {
             aria-hidden
             className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
           />
-          {/* Highlight arc */}
+          {/* Highlight arc — heavy blur, desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[5%] rounded-full"
+            className="absolute inset-[5%] rounded-full hidden md:block"
             style={{
               background:
                 "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
