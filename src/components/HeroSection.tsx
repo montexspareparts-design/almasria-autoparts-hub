@@ -29,7 +29,7 @@ const HeroSection = () => {
       aria-label="قطع غيار تويوتا الأصلية"
     >
       {/* Animated grid */}
-      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60" />
+      <div aria-hidden className="absolute inset-0 lux-grid-bg animate-lux-grid-pan opacity-60 hidden md:block" />
 
       {/* Ambient red gradient */}
       <div
@@ -50,8 +50,8 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Floating particles */}
-      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Floating particles — heavy on GPU, desktop only */}
+      <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden hidden md:block">
         {particles.map((p, i) => (
           <span
             key={i}
@@ -71,10 +71,10 @@ const HeroSection = () => {
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
 
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
-        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        {/* MARQUEE backdrop text — heavy layout on mobile, desktop only */}
         <div
           aria-hidden
-          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee hidden md:block"
         >
           <span
             dir="ltr"
@@ -87,10 +87,10 @@ const HeroSection = () => {
 
         {/* Product with concentric rings + glow */}
         <div className="relative w-full max-w-[640px] aspect-[3/2] mx-auto animate-lux-stagger-in">
-          {/* Red glow halo */}
+          {/* Red glow halo — heavy blur, desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow"
+            className="absolute inset-[10%] bg-red-glow animate-lux-pulse-glow hidden md:block"
             style={{ filter: "blur(50px)" }}
           />
           {/* Spinning gold ring */}
@@ -102,10 +102,10 @@ const HeroSection = () => {
             aria-hidden
             className="absolute inset-[18%] rounded-full border border-[hsl(var(--toyota-red)/0.18)]"
           />
-          {/* Highlight arc */}
+          {/* Highlight arc — heavy blur, desktop only */}
           <div
             aria-hidden
-            className="absolute inset-[5%] rounded-full"
+            className="absolute inset-[5%] rounded-full hidden md:block"
             style={{
               background:
                 "conic-gradient(from 200deg, transparent 0deg, hsl(var(--toyota-red) / 0.15) 60deg, transparent 120deg)",
@@ -117,8 +117,8 @@ const HeroSection = () => {
             alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
             width={1536}
             height={1024}
-            fetchPriority="high"
             decoding="async"
+            {...({ fetchpriority: "high" } as { fetchpriority: string })}
             className="relative w-full h-full object-contain animate-lux-float"
             style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
           />
@@ -158,8 +158,8 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Floating diamond decorations */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        {/* Floating diamond decorations — desktop only */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden md:block">
           {[
             { top: "18%", left: "6%", size: 10, delay: "0s" },
             { top: "10%", left: "42%", size: 8, delay: "1.2s" },
