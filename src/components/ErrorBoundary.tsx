@@ -10,26 +10,44 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  code: string;
+}
+
+/** Deterministic short diagnostic code so we can identify the failing pipeline
+ *  from a TestFlight screenshot without needing the full stack. */
+function deriveDiagnosticCode(err: Error | null): string {
+  const msg = (err?.message || "").toLowerCase();
+  const stack = (err?.stack || "").toLowerCase();
+  if (/chunk|dynamically imported|loading/.test(msg)) return "ERR-CHUNK-001";
+  if (/authcontext|onauthstate|getsession/.test(stack)) return "ERR-PAUTH-001";
+  if (/completeprofile|addphoneprompt/.test(stack)) return "ERR-PAUTH-002";
+  if (/dealer|role/.test(stack)) return "ERR-PAUTH-003";
+  if (/cannot read propert|undefined is not/.test(msg)) return "ERR-RENDER-001";
+  if (/network|failed to fetch/.test(msg)) return "ERR-NET-001";
+  return "ERR-APP-000";
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null };
+  state: State = { hasError: false, error: null, code: "" };
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, code: deriveDiagnosticCode(error) };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[ErrorBoundary] Uncaught error:", error, errorInfo);
+    const code = deriveDiagnosticCode(error);
+    console.error(`[ErrorBoundary][${code}] ${error.name}: ${error.message}`);
+    if (error.stack) console.error(`[ErrorBoundary][${code}] stack:`, error.stack);
+    if (errorInfo?.componentStack) console.error(`[ErrorBoundary][${code}] component:`, errorInfo.componentStack);
   }
 
   handleReload = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, code: "" });
     window.location.reload();
   };
 
   handleGoHome = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, code: "" });
     window.location.href = "/";
   };
 
@@ -39,6 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
     const message = this.state.error?.message || "خطأ غير متوقع";
     const isChunkError = /chunk|loading|dynamically imported/i.test(message);
+    const code = this.state.code || "ERR-APP-000";
 
     return (
       <div
@@ -59,6 +78,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 ? "تم تحديث الموقع، فضلاً أعد التحميل للحصول على أحدث إصدار."
                 : "نعتذر عن هذا الخطأ. فريقنا التقني يعمل على حله. يمكنك إعادة المحاولة أو العودة للرئيسية."}
             </p>
+            <p className="text-[11px] font-mono text-muted-foreground/70 tracking-wider">
+              كود التشخيص: {code}
+            </p>
           </div>
 
           {import.meta.env.DEV && this.state.error && (
@@ -72,6 +94,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             </details>
           )}
+
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
             <Button onClick={this.handleReload} className="flex-1 gap-2">
