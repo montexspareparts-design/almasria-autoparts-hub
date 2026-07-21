@@ -113,19 +113,7 @@ async function saveSubscription(subscription: PushSubscription) {
 }
 
 export async function isPushSubscribed(): Promise<boolean> {
-  if (isNativePlatform()) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-      const { data } = await supabase
-        .from("device_tokens")
-        .select("id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      return !!data;
-    } catch { return false; }
-  }
+  if (isNativePlatform()) return false;
   if (!("serviceWorker" in navigator)) return false;
   try {
     const registration = await getSafeRegistration();
@@ -138,17 +126,7 @@ export async function isPushSubscribed(): Promise<boolean> {
 }
 
 export async function unsubscribePush(): Promise<boolean> {
-  if (isNativePlatform()) {
-    try {
-      const { PushNotifications } = await import("@capacitor/push-notifications");
-      await PushNotifications.removeAllListeners();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("device_tokens").delete().eq("user_id", user.id);
-      }
-      return true;
-    } catch { return false; }
-  }
+  if (isNativePlatform()) return false;
   if (!("serviceWorker" in navigator)) return false;
   try {
     const registration = await getSafeRegistration();
