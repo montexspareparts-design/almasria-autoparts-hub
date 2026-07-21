@@ -71,10 +71,10 @@ const HeroSection = () => {
       <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-toyota-red to-transparent opacity-80" />
 
       <div className="relative z-10 container mx-auto px-4 pt-28 md:pt-32 pb-20 flex flex-col items-center justify-center min-h-screen">
-        {/* MARQUEE backdrop text — slow horizontal scroll */}
+        {/* MARQUEE backdrop text — heavy layout on mobile, desktop only */}
         <div
           aria-hidden
-          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee"
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 w-[260vw] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap animate-lux-marquee hidden md:block"
         >
           <span
             dir="ltr"
