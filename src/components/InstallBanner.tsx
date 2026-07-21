@@ -4,6 +4,7 @@ import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { requestPushPermission } from "@/lib/pushNotifications";
+import { isNativePlatform } from "@/lib/native";
 import logo from "@/assets/logo.webp";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -22,6 +23,8 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   useEffect(() => {
+    if (isNativePlatform()) return;
+
     // Already installed (check both standard and iOS standalone)
     if (window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true) {
       setIsStandalone(true);

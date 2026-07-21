@@ -47,64 +47,10 @@ async function getSafeRegistration(timeoutMs = 3000): Promise<ServiceWorkerRegis
  * the existing row via upsert on (user_id, token).
  */
 export async function registerNativePush(): Promise<boolean> {
-  // Phase 1 Android release: native push is iOS-only. On Android we skip
-  // registration (no permission prompt, no APNs/FCM call). Existing web
-  // push (VAPID service worker) is untouched.
-  if (!isNativeIOS()) return false;
-  try {
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-
-    const perm = await PushNotifications.checkPermissions();
-    let granted = perm.receive === "granted";
-    if (!granted) {
-      const req = await PushNotifications.requestPermissions();
-      granted = req.receive === "granted";
-    }
-    if (!granted) {
-      console.log("[push] permission denied");
-      return false;
-    }
-
-    return await new Promise<boolean>((resolve) => {
-      let done = false;
-      const finish = (ok: boolean) => {
-        if (done) return;
-        done = true;
-        resolve(ok);
-      };
-
-      PushNotifications.addListener("registration", async (t) => {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return finish(false);
-
-          await supabase.from("device_tokens").upsert({
-            user_id: user.id,
-            token: t.value,
-            platform: isNativeIOS() ? "ios" : "android",
-            bundle_id: "com.almasria.autoparts",
-          } as never, { onConflict: "user_id,token" });
-
-          finish(true);
-        } catch (e) {
-          console.error("[push] save token failed", e);
-          finish(false);
-        }
-      });
-
-      PushNotifications.addListener("registrationError", (err) => {
-        console.error("[push] registration error", err);
-        finish(false);
-      });
-
-      PushNotifications.register().catch(() => finish(false));
-      // Timeout safety
-      setTimeout(() => finish(false), 10000);
-    });
-  } catch (err) {
-    console.error("[push] native register failed", err);
-    return false;
-  }
+  // Native push is feature-gated OFF for the current iOS/Android release.
+  // Never request notification permission or register APNs/FCM from auth,
+  // dashboards, install banners, or app launch.
+  return false;
 }
 
 // ============================================================================
@@ -112,9 +58,7 @@ export async function registerNativePush(): Promise<boolean> {
 // ============================================================================
 
 export async function requestPushPermission(): Promise<boolean> {
-  if (isNativeIOS()) return registerNativePush();
-  // Native Android: no push in this release phase — fall through to web
-  // path which is a no-op inside a WebView anyway.
+  if (isNativePlatform()) return false;
 
   if (!isWebPushSupported()) {
     console.log("Push notifications not supported on this platform");
