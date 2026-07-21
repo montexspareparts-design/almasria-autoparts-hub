@@ -26,19 +26,17 @@ const AnimatedRoutes = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const variants = lite
-    ? {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: 0.18, ease: "easeOut" as const },
-      }
-    : {
-        initial: { opacity: 0, filter: "blur(6px)", y: 6 },
-        animate: { opacity: 1, filter: "blur(0px)", y: 0 },
-        exit: { opacity: 0, filter: "blur(4px)", y: -4 },
-        transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
-      };
+  // NOTE: `filter: blur()` as an animatable property crashes intermittently on
+  // iOS WebView (WKWebView + WebKit compositor) — especially right after
+  // sign-in when the /auth → / transition races with lazy chunk load. We now
+  // ALWAYS use the lite variant (opacity only). Cheap, stable, and identical
+  // visually on mobile where users spend most of their time.
+  const variants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.18, ease: "easeOut" as const },
+  };
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -48,8 +46,9 @@ const AnimatedRoutes = ({ children }: { children: ReactNode }) => {
         animate={variants.animate}
         exit={variants.exit}
         transition={variants.transition}
-        style={{ willChange: lite ? "opacity" : "opacity, filter, transform" }}
+        style={{ willChange: "opacity" }}
       >
+
         {children}
       </motion.div>
     </AnimatePresence>
