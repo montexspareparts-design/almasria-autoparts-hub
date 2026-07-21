@@ -158,8 +158,8 @@ const HeroSection = () => {
           </div>
         </div>
 
-        {/* Floating diamond decorations */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
+        {/* Floating diamond decorations — desktop only */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 hidden md:block">
           {[
             { top: "18%", left: "6%", size: 10, delay: "0s" },
             { top: "10%", left: "42%", size: 8, delay: "1.2s" },
