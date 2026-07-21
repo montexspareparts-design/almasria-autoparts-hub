@@ -401,7 +401,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (postAuthState !== "READY" || !user) return;
-    if (location.pathname !== "/auth" && location.pathname !== "/dealer-login") return;
+    if (location.pathname !== "/auth" && location.pathname !== "/dealer-login" && location.pathname !== "/auth-callback") return;
 
     if (
       location.pathname === "/dealer-login" &&
