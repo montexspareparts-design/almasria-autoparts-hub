@@ -117,8 +117,8 @@ const HeroSection = () => {
             alt="فلتر زيت تويوتا YZZN2 الأصلي + شمعة إيريديوم"
             width={1536}
             height={1024}
-            fetchPriority="high"
             decoding="async"
+            {...({ fetchpriority: "high" } as { fetchpriority: string })}
             className="relative w-full h-full object-contain animate-lux-float"
             style={{ filter: "drop-shadow(0 30px 50px hsl(0 0% 0% / 0.7))" }}
           />
