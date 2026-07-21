@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Phone, ShieldCheck, ArrowRight, Loader2, Mail, Eye, EyeOff, Clock, CheckCircle2, XCircle, AlertCircle, ArrowLeft } from "lucide-react";
@@ -16,7 +16,7 @@ import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import { mapLoginError } from "@/lib/loginErrors";
-import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 
 type AuthMethod = "phone" | "email" | "auto";
@@ -34,7 +34,6 @@ const setRemembered = (val: boolean) => {
 };
 // Session flag: set on login, cleared on browser close (via sessionStorage)
 const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
-const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 const statusConfig = {
   pending: { label: "قيد المراجعة", icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -55,53 +54,16 @@ const DealerLogin = () => {
   const [applicationStatus, setApplicationStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [rememberMe, setRememberMe] = useState(isRemembered());
-  const autoLoginAttempted = useRef(false);
 
-  // On mount: if "remember me" was NOT checked and there's no active session flag,
-  // sign out to prevent stale sessions from persisting across browser restarts
   useEffect(() => {
-    if (!autoLoginAttempted.current) {
-      autoLoginAttempted.current = true;
-      if (!isRemembered() && !isSessionActive()) {
-        // User didn't want to be remembered and browser was restarted — clear session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
-            supabase.auth.signOut();
-          }
-        });
-      } else if (isSessionActive() || isRemembered()) {
-        // Mark session as active for this browser tab
-        markSessionActive();
-      }
+    if (!authLoading && user && !isAdmin && !isModerator && !dealerAccount) {
+      checkDealerApplication(user.id);
     }
-  }, []);
+  }, [authLoading, user, isAdmin, isModerator, dealerAccount]);
 
-  // Hard guard: staff (admin/moderator) must NEVER see the dealer portal — redirect immediately
-  useEffect(() => {
-    if (!authLoading && user && (isAdmin || isModerator)) {
-      navigate("/admin", { replace: true });
-    }
-  }, [authLoading, user, isAdmin, isModerator, navigate]);
-
-  useEffect(() => { if (user && !isAdmin && !isModerator) checkDealerStatus(user.id); }, [user, isAdmin, isModerator]);
-
-  const checkDealerStatus = async (userId: string) => {
+  const checkDealerApplication = async (userId: string) => {
     setCheckingStatus(true);
     try {
-      const oauthReturnTo = consumeOAuthReturnTo();
-
-      // Staff (admin/moderator) should go directly to the admin panel
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-      const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
-      const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
-      if (hasAdmin || hasModerator) { navigate("/admin"); return; }
-
-      const { data: da } = await supabase.from("dealer_accounts").select("id, is_active, tier").eq("user_id", userId).eq("is_active", true).maybeSingle();
-      if (da) { navigate("/dealer"); return; }
-      if (oauthReturnTo && oauthReturnTo !== "/dealer-login") {
-        navigate(oauthReturnTo, { replace: true });
-        return;
-      }
       const { data: app } = await supabase.from("dealer_applications").select("id, status, business_name, created_at, review_notes").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       setApplicationStatus(app);
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
@@ -127,7 +89,6 @@ const DealerLogin = () => {
         setRemembered(rememberMe);
         markSessionActive();
         toast({ title: "تم تسجيل الدخول بنجاح ✅" });
-        checkDealerStatus(data.user.id);
       }
     } catch (e) {
       console.error("[DealerLogin] submit crashed:", e);

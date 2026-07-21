@@ -53,36 +53,11 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
       }
       setLoading(true);
 
-      // 1) Duplicate check (best-effort — swallow RPC errors so we never crash the app)
-      try {
-        console.log("[PAUTH] PHONE_CHECK_START");
-        const { data: taken, error: rpcErr } = await supabase.rpc("phone_already_registered", { _phone: phone });
-        if (!rpcErr && taken === true) {
-          const { data: mine } = await supabase
-            .from("profiles")
-            .select("phone")
-            .eq("user_id", userId)
-            .maybeSingle();
-          if (mine?.phone !== phone) {
-            console.log("[PAUTH] PHONE_CHECK_DUPLICATE");
-            toast({ title: "رقم الهاتف مسجل بالفعل بحساب آخر.", variant: "destructive" });
-            setLoading(false);
-            return;
-          }
-        }
-        console.log("[PAUTH] PHONE_CHECK_OK");
-      } catch (rpcCrash) {
-        console.warn("[PAUTH] PHONE_CHECK_FAIL (non-fatal):", rpcCrash);
-      }
-
-      // 2) UPSERT — handles both existing profile and missing profile
-      console.log("[PAUTH] PROFILE_UPSERT_START");
-      const { error: upsertErr } = await supabase
-        .from("profiles")
-        .upsert(
-          { user_id: userId, phone },
-          { onConflict: "user_id" }
-        );
+      console.log("[PAUTH] PROFILE_PHONE_SAVE_START");
+      const { error: upsertErr } = await supabase.rpc("save_my_profile_phone", {
+        _phone: phone,
+        _whatsapp_opt_in: true,
+      });
 
       if (upsertErr) {
         console.error("[PAUTH] PROFILE_UPSERT_FAIL:", upsertErr);
@@ -97,10 +72,7 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
       console.log("[PAUTH] PROFILE_UPSERT_OK");
       toast({ title: "تم حفظ رقم الهاتف بنجاح ✅" });
       setLoading(false);
-      // Defer close to next tick to avoid re-render race with parent AuthContext.
-      setTimeout(() => {
-        try { onOpenChange(false); } catch { /* ignore */ }
-      }, 0);
+      try { onOpenChange(false); } catch { /* ignore */ }
     } catch (err) {
       // Absolutely never let this reach ErrorBoundary — this modal is post-auth critical.
       console.error("[PAUTH] PHONE_SAVE_FAIL unexpected:", err);

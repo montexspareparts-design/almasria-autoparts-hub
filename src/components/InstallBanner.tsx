@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { requestPushPermission } from "@/lib/pushNotifications";
+import { isNativePlatform } from "@/lib/native";
 import logo from "@/assets/logo.webp";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -22,6 +22,8 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
   const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   useEffect(() => {
+    if (isNativePlatform()) return;
+
     // Already installed (check both standard and iOS standalone)
     if (window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true) {
       setIsStandalone(true);
@@ -63,15 +65,6 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
         description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
         duration: 5000,
       });
-      setTimeout(async () => {
-        const granted = await requestPushPermission();
-        if (granted) {
-          toast.success("تم تفعيل الإشعارات! 🔔", {
-            description: "هتوصلك إشعارات بالعروض والتحديثات",
-            duration: 4000,
-          });
-        }
-      }, 3000);
     };
     window.addEventListener("appinstalled", installHandler);
 

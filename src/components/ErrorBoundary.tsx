@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getLastDiagnosticCode, recordDiagnostic } from "@/lib/runtimeDiagnostics";
 
 interface Props {
   children: ReactNode;
@@ -24,7 +25,7 @@ function deriveDiagnosticCode(err: Error | null): string {
   if (/dealer|role/.test(stack)) return "ERR-PAUTH-003";
   if (/cannot read propert|undefined is not/.test(msg)) return "ERR-RENDER-001";
   if (/network|failed to fetch/.test(msg)) return "ERR-NET-001";
-  return "ERR-APP-000";
+  return getLastDiagnosticCode() || "ERR-RENDER-000";
 }
 
 const AUTO_RECOVER_KEY = "err-boundary-auto-recovered-at";
@@ -38,7 +39,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const code = deriveDiagnosticCode(error);
+    const code = recordDiagnostic("render", error, "ErrorBoundary") || deriveDiagnosticCode(error);
+    this.setState({ code });
     console.error(`[ErrorBoundary][${code}] ${error.name}: ${error.message}`);
     if (error.stack) console.error(`[ErrorBoundary][${code}] stack:`, error.stack);
     if (errorInfo?.componentStack) console.error(`[ErrorBoundary][${code}] component:`, errorInfo.componentStack);

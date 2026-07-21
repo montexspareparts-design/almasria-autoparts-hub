@@ -4662,6 +4662,28 @@ export type Database = {
         Args: { p_staff_user_id: string }
         Returns: string
       }
+      save_my_profile_phone: {
+        Args: { _phone: string; _whatsapp_opt_in?: boolean }
+        Returns: {
+          avatar_url: string | null
+          car_model: string | null
+          car_year: number | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          whatsapp_opt_in: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       search_all_products_for_shortage: {
         Args: { _q: string }
         Returns: {

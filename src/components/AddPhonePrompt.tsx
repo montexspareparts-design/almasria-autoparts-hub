@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,66 +7,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, MessageCircle, Sparkles } from "lucide-react";
+import { recordDiagnostic } from "@/lib/runtimeDiagnostics";
 
 const SKIP_KEY = "phone_prompt_skipped_v1";
+
+interface AddPhonePromptProps {
+  open: boolean;
+  userId: string;
+  onCompleted: () => Promise<void> | void;
+  onSkipped?: () => Promise<void> | void;
+}
 
 /**
  * يظهر مرة واحدة للمستخدمين القدامى المسجّلين بإيميل بدون رقم تليفون
  * يطلب منهم إضافة رقم الموبايل + موافقة على واتساب (اختياري)
  */
-export const AddPhonePrompt = () => {
-  const [open, setOpen] = useState(false);
+export const AddPhonePrompt = ({ open, userId, onCompleted, onSkipped }: AddPhonePromptProps) => {
   const [phone, setPhone] = useState("");
   const [whatsappOptIn, setWhatsappOptIn] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    let mounted = true;
-
-    const checkProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user || !mounted) return;
-
-        // مش هنزعج اللي اختاروا "بعدين" قبل كده
-        if (localStorage.getItem(SKIP_KEY) === session.user.id) return;
-
-        // تخطي لو المستخدم سجل دخول برقم تليفون أصلاً
-        const email = session.user.email || "";
-        if (email.endsWith("@phone.almasria.local")) return;
-
-        // تأخير بسيط لتجنب الإزعاج اللحظي
-        setTimeout(async () => {
-          if (!mounted) return;
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("phone")
-            .eq("user_id", session.user.id)
-            .maybeSingle();
-
-          if (!mounted) return;
-          if (!profile?.phone || profile.phone.trim() === "") {
-            setUserId(session.user.id);
-            setOpen(true);
-          }
-        }, 4000);
-      } catch (e) {
-        // silent
-      }
-    };
-
-    checkProfile();
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") checkProfile();
-    });
-
-    return () => {
-      mounted = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleSave = async () => {
     try {
@@ -82,17 +42,14 @@ export const AddPhonePrompt = () => {
       if (!userId) return;
 
       setSaving(true);
-      console.log("[PAUTH] ADD_PHONE_UPSERT_START");
-      const { error } = await supabase
-        .from("profiles")
-        .upsert(
-          { user_id: userId, phone: trimmed, whatsapp_opt_in: whatsappOptIn },
-          { onConflict: "user_id" }
-        );
+      const { error } = await supabase.rpc("save_my_profile_phone", {
+        _phone: trimmed,
+        _whatsapp_opt_in: whatsappOptIn,
+      });
 
       if (error) {
-        console.error("[PAUTH] ADD_PHONE_UPSERT_FAIL:", error);
-        const msg = /duplicate|unique/i.test(error.message || "")
+        console.error("[PAUTH] ADD_PHONE_SAVE_FAIL:", error);
+        const msg = /duplicate|unique|already/i.test(error.message || "")
           ? "رقم الهاتف مسجل بالفعل بحساب آخر."
           : "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.";
         toast({ title: msg, variant: "destructive" });
@@ -100,13 +57,11 @@ export const AddPhonePrompt = () => {
         return;
       }
 
-      console.log("[PAUTH] ADD_PHONE_UPSERT_OK");
       toast({ title: "تم حفظ رقم الموبايل ✅", description: "هنقدر نتواصل معاك بشكل أسرع دلوقتي" });
-      try { localStorage.setItem(SKIP_KEY, userId); } catch { /* ignore */ }
+      await onCompleted();
       setSaving(false);
-      setTimeout(() => setOpen(false), 0);
     } catch (err) {
-      console.error("[PAUTH] ADD_PHONE_SAVE unexpected:", err);
+      recordDiagnostic("phone", err, "AddPhonePrompt.save");
       try {
         toast({
           title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
@@ -118,9 +73,9 @@ export const AddPhonePrompt = () => {
   };
 
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     if (userId) localStorage.setItem(SKIP_KEY, userId);
-    setOpen(false);
+    await onSkipped?.();
   };
 
   return (

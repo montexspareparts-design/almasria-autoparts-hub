@@ -318,8 +318,7 @@ export const registerDeepLinkListener = (
 
       const search = parsed.search || "";
       const target = `${path}${search}`;
-      // Small delay so the browser close animation doesn't fight the React nav.
-      setTimeout(() => navigate(target, { replace: true }), 50);
+      navigate(target, { replace: true });
     } catch (err) {
       console.error("[deeplink] handler failure", err);
     }

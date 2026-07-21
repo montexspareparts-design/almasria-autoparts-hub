@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import logo from "@/assets/logo.webp";
 import { isPhoneLike, phoneToInternalEmail } from "@/lib/phoneAuth";
 import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import { mapLoginError } from "@/lib/loginErrors";
-import { consumeOAuthReturnTo, startGoogleOAuth } from "@/lib/googleOAuth";
+import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 
 const isPhone = isPhoneLike;
@@ -31,7 +31,6 @@ const setRememberedFlag = (val: boolean) => {
   else localStorage.removeItem(REMEMBER_KEY);
 };
 const markSessionActive = () => sessionStorage.setItem(SESSION_FLAG, "true");
-const isSessionActive = () => sessionStorage.getItem(SESSION_FLAG) === "true";
 
 type LoginMethod = "phone" | "email";
 
@@ -53,7 +52,6 @@ const Auth = () => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [rememberMe, setRememberMe] = useState(isRemembered());
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   const isLogin = mode === "login";
@@ -66,77 +64,6 @@ const Auth = () => {
     return credIsPhone ? phoneToEmail(credential) : credential.trim();
   };
 
-  // If session already exists (or arrives after OAuth), leave auth page immediately
-  useEffect(() => {
-    let mounted = true;
-
-    const handleAuthRedirect = async (userId: string) => {
-      try {
-        const oauthReturnTo = consumeOAuthReturnTo();
-
-        // Check dealer + admin status
-        const [dealerRes, rolesRes] = await Promise.all([
-          supabase.from("dealer_accounts").select("id").eq("user_id", userId).eq("is_active", true).maybeSingle(),
-          supabase.from("user_roles").select("role").eq("user_id", userId),
-        ]);
-        const dealer = dealerRes?.data ?? null;
-        const roles = rolesRes?.data ?? [];
-        const hasAdmin = roles?.some((r) => r.role === "admin") ?? false;
-        const hasModerator = roles?.some((r) => r.role === "moderator") ?? false;
-        const hasReporter = roles?.some((r) => r.role === "reporter") ?? false;
-        const hasDealer = !!dealer;
-        const isReporterOnly = hasReporter && !hasAdmin && !hasModerator;
-
-        if (!mounted) return;
-        markSessionActive();
-
-        if (isReporterOnly) {
-          navigate("/admin/daily-report", { replace: true });
-          return;
-        }
-
-        if (hasDealer && hasAdmin) {
-          const savedRole = localStorage.getItem("almasria_last_role");
-          if (savedRole === "admin") navigate("/admin", { replace: true });
-          else if (savedRole === "dealer") navigate("/dealer", { replace: true });
-          else navigate("/", { replace: true });
-        } else if (hasAdmin) {
-          navigate("/admin", { replace: true });
-        } else if (hasModerator) {
-          navigate("/admin", { replace: true });
-        } else if (hasDealer) {
-          navigate("/dealer", { replace: true });
-        } else {
-          navigate(oauthReturnTo === "/dealer-login" ? "/" : oauthReturnTo || "/", { replace: true });
-        }
-      } catch (e) {
-        // Post-login lookups must NEVER crash the app. Route safely to home.
-        console.error("[Auth] post-login routing failed:", e);
-        if (mounted) navigate("/", { replace: true });
-      }
-    };
-
-
-    const syncSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!mounted || !session?.user) return;
-      handleAuthRedirect(session.user.id);
-    };
-
-    syncSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted || !session?.user) return;
-      handleAuthRedirect(session.user.id);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin && lockedUntil && Date.now() < lockedUntil) {
