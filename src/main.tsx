@@ -3,9 +3,11 @@ import App from "./App.tsx";
 import "./index.css";
 import { setupLazyImportRecovery } from "@/lib/lazyImportRecovery";
 import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
+import { installGlobalErrorDiagnostics } from "@/lib/runtimeDiagnostics";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
+installGlobalErrorDiagnostics();
 installMobileErrorReporter();
 initHighContrastEarly();
 
