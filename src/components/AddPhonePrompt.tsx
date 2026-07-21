@@ -69,19 +69,20 @@ export const AddPhonePrompt = () => {
   }, []);
 
   const handleSave = async () => {
-    const trimmed = phone.trim();
-    if (!/^01[0-9]{9}$/.test(trimmed)) {
-      toast({
-        title: "رقم موبايل غير صحيح",
-        description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!userId) return;
-
-    setSaving(true);
     try {
+      const trimmed = phone.trim();
+      if (!/^01[0-9]{9}$/.test(trimmed)) {
+        toast({
+          title: "رقم موبايل غير صحيح",
+          description: "أدخل رقم مصري يبدأ بـ 01 ومكون من 11 رقم",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!userId) return;
+
+      setSaving(true);
+      console.log("[PAUTH] ADD_PHONE_UPSERT_START");
       const { error } = await supabase
         .from("profiles")
         .upsert(
@@ -90,6 +91,7 @@ export const AddPhonePrompt = () => {
         );
 
       if (error) {
+        console.error("[PAUTH] ADD_PHONE_UPSERT_FAIL:", error);
         const msg = /duplicate|unique/i.test(error.message || "")
           ? "رقم الهاتف مسجل بالفعل بحساب آخر."
           : "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.";
@@ -98,19 +100,23 @@ export const AddPhonePrompt = () => {
         return;
       }
 
+      console.log("[PAUTH] ADD_PHONE_UPSERT_OK");
       toast({ title: "تم حفظ رقم الموبايل ✅", description: "هنقدر نتواصل معاك بشكل أسرع دلوقتي" });
-      localStorage.setItem(SKIP_KEY, userId);
+      try { localStorage.setItem(SKIP_KEY, userId); } catch { /* ignore */ }
       setSaving(false);
-      setOpen(false);
+      setTimeout(() => setOpen(false), 0);
     } catch (err) {
-      console.error("[AddPhonePrompt] save failed:", err);
-      toast({
-        title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
-        variant: "destructive",
-      });
+      console.error("[PAUTH] ADD_PHONE_SAVE unexpected:", err);
+      try {
+        toast({
+          title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+      } catch { /* ignore */ }
       setSaving(false);
     }
   };
+
 
   const handleSkip = () => {
     if (userId) localStorage.setItem(SKIP_KEY, userId);
