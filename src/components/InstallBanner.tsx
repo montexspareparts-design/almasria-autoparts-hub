@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Share, PlusSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { requestPushPermission } from "@/lib/pushNotifications";
 import { isNativePlatform } from "@/lib/native";
 import logo from "@/assets/logo.webp";
 
@@ -66,15 +65,6 @@ const InstallBanner = forwardRef<HTMLDivElement>((_, ref) => {
         description: "يمكنك الآن فتح التطبيق من الشاشة الرئيسية",
         duration: 5000,
       });
-      setTimeout(async () => {
-        const granted = await requestPushPermission();
-        if (granted) {
-          toast.success("تم تفعيل الإشعارات! 🔔", {
-            description: "هتوصلك إشعارات بالعروض والتحديثات",
-            duration: 4000,
-          });
-        }
-      }, 3000);
     };
     window.addEventListener("appinstalled", installHandler);
 
