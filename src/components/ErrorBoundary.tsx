@@ -27,6 +27,9 @@ function deriveDiagnosticCode(err: Error | null): string {
   return "ERR-APP-000";
 }
 
+const AUTO_RECOVER_KEY = "err-boundary-auto-recovered-at";
+const AUTO_RECOVER_COOLDOWN_MS = 60_000; // don't loop-reload more than once per minute
+
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null, code: "" };
 
@@ -39,7 +42,30 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error(`[ErrorBoundary][${code}] ${error.name}: ${error.message}`);
     if (error.stack) console.error(`[ErrorBoundary][${code}] stack:`, error.stack);
     if (errorInfo?.componentStack) console.error(`[ErrorBoundary][${code}] component:`, errorInfo.componentStack);
+
+    // Auto-recover on FIRST crash only (rate-limited). Fixes transient
+    // post-auth crashes on iOS WebView where the boundary would otherwise
+    // trap the user on an error screen after a successful login.
+    try {
+      const last = Number(sessionStorage.getItem(AUTO_RECOVER_KEY) || 0);
+      const now = Date.now();
+      if (!last || now - last > AUTO_RECOVER_COOLDOWN_MS) {
+        sessionStorage.setItem(AUTO_RECOVER_KEY, String(now));
+        // Small delay so React finishes committing the error state before we
+        // navigate. Full reload guarantees a clean chunk + provider tree.
+        setTimeout(() => {
+          try {
+            window.location.replace("/");
+          } catch {
+            window.location.href = "/";
+          }
+        }, 400);
+      }
+    } catch {
+      /* sessionStorage unavailable — fall through to manual recovery UI */
+    }
   }
+
 
   handleReload = () => {
     this.setState({ hasError: false, error: null, code: "" });
