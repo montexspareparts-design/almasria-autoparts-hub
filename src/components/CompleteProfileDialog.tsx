@@ -38,41 +38,45 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validationError = validatePhone(phone);
-    if (validationError) {
-      setPhoneError(validationError);
-      toast({ title: validationError, variant: "destructive" });
-      return;
-    }
-    if (!userId) {
-      toast({ title: "الجلسة غير صالحة", description: "يرجى إعادة تسجيل الدخول.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-
+    // Wrap the ENTIRE flow in a defensive shell — any error, including sync
+    // throws from Supabase client init, must NEVER bubble to ErrorBoundary.
     try {
+      const validationError = validatePhone(phone);
+      if (validationError) {
+        setPhoneError(validationError);
+        toast({ title: validationError, variant: "destructive" });
+        return;
+      }
+      if (!userId) {
+        toast({ title: "الجلسة غير صالحة", description: "يرجى إعادة تسجيل الدخول.", variant: "destructive" });
+        return;
+      }
+      setLoading(true);
+
       // 1) Duplicate check (best-effort — swallow RPC errors so we never crash the app)
       try {
+        console.log("[PAUTH] PHONE_CHECK_START");
         const { data: taken, error: rpcErr } = await supabase.rpc("phone_already_registered", { _phone: phone });
         if (!rpcErr && taken === true) {
-          // Confirm it's not the CURRENT user's own number before blocking
           const { data: mine } = await supabase
             .from("profiles")
             .select("phone")
             .eq("user_id", userId)
             .maybeSingle();
           if (mine?.phone !== phone) {
+            console.log("[PAUTH] PHONE_CHECK_DUPLICATE");
             toast({ title: "رقم الهاتف مسجل بالفعل بحساب آخر.", variant: "destructive" });
             setLoading(false);
             return;
           }
         }
+        console.log("[PAUTH] PHONE_CHECK_OK");
       } catch (rpcCrash) {
-        console.warn("[CompleteProfile] phone_already_registered RPC failed (non-fatal):", rpcCrash);
+        console.warn("[PAUTH] PHONE_CHECK_FAIL (non-fatal):", rpcCrash);
       }
 
-      // 2) UPSERT — handles both existing profile (Google returning user) and
-      //    missing profile (edge case where handle_new_user trigger didn't run).
+      // 2) UPSERT — handles both existing profile and missing profile
+      console.log("[PAUTH] PROFILE_UPSERT_START");
       const { error: upsertErr } = await supabase
         .from("profiles")
         .upsert(
@@ -81,7 +85,7 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
         );
 
       if (upsertErr) {
-        console.error("[CompleteProfile] upsert failed:", upsertErr);
+        console.error("[PAUTH] PROFILE_UPSERT_FAIL:", upsertErr);
         const msg = /duplicate|unique/i.test(upsertErr.message || "")
           ? "رقم الهاتف مسجل بالفعل بحساب آخر."
           : "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.";
@@ -90,18 +94,26 @@ const CompleteProfileDialog = ({ open, onOpenChange, userId }: CompleteProfileDi
         return;
       }
 
+      console.log("[PAUTH] PROFILE_UPSERT_OK");
       toast({ title: "تم حفظ رقم الهاتف بنجاح ✅" });
       setLoading(false);
-      onOpenChange(false);
+      // Defer close to next tick to avoid re-render race with parent AuthContext.
+      setTimeout(() => {
+        try { onOpenChange(false); } catch { /* ignore */ }
+      }, 0);
     } catch (err) {
-      console.error("[CompleteProfile] unexpected error:", err);
-      toast({
-        title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
-        variant: "destructive",
-      });
+      // Absolutely never let this reach ErrorBoundary — this modal is post-auth critical.
+      console.error("[PAUTH] PHONE_SAVE_FAIL unexpected:", err);
+      try {
+        toast({
+          title: "تعذر حفظ رقم الهاتف الآن. يرجى المحاولة مرة أخرى.",
+          variant: "destructive",
+        });
+      } catch { /* ignore */ }
       setLoading(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>

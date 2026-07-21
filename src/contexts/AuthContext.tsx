@@ -324,7 +324,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
       clearSessionCheck();
     };
-  }, [clearAllAuthStorage, clearSessionCheck, location.pathname, registerDealerSession, startSessionMonitor, toast]);
+    // Intentionally omit location.pathname — the auth listener must survive route
+    // changes. Re-subscribing on every navigation caused duplicate handlers and a
+    // race window where post-auth setState fired after unsubscribe, corrupting
+    // the profile-completion flow. Route-dependent decisions live in a separate
+    // effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearAllAuthStorage, clearSessionCheck, registerDealerSession, startSessionMonitor, toast]);
+
 
   const signOut = async () => {
     clearSessionCheck();
