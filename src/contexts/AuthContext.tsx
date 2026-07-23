@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
+import { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,6 +112,23 @@ const StableAuthScreen = ({ message = "جاري تجهيز حسابك..." }: { m
     </div>
   </div>
 );
+
+class SilentPostAuthBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    recordDiagnostic("render", error, "AuthContext.postAuthOverlay");
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback ?? null;
+    return this.props.children;
+  }
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -477,12 +494,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return (
       <AuthContext.Provider value={contextValue}>
         <StableAuthScreen message="أكمل رقم الهاتف لتفعيل الحساب" />
-        <AddPhonePrompt
-          open
-          userId={user.id}
-          onCompleted={refreshAuthProfile}
-          onSkipped={refreshAuthProfile}
-        />
+        <SilentPostAuthBoundary
+          fallback={
+            <div className="fixed inset-x-4 bottom-6 z-[70] rounded-lg border border-border bg-card p-4 text-center shadow-lg">
+              <p className="mb-3 text-sm text-muted-foreground">تعذر فتح خطوة رقم الهاتف. يمكنك المتابعة الآن.</p>
+              <button className="h-10 px-4 rounded-lg bg-primary text-primary-foreground font-bold" onClick={refreshAuthProfile}>
+                متابعة
+              </button>
+            </div>
+          }
+        >
+          <AddPhonePrompt
+            open
+            userId={user.id}
+            onCompleted={refreshAuthProfile}
+            onSkipped={refreshAuthProfile}
+          />
+        </SilentPostAuthBoundary>
       </AuthContext.Provider>
     );
   }
@@ -507,10 +535,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider value={contextValue}>
       {children}
       {user && (
-        <RoleSelectionDialog
-          open={showRoleSelection}
-          onOpenChange={setShowRoleSelection}
-        />
+        <SilentPostAuthBoundary>
+          <RoleSelectionDialog
+            open={showRoleSelection}
+            onOpenChange={setShowRoleSelection}
+          />
+        </SilentPostAuthBoundary>
       )}
     </AuthContext.Provider>
   );
