@@ -498,7 +498,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           fallback={
             <div className="fixed inset-x-4 bottom-6 z-[70] rounded-lg border border-border bg-card p-4 text-center shadow-lg">
               <p className="mb-3 text-sm text-muted-foreground">تعذر فتح خطوة رقم الهاتف. يمكنك المتابعة الآن.</p>
-              <button className="h-10 px-4 rounded-lg bg-primary text-primary-foreground font-bold" onClick={refreshAuthProfile}>
+              <button
+                className="h-10 px-4 rounded-lg bg-primary text-primary-foreground font-bold"
+                onClick={() => {
+                  localStorage.setItem(PHONE_PROMPT_SKIP_KEY, user.id);
+                  void refreshAuthProfile();
+                }}
+              >
                 متابعة
               </button>
             </div>
