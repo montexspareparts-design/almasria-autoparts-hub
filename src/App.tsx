@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
 const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
@@ -15,7 +15,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
@@ -88,7 +88,24 @@ const PageLoader = () => (
   </div>
 );
 
-const DeferredComponent = ({ delay, children }: { delay: number; children: React.ReactNode }) => {
+class SilentWidgetBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[widget-boundary] deferred widget failed", error);
+  }
+
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+const DeferredComponent = ({ delay, children }: { delay: number; children: ReactNode }) => {
   const [show, setShow] = useState(false);
   useEffect(() => {
     const id = typeof requestIdleCallback !== 'undefined'
@@ -100,7 +117,17 @@ const DeferredComponent = ({ delay, children }: { delay: number; children: React
     };
   }, [delay]);
   if (!show) return null;
-  return <Suspense fallback={null}>{children}</Suspense>;
+  return (
+    <SilentWidgetBoundary>
+      <Suspense fallback={null}>{children}</Suspense>
+    </SilentWidgetBoundary>
+  );
+};
+
+const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: ReactNode }) => {
+  const { loading, postAuthState } = useAuth();
+  if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
+  return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
 
 const App = () => (
@@ -117,14 +144,14 @@ const App = () => (
               <SEOHead />
               <PageVisitTracker />
               <ReporterOnlyGuard />
-              {!isNativePlatform() && <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>}
-              <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
-              <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
-              <DeferredComponent delay={1500}><VisitorLeadCapture /></DeferredComponent>
-              <DeferredComponent delay={3000}><SmartLeadTriggers /></DeferredComponent>
+              {!isNativePlatform() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
+              <DeferredWhenAuthStable delay={4000}><AIChatBot /></DeferredWhenAuthStable>
+              <DeferredWhenAuthStable delay={2500}><WhatsAppFloat /></DeferredWhenAuthStable>
+              <DeferredWhenAuthStable delay={1500}><VisitorLeadCapture /></DeferredWhenAuthStable>
+              <DeferredWhenAuthStable delay={3000}><SmartLeadTriggers /></DeferredWhenAuthStable>
               {/* Staff popups — self-gate by role, no-op for non-staff */}
-              <DeferredComponent delay={1500}><AdminNewOrderAlertGlobal /></DeferredComponent>
-              <DeferredComponent delay={1500}><AdminNewSignupAlertGlobal /></DeferredComponent>
+              <DeferredWhenAuthStable delay={1500}><AdminNewOrderAlertGlobal /></DeferredWhenAuthStable>
+              <DeferredWhenAuthStable delay={1500}><AdminNewSignupAlertGlobal /></DeferredWhenAuthStable>
               {DealerRtlAuditor && (
                 <Suspense fallback={null}>
                   <DealerRtlAuditor />
@@ -155,6 +182,7 @@ const App = () => (
                     <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
                     <Route path="/parts-by-type" element={<PartsByTypePage />} />
                     <Route path="/auth" element={<Auth />} />
+                    <Route path="/auth-callback" element={<PageLoader />} />
                     <Route path="/dealer-apply" element={<DealerApply />} />
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />

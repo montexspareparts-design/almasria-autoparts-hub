@@ -415,8 +415,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const effectiveIsDealer = !!dealerAccount && !effectiveIsModerator && !effectiveIsAdmin;
   const isReporterOnly = isReporter && !isAdmin && !isModerator;
 
-  const routeForReadyUser = useCallback(() => {
-    const oauthReturnTo = consumeOAuthReturnTo();
+  const routeForReadyUser = useCallback((oauthReturnTo: string | null) => {
     if (isReporterOnly) return "/admin/daily-report";
     if (effectiveIsAdmin || effectiveIsModerator) return "/admin";
     if (effectiveIsDealer) return "/dealer";
@@ -438,7 +437,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const target = routeForReadyUser();
+    const oauthReturnTo = consumeOAuthReturnTo();
+    const target = routeForReadyUser(oauthReturnTo);
     if (lastLoginTargetRef.current === target && location.pathname === target) return;
     lastLoginTargetRef.current = target;
     navigate(target, { replace: true });
