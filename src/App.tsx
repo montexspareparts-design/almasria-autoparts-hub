@@ -130,6 +130,12 @@ const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: 
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
 
+const AuthCallbackRoute = () => {
+  const { loading, postAuthState } = useAuth();
+  if (!loading && postAuthState === "UNAUTHENTICATED") return <Navigate to="/auth" replace />;
+  return <PageLoader />;
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -182,7 +188,7 @@ const App = () => (
                     <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
                     <Route path="/parts-by-type" element={<PartsByTypePage />} />
                     <Route path="/auth" element={<Auth />} />
-                    <Route path="/auth-callback" element={<PageLoader />} />
+                    <Route path="/auth-callback" element={<AuthCallbackRoute />} />
                     <Route path="/dealer-apply" element={<DealerApply />} />
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />
