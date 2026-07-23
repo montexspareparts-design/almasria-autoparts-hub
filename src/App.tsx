@@ -22,6 +22,7 @@ import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import NativeBootstrap from "@/components/NativeBootstrap";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
+import { isNativePlatform } from "@/lib/native";
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -116,7 +117,7 @@ const App = () => (
               <SEOHead />
               <PageVisitTracker />
               <ReporterOnlyGuard />
-              <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>
+              {!isNativePlatform() && <DeferredComponent delay={2000}><InstallBannerLazy /></DeferredComponent>}
               <DeferredComponent delay={4000}><AIChatBot /></DeferredComponent>
               <DeferredComponent delay={2500}><WhatsAppFloat /></DeferredComponent>
               <DeferredComponent delay={1500}><VisitorLeadCapture /></DeferredComponent>
@@ -166,7 +167,7 @@ const App = () => (
                     
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/catalogs" element={<CatalogsPage />} />
-                    <Route path="/install" element={<InstallApp />} />
+                    <Route path="/install" element={isNativePlatform() ? <Navigate to="/" replace /> : <InstallApp />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />

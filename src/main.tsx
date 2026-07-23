@@ -6,6 +6,7 @@ import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
 import { installGlobalErrorDiagnostics } from "@/lib/runtimeDiagnostics";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { isNativePlatform } from "@/lib/native";
 
 installGlobalErrorDiagnostics();
 installMobileErrorReporter();
@@ -44,6 +45,10 @@ const removeSplash = () => {
  * This helper just provides a safe way to check for updates occasionally.
  */
 const registerServiceWorkerUpdateChecks = () => {
+  if (isNativePlatform()) {
+    return undefined;
+  }
+
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
     return undefined;
   }

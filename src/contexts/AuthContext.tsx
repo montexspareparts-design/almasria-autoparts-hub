@@ -172,26 +172,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const startSessionMonitor = useCallback((dealerId: string) => {
     clearSessionCheck();
     sessionCheckRef.current = setInterval(async () => {
-      const localSessionId = localStorage.getItem(SESSION_KEY);
-      if (!localSessionId) return;
-      const { data } = await supabase
-        .from("dealer_accounts")
-        .select("active_session_id")
-        .eq("id", dealerId)
-        .maybeSingle();
+      try {
+        const localSessionId = localStorage.getItem(SESSION_KEY);
+        if (!localSessionId) return;
+        const { data } = await supabase
+          .from("dealer_accounts")
+          .select("active_session_id")
+          .eq("id", dealerId)
+          .maybeSingle();
 
-      if (data && (data as any).active_session_id && (data as any).active_session_id !== localSessionId) {
-        clearSessionCheck();
-        clearAllAuthStorage();
-        toast({
-          title: "تم تسجيل الدخول من جهاز آخر",
-          description: "تم تسجيل خروجك تلقائياً لأن حسابك مفتوح على جهاز آخر.",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
+        if (data && (data as any).active_session_id && (data as any).active_session_id !== localSessionId) {
+          clearSessionCheck();
+          clearAllAuthStorage();
+          toast({
+            title: "تم تسجيل الدخول من جهاز آخر",
+            description: "تم تسجيل خروجك تلقائياً لأن حسابك مفتوح على جهاز آخر.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+        }
+      } catch (error) {
+        recordDiagnostic("role", error, "AuthContext.sessionMonitor");
       }
     }, 10000);
   }, [clearAllAuthStorage, clearSessionCheck, toast]);
+
+  const fallbackProfileFromUser = useCallback((authUser: User): CanonicalProfile => {
+    const meta = (authUser.user_metadata ?? {}) as Record<string, unknown>;
+    const fullName = String(meta.full_name || meta.name || "").trim();
+    const phone = typeof meta.phone === "string" ? meta.phone.trim() : "";
+    return {
+      user_id: authUser.id,
+      email: authUser.email ?? null,
+      full_name: fullName || null,
+      phone: phone || null,
+      whatsapp_opt_in: typeof meta.whatsapp_opt_in === "boolean" ? meta.whatsapp_opt_in : null,
+    };
+  }, []);
 
   const ensureProfile = useCallback(async (authUser: User): Promise<CanonicalProfile> => {
     const { data: existing, error: readError } = await supabase
@@ -202,7 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (readError) {
       recordDiagnostic("profile", readError, "AuthContext.profile.read");
-      throw readError;
+      return fallbackProfileFromUser(authUser);
     }
 
     if (!existing) {
@@ -217,7 +234,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (upsertError) {
         recordDiagnostic("profile", upsertError, "AuthContext.profile.upsert");
-        throw upsertError;
+        return fallbackProfileFromUser(authUser);
       }
 
       const { data: created, error: rereadError } = await supabase
@@ -228,13 +245,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (rereadError || !created) {
         recordDiagnostic("profile", rereadError || "profile missing after upsert", "AuthContext.profile.reread");
-        throw rereadError || new Error("profile missing after upsert");
+        return fallbackProfileFromUser(authUser);
       }
       return created as CanonicalProfile;
     }
 
     return existing as CanonicalProfile;
-  }, []);
+  }, [fallbackProfileFromUser]);
 
   const resolvePostAuth = useCallback(async (nextSession: Session | null, event = "MANUAL") => {
     const flowId = ++flowIdRef.current;
@@ -268,15 +285,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (dealerRes.error) {
         recordDiagnostic("role", dealerRes.error, "AuthContext.dealer.read");
-        throw dealerRes.error;
       }
       if (rolesRes.error) {
         recordDiagnostic("role", rolesRes.error, "AuthContext.roles.read");
-        throw rolesRes.error;
       }
 
-      const dealer = (dealerRes.data as DealerAccount | null) ?? null;
-      const roles = rolesRes.data ?? [];
+      const dealer = dealerRes.error ? null : ((dealerRes.data as DealerAccount | null) ?? null);
+      const roles = rolesRes.error ? [] : (rolesRes.data ?? []);
       const hasAdmin = roles.some((r) => r.role === "admin");
       const hasModerator = roles.some((r) => r.role === "moderator");
       const hasReporter = roles.some((r) => (r.role as string) === "reporter");
@@ -289,7 +304,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (dealer && !hasModerator && !hasAdmin) {
         if (isFreshSignIn && !localStorage.getItem(SESSION_KEY)) {
-          await registerDealerSession(dealer.id);
+          try {
+            await registerDealerSession(dealer.id);
+          } catch (error) {
+            recordDiagnostic("role", error, "AuthContext.dealer.session.register");
+          }
         }
         startSessionMonitor(dealer.id);
       } else {
@@ -336,10 +355,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await resolvePostAuth(currentSession, "PROFILE_REFRESH");
   }, [resolvePostAuth]);
 
+  const resolvePostAuthRef = useRef(resolvePostAuth);
+
+  useEffect(() => {
+    resolvePostAuthRef.current = resolvePostAuth;
+  }, [resolvePostAuth]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (event === "USER_UPDATED") localStorage.removeItem("almasria_remember_me");
-      void resolvePostAuth(nextSession, event);
+      void resolvePostAuthRef.current(nextSession, event);
     });
 
     supabase.auth.getSession()
@@ -349,7 +374,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setPostAuthState("RECOVERABLE_ERROR");
           return;
         }
-        void resolvePostAuth(currentSession, "INITIAL_SESSION");
+        void resolvePostAuthRef.current(currentSession, "INITIAL_SESSION");
       })
       .catch((error) => {
         recordDiagnostic("pauth", error, "AuthContext.initial.catch");
@@ -361,7 +386,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearSessionCheck();
       flowIdRef.current += 1;
     };
-  }, [clearSessionCheck, resolvePostAuth]);
+  }, [clearSessionCheck]);
 
   const startImpersonation = useCallback((target: { userId: string; name: string }) => {
     const next: ImpersonationState = { userId: target.userId, name: target.name };
