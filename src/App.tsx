@@ -1,6 +1,10 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
-const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
+const InstallBannerLazy = lazy(() =>
+  isNativePlatform()
+    ? Promise.resolve({ default: () => null as unknown as JSX.Element })
+    : import("@/components/InstallBanner"),
+);
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const VisitorLeadCapture = lazy(() => import("@/components/VisitorLeadCapture"));
 const SmartLeadTriggers = lazy(() => import("@/components/SmartLeadTriggers"));

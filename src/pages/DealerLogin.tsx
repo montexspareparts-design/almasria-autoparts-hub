@@ -18,6 +18,7 @@ import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/login
 import { mapLoginError } from "@/lib/loginErrors";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
+import DiagnosticFooter from "@/components/DiagnosticFooter";
 
 type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
@@ -290,6 +291,7 @@ const DealerLogin = () => {
             <div className="text-center">
               <Link to="/" className="text-[11px] text-muted-foreground hover:text-primary transition-colors">← العودة للرئيسية</Link>
             </div>
+            <DiagnosticFooter />
           </div>
         )}
       </div>
