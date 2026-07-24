@@ -7,6 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import SEOHead from "@/components/SEOHead";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
+import { isNativePlatform } from "@/lib/native";
 
 /* ── Above-the-fold: eager ── */
 const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
@@ -67,6 +68,7 @@ const Index = () => {
   const { dealerAccount, isAdmin, isModerator, loading } = useAuth();
   const { isAr } = useLanguage();
   const isDealer = !!dealerAccount && !isModerator;
+  const native = isNativePlatform();
   const savedRole = typeof window !== "undefined" ? localStorage.getItem("almasria_last_role") : null;
 
   // Moderator-only employees should never see the B2C homepage
@@ -114,7 +116,7 @@ const Index = () => {
       <LazySection fallback={null}><Footer /></LazySection>
       
       <Suspense fallback={null}><BackToTop /></Suspense>
-      <Suspense fallback={null}><CarProfilePopup /></Suspense>
+      {!native && <Suspense fallback={null}><CarProfilePopup /></Suspense>}
     </div>
   );
 };
