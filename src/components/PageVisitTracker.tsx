@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { trackPageVisit, trackHeartbeatVisit, flushPendingVisits } from "@/lib/pageVisitTracker";
 import { trackCustomerSession } from "@/lib/sessionTracker";
+import { isNativePlatform } from "@/lib/native";
 
 /**
  * Mounted once inside the router. Tracks every navigation as a page_visit
@@ -14,9 +15,11 @@ import { trackCustomerSession } from "@/lib/sessionTracker";
  */
 export default function PageVisitTracker() {
   const location = useLocation();
+  const native = isNativePlatform();
 
   // On mount: flush any leftover visits from previous tabs/sessions
   useEffect(() => {
+    if (native) return;
     flushPendingVisits();
 
     const handleVisibility = () => {
@@ -38,10 +41,11 @@ export default function PageVisitTracker() {
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("beforeunload", handlePageHide);
     };
-  }, []);
+  }, [native]);
 
   // Track every navigation
   useEffect(() => {
+    if (native) return;
     const fullPath = location.pathname + location.search;
     // Track immediately so fast bounces (esp. from FB in-app browser) don't get lost.
     // Run title-dependent metadata enrichment in a microtask but the visit itself is queued sync.
@@ -58,7 +62,7 @@ export default function PageVisitTracker() {
     return () => {
       clearInterval(heartbeat);
     };
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, native]);
 
   return null;
 }

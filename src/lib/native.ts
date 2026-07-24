@@ -90,6 +90,91 @@ export const closeInAppBrowser = async (): Promise<void> => {
 };
 
 /**
+ * Hard kill-switch for browser/WebView notification surfaces in native builds.
+ *
+ * The TestFlight evidence shows the iOS notification permission sheet can appear
+ * immediately after auth, over the global error screen. That means some web-side
+ * path (old bundle, browser Notification API, or service-worker push state) can
+ * still ask the OS for notification permission even after the native push plugin
+ * was removed. This guard runs before React mounts and makes native builds unable
+ * to request notification permission from JavaScript at all.
+ */
+export const disableNativeNotificationSurfaces = (): void => {
+  if (!isNativePlatform() || typeof window === "undefined") return;
+
+  const disabledServiceWorker = {
+    register: async () => undefined,
+    getRegistration: async () => null,
+    getRegistrations: async () => [],
+    ready: new Promise<ServiceWorkerRegistration>(() => {}),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    controller: null,
+  };
+
+  try {
+    const nativeNavigator = window.navigator;
+    if ("serviceWorker" in nativeNavigator) {
+      nativeNavigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => {
+          registrations.forEach((registration) => {
+            void registration.unregister();
+          });
+        })
+        .catch(() => {});
+    }
+  } catch {
+    /* ignore — service workers may be unavailable on capacitor:// */
+  }
+
+  try {
+    Object.defineProperty(window.navigator, "serviceWorker", {
+      configurable: true,
+      get: () => disabledServiceWorker,
+    });
+  } catch {
+    /* ignore — some WebViews expose navigator.serviceWorker as read-only */
+  }
+
+  try {
+    const blockedNotification = function blockedNativeNotification() {
+      return undefined;
+    } as unknown as typeof Notification;
+
+    Object.defineProperty(blockedNotification, "permission", {
+      configurable: true,
+      get: () => "denied" as NotificationPermission,
+    });
+
+    Object.defineProperty(blockedNotification, "requestPermission", {
+      configurable: true,
+      writable: true,
+      value: async () => "denied" as NotificationPermission,
+    });
+
+    Object.defineProperty(window, "Notification", {
+      configurable: true,
+      writable: true,
+      value: blockedNotification,
+    });
+  } catch {
+    try {
+      const notificationCtor = (window as Window & { Notification?: typeof Notification }).Notification;
+      if (!notificationCtor) return;
+
+      Object.defineProperty(notificationCtor, "requestPermission", {
+        configurable: true,
+        writable: true,
+        value: async () => "denied" as NotificationPermission,
+      });
+    } catch {
+      /* ignore — some WebViews expose Notification as read-only */
+    }
+  }
+};
+
+/**
  * WhatsApp links. iOS hands off `https://wa.me/...` to the installed
  * WhatsApp app automatically when opened via Safari View Controller, so we
  * just funnel through openExternal.

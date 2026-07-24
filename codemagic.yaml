@@ -18,6 +18,9 @@ workflows:
       - name: Build Web Assets
         script: |
           npm run build
+          # Native TestFlight build must not bundle web service workers.
+          # They are web-only and can trigger iOS notification/service-worker flows.
+          rm -f dist/sw.js dist/sw-push.js
       - name: Prepare iOS Platform
         script: |
           if [ ! -d "ios" ]; then
