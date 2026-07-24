@@ -103,10 +103,10 @@ export const disableNativeNotificationSurfaces = (): void => {
   if (!isNativePlatform() || typeof window === "undefined") return;
 
   const disabledServiceWorker = {
-    register: async () => Promise.reject(new Error("ERR-NATIVE-NOTIF-001: service workers disabled in native app")),
+    register: async () => undefined,
     getRegistration: async () => null,
     getRegistrations: async () => [],
-    ready: Promise.reject(new Error("ERR-NATIVE-NOTIF-001: service workers disabled in native app")),
+    ready: new Promise<ServiceWorkerRegistration>(() => {}),
     addEventListener: () => {},
     removeEventListener: () => {},
     controller: null,
