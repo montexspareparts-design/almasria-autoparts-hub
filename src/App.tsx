@@ -20,7 +20,6 @@ import { CartProvider } from "@/contexts/CartContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
-import NativeBootstrap from "@/components/NativeBootstrap";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 import { isNativePlatform } from "@/lib/native";
 const Index = lazy(() => import("./pages/Index"));
@@ -166,7 +165,6 @@ const App = () => (
                <Suspense fallback={null}>
                  <ImpersonationBanner />
                </Suspense>
-               <NativeBootstrap />
                <Suspense fallback={<PageLoader />}>
                   <AnimatedRoutes>
                   <Routes>

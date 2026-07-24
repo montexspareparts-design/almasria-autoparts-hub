@@ -223,6 +223,121 @@ const ALLOWED_DEEP_LINK_PATHS = new Set<string>([
 const supabaseImportPromise = () => import("@/integrations/supabase/client");
 
 let deepLinkListenerRegistered = false;
+let launchUrlHandled = false;
+
+type NativeNavigate = (path: string, opts?: { replace?: boolean }) => void;
+
+const routeNativeTarget = (target: string, navigate?: NativeNavigate) => {
+  if (navigate) {
+    navigate(target, { replace: true });
+    return;
+  }
+
+  if (typeof window === "undefined") return;
+
+  try {
+    window.history.replaceState(window.history.state, "", target);
+    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+  } catch {
+    window.location.replace(target);
+  }
+};
+
+const getParams = (parsed: URL) => {
+  const hash = parsed.hash?.startsWith("#") ? parsed.hash.slice(1) : parsed.hash;
+  const hashParams = hash ? new URLSearchParams(hash) : new URLSearchParams();
+  const queryParams = parsed.search ? new URLSearchParams(parsed.search.slice(1)) : new URLSearchParams();
+  return { hashParams, queryParams };
+};
+
+const hydrateOAuthSessionFromUrl = async (parsed: URL) => {
+  const { supabase } = await supabaseImportPromise();
+  const { hashParams, queryParams } = getParams(parsed);
+
+  // Some native OAuth providers return tokens in the fragment, others in the
+  // query string. Read both so implicit and PKCE callbacks are deterministic.
+  const access_token = hashParams.get("access_token") || queryParams.get("access_token");
+  const refresh_token = hashParams.get("refresh_token") || queryParams.get("refresh_token");
+  const code = queryParams.get("code") || hashParams.get("code");
+  const oauthErr =
+    queryParams.get("error_description") ||
+    queryParams.get("error") ||
+    hashParams.get("error_description") ||
+    hashParams.get("error");
+
+  console.info("[deeplink] auth-callback", {
+    hasCode: !!code,
+    hasHashTokens: !!(hashParams.get("access_token") && hashParams.get("refresh_token")),
+    hasQueryTokens: !!(queryParams.get("access_token") && queryParams.get("refresh_token")),
+    hasError: !!oauthErr,
+  });
+
+  if (oauthErr) {
+    console.warn("[deeplink] oauth provider error", oauthErr);
+    return;
+  }
+
+  if (access_token && refresh_token) {
+    const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+    if (error) console.warn("[deeplink] setSession failed", error.message);
+    return;
+  }
+
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) console.warn("[deeplink] exchangeCodeForSession failed", error.message);
+  }
+};
+
+const handleNativeDeepLinkUrl = async (raw: string, navigate?: NativeNavigate) => {
+  if (!raw) return;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    console.warn("[deeplink] malformed url", raw);
+    return;
+  }
+
+  // Only accept our own custom scheme, or universal-link https from
+  // the canonical domain.
+  const isCustomScheme = parsed.protocol === `${APP_URL_SCHEME}:`;
+  const isCanonicalHttps =
+    parsed.protocol === "https:" &&
+    (parsed.hostname === "almasriaautoparts.com" ||
+      parsed.hostname === "www.almasriaautoparts.com");
+  if (!isCustomScheme && !isCanonicalHttps) {
+    console.warn("[deeplink] rejected scheme", parsed.protocol, parsed.hostname);
+    return;
+  }
+
+  // Custom scheme uses `host` as the "path" (e.g. com.almasria.autoparts://payment-callback).
+  // Normalize both to a leading-slash path.
+  const rawPath = isCustomScheme
+    ? `/${parsed.hostname}${parsed.pathname || ""}`
+    : parsed.pathname || "/";
+  const path = rawPath.replace(/\/+/g, "/");
+
+  if (!ALLOWED_DEEP_LINK_PATHS.has(path)) {
+    console.warn("[deeplink] path not allowed", path);
+    return;
+  }
+
+  if (path === "/auth-callback") {
+    try {
+      await hydrateOAuthSessionFromUrl(parsed);
+    } catch (err) {
+      console.warn("[deeplink] failed to hydrate oauth session", err);
+    }
+  }
+
+  await closeInAppBrowser();
+
+  const search = parsed.search || "";
+  const target = `${path}${search}`;
+  routeNativeTarget(target, navigate);
+};
 
 /**
  * Registers the single global `appUrlOpen` listener. Safe to call multiple
@@ -230,97 +345,25 @@ let deepLinkListenerRegistered = false;
  * (from `src/main.tsx`).
  */
 export const registerDeepLinkListener = (
-  navigate: (path: string, opts?: { replace?: boolean }) => void
+  navigate?: NativeNavigate
 ): void => {
   if (!isNativePlatform() || deepLinkListenerRegistered) return;
   deepLinkListenerRegistered = true;
 
   App.addListener("appUrlOpen", async (event: URLOpenListenerEvent) => {
     try {
-      const raw = event.url;
-      if (!raw) return;
-
-      let parsed: URL;
-      try {
-        parsed = new URL(raw);
-      } catch {
-        console.warn("[deeplink] malformed url", raw);
-        return;
-      }
-
-      // Only accept our own custom scheme, or universal-link https from
-      // the canonical domain.
-      const isCustomScheme = parsed.protocol === `${APP_URL_SCHEME}:`;
-      const isCanonicalHttps =
-        parsed.protocol === "https:" &&
-        (parsed.hostname === "almasriaautoparts.com" ||
-          parsed.hostname === "www.almasriaautoparts.com");
-      if (!isCustomScheme && !isCanonicalHttps) {
-        console.warn("[deeplink] rejected scheme", parsed.protocol, parsed.hostname);
-        return;
-      }
-
-      // Custom scheme uses `host` as the "path" (e.g. com.almasria.autoparts://payment-callback).
-      // Normalize both to a leading-slash path.
-      const rawPath = isCustomScheme
-        ? `/${parsed.hostname}${parsed.pathname || ""}`
-        : parsed.pathname || "/";
-      const path = rawPath.replace(/\/+/g, "/");
-
-      if (!ALLOWED_DEEP_LINK_PATHS.has(path)) {
-        console.warn("[deeplink] path not allowed", path);
-        return;
-      }
-
-      // OAuth callback: Supabase may return tokens in the hash (implicit)
-      // OR a `?code=...` for the default PKCE flow. Handle both.
-      if (path === "/auth-callback") {
-        try {
-          const { supabase } = await supabaseImportPromise();
-
-          const hash = parsed.hash?.startsWith("#") ? parsed.hash.slice(1) : parsed.hash;
-          const hashParams = hash ? new URLSearchParams(hash) : null;
-          const queryParams = parsed.search ? new URLSearchParams(parsed.search.slice(1)) : null;
-
-          const access_token = hashParams?.get("access_token");
-          const refresh_token = hashParams?.get("refresh_token");
-          const code = queryParams?.get("code");
-          const oauthErr =
-            queryParams?.get("error_description") ||
-            queryParams?.get("error") ||
-            hashParams?.get("error_description") ||
-            hashParams?.get("error");
-
-          console.info("[deeplink] auth-callback", {
-            hasCode: !!code,
-            hasHashTokens: !!(access_token && refresh_token),
-            hasError: !!oauthErr,
-          });
-
-          if (oauthErr) {
-            console.warn("[deeplink] oauth provider error", oauthErr);
-          } else if (access_token && refresh_token) {
-            await supabase.auth.setSession({ access_token, refresh_token });
-          } else if (code) {
-            // PKCE flow — exchange the authorization code (string only, not the full URL)
-            // for a session. Requires the verifier stored at signInWithOAuth time.
-            const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
-            if (exErr) console.warn("[deeplink] exchangeCodeForSession failed", exErr.message);
-          }
-        } catch (err) {
-          console.warn("[deeplink] failed to hydrate oauth session", err);
-        }
-      }
-
-
-      // Close the in-app Safari view before navigating.
-      await closeInAppBrowser();
-
-      const search = parsed.search || "";
-      const target = `${path}${search}`;
-      navigate(target, { replace: true });
+      await handleNativeDeepLinkUrl(event.url, navigate);
     } catch (err) {
       console.error("[deeplink] handler failure", err);
     }
   });
+
+  if (!launchUrlHandled) {
+    launchUrlHandled = true;
+    App.getLaunchUrl()
+      .then((launch) => {
+        if (launch?.url) void handleNativeDeepLinkUrl(launch.url, navigate);
+      })
+      .catch((err) => console.warn("[deeplink] getLaunchUrl failed", err));
+  }
 };
