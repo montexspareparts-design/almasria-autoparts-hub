@@ -6,11 +6,12 @@ import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
 import { installGlobalErrorDiagnostics } from "@/lib/runtimeDiagnostics";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { isNativePlatform } from "@/lib/native";
+import { isNativePlatform, registerDeepLinkListener } from "@/lib/native";
 
 installGlobalErrorDiagnostics();
 installMobileErrorReporter();
 initHighContrastEarly();
+registerDeepLinkListener();
 
 const enforceCanonicalHost = () => {
   if (typeof window === "undefined") {
