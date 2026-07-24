@@ -1,7 +1,17 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getLastDiagnosticCode, recordDiagnostic } from "@/lib/runtimeDiagnostics";
+import {
+  extractStackFrames,
+  getBuildCommit,
+  getBuildNumber,
+  getLastDiagnosticCode,
+  getLastDiagnosticRecord,
+  isDiagnosticMode,
+  recordDiagnostic,
+  sanitize,
+} from "@/lib/runtimeDiagnostics";
+import { Capacitor } from "@capacitor/core";
 
 interface Props {
   children: ReactNode;
