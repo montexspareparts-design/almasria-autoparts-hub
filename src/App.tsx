@@ -125,6 +125,7 @@ const DeferredComponent = ({ delay, children }: { delay: number; children: React
 
 const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: ReactNode }) => {
   const { loading, postAuthState } = useAuth();
+  if (isNativePlatform()) return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
@@ -147,7 +148,7 @@ const App = () => (
             <CartProvider>
               <PermissionRequestProvider>
               <SEOHead />
-              <PageVisitTracker />
+              {!isNativePlatform() && <PageVisitTracker />}
               <ReporterOnlyGuard />
               {!isNativePlatform() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
               <DeferredWhenAuthStable delay={4000}><AIChatBot /></DeferredWhenAuthStable>

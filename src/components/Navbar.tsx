@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
 import DealerAuthDialog from "@/components/DealerAuthDialog";
+import { isNativePlatform } from "@/lib/native";
 
 const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0, filter: "blur(8px)" },
@@ -44,6 +45,7 @@ const Navbar = () => {
     (dealerAccount?.tier === "wholesale_tier1" || dealerAccount?.tier === "wholesale_tier2");
   const navigate = useNavigate();
   const location = useLocation();
+  const native = isNativePlatform();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -239,7 +241,7 @@ const Navbar = () => {
                 )}
               </button>
             )}
-            {user && (
+            {user && !native && (
               <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
                 <NotificationBell />
               </div>
@@ -287,7 +289,7 @@ const Navbar = () => {
             )}
 
             {/* Notifications */}
-            {user && (
+            {user && !native && (
               <div className="glass-icon rounded-full h-9 w-9 flex items-center justify-center">
                 <NotificationBell />
               </div>
