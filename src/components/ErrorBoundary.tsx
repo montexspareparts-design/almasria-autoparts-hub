@@ -1,7 +1,17 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getLastDiagnosticCode, recordDiagnostic } from "@/lib/runtimeDiagnostics";
+import {
+  extractStackFrames,
+  getBuildCommit,
+  getBuildNumber,
+  getLastDiagnosticCode,
+  getLastDiagnosticRecord,
+  isDiagnosticMode,
+  recordDiagnostic,
+  sanitize,
+} from "@/lib/runtimeDiagnostics";
+import { Capacitor } from "@capacitor/core";
 
 interface Props {
   children: ReactNode;
@@ -48,13 +58,18 @@ export class ErrorBoundary extends Component<Props, State> {
     // Auto-recover on FIRST crash only (rate-limited). Fixes transient
     // post-auth crashes on iOS WebView where the boundary would otherwise
     // trap the user on an error screen after a successful login.
+    // In diagnostic mode we intentionally disable auto-recovery so the
+    // reviewer sees the real error details captured on this device.
+    if (isDiagnosticMode()) {
+      recordDiagnostic("render", error, "ErrorBoundary", errorInfo?.componentStack || undefined);
+      return;
+    }
+
     try {
       const last = Number(sessionStorage.getItem(AUTO_RECOVER_KEY) || 0);
       const now = Date.now();
       if (!last || now - last > AUTO_RECOVER_COOLDOWN_MS) {
         sessionStorage.setItem(AUTO_RECOVER_KEY, String(now));
-        // Small delay so React finishes committing the error state before we
-        // navigate. Full reload guarantees a clean chunk + provider tree.
         setTimeout(() => {
           try {
             window.location.replace("/");
@@ -78,6 +93,58 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null, code: "" });
     window.location.href = "/";
   };
+
+  renderDiagnosticPanel() {
+    const err = this.state.error;
+    const stored = getLastDiagnosticRecord();
+    let platform = stored?.platform ?? "web";
+    let native = stored?.native ?? false;
+    try {
+      platform = Capacitor.getPlatform?.() ?? platform;
+      native = Capacitor.isNativePlatform?.() ?? native;
+    } catch {
+      /* ignore */
+    }
+    const name = sanitize(err?.name || stored?.name || "Error").slice(0, 80);
+    const message = sanitize(err?.message || stored?.message || "unknown").slice(0, 240);
+    const frames = err?.stack ? extractStackFrames(err.stack, 3) : stored?.frames ?? [];
+    const route =
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.search
+        : stored?.route ?? "unknown";
+    const commit = getBuildCommit();
+    const build = getBuildNumber();
+
+    return (
+      <div
+        dir="ltr"
+        className="text-left bg-muted/50 rounded-lg p-3 text-[11px] font-mono space-y-2 select-all"
+      >
+        <div className="text-destructive font-bold">
+          {name}: {message}
+        </div>
+        {frames.length > 0 && (
+          <pre className="whitespace-pre-wrap break-words text-muted-foreground">
+            {frames.join("\n")}
+          </pre>
+        )}
+        {stored?.componentStack && (
+          <div className="text-muted-foreground">
+            <div className="font-bold text-foreground/80">component:</div>
+            <pre className="whitespace-pre-wrap break-words">{stored.componentStack.split("\n").slice(0, 4).join("\n")}</pre>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-muted-foreground pt-1 border-t border-border/50">
+          <div>route: <span className="text-foreground">{route}</span></div>
+          <div>platform: <span className="text-foreground">{platform}</span></div>
+          <div>native: <span className="text-foreground">{String(native)}</span></div>
+          <div>build: <span className="text-foreground">#{build}</span></div>
+          <div className="col-span-2">commit: <span className="text-foreground">{commit}</span></div>
+          <div className="col-span-2">code: <span className="text-foreground">{this.state.code || "ERR-APP-000"}</span></div>
+        </div>
+      </div>
+    );
+  }
 
   render() {
     if (!this.state.hasError) return this.props.children;
@@ -122,6 +189,10 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             </details>
           )}
+
+          {isDiagnosticMode() && this.renderDiagnosticPanel()}
+
+
 
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">

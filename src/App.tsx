@@ -1,6 +1,10 @@
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Component, forwardRef, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
-const InstallBannerLazy = lazy(() => import("@/components/InstallBanner"));
+const InstallBannerLazy = lazy(() =>
+  isNativePlatform()
+    ? Promise.resolve({ default: forwardRef<HTMLDivElement>(() => null) })
+    : import("@/components/InstallBanner"),
+);
 const WhatsAppFloat = lazy(() => import("@/components/WhatsAppFloat"));
 const VisitorLeadCapture = lazy(() => import("@/components/VisitorLeadCapture"));
 const SmartLeadTriggers = lazy(() => import("@/components/SmartLeadTriggers"));

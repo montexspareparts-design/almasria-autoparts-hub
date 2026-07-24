@@ -16,6 +16,7 @@ import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/login
 import { mapLoginError } from "@/lib/loginErrors";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
+import DiagnosticFooter from "@/components/DiagnosticFooter";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
@@ -470,6 +471,7 @@ const Auth = () => {
                 ← العودة للرئيسية
               </Link>
             </div>
+            <DiagnosticFooter />
           </div>
         )}
       </motion.div>
