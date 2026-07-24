@@ -94,6 +94,58 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.href = "/";
   };
 
+  renderDiagnosticPanel() {
+    const err = this.state.error;
+    const stored = getLastDiagnosticRecord();
+    let platform = stored?.platform ?? "web";
+    let native = stored?.native ?? false;
+    try {
+      platform = Capacitor.getPlatform?.() ?? platform;
+      native = Capacitor.isNativePlatform?.() ?? native;
+    } catch {
+      /* ignore */
+    }
+    const name = sanitize(err?.name || stored?.name || "Error").slice(0, 80);
+    const message = sanitize(err?.message || stored?.message || "unknown").slice(0, 240);
+    const frames = err?.stack ? extractStackFrames(err.stack, 3) : stored?.frames ?? [];
+    const route =
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.search
+        : stored?.route ?? "unknown";
+    const commit = getBuildCommit();
+    const build = getBuildNumber();
+
+    return (
+      <div
+        dir="ltr"
+        className="text-left bg-muted/50 rounded-lg p-3 text-[11px] font-mono space-y-2 select-all"
+      >
+        <div className="text-destructive font-bold">
+          {name}: {message}
+        </div>
+        {frames.length > 0 && (
+          <pre className="whitespace-pre-wrap break-words text-muted-foreground">
+            {frames.join("\n")}
+          </pre>
+        )}
+        {stored?.componentStack && (
+          <div className="text-muted-foreground">
+            <div className="font-bold text-foreground/80">component:</div>
+            <pre className="whitespace-pre-wrap break-words">{stored.componentStack.split("\n").slice(0, 4).join("\n")}</pre>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-muted-foreground pt-1 border-t border-border/50">
+          <div>route: <span className="text-foreground">{route}</span></div>
+          <div>platform: <span className="text-foreground">{platform}</span></div>
+          <div>native: <span className="text-foreground">{String(native)}</span></div>
+          <div>build: <span className="text-foreground">#{build}</span></div>
+          <div className="col-span-2">commit: <span className="text-foreground">{commit}</span></div>
+          <div className="col-span-2">code: <span className="text-foreground">{this.state.code || "ERR-APP-000"}</span></div>
+        </div>
+      </div>
+    );
+  }
+
   render() {
     if (!this.state.hasError) return this.props.children;
     if (this.props.fallback) return this.props.fallback;
