@@ -58,13 +58,18 @@ export class ErrorBoundary extends Component<Props, State> {
     // Auto-recover on FIRST crash only (rate-limited). Fixes transient
     // post-auth crashes on iOS WebView where the boundary would otherwise
     // trap the user on an error screen after a successful login.
+    // In diagnostic mode we intentionally disable auto-recovery so the
+    // reviewer sees the real error details captured on this device.
+    if (isDiagnosticMode()) {
+      recordDiagnostic("render", error, "ErrorBoundary", errorInfo?.componentStack || undefined);
+      return;
+    }
+
     try {
       const last = Number(sessionStorage.getItem(AUTO_RECOVER_KEY) || 0);
       const now = Date.now();
       if (!last || now - last > AUTO_RECOVER_COOLDOWN_MS) {
         sessionStorage.setItem(AUTO_RECOVER_KEY, String(now));
-        // Small delay so React finishes committing the error state before we
-        // navigate. Full reload guarantees a clean chunk + provider tree.
         setTimeout(() => {
           try {
             window.location.replace("/");
@@ -132,6 +137,10 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             </details>
           )}
+
+          {isDiagnosticMode() && this.renderDiagnosticPanel()}
+
+
 
 
           <div className="flex flex-col sm:flex-row gap-2 pt-2">
