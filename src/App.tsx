@@ -1,6 +1,5 @@
-import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { Component, forwardRef, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 const AIChatBot = lazy(() => import("@/components/AIChatBot"));
-import { forwardRef } from "react";
 const InstallBannerLazy = lazy(() =>
   isNativePlatform()
     ? Promise.resolve({ default: forwardRef<HTMLDivElement>(() => null) })
