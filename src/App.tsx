@@ -87,11 +87,7 @@ const DealerRtlAuditor = import.meta.env.DEV
   : null;
 const queryClient = new QueryClient();
 
-const isNativeShell = () => {
-  if (isNativePlatform()) return true;
-  if (typeof document !== "undefined" && document.documentElement.dataset.nativeApp === "true") return true;
-  return false;
-};
+const isNativeShell = () => isNativeShellFn();
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
