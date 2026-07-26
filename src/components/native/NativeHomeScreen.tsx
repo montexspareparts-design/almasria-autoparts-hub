@@ -33,7 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { LazyImage } from "@/components/ui/lazy-image";
-import logoAsset from "@/assets/almasria-logo-dark.png.asset.json";
+import logoDark from "@/assets/almasria-logo-dark.png";
 import catEngine from "@/assets/cat-engine.jpg";
 import catFilters from "@/assets/cat-filters.jpg";
 import catOils from "@/assets/cat-oils.jpg";
@@ -173,7 +173,7 @@ const NativeHomeScreen = () => {
       >
         <div className="px-4 pt-3 pb-3">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <img src={logoAsset.url} alt="المصرية جروب" className="h-9 w-auto object-contain" />
+            <img src={logoDark} alt="المصرية جروب" className="h-9 w-auto object-contain" />
             <Link
               to={user ? "/my-profile" : "/auth"}
               className="w-9 h-9 rounded-full bg-white/5 border border-white/10 grid place-items-center active:scale-95 transition-transform"
@@ -483,7 +483,7 @@ const NativeHomeScreen = () => {
 
       {/* ── ختام ── */}
       <footer className="px-4 mt-8 pb-2 flex flex-col items-center gap-2">
-        <img src={logoAsset.url} alt="المصرية جروب" className="h-8 w-auto object-contain opacity-80" />
+        <img src={logoDark} alt="المصرية جروب" className="h-8 w-auto object-contain opacity-80" />
         <p className="font-tajawal text-[11px] text-soft text-center">
           موزع معتمد لقطع غيار تويوتا — منذ 1999
         </p>
