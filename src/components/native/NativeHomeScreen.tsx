@@ -139,7 +139,7 @@ const ABOUT_LINKS = [
 
 const STATS = [
   { value: "+25", label: "سنة خبرة" },
-  { value: "+960", label: "صنف متاح" },
+  { value: "+20000", label: "صنف متاح" },
   { value: "48h", label: "توصيل" },
 ];
 
