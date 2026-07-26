@@ -26,6 +26,8 @@ import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 import { isNativePlatform } from "@/lib/native";
+const NativeTabBar = lazy(() => import("@/components/native/NativeTabBar"));
+
 const Index = lazy(() => import("./pages/Index"));
 
 const Auth = lazy(() => import("./pages/Auth"));
@@ -244,6 +246,12 @@ const App = () => (
                   </Routes>
                   </AnimatedRoutes>
                </Suspense>
+               {isNativeShell() && (
+                 <Suspense fallback={null}>
+                   <NativeTabBar />
+                 </Suspense>
+               )}
+
               </PermissionRequestProvider>
             </CartProvider>
           </AuthProvider>

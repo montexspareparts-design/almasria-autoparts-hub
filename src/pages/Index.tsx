@@ -8,6 +8,10 @@ import SEOHead from "@/components/SEOHead";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { isNativePlatform } from "@/lib/native";
+import { isNativeShell } from "@/lib/nativeShell";
+
+const NativeHomeScreen = lazy(() => import("@/components/native/NativeHomeScreen"));
+
 
 /* ── Above-the-fold: eager ── */
 const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
@@ -87,7 +91,17 @@ const Index = () => {
     return <Navigate to="/dealer" replace />;
   }
 
+  // Inside the iOS/Android shell → render the dedicated native app home.
+  if (isNativeShell()) {
+    return (
+      <Suspense fallback={<SectionFallback />}>
+        <NativeHomeScreen />
+      </Suspense>
+    );
+  }
+
   return (
+
     <div className="min-h-screen bg-carbon">
       <SEOHead
         titleAr="قطع غيار وزيوت تويوتا الأصلية في مصر"

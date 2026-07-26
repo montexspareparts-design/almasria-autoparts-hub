@@ -519,6 +519,10 @@ html.hc-mode a:not(.no-hc-underline) {
   .text-toyota-red { color: hsl(var(--toyota-red)); }
   .border-toyota-red { border-color: hsl(var(--toyota-red)); }
   .bg-toyota-red { background-color: hsl(var(--toyota-red)); }
+  .text-carbon { color: hsl(var(--carbon)); }
+  .bg-gold { background-color: hsl(var(--gold)); }
+  .ring-carbon { --tw-ring-color: hsl(var(--carbon)); }
+
   .font-display { font-family: "Space Grotesk", "Tajawal", sans-serif; }
   .font-tajawal { font-family: "Tajawal", "Cairo", sans-serif; }
   .font-almarai { font-family: "Almarai", "IBM Plex Sans Arabic", "Cairo", sans-serif; }
