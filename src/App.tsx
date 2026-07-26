@@ -25,6 +25,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
+import { isNativePlatform } from "@/lib/native";
 import { isNativeShell as isNativeShellFn } from "@/lib/nativeShell";
 const NativeTabBar = lazy(() => import("@/components/native/NativeTabBar"));
 
