@@ -13,33 +13,39 @@ import type { CapacitorConfig } from '@capacitor/cli';
  *   server: { url: 'https://<sandbox>.lovableproject.com', cleartext: true }
  * but this MUST be removed before an App Store archive.
  */
+const BRAND_NAVY = '#0A1A2F';
+
 const config: CapacitorConfig = {
   appId: 'com.almasria.autoparts',
   appName: 'ALMASRIA GROUP',
   webDir: 'dist',
   ios: {
-    backgroundColor: '#FFFFFF',
-    contentInset: 'automatic',
+    backgroundColor: BRAND_NAVY,
+    contentInset: 'never',
     preferredContentMode: 'mobile',
     scheme: 'Al Masria Auto Parts',
     limitsNavigationsToAppBoundDomains: false,
   },
   android: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: BRAND_NAVY,
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 1400,
       launchAutoHide: true,
-      backgroundColor: '#FFFFFF',
-      showSpinner: true,
-      spinnerColor: '#DC2626',
+      backgroundColor: BRAND_NAVY,
+      showSpinner: false,
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       splashImmersive: true,
+    },
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: BRAND_NAVY,
+      overlaysWebView: false,
     },
     Keyboard: {
       resize: 'native',
