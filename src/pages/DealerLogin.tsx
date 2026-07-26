@@ -67,8 +67,19 @@ const DealerLogin = () => {
     try {
       const { data: app } = await supabase.from("dealer_applications").select("id, status, business_name, created_at, review_notes").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       setApplicationStatus(app);
+      if (!app) {
+        // Signed in but not a dealer and no pending application:
+        // this is a retail customer — never bounce them back to the
+        // login form (it looks like the login silently failed).
+        toast({
+          title: "تم تسجيل الدخول بنجاح ✅",
+          description: "حسابك حساب عملاء قطاعي — تم تحويلك للصفحة الرئيسية.",
+        });
+        navigate("/", { replace: true });
+      }
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
   };
+
 
   const phoneToEmail = phoneToInternalEmail;
   const isPhone = isPhoneLike;
