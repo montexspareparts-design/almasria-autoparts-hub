@@ -929,3 +929,33 @@ html.hc-mode a:not(.no-hc-underline) {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Native shell (iOS / Android) — device-safe layout.
+   Only applies inside the Capacitor shell or the `?app=1` preview.
+   ────────────────────────────────────────────────────────────── */
+html[data-native-app="true"] body {
+  /* Pushes normal flow content below the notch. Fixed headers are
+     padded separately so they stay flush with the screen edge. */
+  padding-top: env(safe-area-inset-top);
+  overscroll-behavior-y: none;
+}
+
+/* Fixed top chrome (site navbar) keeps its glass background under the
+   status bar instead of being clipped by the notch. */
+html[data-native-app="true"] .fixed.top-0 {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Native feel: no text selection callouts / tap highlight on chrome. */
+html[data-native-app="true"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html[data-native-app="true"] input,
+html[data-native-app="true"] textarea,
+html[data-native-app="true"] [contenteditable="true"] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
