@@ -5,7 +5,7 @@ import { useInView } from "framer-motion";
 const features = [
   { icon: ShieldCheck, num: 25, suffix: "+", label: "عام خبرة" },
   { icon: Users, num: 1000, suffix: "+", label: "عميل نشط" },
-  { icon: Truck, num: 20000, suffix: "+", label: "منتج أصلي" },
+  { icon: Truck, num: 12, suffix: "K+", label: "منتج أصلي" },
   { icon: Clock, num: 48, suffix: "h", label: "تسليم سريع" },
 ];
 
