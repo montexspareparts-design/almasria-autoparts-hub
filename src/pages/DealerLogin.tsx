@@ -189,7 +189,20 @@ const DealerLogin = () => {
     );
   }
 
+  // ─── Already signed in: never fall back to the login form ───
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">جارٍ تحويلك...</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Login Form ───
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-8" dir="rtl">
       <div className="w-full max-w-[420px]">
