@@ -8,6 +8,10 @@ import SEOHead from "@/components/SEOHead";
 import { OrganizationSchema, WebSiteSchema, LocalBusinessSchema, FAQSchema } from "@/components/SEOSchemaMarkup";
 import { useLazyVisible } from "@/hooks/useLazyVisible";
 import { isNativePlatform } from "@/lib/native";
+import { isNativeShell } from "@/lib/nativeShell";
+
+const NativeHomeScreen = lazy(() => import("@/components/native/NativeHomeScreen"));
+
 
 /* ── Above-the-fold: eager ── */
 const TrustBadgesStrip = lazy(() => import("@/components/TrustBadgesStrip"));
