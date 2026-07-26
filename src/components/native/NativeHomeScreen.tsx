@@ -18,7 +18,6 @@ import {
   Car,
   Wrench,
   BookOpen,
-  FileText,
   PackageSearch,
   Store,
   Building2,
