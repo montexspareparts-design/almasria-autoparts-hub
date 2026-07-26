@@ -14,8 +14,9 @@ export const initNativeUiPreview = (): void => {
     // never switch to the app UI on its own.
     localStorage.removeItem(PREVIEW_KEY);
     const param = new URLSearchParams(window.location.search).get("app");
-    if (param === "1") {
-      // Session-only preview: active for this URL/tab, never persisted.
+    // Real native shell always gets the app UI; `?app=1` is a session-only
+    // browser preview of the very same UI.
+    if (isNativePlatform() || param === "1") {
       document.documentElement.dataset.nativeApp = "true";
     } else {
       delete document.documentElement.dataset.nativeApp;
