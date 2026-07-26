@@ -228,21 +228,34 @@ const NativeHomeScreen = () => {
             <h1 className="font-tajawal font-black text-[26px] leading-[1.25] mt-3">
               قطع غيار تويوتا الأصلية
               <span className="block text-white/55 text-[17px] font-bold mt-1">
-                بضمان الوكالة وتوصيل خلال 48 ساعة
+                توصيل خلال 48 ساعة لكل المحافظات
               </span>
             </h1>
           </motion.div>
 
           <form onSubmit={submitSearch} className="flex items-center gap-2 mt-5">
             <div className="flex-1 flex items-center gap-2 h-12 px-4 rounded-2xl bg-white/[0.07] border border-white/15 backdrop-blur-xl focus-within:border-toyota-red/70 transition-colors">
-              <Search className="w-[18px] h-[18px] text-white/50 shrink-0" />
+              <button type="submit" aria-label="بحث" className="shrink-0">
+                <Search className="w-[18px] h-[18px] text-white/60" />
+              </button>
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="ابحث بكود الصنف أو البارت نمبر…"
                 className="flex-1 bg-transparent outline-none font-tajawal text-sm text-white placeholder:text-white/40"
+                type="search"
                 inputMode="search"
+                enterKeyHint="search"
+                autoComplete="off"
               />
+              {query.trim() && (
+                <button
+                  type="submit"
+                  className="shrink-0 px-3 h-8 rounded-xl bg-toyota-red font-tajawal text-[12px] font-bold text-white active:scale-95 transition-transform"
+                >
+                  بحث
+                </button>
+              )}
             </div>
             <button
               type="button"
@@ -253,6 +266,7 @@ const NativeHomeScreen = () => {
               <ScanLine className="w-5 h-5 text-white" />
             </button>
           </form>
+
 
           {/* stats */}
           <div className="grid grid-cols-3 gap-2 mt-5">
