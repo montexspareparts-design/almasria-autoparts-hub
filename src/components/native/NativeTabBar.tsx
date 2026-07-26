@@ -59,7 +59,10 @@ const NativeTabBar = () => {
         <button
           type="button"
           aria-label="عربة التسوق"
-          onClick={() => navigate("/cart")}
+          onClick={() => {
+            void haptic("medium");
+            navigate("/cart");
+          }}
           className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 rounded-full bg-toyota-red text-white grid place-items-center shadow-[0_10px_30px_-6px_hsl(var(--toyota-red)/0.7)] ring-4 ring-carbon active:scale-95 transition-transform"
         >
           <ShoppingCart className="w-6 h-6" strokeWidth={2.2} />
@@ -96,7 +99,9 @@ const TabItem = ({
     <li className="h-full">
       <Link
         to={tab.to}
-        className="relative h-full flex flex-col items-center justify-center gap-1 select-none"
+        onClick={() => void haptic("light")}
+        aria-current={active ? "page" : undefined}
+        className="relative h-full flex flex-col items-center justify-center gap-1 select-none active:scale-95 transition-transform"
       >
         {active && (
           <motion.span
