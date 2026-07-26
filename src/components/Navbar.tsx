@@ -443,17 +443,18 @@ const Navbar = () => {
                   </motion.a>
                 );
               })}
-              {/* Install App */}
-              <motion.div custom={links.length} initial="hidden" animate="visible" variants={linkVariants}>
-                <Link
-                  to="/install"
-                  className="py-3 text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Download className="w-4 h-4" />
-                  {t("nav.install_app")}
-                </Link>
-              </motion.div>
+              {!native && (
+                <motion.div custom={links.length} initial="hidden" animate="visible" variants={linkVariants}>
+                  <Link
+                    to="/install"
+                    className="py-3 text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Download className="w-4 h-4" />
+                    {t("nav.install_app")}
+                  </Link>
+                </motion.div>
+              )}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="border-t border-secondary-foreground/10 pt-3 mt-2 space-y-1.5">
                 {user ? (
                   <>
