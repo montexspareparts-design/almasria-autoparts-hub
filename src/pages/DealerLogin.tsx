@@ -67,8 +67,19 @@ const DealerLogin = () => {
     try {
       const { data: app } = await supabase.from("dealer_applications").select("id, status, business_name, created_at, review_notes").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
       setApplicationStatus(app);
+      if (!app) {
+        // Signed in but not a dealer and no pending application:
+        // this is a retail customer — never bounce them back to the
+        // login form (it looks like the login silently failed).
+        toast({
+          title: "تم تسجيل الدخول بنجاح ✅",
+          description: "حسابك حساب عملاء قطاعي — تم تحويلك للصفحة الرئيسية.",
+        });
+        navigate("/", { replace: true });
+      }
     } catch (err) { console.error(err); } finally { setCheckingStatus(false); }
   };
+
 
   const phoneToEmail = phoneToInternalEmail;
   const isPhone = isPhoneLike;
@@ -178,7 +189,20 @@ const DealerLogin = () => {
     );
   }
 
+  // ─── Already signed in: never fall back to the login form ───
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">جارٍ تحويلك...</p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Login Form ───
+
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-8" dir="rtl">
       <div className="w-full max-w-[420px]">
