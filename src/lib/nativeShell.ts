@@ -10,11 +10,15 @@ const PREVIEW_KEY = "almasria_app_ui_preview";
 export const initNativeUiPreview = (): void => {
   if (typeof window === "undefined") return;
   try {
+    // Always clear any previously remembered preview flag: the website must
+    // never switch to the app UI on its own.
+    localStorage.removeItem(PREVIEW_KEY);
     const param = new URLSearchParams(window.location.search).get("app");
-    if (param === "1") localStorage.setItem(PREVIEW_KEY, "1");
-    if (param === "0") localStorage.removeItem(PREVIEW_KEY);
-    if (localStorage.getItem(PREVIEW_KEY) === "1") {
+    if (param === "1") {
+      // Session-only preview: active for this URL/tab, never persisted.
       document.documentElement.dataset.nativeApp = "true";
+    } else {
+      delete document.documentElement.dataset.nativeApp;
     }
   } catch {
     /* ignore */
