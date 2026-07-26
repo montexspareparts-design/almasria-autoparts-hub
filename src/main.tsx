@@ -7,8 +7,10 @@ import { installGlobalErrorDiagnostics } from "@/lib/runtimeDiagnostics";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { disableNativeNotificationSurfaces, isNativePlatform, registerDeepLinkListener } from "@/lib/native";
+import { initNativeUiPreview } from "@/lib/nativeShell";
 
 disableNativeNotificationSurfaces();
+initNativeUiPreview();
 installGlobalErrorDiagnostics();
 installMobileErrorReporter();
 initHighContrastEarly();
