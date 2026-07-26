@@ -88,7 +88,22 @@ export const startAppleSignIn = async (): Promise<{ session: true }> => {
     token: native.identityToken,
     nonce: rawNonce,
   });
-  if (error) throw error;
+  if (error) {
+    const raw = (error.message || "").toLowerCase();
+    if (raw.includes("audience")) {
+      throw new Error(
+        "إعداد Apple ناقص في الخادم: لازم يضاف معرّف التطبيق com.almasria.autoparts كـ Client ID مسموح به.",
+      );
+    }
+    if (raw.includes("nonce")) {
+      throw new Error("فشل التحقق الأمني من Apple. جرّب مرة أخرى.");
+    }
+    if (raw.includes("provider") && raw.includes("not enabled")) {
+      throw new Error("تسجيل الدخول بحساب Apple غير مفعّل على الخادم.");
+    }
+    throw error;
+  }
+
   if (!data?.session) throw new Error("Supabase did not return a session");
 
   // First-login: Apple gives fullName only once. Persist to user_metadata
