@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, LayoutGrid, Package, User, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { haptic } from "@/lib/haptics";
 
 /**
  * Native bottom tab bar — only rendered inside the iOS/Android shell.
