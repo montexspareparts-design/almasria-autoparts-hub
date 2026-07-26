@@ -84,6 +84,44 @@ const BANNERS = [
   },
 ];
 
+/* كل خدمات الموقع — لا شيء ناقص داخل التطبيق */
+const SERVICES = [
+  { label: "قطع أصلية", to: "/products/genuine-toyota-parts", icon: BadgeCheck },
+  { label: "MTX", to: "/mtx", icon: Sparkles },
+  { label: "حسب الموديل", to: "/parts-by-model", icon: Car },
+  { label: "حسب النوع", to: "/parts-by-type", icon: Wrench },
+  { label: "الكتالوجات", to: "/catalogs", icon: BookOpen },
+  { label: "تتبع الطلب", to: "/track-order", icon: PackageSearch },
+  { label: "دخول التجار", to: "/dealer-login", icon: Store },
+  { label: "تسجيل تاجر", to: "/dealer-apply", icon: Building2 },
+];
+
+const MODELS = [
+  { label: "هايس", slug: "hiace" },
+  { label: "كوستر", slug: "coaster" },
+  { label: "هايلوكس", slug: "hilux" },
+  { label: "لاند كروزر", slug: "land-cruiser" },
+  { label: "ياريس", slug: "yaris" },
+  { label: "كورولا", slug: "corolla" },
+];
+
+const GUIDES = [
+  { label: "إزاي تعرف القطعة الأصلية؟", to: "/guides/identifying-genuine-toyota-parts" },
+  { label: "أصلي vs MTX vs DENSO", to: "/guides/genuine-vs-mtx-vs-denso" },
+  { label: "إمتى تغيّر فلتر الزيت؟", to: "/guides/when-to-change-oil-filter" },
+  { label: "إمتى تغيّر تيل الفرامل؟", to: "/guides/when-to-change-brake-pads" },
+  { label: "صيانة كورولا", to: "/guides/toyota-corolla-maintenance" },
+  { label: "صيانة هايلوكس", to: "/guides/toyota-hilux-maintenance" },
+];
+
+const ABOUT_LINKS = [
+  { label: "عن الشركة", to: "/about", icon: Info },
+  { label: "ليه المصرية؟", to: "/what-sets-us-apart", icon: BadgeCheck },
+  { label: "فروعنا", to: "/contact", icon: MapPin },
+  { label: "السياسات", to: "/policies", icon: ScrollText },
+];
+
+
 const NativeHomeScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
