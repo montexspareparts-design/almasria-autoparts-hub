@@ -42,3 +42,22 @@ export const isNativeShell = (): boolean => {
   }
   return false;
 };
+
+/**
+ * Applies native chrome (status bar) styling once at launch.
+ * No-op on the web; never throws.
+ */
+export const initNativeChrome = async (): Promise<void> => {
+  if (!isNativePlatform()) return;
+  try {
+    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    await StatusBar.setStyle({ style: Style.Dark });
+    try {
+      await StatusBar.setBackgroundColor({ color: "#0A1A2F" });
+    } catch {
+      /* iOS does not support background colour */
+    }
+  } catch {
+    /* plugin unavailable — ignore */
+  }
+};
