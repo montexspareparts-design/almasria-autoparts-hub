@@ -160,7 +160,7 @@ export const disableNativeNotificationSurfaces = (): void => {
     register: async () => undefined,
     getRegistration: async () => null,
     getRegistrations: async () => [],
-    ready: Promise.resolve(null as unknown as ServiceWorkerRegistration),
+    ready: new Promise<ServiceWorkerRegistration>(() => {}),
     addEventListener: () => {},
     removeEventListener: () => {},
     controller: null,
