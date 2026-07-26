@@ -244,6 +244,12 @@ const App = () => (
                   </Routes>
                   </AnimatedRoutes>
                </Suspense>
+               {isNativeShell() && (
+                 <Suspense fallback={null}>
+                   <NativeTabBar />
+                 </Suspense>
+               )}
+
               </PermissionRequestProvider>
             </CartProvider>
           </AuthProvider>
