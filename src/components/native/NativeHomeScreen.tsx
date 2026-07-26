@@ -15,18 +15,32 @@ import {
   Wind,
   Bell,
   ScanLine,
+  Car,
+  Wrench,
+  BookOpen,
+  PackageSearch,
+  Store,
+  Building2,
+  BadgeCheck,
+  Phone,
+  MapPin,
+  ScrollText,
+  Sparkles,
+  MessageCircle,
+  Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { LazyImage } from "@/components/ui/lazy-image";
-import logo from "@/assets/almasria-logo.png";
+import logoDark from "@/assets/almasria-logo-dark.png";
 import catEngine from "@/assets/cat-engine.jpg";
 import catFilters from "@/assets/cat-filters.jpg";
 import catOils from "@/assets/cat-oils.jpg";
 import catElectrical from "@/assets/cat-electrical.jpg";
 import catSuspension from "@/assets/cat-suspension.jpg";
 import catCooling from "@/assets/cat-cooling.jpg";
+
 
 /* ────────────────────────────────────────────────────────────
    Native app home — a real mobile app surface, not a webpage.
@@ -68,6 +82,44 @@ const BANNERS = [
     to2: "hsl(0 0% 6%)",
   },
 ];
+
+/* كل خدمات الموقع — لا شيء ناقص داخل التطبيق */
+const SERVICES = [
+  { label: "قطع أصلية", to: "/products/genuine-toyota-parts", icon: BadgeCheck },
+  { label: "MTX", to: "/mtx", icon: Sparkles },
+  { label: "حسب الموديل", to: "/parts-by-model", icon: Car },
+  { label: "حسب النوع", to: "/parts-by-type", icon: Wrench },
+  { label: "الكتالوجات", to: "/catalogs", icon: BookOpen },
+  { label: "تتبع الطلب", to: "/track-order", icon: PackageSearch },
+  { label: "دخول التجار", to: "/dealer-login", icon: Store },
+  { label: "تسجيل تاجر", to: "/dealer-apply", icon: Building2 },
+];
+
+const MODELS = [
+  { label: "هايس", slug: "hiace" },
+  { label: "كوستر", slug: "coaster" },
+  { label: "هايلوكس", slug: "hilux" },
+  { label: "لاند كروزر", slug: "land-cruiser" },
+  { label: "ياريس", slug: "yaris" },
+  { label: "كورولا", slug: "corolla" },
+];
+
+const GUIDES = [
+  { label: "إزاي تعرف القطعة الأصلية؟", to: "/guides/identifying-genuine-toyota-parts" },
+  { label: "أصلي vs MTX vs DENSO", to: "/guides/genuine-vs-mtx-vs-denso" },
+  { label: "إمتى تغيّر فلتر الزيت؟", to: "/guides/when-to-change-oil-filter" },
+  { label: "إمتى تغيّر تيل الفرامل؟", to: "/guides/when-to-change-brake-pads" },
+  { label: "صيانة كورولا", to: "/guides/toyota-corolla-maintenance" },
+  { label: "صيانة هايلوكس", to: "/guides/toyota-hilux-maintenance" },
+];
+
+const ABOUT_LINKS = [
+  { label: "عن الشركة", to: "/about", icon: Info },
+  { label: "ليه المصرية؟", to: "/what-sets-us-apart", icon: BadgeCheck },
+  { label: "فروعنا", to: "/contact", icon: MapPin },
+  { label: "السياسات", to: "/policies", icon: ScrollText },
+];
+
 
 const NativeHomeScreen = () => {
   const navigate = useNavigate();
@@ -121,7 +173,7 @@ const NativeHomeScreen = () => {
       >
         <div className="px-4 pt-3 pb-3">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <img src={logo} alt="المصرية جروب" className="h-9 w-auto object-contain" />
+            <img src={logoDark} alt="المصرية جروب" className="h-9 w-auto object-contain" />
             <Link
               to={user ? "/my-profile" : "/auth"}
               className="w-9 h-9 rounded-full bg-white/5 border border-white/10 grid place-items-center active:scale-95 transition-transform"
@@ -241,6 +293,44 @@ const NativeHomeScreen = () => {
         </div>
       </section>
 
+      {/* ── كل الخدمات ── */}
+      <section className="px-4 mt-7">
+        <h2 className="font-tajawal font-black text-base mb-3">كل الخدمات</h2>
+        <div className="grid grid-cols-4 gap-2.5">
+          {SERVICES.map((s) => (
+            <Link
+              key={s.to}
+              to={s.to}
+              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-surface border border-white/[0.06] active:scale-95 transition-transform"
+            >
+              <span className="w-9 h-9 rounded-xl bg-toyota-red/[0.12] grid place-items-center">
+                <s.icon className="w-[18px] h-[18px] text-toyota-red" />
+              </span>
+              <span className="font-tajawal text-[10.5px] text-center leading-tight px-1">{s.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── حسب موديل السيارة ── */}
+      <section className="mt-7">
+        <SectionHeader title="اختر موديل عربيتك" to="/parts-by-model" />
+        <div className="flex gap-2 overflow-x-auto px-4 mt-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {MODELS.map((m) => (
+            <Link
+              key={m.slug}
+              to={`/parts-by-model/${m.slug}`}
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 h-10 rounded-full bg-surface border border-white/10 font-tajawal text-xs font-bold active:scale-95 transition-transform"
+            >
+              <Car className="w-4 h-4 text-gold" />
+              {m.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+
+
       {/* ── Products rail ── */}
       <section className="mt-7">
         <SectionHeader title="وصل حديثاً" to="/products" />
@@ -313,8 +403,95 @@ const NativeHomeScreen = () => {
         </section>
       )}
 
+      {/* ── باقات الصيانة ── */}
+      <section className="px-4 mt-7">
+        <Link
+          to="/parts-by-type"
+          className="block rounded-3xl p-5 bg-surface border border-white/[0.07] active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <span className="w-11 h-11 rounded-2xl bg-gold/15 grid place-items-center shrink-0">
+              <Wrench className="w-5 h-5 text-gold" />
+            </span>
+            <div className="flex-1">
+              <h3 className="font-tajawal font-black text-base">باقات الصيانة الدورية</h3>
+              <p className="font-tajawal text-xs text-soft mt-1">
+                كل قطع صيانة 10/20/40 ألف كم في طلب واحد
+              </p>
+            </div>
+            <ChevronLeft className="w-5 h-5 text-soft" />
+          </div>
+        </Link>
+      </section>
+
+      {/* ── الأدلة الفنية ── */}
+      <section className="mt-7">
+        <h2 className="font-tajawal font-black text-base px-4 mb-3">أدلة ونصائح فنية</h2>
+        <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {GUIDES.map((g) => (
+            <Link
+              key={g.to}
+              to={g.to}
+              className="snap-start shrink-0 w-[62%] rounded-2xl p-4 bg-surface border border-white/[0.06] active:scale-[0.97] transition-transform"
+            >
+              <BookOpen className="w-5 h-5 text-toyota-red mb-3" />
+              <p className="font-tajawal font-bold text-sm leading-snug">{g.label}</p>
+              <span className="font-tajawal text-[11px] text-soft mt-2 inline-block">اقرأ الدليل</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── الشركة ── */}
+      <section className="px-4 mt-7">
+        <h2 className="font-tajawal font-black text-base mb-3">المصرية جروب</h2>
+        <div className="grid grid-cols-2 gap-2.5">
+          {ABOUT_LINKS.map((a) => (
+            <Link
+              key={a.to}
+              to={a.to}
+              className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-surface border border-white/[0.06] active:scale-95 transition-transform"
+            >
+              <a.icon className="w-[18px] h-[18px] text-gold shrink-0" />
+              <span className="font-tajawal text-xs font-bold">{a.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── تواصل ── */}
+      <section className="px-4 mt-5">
+        <div className="grid grid-cols-2 gap-2.5">
+          <a
+            href="https://wa.me/201034806288"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#25D366]/15 border border-[#25D366]/30 active:scale-95 transition-transform"
+          >
+            <MessageCircle className="w-[18px] h-[18px] text-[#25D366]" />
+            <span className="font-tajawal text-xs font-bold text-[#25D366]">واتساب</span>
+          </a>
+          <a
+            href="tel:+201034806288"
+            className="flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-white/[0.06] border border-white/10 active:scale-95 transition-transform"
+          >
+            <Phone className="w-[18px] h-[18px] text-white" />
+            <span className="font-tajawal text-xs font-bold">اتصل بنا</span>
+          </a>
+        </div>
+      </section>
+
+      {/* ── ختام ── */}
+      <footer className="px-4 mt-8 pb-2 flex flex-col items-center gap-2">
+        <img src={logoDark} alt="المصرية جروب" className="h-8 w-auto object-contain opacity-80" />
+        <p className="font-tajawal text-[11px] text-soft text-center">
+          موزع معتمد لقطع غيار تويوتا — منذ 1999
+        </p>
+      </footer>
+
       <div className="h-6" />
     </div>
+
   );
 };
 
