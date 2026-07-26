@@ -127,7 +127,7 @@ const sections = [
 const quickStats = [
   { value: 25, suffix: "+", label: "سنة خبرة" },
   { value: 2000, suffix: "+", label: "عميل نشط" },
-  { value: 960, suffix: "+", label: "صنف أصلي" },
+  { value: 20000, suffix: "+", label: "صنف أصلي" },
   { value: 48, suffix: "h", label: "تسليم سريع" },
 ];
 

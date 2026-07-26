@@ -134,8 +134,8 @@ const ProductsPage = () => {
         <SEOHead
           titleAr="منتجاتنا — قطع غيار وزيوت تويوتا الأصلية"
           titleEn="Our Products — Toyota Genuine Parts & Oils"
-          descriptionAr="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، وAISIN. أكثر من 960 صنف متاح."
-          descriptionEn="Browse Al Masria Group catalog: Toyota genuine parts, oils, MTX Aftermarket, DENSO, and AISIN — 960+ items in stock."
+          descriptionAr="تصفح كتالوج المصرية جروب: قطع غيار تويوتا الأصلية، زيوت تويوتا، MTX Aftermarket، DENSO، وAISIN. أكثر من 20000 صنف متاح."
+          descriptionEn="Browse Al Masria Group catalog: Toyota genuine parts, oils, MTX Aftermarket, DENSO, and AISIN — 20000+ items in stock."
           keywordsAr="منتجات تويوتا, قطع غيار اصلية, زيوت تويوتا, MTX, DENSO, AISIN"
           keywordsEn="Toyota products, genuine parts, Toyota oil, MTX, DENSO, AISIN"
           breadcrumbs={[
