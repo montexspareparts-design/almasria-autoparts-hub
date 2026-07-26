@@ -26,6 +26,7 @@ import { PermissionRequestProvider } from "@/hooks/usePermissionRequest";
 import SEOHead from "@/components/SEOHead";
 import AnimatedRoutes from "@/components/AnimatedRoutes";
 import { isNativePlatform } from "@/lib/native";
+import { isNativeShell as isNativeShellFn } from "@/lib/nativeShell";
 const NativeTabBar = lazy(() => import("@/components/native/NativeTabBar"));
 
 const Index = lazy(() => import("./pages/Index"));
@@ -87,11 +88,7 @@ const DealerRtlAuditor = import.meta.env.DEV
   : null;
 const queryClient = new QueryClient();
 
-const isNativeShell = () => {
-  if (isNativePlatform()) return true;
-  if (typeof document !== "undefined" && document.documentElement.dataset.nativeApp === "true") return true;
-  return false;
-};
+const isNativeShell = () => isNativeShellFn();
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
