@@ -48,7 +48,11 @@ const NativeTabBar = () => {
         className="fixed bottom-0 inset-x-0 z-50"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="absolute inset-0 bg-carbon/85 backdrop-blur-2xl border-t border-white/10" />
+        <div
+          className="absolute inset-0 backdrop-blur-2xl border-t border-white/10"
+          style={{ background: "hsl(var(--carbon) / 0.9)" }}
+        />
+
 
         {/* center action */}
         <button
