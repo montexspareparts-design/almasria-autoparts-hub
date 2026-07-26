@@ -71,7 +71,7 @@ const isLikelyNativeWebView = (): boolean => {
 
   const ua = window.navigator?.userAgent?.toLowerCase() ?? "";
   const isIosWebView = /iphone|ipad|ipod/.test(ua) && /applewebkit/.test(ua) && !/safari/.test(ua);
-  const isAndroidWebView = /; wv\)/.test(ua) || /version\/\d+\.\d+.*chrome\/.test(ua);
+  const isAndroidWebView = /; wv\)/.test(ua) || /version\/\d+\.\d+.*chrome\//.test(ua);
   const hasNativeBridge = !!(window as CapacitorWindow).webkit?.messageHandlers?.bridge;
 
   return hasNativeBridge || isIosWebView || isAndroidWebView;
