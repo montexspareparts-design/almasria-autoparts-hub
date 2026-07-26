@@ -85,6 +85,12 @@ const DealerRtlAuditor = import.meta.env.DEV
   : null;
 const queryClient = new QueryClient();
 
+const isNativeShell = () => {
+  if (isNativePlatform()) return true;
+  if (typeof document !== "undefined" && document.documentElement.dataset.nativeApp === "true") return true;
+  return false;
+};
+
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
     <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
@@ -129,7 +135,7 @@ const DeferredComponent = ({ delay, children }: { delay: number; children: React
 
 const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: ReactNode }) => {
   const { loading, postAuthState } = useAuth();
-  if (isNativePlatform()) return null;
+  if (isNativeShell()) return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
@@ -152,9 +158,9 @@ const App = () => (
             <CartProvider>
               <PermissionRequestProvider>
               <SEOHead />
-              {!isNativePlatform() && <PageVisitTracker />}
+              {!isNativeShell() && <PageVisitTracker />}
               <ReporterOnlyGuard />
-              {!isNativePlatform() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
+              {!isNativeShell() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
               <DeferredWhenAuthStable delay={4000}><AIChatBot /></DeferredWhenAuthStable>
               <DeferredWhenAuthStable delay={2500}><WhatsAppFloat /></DeferredWhenAuthStable>
               <DeferredWhenAuthStable delay={1500}><VisitorLeadCapture /></DeferredWhenAuthStable>
@@ -204,7 +210,7 @@ const App = () => (
                     
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/catalogs" element={<CatalogsPage />} />
-                    <Route path="/install" element={isNativePlatform() ? <Navigate to="/" replace /> : <InstallApp />} />
+                    <Route path="/install" element={isNativeShell() ? <Navigate to="/" replace /> : <InstallApp />} />
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />

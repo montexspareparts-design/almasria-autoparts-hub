@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { trackClickCall, trackClickWhatsApp } from "@/lib/analytics";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { isNativePlatform } from "@/lib/native";
 import logo from "@/assets/logo.webp";
 
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useLanguage();
   const { dealerAccount } = useAuth();
   const isDealer = !!dealerAccount;
+  const native = isNativePlatform();
 
   const quickLinks = [
     { label: t("footer.home"), href: "/" },
@@ -28,8 +30,8 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     { label: "متى تغيّر تيل الفرامل؟", href: "/guides/when-to-change-brake-pads" },
     { label: "صيانة تويوتا كورولا", href: "/guides/toyota-corolla-maintenance" },
     { label: "صيانة تويوتا هايلوكس", href: "/guides/toyota-hilux-maintenance" },
-    { label: t("footer.install_app"), href: "/install", icon: Download },
-  ];
+    { label: t("footer.install_app"), href: "/install", icon: Download, webOnly: true },
+  ].filter((link) => !link.webOnly || !native);
 
   return (
     <footer ref={ref} className="relative glass-ios-strong text-white overflow-hidden">

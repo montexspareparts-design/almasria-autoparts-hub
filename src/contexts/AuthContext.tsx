@@ -380,8 +380,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      if (event === "USER_UPDATED") localStorage.removeItem("almasria_remember_me");
-      void resolvePostAuthRef.current(nextSession, event);
+      try {
+        if (event === "USER_UPDATED") localStorage.removeItem("almasria_remember_me");
+        void resolvePostAuthRef.current(nextSession, event).catch((error) => {
+          recordDiagnostic("pauth", error, "AuthContext.authListener.async");
+          setPostAuthState("RECOVERABLE_ERROR");
+        });
+      } catch (error) {
+        recordDiagnostic("pauth", error, "AuthContext.authListener.sync");
+        setPostAuthState("RECOVERABLE_ERROR");
+      }
     });
 
     supabase.auth.getSession()

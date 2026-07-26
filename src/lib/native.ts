@@ -28,20 +28,64 @@ export const CANONICAL_WEB_ORIGIN = "https://almasriaautoparts.com";
 // to hand control back to the native app after external flows.
 export const APP_URL_SCHEME = "com.almasria.autoparts";
 
-export const isNativePlatform = (): boolean => {
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+    getPlatform?: () => string;
+    platform?: string;
+  };
+  webkit?: {
+    messageHandlers?: Record<string, unknown>;
+  };
+  __ALMASRIA_NATIVE_NOTIFICATIONS_DISABLED__?: boolean;
+};
+
+const getWindowCapacitorPlatform = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const cap = (window as CapacitorWindow).Capacitor;
+  if (!cap) return null;
+
   try {
-    return Capacitor.isNativePlatform();
+    if (cap.isNativePlatform?.()) return cap.getPlatform?.() ?? cap.platform ?? "native";
   } catch {
-    return false;
+    /* ignore */
   }
+
+  const platform = cap.getPlatform?.() ?? cap.platform ?? null;
+  return platform && platform !== "web" ? platform : null;
+};
+
+const getCapacitorPlatform = (): string | null => {
+  try {
+    if (Capacitor.isNativePlatform()) return Capacitor.getPlatform?.() ?? "native";
+  } catch {
+    /* ignore */
+  }
+  return getWindowCapacitorPlatform();
+};
+
+const isLikelyNativeWebView = (): boolean => {
+  if (typeof window === "undefined") return false;
+
+  const protocol = window.location?.protocol ?? "";
+  if (protocol === "capacitor:" || protocol === "ionic:" || protocol === `${APP_URL_SCHEME}:`) return true;
+
+  const ua = window.navigator?.userAgent?.toLowerCase() ?? "";
+  const isIosWebView = /iphone|ipad|ipod/.test(ua) && /applewebkit/.test(ua) && !/safari/.test(ua);
+  const isAndroidWebView = /; wv\)/.test(ua) || /version\/\d+\.\d+.*chrome\//.test(ua);
+  const hasNativeBridge = !!(window as CapacitorWindow).webkit?.messageHandlers?.bridge;
+
+  return hasNativeBridge || isIosWebView || isAndroidWebView;
+};
+
+export const isNativePlatform = (): boolean => {
+  return !!getCapacitorPlatform() || isLikelyNativeWebView();
 };
 
 export const isNativeIOS = (): boolean => {
-  try {
-    return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
-  } catch {
-    return false;
-  }
+  if (getCapacitorPlatform() === "ios") return true;
+  if (typeof window === "undefined") return false;
+  return /iphone|ipad|ipod/.test(window.navigator?.userAgent?.toLowerCase() ?? "") && isNativePlatform();
 };
 
 /**
@@ -101,6 +145,16 @@ export const closeInAppBrowser = async (): Promise<void> => {
  */
 export const disableNativeNotificationSurfaces = (): void => {
   if (!isNativePlatform() || typeof window === "undefined") return;
+
+  const nativeWindow = window as CapacitorWindow;
+  if (nativeWindow.__ALMASRIA_NATIVE_NOTIFICATIONS_DISABLED__) return;
+  nativeWindow.__ALMASRIA_NATIVE_NOTIFICATIONS_DISABLED__ = true;
+
+  try {
+    document.documentElement.dataset.nativeApp = "true";
+  } catch {
+    /* ignore */
+  }
 
   const disabledServiceWorker = {
     register: async () => undefined,
