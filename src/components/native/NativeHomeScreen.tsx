@@ -15,18 +15,33 @@ import {
   Wind,
   Bell,
   ScanLine,
+  Car,
+  Wrench,
+  BookOpen,
+  FileText,
+  PackageSearch,
+  Store,
+  Building2,
+  BadgeCheck,
+  Phone,
+  MapPin,
+  ScrollText,
+  Sparkles,
+  MessageCircle,
+  Info,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { LazyImage } from "@/components/ui/lazy-image";
-import logo from "@/assets/almasria-logo.png";
+import logoAsset from "@/assets/almasria-logo-dark.png.asset.json";
 import catEngine from "@/assets/cat-engine.jpg";
 import catFilters from "@/assets/cat-filters.jpg";
 import catOils from "@/assets/cat-oils.jpg";
 import catElectrical from "@/assets/cat-electrical.jpg";
 import catSuspension from "@/assets/cat-suspension.jpg";
 import catCooling from "@/assets/cat-cooling.jpg";
+
 
 /* ────────────────────────────────────────────────────────────
    Native app home — a real mobile app surface, not a webpage.
