@@ -136,7 +136,7 @@ const NativeHomeScreen = () => {
       >
         <div className="px-4 pt-3 pb-3">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <img src={logo} alt="المصرية جروب" className="h-9 w-auto object-contain" />
+            <img src={logoAsset.url} alt="المصرية جروب" className="h-9 w-auto object-contain" />
             <Link
               to={user ? "/my-profile" : "/auth"}
               className="w-9 h-9 rounded-full bg-white/5 border border-white/10 grid place-items-center active:scale-95 transition-transform"
