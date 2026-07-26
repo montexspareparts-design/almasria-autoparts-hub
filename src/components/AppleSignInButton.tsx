@@ -34,8 +34,13 @@ export const AppleSignInButton = ({
         // Silent — user backed out.
       } else {
         console.error("[apple] login failed", err);
-        toast.error("تعذّر تسجيل الدخول بحساب Apple. حاول مرة أخرى.");
+        const detail =
+          err && typeof err === "object" && "message" in err
+            ? String((err as { message: unknown }).message).slice(0, 120)
+            : String(err).slice(0, 120);
+        toast.error("تعذّر تسجيل الدخول بحساب Apple", { description: detail });
       }
+
     } finally {
       setLoading(false);
     }
