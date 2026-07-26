@@ -51,7 +51,8 @@ const getWindowCapacitorPlatform = (): string | null => {
     /* ignore */
   }
 
-  return cap.platform ?? "native";
+  const platform = cap.getPlatform?.() ?? cap.platform ?? null;
+  return platform && platform !== "web" ? platform : null;
 };
 
 const getCapacitorPlatform = (): string | null => {
