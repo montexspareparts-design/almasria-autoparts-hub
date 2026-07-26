@@ -294,6 +294,44 @@ const NativeHomeScreen = () => {
         </div>
       </section>
 
+      {/* ── كل الخدمات ── */}
+      <section className="px-4 mt-7">
+        <h2 className="font-tajawal font-black text-base mb-3">كل الخدمات</h2>
+        <div className="grid grid-cols-4 gap-2.5">
+          {SERVICES.map((s) => (
+            <Link
+              key={s.to}
+              to={s.to}
+              className="flex flex-col items-center gap-2 py-3 rounded-2xl bg-surface border border-white/[0.06] active:scale-95 transition-transform"
+            >
+              <span className="w-9 h-9 rounded-xl bg-toyota-red/[0.12] grid place-items-center">
+                <s.icon className="w-[18px] h-[18px] text-toyota-red" />
+              </span>
+              <span className="font-tajawal text-[10.5px] text-center leading-tight px-1">{s.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── حسب موديل السيارة ── */}
+      <section className="mt-7">
+        <SectionHeader title="اختر موديل عربيتك" to="/parts-by-model" />
+        <div className="flex gap-2 overflow-x-auto px-4 mt-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {MODELS.map((m) => (
+            <Link
+              key={m.slug}
+              to={`/parts-by-model/${m.slug}`}
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 h-10 rounded-full bg-surface border border-white/10 font-tajawal text-xs font-bold active:scale-95 transition-transform"
+            >
+              <Car className="w-4 h-4 text-gold" />
+              {m.label}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+
+
       {/* ── Products rail ── */}
       <section className="mt-7">
         <SectionHeader title="وصل حديثاً" to="/products" />
