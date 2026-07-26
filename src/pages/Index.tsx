@@ -91,7 +91,17 @@ const Index = () => {
     return <Navigate to="/dealer" replace />;
   }
 
+  // Inside the iOS/Android shell → render the dedicated native app home.
+  if (isNativeShell()) {
+    return (
+      <Suspense fallback={<SectionFallback />}>
+        <NativeHomeScreen />
+      </Suspense>
+    );
+  }
+
   return (
+
     <div className="min-h-screen bg-carbon">
       <SEOHead
         titleAr="قطع غيار وزيوت تويوتا الأصلية في مصر"
