@@ -1,6 +1,6 @@
 import { registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { isNativeIOS } from "@/lib/native";
+import { isNativeIOS, APP_URL_SCHEME, openExternal } from "@/lib/native";
 
 /**
  * Native Sign in with Apple.
