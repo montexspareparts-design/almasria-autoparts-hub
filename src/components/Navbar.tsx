@@ -484,9 +484,15 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
-                      {lang === "ar" ? "تسجيل الدخول" : "Login"}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 font-bold border-secondary-foreground/25 bg-secondary-foreground/5 text-secondary-foreground hover:bg-secondary-foreground/10 hover:text-secondary-foreground"
+                      onClick={() => { navigate("/auth"); setIsOpen(false); }}
+                    >
+                      <User className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
                     </Button>
+
                     <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-login"); setIsOpen(false); }}>
                       <Briefcase className="w-4 h-4" /> {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                     </Button>
