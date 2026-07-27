@@ -1,21 +1,35 @@
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { isNativeIOS, APP_URL_SCHEME, openExternal } from "@/lib/native";
+import { isNativeIOS } from "@/lib/native";
 
 /**
  * Production-safe Sign in with Apple for the iOS shell.
  *
  * Web: this helper is a no-op — the UI hides the button off-native.
- * Native iOS: starts the backend-hosted Apple OAuth flow in SFSafariViewController
- * and returns through `com.almasria.autoparts://auth-callback`.
+ * Native iOS: uses Apple's official AuthenticationServices bridge and then
+ * exchanges the returned Apple identity token with the backend via
+ * `signInWithIdToken`.
  *
- * The previous native AuthenticationServices sheet is intentionally not used
- * as the primary path because the real TestFlight video shows iOS returning
- * "Sign Up Not Completed" before the app can exchange a token. OAuth keeps one
- * deterministic path, supports PKCE/implicit callbacks through the global
- * deep-link listener, and avoids the failing native sheet entirely.
+ * Do NOT use the browser OAuth fallback here. Apple OAuth requires a Services
+ * ID as the first client ID, while this production iOS app is configured around
+ * the native bundle ID. The deterministic native path avoids that mismatch.
  */
 
 type AppleSignInResult = { session: true } | { redirected: true };
+
+type NativeAppleCredential = {
+  identityToken?: string;
+  email?: string;
+  givenName?: string;
+  familyName?: string;
+  user?: string;
+};
+
+type AppleSignInNativePlugin = {
+  signIn(options: { nonce: string }): Promise<NativeAppleCredential>;
+};
+
+const AppleSignIn = registerPlugin<AppleSignInNativePlugin>("AppleSignIn");
 
 export const isAppleSignInAvailable = (): boolean => isNativeIOS();
 
@@ -26,21 +40,69 @@ export class AppleSignInCanceledError extends Error {
   }
 }
 
-const startAppleOAuth = async (): Promise<AppleSignInResult> => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "apple",
-    options: {
-      redirectTo: `${APP_URL_SCHEME}://auth-callback`,
-      skipBrowserRedirect: true,
-      queryParams: {
-        response_mode: "form_post",
+const createNonce = () => {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+const sha256Hex = async (value: string) => {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+const displayNameFromApple = (credential: NativeAppleCredential) => {
+  const fullName = [credential.givenName, credential.familyName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(" ");
+  return fullName || null;
+};
+
+const saveFirstAppleName = async (credential: NativeAppleCredential) => {
+  const fullName = displayNameFromApple(credential);
+  if (!fullName && !credential.email) return;
+
+  try {
+    await supabase.auth.updateUser({
+      data: {
+        ...(fullName ? { full_name: fullName } : {}),
+        ...(credential.givenName ? { given_name: credential.givenName } : {}),
+        ...(credential.familyName ? { family_name: credential.familyName } : {}),
+        ...(credential.email ? { email: credential.email } : {}),
+        ...(credential.user ? { apple_user_id: credential.user } : {}),
       },
-    },
+    });
+  } catch (err) {
+    console.warn("[apple] metadata backfill skipped", err);
+  }
+};
+
+const startNativeAppleTokenSignIn = async (): Promise<AppleSignInResult> => {
+  if (Capacitor.getPlatform() !== "ios") {
+    throw new Error("Apple Sign In native bridge is only available on iOS");
+  }
+
+  const rawNonce = createNonce();
+  const hashedNonce = await sha256Hex(rawNonce);
+  const credential = await AppleSignIn.signIn({ nonce: hashedNonce });
+  const identityToken = credential.identityToken?.trim();
+
+  if (!identityToken) {
+    throw new Error("ERR-APPLE-001: Apple did not return an identity token");
+  }
+
+  const { error } = await supabase.auth.signInWithIdToken({
+    provider: "apple",
+    token: identityToken,
+    nonce: rawNonce,
   });
+
   if (error) throw error;
-  if (!data?.url) throw new Error("Apple OAuth URL missing");
-  await openExternal(data.url);
-  return { redirected: true } as const;
+
+  await saveFirstAppleName(credential);
+  return { session: true } as const;
 };
 
 export const startAppleSignIn = async (): Promise<AppleSignInResult> => {
@@ -49,7 +111,7 @@ export const startAppleSignIn = async (): Promise<AppleSignInResult> => {
   }
 
   try {
-    return await startAppleOAuth();
+    return await startNativeAppleTokenSignIn();
   } catch (err: unknown) {
     const message =
       err && typeof err === "object" && "message" in err
@@ -59,14 +121,20 @@ export const startAppleSignIn = async (): Promise<AppleSignInResult> => {
     if (lower.includes("cancel") || lower.includes("closed")) {
       throw new AppleSignInCanceledError();
     }
+    if (lower.includes("not implemented") || lower.includes("unavailable")) {
+      throw new Error("ERR-APPLE-002: بيلد iOS قديم ولا يحتوي AppleSignInPlugin — لازم Archive/TestFlight جديد بعد آخر كود.");
+    }
     if (lower.includes("audience") || lower.includes("client")) {
       throw new Error(
-        "إعداد Apple ناقص: تأكد من حفظ Client ID و Redirect URL في إعدادات تسجيل الدخول بآبل.",
+        "ERR-APPLE-003: Apple Client ID لازم يحتوي Bundle ID: com.almasria.autoparts في إعدادات الباك إند.",
       );
     }
-    if (lower.includes("provider") && lower.includes("not enabled")) {
-      throw new Error("تسجيل الدخول بحساب Apple غير مفعّل على الخادم.");
+    if (lower.includes("invalid nonce") || lower.includes("nonce")) {
+      throw new Error("ERR-APPLE-004: فشل تحقق Apple nonce — استخدم آخر بيلد iOS بعد المزامنة.");
     }
-    throw new Error(message || "Apple Sign In failed");
+    if (lower.includes("provider") && lower.includes("not enabled")) {
+      throw new Error("ERR-APPLE-005: تسجيل الدخول بحساب Apple غير مفعّل في الباك إند.");
+    }
+    throw new Error(message || "ERR-APPLE-000: Apple Sign In failed");
   }
 };
