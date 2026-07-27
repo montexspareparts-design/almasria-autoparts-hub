@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
     if (!resendKey) throw new Error("RESEND_API_KEY not configured");
 
     const year = new Date().getFullYear();
-    const logoUrl = "https://almasriaautoparts.com/__l5e/assets-v1/818523be-f1b8-471a-ba23-138267801d70/almasria-logo.png";
+    const logoUrl = "https://almasriaautoparts.com/__l5e/assets-v1/9e65e7f7-779e-4632-a5ca-de1fe1214b19/almasria-logo-dark.png";
     const html = `
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
