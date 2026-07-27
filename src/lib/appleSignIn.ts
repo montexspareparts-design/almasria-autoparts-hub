@@ -1,6 +1,6 @@
 import { registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { isNativeIOS } from "@/lib/native";
+import { isNativeIOS, APP_URL_SCHEME, openExternal } from "@/lib/native";
 
 /**
  * Native Sign in with Apple.
@@ -59,6 +59,27 @@ export class AppleSignInCanceledError extends Error {
   }
 }
 
+/**
+ * Web-based Apple OAuth fallback (Supabase + SFSafariViewController).
+ * Used when the in-app native Swift bridge is unavailable in the shipped
+ * binary (e.g. "AppleSignIn plugin is not implemented on ios"). Apple
+ * redirects back to `com.almasria.autoparts://auth-callback`, which the
+ * global deep-link listener turns into a Supabase session.
+ */
+const startAppleOAuthFallback = async (): Promise<{ session: true }> => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "apple",
+    options: {
+      redirectTo: `${APP_URL_SCHEME}://auth-callback`,
+      skipBrowserRedirect: true,
+    },
+  });
+  if (error) throw error;
+  if (!data?.url) throw new Error("Apple OAuth URL missing");
+  await openExternal(data.url);
+  return { session: true } as const;
+};
+
 export const startAppleSignIn = async (): Promise<{ session: true }> => {
   if (!isNativeIOS()) {
     throw new Error("Apple Sign In is only available on iOS");
@@ -76,12 +97,18 @@ export const startAppleSignIn = async (): Promise<{ session: true }> => {
         ? String((err as { message: unknown }).message)
         : String(err);
     if (message === "canceled") throw new AppleSignInCanceledError();
+    // Native bridge missing in this binary → fall back to the hosted flow.
+    if (/not implemented|unimplemented|not available|unavailable/i.test(message)) {
+      console.warn("[apple] native bridge unavailable, using OAuth fallback");
+      return startAppleOAuthFallback();
+    }
     throw new Error(message || "Apple Sign In failed");
   }
 
   if (!native?.identityToken) {
-    throw new Error("Missing identity token from Apple");
+    return startAppleOAuthFallback();
   }
+
 
   const { data, error } = await supabase.auth.signInWithIdToken({
     provider: "apple",
