@@ -350,13 +350,14 @@ const Navbar = () => {
               <>
                 <div className="w-px h-5 bg-secondary-foreground/10 mx-1" />
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate("/auth")}
-                  className="text-secondary-foreground/60 hover:text-secondary-foreground text-[13px] font-semibold h-8 px-2.5"
+                  className="rounded-full border-secondary-foreground/25 bg-secondary-foreground/5 text-secondary-foreground hover:bg-secondary-foreground/10 hover:text-secondary-foreground text-[13px] font-bold h-8 px-4"
                 >
                   {lang === "ar" ? "تسجيل الدخول" : "Login"}
                 </Button>
+
                 <button
                   onClick={() => navigate("/dealer-login")}
                   className="group relative inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-toyota-red text-white font-tajawal font-bold text-[13px] overflow-hidden border border-[hsl(var(--gold)/0.4)] shadow-[0_0_18px_hsl(var(--toyota-red)/0.45)] hover:shadow-[0_0_24px_hsl(var(--toyota-red)/0.7)] hover:scale-[1.03] transition-all duration-300"
@@ -484,9 +485,15 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" size="sm" className="w-full font-semibold" onClick={() => { navigate("/auth"); setIsOpen(false); }}>
-                      {lang === "ar" ? "تسجيل الدخول" : "Login"}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 font-bold border-secondary-foreground/25 bg-secondary-foreground/5 text-secondary-foreground hover:bg-secondary-foreground/10 hover:text-secondary-foreground"
+                      onClick={() => { navigate("/auth"); setIsOpen(false); }}
+                    >
+                      <User className="w-4 h-4" /> {lang === "ar" ? "تسجيل الدخول" : "Login"}
                     </Button>
+
                     <Button variant="default" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-login"); setIsOpen(false); }}>
                       <Briefcase className="w-4 h-4" /> {lang === "ar" ? "التسجيل كتاجر" : "Dealer Portal"}
                     </Button>
