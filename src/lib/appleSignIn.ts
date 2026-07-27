@@ -30,6 +30,8 @@ interface AppleNativePlugin {
   }>;
 }
 
+type AppleSignInResult = { session: true } | { redirected: true };
+
 const AppleSignIn = registerPlugin<AppleNativePlugin>("AppleSignIn");
 
 const generateRawNonce = (length = 32): string => {
@@ -66,7 +68,7 @@ export class AppleSignInCanceledError extends Error {
  * redirects back to `com.almasria.autoparts://auth-callback`, which the
  * global deep-link listener turns into a Supabase session.
  */
-const startAppleOAuthFallback = async (): Promise<{ session: true }> => {
+const startAppleOAuthFallback = async (): Promise<AppleSignInResult> => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "apple",
     options: {
@@ -77,10 +79,16 @@ const startAppleOAuthFallback = async (): Promise<{ session: true }> => {
   if (error) throw error;
   if (!data?.url) throw new Error("Apple OAuth URL missing");
   await openExternal(data.url);
-  return { session: true } as const;
+  return { redirected: true } as const;
 };
 
-export const startAppleSignIn = async (): Promise<{ session: true }> => {
+const shouldFallbackToHostedApple = (message: string): boolean => {
+  return /not implemented|unimplemented|not available|unavailable|failed|authorization|completed|unknown|1000|1001|1003|1004/i.test(
+    message,
+  );
+};
+
+export const startAppleSignIn = async (): Promise<AppleSignInResult> => {
   if (!isNativeIOS()) {
     throw new Error("Apple Sign In is only available on iOS");
   }
@@ -97,9 +105,10 @@ export const startAppleSignIn = async (): Promise<{ session: true }> => {
         ? String((err as { message: unknown }).message)
         : String(err);
     if (message === "canceled") throw new AppleSignInCanceledError();
-    // Native bridge missing in this binary → fall back to the hosted flow.
-    if (/not implemented|unimplemented|not available|unavailable/i.test(message)) {
-      console.warn("[apple] native bridge unavailable, using OAuth fallback");
+    // Native bridge/provisioning/capability failure → fall back to hosted OAuth.
+    // This prevents the iOS sheet "Sign Up Not Completed" from blocking login.
+    if (shouldFallbackToHostedApple(message)) {
+      console.warn("[apple] native flow unavailable, using OAuth fallback");
       return startAppleOAuthFallback();
     }
     throw new Error(message || "Apple Sign In failed");
@@ -117,6 +126,12 @@ export const startAppleSignIn = async (): Promise<{ session: true }> => {
   });
   if (error) {
     const raw = (error.message || "").toLowerCase();
+    try {
+      console.warn("[apple] native token exchange failed, using OAuth fallback");
+      return await startAppleOAuthFallback();
+    } catch {
+      // If the fallback cannot start, surface the original native exchange reason.
+    }
     if (raw.includes("audience")) {
       throw new Error(
         "إعداد Apple ناقص في الخادم: لازم يضاف معرّف التطبيق com.almasria.autoparts كـ Client ID مسموح به.",
