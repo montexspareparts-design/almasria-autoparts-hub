@@ -659,41 +659,52 @@ const PriceSection = ({
     ) : (
       <button
         onClick={onLoginRequired}
-        className="group relative w-full
+        className="group relative w-full overflow-hidden
           flex flex-row-reverse items-center gap-3
-          rounded-2xl px-3.5 py-2.5
-          bg-white
-          border border-border/70
-          hover:border-foreground/30
-          hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)]
-          hover:-translate-y-px active:translate-y-0
+          rounded-2xl px-3.5 py-3
+          bg-gradient-to-l from-primary via-primary to-primary/90
+          text-primary-foreground
+          border border-primary/40
+          shadow-[0_10px_28px_-16px_hsl(var(--primary)/0.9)]
+          hover:shadow-[0_16px_38px_-14px_hsl(var(--primary)/0.85)]
+          hover:-translate-y-[2px] active:translate-y-0 active:scale-[0.99]
           transition-all duration-300 ease-out"
         aria-label="سجل دخولك لعرض السعر"
       >
+        {/* لمعة متحركة */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-20deg]
+            bg-gradient-to-r from-transparent via-white/25 to-transparent
+            translate-x-0 group-hover:translate-x-[420%]
+            transition-transform duration-[900ms] ease-out"
+        />
+
         {/* أيقونة قفل دائرية */}
         <span className="relative flex items-center justify-center w-9 h-9 shrink-0
-          rounded-full bg-foreground/[0.04]
-          group-hover:bg-foreground group-hover:text-background
-          transition-colors duration-300">
-          <Lock className="w-4 h-4 text-foreground/70 group-hover:text-background transition-colors duration-300" strokeWidth={2.25} />
+          rounded-full bg-primary-foreground/15 ring-1 ring-primary-foreground/25
+          group-hover:bg-primary-foreground group-hover:ring-primary-foreground
+          transition-all duration-300">
+          <Lock className="w-4 h-4 text-primary-foreground group-hover:text-primary transition-colors duration-300" strokeWidth={2.4} />
         </span>
 
         {/* النص */}
-        <span className="flex-1 flex flex-col items-end justify-center gap-0.5 text-right">
-          <span className="text-[13px] font-bold text-foreground tracking-tight leading-tight">
+        <span className="relative flex-1 flex flex-col items-end justify-center gap-0.5 text-right">
+          <span className="text-[13px] font-extrabold tracking-tight leading-tight">
             سجل دخولك لعرض السعر
           </span>
-          <span className="text-[10px] font-medium text-muted-foreground tracking-wide leading-tight">
-            اضغط للمتابعة
+          <span className="text-[10px] font-medium text-primary-foreground/70 tracking-wide leading-tight">
+            أسعار خاصة للعملاء المسجلين
           </span>
         </span>
 
-        {/* سهم خفيف */}
-        <span aria-hidden className="text-muted-foreground/60 group-hover:text-foreground group-hover:-translate-x-0.5 transition-all duration-300 text-base font-light">
+        {/* سهم */}
+        <span aria-hidden className="relative flex items-center justify-center w-6 h-6 rounded-full bg-primary-foreground/10 text-primary-foreground/80 group-hover:bg-primary-foreground/20 group-hover:text-primary-foreground group-hover:-translate-x-0.5 transition-all duration-300 text-sm font-light">
           ←
         </span>
       </button>
     );
+
   }
 
   if (price !== null) {
