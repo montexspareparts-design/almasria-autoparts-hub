@@ -419,43 +419,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    let fee: number | null = null;
-    let lastError: any = null;
-
-    if (BOSTA_API_KEY) {
-      const attempts = [
-        { path: "/pricing/shipment-fees", body: { dropOffCity, pickupCity, cod, size, type } },
-        { path: "/pricing/calculator",   body: { dropOffCity, pickupCity, cod, size, type } },
-        { path: "/pricing/shipment",     body: { dropOffCity, pickupCity, cod, size, type } },
-        { path: "/deliveries/pricing",   body: { dropOffCity, pickupCity, cod, size, type } },
-      ];
-      for (const a of attempts) {
-        try {
-          const r = await tryFetch(a.path, a.body);
-          if (r.ok) { fee = extractFee(r.raw); if (fee != null) break; }
-          else lastError = { path: a.path, status: r.status, details: r.raw };
-        } catch (e) { lastError = String(e); }
-      }
-    }
-
-    let source: "bosta" | "rate_card" = "bosta";
-    let zone: number | null = null;
-    let baseFee = 0;
-    let vat = 0;
-    let codFee = 0;
-
-    if (fee == null) {
-      source = "rate_card";
-      zone = CITY_TO_ZONE[canonicalGovEn(dropOffCity)] ?? 3;
-      baseFee = ZONE_BASE[zone];
-      vat = Math.round(baseFee * VAT_RATE);
-      codFee = calcCodFee(Number(cod) || 0);
-      fee = baseFee + vat + codFee;
-    }
+    // Bosta's account-level pricing API is not enabled for this business key
+    // (all pricing paths return 404), so we price directly from the signed
+    // contractual rate card — deterministic, instant, and never blocks checkout.
+    const zone = CITY_TO_ZONE[canonicalGovEn(dropOffCity)] ?? 3;
+    const baseFee = ZONE_BASE[zone];
+    const vat = Math.round(baseFee * VAT_RATE);
+    const codFee = calcCodFee(Number(cod) || 0);
+    const fee = baseFee + vat + codFee;
+    void tryFetch;
+    void extractFee;
+    void BOSTA_API_KEY;
+    void pickupCity;
+    void size;
+    void type;
 
     return new Response(JSON.stringify({
-      success: true, fee, source, zone, baseFee, vat, codFee, lastError,
+      success: true, fee, source: "rate_card", zone, baseFee, vat, codFee,
     }), {
+
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
