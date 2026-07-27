@@ -26,7 +26,11 @@ export const AppleSignInButton = ({
   const handleClick = async () => {
     setLoading(true);
     try {
-      await startAppleSignIn();
+      const result = await startAppleSignIn();
+      if ("redirected" in result) {
+        toast.message("استكمل تسجيل الدخول من نافذة Apple");
+        return;
+      }
       toast.success("تم تسجيل الدخول بنجاح");
       onSuccess?.();
     } catch (err) {
