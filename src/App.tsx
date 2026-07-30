@@ -90,11 +90,34 @@ const queryClient = new QueryClient();
 
 const isNativeShell = () => isNativeShellFn();
 
+/** Branded dark loader — never flash a white screen inside the native shell. */
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-carbon">
+    <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    <span className="text-[11px] tracking-[0.3em] text-white/40 font-medium">ALMASRIA</span>
   </div>
 );
+
+/**
+ * Warms up the heaviest route chunks once the app is idle so tapping
+ * "المتجر" / a brand never leaves the user staring at a loader on 3G.
+ */
+const prefetchRouteChunks = () => {
+  if (typeof window === "undefined") return;
+  const run = () => {
+    void import("./pages/ProductsPage");
+    void import("./pages/CartPage");
+    void import("./pages/MyProfilePage");
+  };
+  if (typeof requestIdleCallback !== "undefined") requestIdleCallback(run, { timeout: 3000 });
+  else setTimeout(run, 2000);
+};
+
+const RoutePrefetcher = () => {
+  useEffect(prefetchRouteChunks, []);
+  return null;
+};
+
 
 class SilentWidgetBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -159,6 +182,8 @@ const App = () => (
               <SEOHead />
               {!isNativeShell() && <PageVisitTracker />}
               <ReporterOnlyGuard />
+              <RoutePrefetcher />
+
               {!isNativeShell() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
               <DeferredWhenAuthStable delay={4000}><AIChatBot /></DeferredWhenAuthStable>
               <DeferredWhenAuthStable delay={2500}><WhatsAppFloat /></DeferredWhenAuthStable>
