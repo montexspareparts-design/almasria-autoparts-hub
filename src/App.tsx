@@ -182,6 +182,8 @@ const App = () => (
               <SEOHead />
               {!isNativeShell() && <PageVisitTracker />}
               <ReporterOnlyGuard />
+              <RoutePrefetcher />
+
               {!isNativeShell() && <DeferredWhenAuthStable delay={2000}><InstallBannerLazy /></DeferredWhenAuthStable>}
               <DeferredWhenAuthStable delay={4000}><AIChatBot /></DeferredWhenAuthStable>
               <DeferredWhenAuthStable delay={2500}><WhatsAppFloat /></DeferredWhenAuthStable>
