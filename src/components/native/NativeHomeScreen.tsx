@@ -95,7 +95,7 @@ const EDITORIAL = [
 const SERVICES = [
   { label: "قطع تويوتا الأصلية", hint: "موزّع معتمد", to: "/products/genuine-toyota-parts", icon: BadgeCheck },
   { label: "علامة MTX", hint: "بديل اقتصادي معتمد", to: "/mtx", icon: Sparkles },
-  { label: "التصفّح حسب الموديل", hint: "هايس • هايلوكس • كورولا", to: "/parts-by-model", icon: Car },
+  { label: "التصفّح حسب الموديل", hint: "هايس • هايلوكس • كورولا", to: "/products", icon: Car },
   { label: "التصفّح حسب النوع", hint: "فلاتر • فرامل • كهرباء", to: "/parts-by-type", icon: Wrench },
   { label: "الكتالوجات", hint: "ملفات PDF للتحميل", to: "/catalogs", icon: BookOpen },
   { label: "تتبّع الطلب", hint: "من الشحن حتى الاستلام", to: "/track-order", icon: PackageSearch },
@@ -358,12 +358,12 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Models — chip rail ───────────── */}
       <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="اختر موديل عربيتك" to="/parts-by-model" />
+        <SectionHeader title="اختر موديل عربيتك" to="/products" />
         <div className={`flex gap-2.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1`}>
           {MODELS.map((m) => (
             <Link
               key={m.slug}
-              to={`/parts-by-model/${m.slug}`}
+              to={`/products?search=${encodeURIComponent(m.label)}`}
               onClick={() => void haptic("light")}
               className="shrink-0 inline-flex items-center gap-2 px-4 h-11 rounded-full ios-card ar-body text-[13.5px] font-semibold ios-press"
             >
