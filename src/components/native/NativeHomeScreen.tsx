@@ -634,21 +634,31 @@ const NativeHomeScreen = () => {
 /* ── Building blocks ─────────────────────────────────────── */
 
 const SectionHeader = ({ title, to }: { title: string; to: string }) => (
-  <div className={`flex items-baseline justify-between ${GUTTER}`}>
-    <h2 className="ar-display font-bold text-[19px]">{title}</h2>
-    <Link
-      to={to}
-      className="ar-body text-[12.5px] text-white/45 font-semibold inline-flex items-center gap-0.5 ios-press"
-    >
-      عرض الكل
-      <ChevronLeft className="w-3.5 h-3.5" />
-    </Link>
+  <div className={`${GUTTER}`}>
+    <div className="flex items-baseline justify-between">
+      <h2 className="ar-display font-bold text-[19px] flex items-center gap-2.5">
+        <span className="inline-block w-1 h-5 rounded-full bg-gold" />
+        {title}
+      </h2>
+      <Link
+        to={to}
+        className="ar-body text-[12.5px] text-gold/85 font-semibold inline-flex items-center gap-0.5 ios-press"
+      >
+        عرض الكل
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </Link>
+    </div>
+    <div className="mt-3 h-px w-full bg-gradient-to-l from-gold/40 via-white/[0.07] to-transparent" />
   </div>
 );
 
 const GroupTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="eyebrow text-white/35 mb-3 px-1">{children}</h2>
+  <h2 className="eyebrow text-gold/70 mb-3 px-1 flex items-center gap-2">
+    <span className="inline-block w-4 h-px bg-gold/50" />
+    {children}
+  </h2>
 );
+
 
 const ListRow = ({
   label,
