@@ -274,6 +274,11 @@ const App = () => (
                    <NativeTabBar />
                  </Suspense>
                )}
+               {isNativeShell() && (
+                 <Suspense fallback={null}>
+                   <NativeLaunchGate />
+                 </Suspense>
+               )}
 
               </PermissionRequestProvider>
             </CartProvider>
