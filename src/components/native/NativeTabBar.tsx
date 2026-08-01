@@ -131,12 +131,14 @@ const NativeTabBar = () => {
                       )}
                     </span>
                     <motion.span
-                      animate={{ opacity: compact ? 0 : 1, height: compact ? 0 : 13 }}
+                      animate={{ opacity: compact ? 0 : 1, height: compact ? 0 : 16 }}
                       transition={{ duration: 0.18, ease: easeStandard }}
-                      className="ar-body text-[10.5px] font-bold leading-none overflow-hidden"
+                      className="ar-body text-[10.5px] font-bold overflow-hidden flex items-center"
+                      style={{ lineHeight: "16px" }}
                     >
                       {t.label}
                     </motion.span>
+
                   </Link>
                 </li>
               );
