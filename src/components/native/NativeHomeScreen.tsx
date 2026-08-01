@@ -197,7 +197,7 @@ const NativeHomeScreen = () => {
         <div className="absolute top-[38%] -right-[25%] w-[80vw] h-[80vw] rounded-full blur-[120px] bg-gold/[0.07]" />
         <div className="absolute bottom-[6%] -left-[30%] w-[85vw] h-[85vw] rounded-full blur-[130px] bg-toyota-red/[0.08]" />
         <div
-          className="absolute inset-0 opacity-[0.045]"
+          className="absolute inset-0 opacity-[0.022]"
           style={{
             backgroundImage:
               "linear-gradient(hsl(var(--gold)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)) 1px, transparent 1px)",
