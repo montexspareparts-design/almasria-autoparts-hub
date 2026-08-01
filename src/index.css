@@ -1050,42 +1050,54 @@ html[data-native-app="true"] [contenteditable="true"] {
    ═══════════════════════════════════════════════════════════════════ */
 
 [data-native-app="true"] {
-  /* ── Surfaces ─────────────────────────────────────────────── */
-  --n-bg: 220 22% 96.5%;
+  /* ── Surfaces (warm graphite neutrals — no blue cast) ─────── */
+  --n-bg: 40 12% 96%;
   --n-bg-elev: 0 0% 100%;
   --n-surface: 0 0% 100%;
-  --n-surface-2: 220 20% 94.5%;
-  --n-surface-3: 220 18% 91%;
+  --n-surface-2: 40 10% 93.5%;
+  --n-surface-3: 38 9% 89.5%;
   --n-image-bg: 0 0% 100%;
 
   /* ── Text ─────────────────────────────────────────────────── */
-  --n-text: 218 28% 11%;
-  --n-text-2: 218 11% 40%;
-  --n-text-3: 218 9% 56%;
+  --n-text: 30 8% 12%;
+  --n-text-2: 30 5% 38%;
+  --n-text-3: 30 4% 54%;
   --n-text-on-brand: 0 0% 100%;
 
-  /* ── Brand ────────────────────────────────────────────────── */
-  --n-brand: 213 65% 11%;        /* Al Masria navy  */
-  --n-brand-2: 213 48% 20%;
-  --n-accent: 212 74% 34%;       /* interactive blue */
-  --n-accent-soft: 212 74% 34% / 0.10;
-  --n-gold: 42 52% 46%;
+  /* ── Brand — derived from the real Al Masria mark ─────────── */
+  --n-ink: 30 8% 11%;            /* command surface: graphite  */
+  --n-ink-2: 30 7% 17%;
+  --n-brand: 30 8% 11%;          /* alias kept for consumers   */
+  --n-brand-2: 30 7% 17%;
+  --n-accent: 357 74% 42%;       /* Al Masria red — logo hue   */
+  --n-accent-2: 357 66% 33%;
+  --n-accent-soft: 357 74% 42% / 0.10;
+  --n-olive: 74 22% 34%;         /* olive support tone         */
+  --n-gold: 40 44% 48%;
 
   /* ── Semantics (never colour-only; always icon + text) ─────── */
-  --n-success: 152 58% 28%;
-  --n-success-bg: 152 45% 94%;
+  --n-success: 152 58% 26%;
+  --n-success-bg: 152 40% 94%;
   --n-warning: 34 88% 36%;
   --n-warning-bg: 40 90% 94%;
-  --n-error: 353 74% 41%;
-  --n-error-bg: 353 78% 96%;
-  --n-info: 212 74% 34%;
-  --n-info-bg: 212 70% 95%;
+  --n-error: 4 68% 40%;
+  --n-error-bg: 6 70% 96%;
+  --n-info: 30 8% 20%;
+  --n-info-bg: 40 10% 94%;
+
+  /* ── Compatibility / availability states ───────────────────── */
+  --n-fit: 152 58% 26%;          /* confirmed fit              */
+  --n-fit-unknown: 30 5% 44%;    /* unverified fit             */
+  --n-stock-in: 152 58% 26%;
+  --n-stock-low: 34 88% 36%;
+  --n-stock-out: 30 5% 50%;
 
   /* ── Lines & overlays ─────────────────────────────────────── */
-  --n-border: 218 16% 88%;
-  --n-border-strong: 218 14% 80%;
-  --n-divider: 218 16% 91%;
-  --n-overlay: 218 28% 8% / 0.42;
+  --n-border: 36 10% 87%;
+  --n-border-strong: 34 9% 78%;
+  --n-divider: 36 10% 90%;
+  --n-overlay: 30 10% 6% / 0.46;
+
 
   /* ── Radii (concentric) ───────────────────────────────────── */
   --n-r-xs: 8px;
