@@ -363,7 +363,7 @@ const NativeHomeScreen = () => {
           {MODELS.map((m) => (
             <Link
               key={m.slug}
-              to={`/parts-by-model/${m.slug}`}
+              to={`/products?search=${encodeURIComponent(m.label)}`}
               onClick={() => void haptic("light")}
               className="shrink-0 inline-flex items-center gap-2 px-4 h-11 rounded-full ios-card ar-body text-[13.5px] font-semibold ios-press"
             >
