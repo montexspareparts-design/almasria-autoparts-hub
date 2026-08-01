@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Search,
   ShieldCheck,
   Truck,
   Headphones,
   ChevronLeft,
-  ScanLine,
   Car,
   Wrench,
   BookOpen,
@@ -22,6 +21,7 @@ import {
   MessageCircle,
   Info,
   Bell,
+  ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -30,8 +30,18 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { haptic } from "@/lib/haptics";
 import { easeOutIOS, revealUp } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
+import {
+  GUTTER,
+  SectionHeader,
+  GroupTitle,
+  ListRow,
+  PriceDisplay,
+  PartNumber,
+  AvailabilityBadge,
+  CompatibilityBadge,
+  Skeleton,
+} from "@/components/native/ui/primitives";
 
-import heroAmbient from "@/assets/native/hero-ambient.jpg";
 import bannerGenuine from "@/assets/native/banner-genuine.jpg";
 import bannerOils from "@/assets/native/banner-oils.jpg";
 import bannerMtx from "@/assets/native/banner-mtx.jpg";
@@ -50,13 +60,12 @@ import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbk from "@/assets/brand-fbk-logo.webp";
 
 /* ────────────────────────────────────────────────────────────
-   Native app home — Apple HIG 2026.
-   Restrained editorial luxury: one accent, generous margins,
-   concentric radii, glass reserved for chrome only.
-   Rendered exclusively inside the iOS/Android shell.
+   Native home — "Precision Luxury Commerce".
+   Calm neutral canvas, navy brand chrome, one interactive accent.
+   Search and vehicle compatibility sit at the top of the hierarchy;
+   products stay the visual priority. Routes and data bindings are
+   unchanged — this file is presentation only.
    ──────────────────────────────────────────────────────────── */
-
-const GUTTER = "px-5";
 
 const CATEGORIES = [
   { slug: "filters", label: "فلاتر", sub: "زيت • هواء • مكيف", img: catFilters },
@@ -150,14 +159,9 @@ const NativeHomeScreen = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
-  const heroRef = useRef<HTMLElement>(null);
-
-  const { scrollY } = useScroll();
-  const heroShift = useTransform(scrollY, [0, 420], [0, 90]);
-  const heroFade = useTransform(scrollY, [0, 300], [1, 0.35]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 64);
+    const onScroll = () => setScrolled(window.scrollY > 120);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -189,47 +193,64 @@ const NativeHomeScreen = () => {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-carbon text-white overflow-x-hidden ar-body">
-      {/* ───────────── Floating glass nav bar ───────────── */}
+    <div dir="rtl" className="n-screen ar-body pb-2">
+      {/* ═══════ Compact sticky chrome — appears after the brand block ═══════ */}
       <motion.header
-        animate={{ opacity: scrolled ? 1 : 0, y: scrolled ? 0 : -12 }}
-        transition={{ duration: 0.28, ease: easeOutIOS }}
+        animate={{ opacity: scrolled ? 1 : 0, y: scrolled ? 0 : -10 }}
+        transition={{ duration: 0.22, ease: easeOutIOS }}
         className={`fixed top-0 inset-x-0 z-40 ${scrolled ? "" : "pointer-events-none"}`}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="ios-glass border-x-0 border-t-0 rounded-none">
-          <div className={`h-12 flex items-center justify-between ${GUTTER}`}>
-            <img src={logoDark} alt="المصرية جروب" className="h-7 w-auto object-contain" />
+        <div className="n-chrome rounded-none border-x-0 border-t-0" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+          <div className={`h-[52px] flex items-center justify-between gap-3 ${GUTTER}`}>
+            <span
+              className="flex items-center justify-center h-8 px-2.5 rounded-lg"
+              style={{ background: "hsl(var(--n-brand))" }}
+            >
+              <img src={logoDark} alt="المصرية جروب" className="h-5 w-auto object-contain" />
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                void haptic("light");
+                document.getElementById("n-home-search")?.focus();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="flex-1 flex items-center gap-2 h-9 px-3 rounded-full n-press"
+              style={{ background: "hsl(var(--n-surface-2))" }}
+              aria-label="ابحث في الكتالوج"
+            >
+              <Search className="w-4 h-4 text-[hsl(var(--n-text-3))]" />
+              <span className="ar-body text-[12.5px] text-[hsl(var(--n-text-3))]">ابحث بالكود أو البارت نمبر</span>
+            </button>
             <Link
               to={user ? "/my-profile" : "/auth"}
               aria-label="حسابي"
               onClick={() => void haptic("light")}
-              className="w-9 h-9 rounded-full bg-white/[0.08] grid place-items-center ios-press"
+              className="w-9 h-9 rounded-full grid place-items-center n-press shrink-0"
+              style={{ background: "hsl(var(--n-surface-2))" }}
             >
-              <Bell className="w-[17px] h-[17px] text-white/75" />
+              <Bell className="w-[17px] h-[17px] text-[hsl(var(--n-text-2))]" />
             </Link>
           </div>
         </div>
       </motion.header>
 
-      {/* ───────────── Cinematic hero ───────────── */}
-      <section ref={heroRef} className="relative">
-        <motion.div style={{ y: heroShift, opacity: heroFade }} className="absolute inset-0 will-change-transform">
-          <img
-            src={heroAmbient}
-            alt=""
-            aria-hidden
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-carbon/70 via-carbon/82 to-carbon" />
-          <div className="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,transparent_20%,hsl(var(--carbon)/0.85)_100%)]" />
-
-        </motion.div>
-
+      {/* ═══════ Brand block — restrained navy, not a banner wall ═══════ */}
+      <section
+        className="relative"
+        style={{ background: "hsl(var(--n-brand))", color: "#fff" }}
+      >
         <div
-          className={`relative ${GUTTER} pb-10`}
-          style={{ paddingTop: "calc(env(safe-area-inset-top) + 18px)" }}
+          aria-hidden
+          className="absolute inset-0 opacity-[0.55]"
+          style={{
+            background:
+              "radial-gradient(120% 90% at 85% 0%, hsl(var(--n-brand-2)) 0%, transparent 60%)",
+          }}
+        />
+        <div
+          className={`relative ${GUTTER} pb-12`}
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 14px)" }}
         >
           <div className="flex items-center justify-between">
             <img src={logoDark} alt="المصرية جروب" className="h-9 w-auto object-contain" />
@@ -237,227 +258,184 @@ const NativeHomeScreen = () => {
               to={user ? "/my-profile" : "/auth"}
               aria-label="حسابي"
               onClick={() => void haptic("light")}
-              className="w-10 h-10 rounded-full ios-glass grid place-items-center ios-press"
+              className="w-10 h-10 rounded-full grid place-items-center n-press bg-white/10 border border-white/15"
             >
-              <Bell className="w-[18px] h-[18px] text-white/80" />
+              <Bell className="w-[18px] h-[18px] text-white/85" />
             </Link>
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-20"
+            transition={{ duration: 0.45, ease: easeOutIOS }}
+            className="mt-8"
           >
-            <div className="flex items-center gap-2.5">
-              <span className="h-px w-7 bg-gold/70" />
-              <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
+            <div className="flex items-center gap-2">
+              <span className="h-px w-6" style={{ background: "hsl(var(--n-gold))" }} />
+              <p className="eyebrow" style={{ color: "hsl(var(--n-gold))" }}>
+                AUTHORIZED DISTRIBUTOR · SINCE 1999
+              </p>
             </div>
-            <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-4 drop-shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
-              قطع غيار تويوتا
+            <h1 className="ar-display font-black text-[27px] leading-[1.42] mt-3">
+              قطع غيار تويوتا الأصلية
               <br />
-              <span className="text-gold">الأصلية</span>
+              <span className="text-white/70 font-bold text-[19px]">بضمان الموزّع المعتمد</span>
             </h1>
-            <p className="ar-body text-[15px] leading-[1.75] text-white/78 mt-4 max-w-[19rem] drop-shadow-[0_1px_12px_rgba(0,0,0,0.8)]">
-              كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
-            </p>
-
-            <div className="flex items-center gap-2.5 mt-7">
-              <Link
-                to="/products"
-                onClick={() => void haptic("light")}
-                className="inline-flex items-center gap-1.5 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press shadow-[0_18px_40px_-16px_rgba(0,0,0,0.9)]"
-              >
-                تصفّح الكتالوج
-                <ChevronLeft className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/parts-by-model"
-                onClick={() => void haptic("light")}
-                className="inline-flex items-center h-12 px-6 rounded-full border border-white/20 bg-white/[0.06] backdrop-blur-md ar-display font-bold text-[14px] text-white ios-press"
-              >
-                حسب الموديل
-              </Link>
-            </div>
           </motion.div>
         </div>
       </section>
 
-
-      {/* ───────────── Search (understated, floats over the hero seam) ───────────── */}
-      <div className={`${GUTTER} -mt-5 relative z-10`}>
-        <form onSubmit={submitSearch} className="flex items-center gap-2.5">
-          <div className="flex-1 flex items-center gap-2.5 h-[52px] px-4 rounded-2xl ios-glass focus-within:border-white/25 transition-colors">
-            <Search className="w-[18px] h-[18px] text-white/45 shrink-0" />
+      {/* ═══════ Primary search — the app's most important control ═══════ */}
+      <div className={`${GUTTER} -mt-7 relative z-10`}>
+        <form onSubmit={submitSearch}>
+          <label htmlFor="n-home-search" className="sr-only">
+            بحث في كتالوج القطع
+          </label>
+          <div
+            className="flex items-center gap-2.5 h-[54px] px-4 rounded-[18px]"
+            style={{
+              background: "hsl(var(--n-surface))",
+              border: "1px solid hsl(var(--n-border))",
+              boxShadow: "var(--n-elev-3)",
+            }}
+          >
+            <Search className="w-[19px] h-[19px] text-[hsl(var(--n-text-3))] shrink-0" aria-hidden />
             <input
+              id="n-home-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="ابحث بكود الصنف أو البارت نمبر"
-              className="flex-1 min-w-0 bg-transparent outline-none ar-body text-[15px] text-white placeholder:text-white/40"
+              className="flex-1 min-w-0 bg-transparent outline-none ar-body text-[15px] text-[hsl(var(--n-text))] placeholder:text-[hsl(var(--n-text-3))]"
               type="search"
               inputMode="search"
               enterKeyHint="search"
               autoComplete="off"
-              aria-label="بحث في الكتالوج"
             />
+            <button
+              type="submit"
+              aria-label="ابحث"
+              className="shrink-0 w-9 h-9 rounded-full grid place-items-center n-press"
+              style={{ background: "hsl(var(--n-accent))" }}
+            >
+              <ArrowLeft className="w-[18px] h-[18px] text-white" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              void haptic("medium");
-              navigate("/products");
-            }}
-            aria-label="مسح ضوئي للبارت نمبر"
-            className="w-[52px] h-[52px] rounded-2xl bg-toyota-red grid place-items-center ios-press shadow-[0_10px_28px_-10px_hsl(var(--toyota-red)/0.9)]"
-          >
-            <ScanLine className="w-5 h-5 text-white" />
-          </button>
         </form>
       </div>
 
-      {/* ───────────── Stats — hairline row, not boxes ───────────── */}
-      <div className={`${GUTTER} mt-7`}>
-        <div className="flex items-stretch">
-          {STATS.map((s, i) => (
-            <div
-              key={s.label}
-              className={`flex-1 text-center ${i > 0 ? "border-e border-white/[0.09]" : ""}`}
+      {/* ═══════ Vehicle module — compatibility is the core promise ═══════ */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-5`}>
+        <div className="n-card p-4">
+          <div className="flex items-center gap-3">
+            <span
+              className="w-10 h-10 rounded-xl grid place-items-center shrink-0"
+              style={{ background: "hsl(var(--n-accent) / 0.10)" }}
             >
-              <p className="ar-display font-black text-[22px] leading-none text-white numeric">{s.value}</p>
-              <p className="ar-body text-[11.5px] text-white/45 mt-2">{s.label}</p>
+              <Car className="w-5 h-5" style={{ color: "hsl(var(--n-accent))" }} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <h2 className="ar-display font-bold text-[15.5px] text-[hsl(var(--n-text))]">اختر عربيتك</h2>
+              <p className="ar-body text-[12px] text-[hsl(var(--n-text-2))] mt-1">
+                علشان نعرضلك القطع المطابقة لموديلك بس
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+            <CompatibilityBadge state="no-vehicle" label="لم تُحدَّد" compact />
+          </div>
 
-      {/* ───────────── Trust ───────────── */}
-      <div className={`${GUTTER} mt-7`}>
-        <div className="flex items-center justify-between rounded-2xl ios-card px-4 py-3.5">
+          <div className="n-rail gap-2 mt-3.5 -mx-1 px-1 pb-0.5">
+            {MODELS.map((m) => (
+              <Link
+                key={m.slug}
+                to={`/parts-by-model/${m.slug}`}
+                onClick={() => void haptic("light")}
+                className="shrink-0 inline-flex items-center h-10 px-4 rounded-full ar-body text-[13px] font-bold n-press"
+                style={{
+                  background: "hsl(var(--n-surface-2))",
+                  color: "hsl(var(--n-text))",
+                }}
+              >
+                {m.label}
+              </Link>
+            ))}
+            <Link
+              to="/parts-by-model"
+              onClick={() => void haptic("light")}
+              className="shrink-0 inline-flex items-center gap-1 h-10 px-4 rounded-full ar-body text-[13px] font-bold n-press"
+              style={{ background: "hsl(var(--n-accent) / 0.10)", color: "hsl(var(--n-accent))" }}
+            >
+              كل الموديلات
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* ═══════ Trust — quiet reassurance, no claims invented ═══════ */}
+      <section className={`${GUTTER} mt-3`}>
+        <div className="flex items-center justify-between gap-2 px-1">
           {[
             { icon: ShieldCheck, label: "ضمان أصالة" },
             { icon: Truck, label: "توصيل ٤٨ ساعة" },
             { icon: Headphones, label: "دعم فني" },
           ].map((t) => (
-            <div key={t.label} className="flex items-center gap-2">
-              <t.icon className="w-[17px] h-[17px] text-gold shrink-0" />
-              <span className="ar-body text-[11.5px] text-white/65">{t.label}</span>
+            <div key={t.label} className="flex items-center gap-1.5 min-w-0">
+              <t.icon className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--n-success))" }} aria-hidden />
+              <span className="ar-body text-[11.5px] font-semibold text-[hsl(var(--n-text-2))] truncate">
+                {t.label}
+              </span>
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* ───────────── Models — chip rail ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="اختر موديل عربيتك" to="/parts-by-model" />
-        <div className={`flex gap-2.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1`}>
-          {MODELS.map((m) => (
-            <Link
-              key={m.slug}
-              to={`/parts-by-model/${m.slug}`}
-              onClick={() => void haptic("light")}
-              className="shrink-0 inline-flex items-center gap-2 px-4 h-11 rounded-full ios-card ar-body text-[13.5px] font-semibold ios-press"
-            >
-              <Car className="w-[17px] h-[17px] text-white/40" />
-              {m.label}
-            </Link>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* ───────────── Editorial features ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="مختارات المصرية" to="/products" />
-        <div className={`flex gap-4 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1 snap-x snap-mandatory`}>
-          {EDITORIAL.map((b) => (
-            <Link
-              key={b.to}
-              to={b.to}
-              onClick={() => void haptic("light")}
-              className="snap-center shrink-0 w-[82%] rounded-[28px] overflow-hidden relative ios-press border border-white/[0.08]"
-            >
-              <img
-                src={b.img}
-                alt={b.title}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/92 to-carbon/20" />
-              <div className="absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-carbon to-transparent" />
-              <div className="relative p-6 pt-28 min-h-[276px] flex flex-col justify-end">
-
-                <p className="eyebrow text-gold">{b.kicker}</p>
-                <h3 className="ar-display font-bold text-[21px] leading-[1.4] mt-2 drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)]">
-                  {b.title}
-                </h3>
-                <p className="ar-body text-[13px] leading-[1.7] text-white/70 mt-2 max-w-[88%]">{b.sub}</p>
-                <span className="self-start inline-flex items-center gap-1 mt-5 h-9 px-4 rounded-full bg-white/10 border border-white/15 ar-body text-[12.5px] font-bold text-white">
-                  اعرف أكتر
-                  <ChevronLeft className="w-4 h-4" />
-                </span>
-              </div>
-
-            </Link>
-          ))}
-        </div>
-      </motion.section>
-
-      {/* ───────────── Categories — 2-col editorial tiles ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
+      {/* ═══════ Categories ═══════ */}
+      <motion.section {...revealUp} className="mt-8">
         <SectionHeader title="تسوّق حسب الفئة" to="/products" />
-        <div className={`grid grid-cols-2 gap-3.5 ${GUTTER} mt-4`}>
+        <div className={`grid grid-cols-2 gap-3 ${GUTTER} mt-3.5`}>
           {CATEGORIES.map((c) => (
             <Link
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="rounded-[22px] overflow-hidden border border-white/[0.07] bg-white/[0.04] ios-press"
+              className="n-card overflow-hidden n-press"
             >
-              <div className="relative aspect-[5/4] bg-carbon">
-                <img src={c.img} alt={c.label} loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-carbon/70 to-transparent" />
+              <div className="aspect-[5/4]" style={{ background: "hsl(var(--n-image-bg))" }}>
+                <img
+                  src={c.img}
+                  alt={c.label}
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="px-3.5 py-3 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="ar-display font-bold text-[14.5px] leading-none truncate">{c.label}</p>
-                  <p className="ar-body text-[10.5px] text-white/45 mt-1.5 truncate">{c.sub}</p>
+                  <p className="ar-display font-bold text-[14.5px] leading-none text-[hsl(var(--n-text))] truncate">
+                    {c.label}
+                  </p>
+                  <p className="ar-body text-[11px] text-[hsl(var(--n-text-3))] mt-1.5 truncate">{c.sub}</p>
                 </div>
-                <ChevronLeft className="w-4 h-4 text-white/25 shrink-0" />
+                <ChevronLeft className="w-4 h-4 text-[hsl(var(--n-text-3))] shrink-0" />
               </div>
-            </Link>
-          ))}
-        </div>
-
-      </motion.section>
-
-      {/* ───────────── Brands ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="ماركاتنا" to="/products" />
-        <div className={`flex gap-3 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1`}>
-          {BRANDS.map((b) => (
-            <Link
-              key={b.to}
-              to={b.to}
-              onClick={() => void haptic("light")}
-              className="shrink-0 w-[104px] rounded-2xl bg-white p-3 ios-press"
-            >
-              <div className="h-11 grid place-items-center">
-                <img src={b.img} alt={b.label} loading="lazy" className="max-h-10 w-auto object-contain" />
-              </div>
-              <p className="ar-body text-[10.5px] font-bold text-carbon text-center mt-2 leading-tight">
-                {b.label}
-              </p>
             </Link>
           ))}
         </div>
       </motion.section>
 
-      {/* ───────────── New arrivals ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
+      {/* ═══════ New arrivals ═══════ */}
+      <motion.section {...revealUp} className="mt-9">
         <SectionHeader title="وصل حديثاً" to="/products" />
-        <div className={`flex gap-3.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1 snap-x`}>
+        <div className={`n-rail gap-3 ${GUTTER} mt-3.5 pb-1 snap-x`}>
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="shrink-0 w-[47%] h-64 rounded-[22px] ios-card animate-pulse" />
+              <div key={i} className="shrink-0 w-[46%] n-card overflow-hidden">
+                <Skeleton className="aspect-square rounded-none" />
+                <div className="p-3 space-y-2">
+                  <Skeleton className="h-2.5 w-1/2" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-4 w-2/5" />
+                </div>
+              </div>
             ))}
 
           {!isLoading &&
@@ -466,225 +444,261 @@ const NativeHomeScreen = () => {
                 key={p.id}
                 to={`/products?search=${encodeURIComponent(p.sku || p.name_ar)}`}
                 onClick={() => void haptic("light")}
-                className="snap-start shrink-0 w-[47%] rounded-[22px] ios-card overflow-hidden ios-press"
+                className="snap-start shrink-0 w-[46%] n-card overflow-hidden n-press flex flex-col"
               >
-                <div className="aspect-square bg-white p-3">
+                <div
+                  className="aspect-square p-3 border-b"
+                  style={{ background: "hsl(var(--n-image-bg))", borderColor: "hsl(var(--n-divider))" }}
+                >
                   <LazyImage src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain" />
                 </div>
-                <div className="p-3.5 space-y-1.5">
+                <div className="p-3 flex-1 flex flex-col gap-1.5">
                   {p.erp_item_code && (
-                    <p className="ar-body text-[10px] text-gold leading-none numeric">{p.erp_item_code}</p>
+                    <span className="n-code text-[10.5px] font-bold" style={{ color: "hsl(var(--n-accent))" }}>
+                      {p.erp_item_code}
+                    </span>
                   )}
-                  {p.part_number && (
-                    <p className="font-mono text-[10px] text-white/40 leading-none truncate numeric">
-                      {p.part_number}
-                    </p>
-                  )}
-                  <p className="ar-body text-[12.5px] font-semibold leading-snug line-clamp-2 min-h-[2.4rem]">
+                  {p.part_number && <PartNumber value={p.part_number} copyable={false} />}
+                  <p className="ar-body text-[12.5px] font-semibold leading-snug line-clamp-2 text-[hsl(var(--n-text))]">
                     {p.name_ar}
                   </p>
-                  {user ? (
-                    <p className="ar-display text-[15px] font-bold text-white numeric">
-                      {Number(p.base_price || 0).toLocaleString("en-US")} EGP
-                    </p>
-                  ) : (
-                    <p className="ar-body text-[11px] text-white/45">سجّل لرؤية السعر</p>
-                  )}
+                  <div className="mt-auto pt-1.5 space-y-1">
+                    <AvailabilityBadge state="in-stock" />
+                    <PriceDisplay value={user ? Number(p.base_price || 0) : null} locked={!user} size="sm" />
+                  </div>
                 </div>
               </Link>
             ))}
         </div>
       </motion.section>
 
-      {/* ───────────── Guest CTA ───────────── */}
-      {!user && (
-        <motion.section {...revealUp} className={`${GUTTER} mt-10`}>
-          <div className="rounded-[28px] overflow-hidden relative border border-white/[0.08]">
-            <img
-              src={bannerGenuine}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover opacity-25"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/85 to-carbon/60" />
-            <div className="relative p-6">
-              <p className="eyebrow text-gold">MEMBERS ONLY</p>
-              <h3 className="ar-display font-bold text-[19px] mt-2">اعرف أسعارك الخاصة</h3>
-              <p className="ar-body text-[13.5px] text-white/60 mt-2">
-                سجّل حسابك دلوقتي وشوف الأسعار والعروض المخصصة ليك.
-              </p>
-              <div className="flex gap-2.5 mt-5">
-                <Link
-                  to="/auth"
-                  onClick={() => void haptic("light")}
-                  className="flex-1 h-12 grid place-items-center rounded-full bg-white text-carbon ar-display font-bold text-[14px] ios-press"
-                >
-                  إنشاء حساب
-                </Link>
-                <Link
-                  to="/dealer-login"
-                  onClick={() => void haptic("light")}
-                  className="flex-1 h-12 grid place-items-center rounded-full ios-card ar-display font-bold text-[14px] ios-press"
-                >
-                  دخول التجّار
-                </Link>
+      {/* ═══════ Editorial features ═══════ */}
+      <motion.section {...revealUp} className="mt-9">
+        <SectionHeader title="مختارات المصرية" to="/products" />
+        <div className={`n-rail gap-3.5 ${GUTTER} mt-3.5 pb-1 snap-x snap-mandatory`}>
+          {EDITORIAL.map((b) => (
+            <Link
+              key={b.to}
+              to={b.to}
+              onClick={() => void haptic("light")}
+              className="snap-center shrink-0 w-[80%] n-card overflow-hidden n-press"
+            >
+              <div className="relative h-[152px]">
+                <img src={b.img} alt="" aria-hidden loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(213_65%_11%/0.85)] to-transparent" />
+                <p className="absolute top-3.5 start-4 eyebrow text-white/85">{b.kicker}</p>
               </div>
+              <div className="p-4">
+                <h3 className="ar-display font-bold text-[16.5px] leading-snug text-[hsl(var(--n-text))]">
+                  {b.title}
+                </h3>
+                <p className="ar-body text-[12.5px] leading-[1.7] text-[hsl(var(--n-text-2))] mt-1.5">{b.sub}</p>
+                <span
+                  className="inline-flex items-center gap-1 ar-body text-[12.5px] font-bold mt-3"
+                  style={{ color: "hsl(var(--n-accent))" }}
+                >
+                  اعرف أكتر
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ═══════ Brands ═══════ */}
+      <motion.section {...revealUp} className="mt-9">
+        <SectionHeader title="ماركاتنا" to="/products" />
+        <div className={`n-rail gap-2.5 ${GUTTER} mt-3.5 pb-1`}>
+          {BRANDS.map((b) => (
+            <Link
+              key={b.to}
+              to={b.to}
+              onClick={() => void haptic("light")}
+              className="shrink-0 w-[102px] n-card p-3 n-press"
+            >
+              <div className="h-11 grid place-items-center rounded-lg" style={{ background: "hsl(var(--n-image-bg))" }}>
+                <img src={b.img} alt={b.label} loading="lazy" className="max-h-10 w-auto object-contain" />
+              </div>
+              <p className="ar-body text-[10.5px] font-bold text-center mt-2 leading-tight text-[hsl(var(--n-text-2))]">
+                {b.label}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ═══════ Stats — hairline row ═══════ */}
+      <section className={`${GUTTER} mt-9`}>
+        <div className="n-card flex items-stretch py-4">
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              className="flex-1 text-center"
+              style={i > 0 ? { borderInlineEnd: "1px solid hsl(var(--n-divider))" } : undefined}
+            >
+              <p className="ar-display font-black text-[21px] leading-none n-num text-[hsl(var(--n-text))]">
+                {s.value}
+              </p>
+              <p className="ar-body text-[11px] text-[hsl(var(--n-text-3))] mt-2">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════ Guest CTA ═══════ */}
+      {!user && (
+        <motion.section {...revealUp} className={`${GUTTER} mt-8`}>
+          <div
+            className="rounded-[20px] overflow-hidden p-5"
+            style={{ background: "hsl(var(--n-brand))", color: "#fff" }}
+          >
+            <p className="eyebrow" style={{ color: "hsl(var(--n-gold))" }}>
+              MEMBERS ONLY
+            </p>
+            <h3 className="ar-display font-bold text-[18px] mt-2">اعرف أسعارك الخاصة</h3>
+            <p className="ar-body text-[13px] leading-[1.7] text-white/70 mt-2">
+              سجّل حسابك دلوقتي وشوف الأسعار والعروض المخصصة ليك.
+            </p>
+            <div className="flex gap-2.5 mt-4">
+              <Link
+                to="/auth"
+                onClick={() => void haptic("light")}
+                className="flex-1 h-12 grid place-items-center rounded-full bg-white ar-display font-bold text-[14px] n-press"
+                style={{ color: "hsl(var(--n-brand))" }}
+              >
+                إنشاء حساب
+              </Link>
+              <Link
+                to="/dealer-login"
+                onClick={() => void haptic("light")}
+                className="flex-1 h-12 grid place-items-center rounded-full border border-white/25 bg-white/10 ar-display font-bold text-[14px] text-white n-press"
+              >
+                دخول التجّار
+              </Link>
             </div>
           </div>
         </motion.section>
       )}
 
-      {/* ───────────── Maintenance bundles ───────────── */}
-      <motion.section {...revealUp} className={`${GUTTER} mt-10`}>
+      {/* ═══════ Maintenance bundles ═══════ */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-8`}>
         <Link
           to="/parts-by-type"
           onClick={() => void haptic("light")}
-          className="flex items-center gap-3.5 rounded-[22px] ios-card p-4 ios-press"
+          className="flex items-center gap-3.5 n-card p-4 n-press"
         >
-          <span className="w-11 h-11 rounded-2xl bg-gold/12 grid place-items-center shrink-0">
-            <Wrench className="w-5 h-5 text-gold" />
+          <span
+            className="w-11 h-11 rounded-xl grid place-items-center shrink-0"
+            style={{ background: "hsl(var(--n-gold) / 0.14)" }}
+          >
+            <Wrench className="w-5 h-5" style={{ color: "hsl(var(--n-gold))" }} />
           </span>
           <div className="flex-1 min-w-0">
-            <h3 className="ar-display font-bold text-[15px]">باقات الصيانة الدورية</h3>
-            <p className="ar-body text-[12px] text-white/50 mt-1">
+            <h3 className="ar-display font-bold text-[15px] text-[hsl(var(--n-text))]">باقات الصيانة الدورية</h3>
+            <p className="ar-body text-[12px] text-[hsl(var(--n-text-2))] mt-1">
               كل قطع صيانة ١٠ / ٢٠ / ٤٠ ألف كم في طلب واحد
             </p>
           </div>
-          <ChevronLeft className="w-5 h-5 text-white/30 shrink-0" />
+          <ChevronLeft className="w-5 h-5 text-[hsl(var(--n-text-3))] shrink-0" />
         </Link>
       </motion.section>
 
-      {/* ───────────── Services — grouped list ───────────── */}
-      <motion.section {...revealUp} className={`${GUTTER} mt-10`}>
+      {/* ═══════ Services ═══════ */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-8`}>
         <GroupTitle>الخدمات</GroupTitle>
-        <div className="rounded-[22px] ios-card overflow-hidden">
+        <div className="n-group">
           {SERVICES.map((s) => (
             <ListRow key={s.to} {...s} />
           ))}
         </div>
       </motion.section>
 
-      {/* ───────────── Dealers ───────────── */}
-      <motion.section {...revealUp} className={`${GUTTER} mt-8`}>
+      {/* ═══════ Dealers ═══════ */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-7`}>
         <GroupTitle>بوابة التجّار</GroupTitle>
-        <div className="rounded-[22px] ios-card overflow-hidden">
+        <div className="n-group">
           {DEALER_LINKS.map((s) => (
             <ListRow key={s.to} {...s} />
           ))}
         </div>
       </motion.section>
 
-      {/* ───────────── Guides ───────────── */}
-      <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="أدلة ونصائح فنية" to="/guides/identifying-genuine-toyota-parts" />
-        <div className={`flex gap-3.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1 snap-x`}>
+      {/* ═══════ Guides ═══════ */}
+      <motion.section {...revealUp} className="mt-9">
+        <SectionHeader title="أدلة ونصائح فنية" to="/guides/identifying-genuine-toyota-parts" action="الكل" />
+        <div className={`n-rail gap-3 ${GUTTER} mt-3.5 pb-1 snap-x`}>
           {GUIDES.map((g) => (
             <Link
               key={g.to}
               to={g.to}
               onClick={() => void haptic("light")}
-              className="snap-start shrink-0 w-[64%] rounded-[22px] ios-card p-5 ios-press"
+              className="snap-start shrink-0 w-[62%] n-card p-4 n-press"
             >
-              <BookOpen className="w-5 h-5 text-white/35" />
-              <p className="ar-display font-bold text-[14px] leading-[1.5] mt-4">{g.label}</p>
-              <span className="ar-body text-[11.5px] text-gold mt-3 inline-block">اقرأ الدليل</span>
+              <BookOpen className="w-5 h-5" style={{ color: "hsl(var(--n-accent))" }} />
+              <p className="ar-display font-bold text-[14px] leading-[1.55] mt-3 text-[hsl(var(--n-text))]">
+                {g.label}
+              </p>
+              <span
+                className="ar-body text-[11.5px] font-bold mt-2.5 inline-block"
+                style={{ color: "hsl(var(--n-accent))" }}
+              >
+                اقرأ الدليل
+              </span>
             </Link>
           ))}
         </div>
       </motion.section>
 
-      {/* ───────────── Company ───────────── */}
-      <motion.section {...revealUp} className={`${GUTTER} mt-10`}>
+      {/* ═══════ Company ═══════ */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-9`}>
         <GroupTitle>المصرية جروب</GroupTitle>
-        <div className="rounded-[22px] ios-card overflow-hidden">
+        <div className="n-group">
           {ABOUT_LINKS.map((a) => (
             <ListRow key={a.to} {...a} />
           ))}
         </div>
       </motion.section>
 
-      {/* ───────────── Contact ───────────── */}
-      <section className={`${GUTTER} mt-5`}>
+      {/* ═══════ Contact ═══════ */}
+      <section className={`${GUTTER} mt-4`}>
         <div className="grid grid-cols-2 gap-3">
           <a
             href="https://wa.me/201034806288"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => void haptic("light")}
-            className="flex items-center justify-center gap-2 h-12 rounded-full bg-[#25D366]/12 border border-[#25D366]/25 ios-press"
+            className="flex items-center justify-center gap-2 h-12 rounded-full n-press"
+            style={{ background: "hsl(var(--n-surface))", border: "1px solid hsl(var(--n-border))" }}
           >
-            <MessageCircle className="w-[18px] h-[18px] text-[#25D366]" />
-            <span className="ar-body text-[13px] font-bold text-[#25D366]">واتساب</span>
+            <MessageCircle className="w-[18px] h-[18px] text-[#1DA851]" />
+            <span className="ar-body text-[13px] font-bold text-[hsl(var(--n-text))]">واتساب</span>
           </a>
           <a
             href="tel:+201034806288"
             onClick={() => void haptic("light")}
-            className="flex items-center justify-center gap-2 h-12 rounded-full ios-card ios-press"
+            className="flex items-center justify-center gap-2 h-12 rounded-full n-press"
+            style={{ background: "hsl(var(--n-surface))", border: "1px solid hsl(var(--n-border))" }}
           >
-            <Phone className="w-[18px] h-[18px] text-white/80" />
-            <span className="ar-body text-[13px] font-bold">اتصل بنا</span>
+            <Phone className="w-[18px] h-[18px]" style={{ color: "hsl(var(--n-accent))" }} />
+            <span className="ar-body text-[13px] font-bold text-[hsl(var(--n-text))]">اتصل بنا</span>
           </a>
         </div>
       </section>
 
-      {/* ───────────── Footer ───────────── */}
-      <footer className={`${GUTTER} mt-12 flex flex-col items-center gap-3`}>
-        <img src={logoDark} alt="المصرية جروب" className="h-7 w-auto object-contain opacity-70" />
-        <p className="ar-body text-[11px] text-white/35 text-center">
+      {/* ═══════ Footer ═══════ */}
+      <footer className={`${GUTTER} mt-10 flex flex-col items-center gap-3`}>
+        <span className="px-3 py-2 rounded-xl" style={{ background: "hsl(var(--n-brand))" }}>
+          <img src={logoDark} alt="المصرية جروب" className="h-6 w-auto object-contain" />
+        </span>
+        <p className="ar-body text-[11px] text-[hsl(var(--n-text-3))] text-center">
           موزّع معتمد لقطع غيار تويوتا — منذ ١٩٩٩
         </p>
       </footer>
 
-      <div className="h-6" />
+      <div className="h-4" />
     </div>
   );
 };
-
-/* ── Building blocks ─────────────────────────────────────── */
-
-const SectionHeader = ({ title, to }: { title: string; to: string }) => (
-  <div className={`flex items-baseline justify-between ${GUTTER}`}>
-    <h2 className="ar-display font-bold text-[19px]">{title}</h2>
-    <Link
-      to={to}
-      className="ar-body text-[12.5px] text-white/45 font-semibold inline-flex items-center gap-0.5 ios-press"
-    >
-      عرض الكل
-      <ChevronLeft className="w-3.5 h-3.5" />
-    </Link>
-  </div>
-);
-
-const GroupTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="eyebrow text-white/35 mb-3 px-1">{children}</h2>
-);
-
-const ListRow = ({
-  label,
-  hint,
-  to,
-  icon: Icon,
-}: {
-  label: string;
-  hint: string;
-  to: string;
-  icon: typeof Store;
-}) => (
-  <Link
-    to={to}
-    onClick={() => void haptic("light")}
-    className="ios-row flex items-center gap-3.5 px-4 py-3.5 active:bg-white/[0.05] transition-colors"
-  >
-    <span className="w-9 h-9 rounded-xl bg-white/[0.07] grid place-items-center shrink-0">
-      <Icon className="w-[17px] h-[17px] text-white/70" />
-    </span>
-    <span className="flex-1 min-w-0">
-      <span className="block ar-body text-[14px] font-semibold leading-tight">{label}</span>
-      <span className="block ar-body text-[11.5px] text-white/40 mt-0.5 leading-tight">{hint}</span>
-    </span>
-    <ChevronLeft className="w-[18px] h-[18px] text-white/25 shrink-0" />
-  </Link>
-);
 
 export default NativeHomeScreen;
