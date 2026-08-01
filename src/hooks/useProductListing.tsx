@@ -528,6 +528,49 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     gcTime: 10 * 60 * 1000, // keep in garbage collection for 10 minutes
   });
 
+  /* ── Server-side search (covers the FULL catalog, not just the cached page) ──
+   * القائمة المحلية بتجيب 800 صنف بس، فالبحث بكود/بارت نمبر كان بيفشل.
+   * هنا بنسأل السيرفر مباشرة بالمصطلح ونضم النتيجة للقائمة. */
+  const rawSearchTerm = (filters.search || "").trim();
+  const [debouncedSearch, setDebouncedSearch] = useState(rawSearchTerm);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(rawSearchTerm), 250);
+    return () => clearTimeout(t);
+  }, [rawSearchTerm]);
+
+  const { data: serverSearchResults } = useQuery({
+    queryKey: ["products", "server-search", debouncedSearch],
+    enabled: debouncedSearch.length >= 2,
+    staleTime: 2 * 60 * 1000,
+    queryFn: async () => {
+      const term = debouncedSearch.replace(/[%,()]/g, " ").trim();
+      if (!term) return [];
+      const like = `%${term}%`;
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name_ar, name_en, sku, part_number, image_url, base_price, stock_quantity, safety_stock, max_order_cap, brand, category_id, is_active, is_featured, is_on_sale, sale_price, min_order_qty, compatible_models, description_ar, year_from, year_to, product_categories(name_ar)")
+        .eq("is_active", true)
+        .or(
+          `name_ar.ilike.${like},name_en.ilike.${like},sku.ilike.${like},part_number.ilike.${like},description_ar.ilike.${like}`
+        )
+        .limit(300);
+      if (error) throw error;
+      return (data || []).map((p: any) => ({
+        ...p,
+        available_quantity: Math.max(0, (p.stock_quantity || 0) - (p.safety_stock || 0)),
+      }));
+    },
+  });
+
+  /* دمج نتائج السيرفر مع القائمة المحلية بدون تكرار */
+  const catalog = useMemo(() => {
+    const base = products || [];
+    if (!serverSearchResults?.length) return base;
+    const seen = new Set(base.map((p: any) => p.id));
+    return [...base, ...serverSearchResults.filter((p: any) => !seen.has(p.id))];
+  }, [products, serverSearchResults]);
+
+
   /* ── Best-selling product IDs ── */
   const { data: bestSellingIds } = useQuery({
     queryKey: ["best_selling_ids"],
@@ -626,7 +669,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
   /* ── Filtering with Arabic normalization + smart year matching ── */
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
+    if (!catalog) return [];
 
     const rawSearch = filters.search?.trim() || "";
     const searchYear = rawSearch ? extractYearFromSearch(rawSearch) : null;
@@ -691,7 +734,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     };
 
-    let baseResults = products.filter(baseFilter);
+    let baseResults = catalog.filter(baseFilter);
 
     // Step 2: Smart year matching when search contains a year
     if (searchYear) {
@@ -863,7 +906,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms, selectedCategoryFallbackKeywords]);
+  }, [catalog, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms, selectedCategoryFallbackKeywords]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
