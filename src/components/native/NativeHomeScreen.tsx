@@ -189,8 +189,26 @@ const NativeHomeScreen = () => {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-carbon text-white overflow-x-hidden ar-body">
+    <div dir="rtl" className="relative min-h-screen bg-carbon text-white overflow-x-hidden ar-body">
+      {/* ── Website-matched ambient theme (spotlight + gold/red glow) ── */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-spotlight opacity-[0.55]" />
+        <div className="absolute top-[38%] -right-[25%] w-[80vw] h-[80vw] rounded-full blur-[120px] bg-gold/[0.07]" />
+        <div className="absolute bottom-[6%] -left-[30%] w-[85vw] h-[85vw] rounded-full blur-[130px] bg-toyota-red/[0.08]" />
+        <div
+          className="absolute inset-0 opacity-[0.045]"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(var(--gold)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--gold)) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+            maskImage: "radial-gradient(80% 60% at 50% 30%, black, transparent)",
+            WebkitMaskImage: "radial-gradient(80% 60% at 50% 30%, black, transparent)",
+          }}
+        />
+      </div>
+      <div className="relative z-[1]">
       {/* ───────────── Floating glass nav bar ───────────── */}
+
       <motion.header
         animate={{ opacity: scrolled ? 1 : 0, y: scrolled ? 0 : -12 }}
         transition={{ duration: 0.28, ease: easeOutIOS }}
