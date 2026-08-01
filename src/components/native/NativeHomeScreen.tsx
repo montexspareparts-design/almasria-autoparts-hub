@@ -319,7 +319,9 @@ const NativeHomeScreen = () => {
                 className="w-[52px] h-[52px] rounded-2xl bg-toyota-red grid place-items-center ios-press shadow-[0_10px_28px_-10px_hsl(var(--toyota-red)/0.9)]"
               >
                 <Camera className="w-5 h-5 text-white" />
-          </button>
+              </button>
+            }
+          />
         </form>
       </div>
 
