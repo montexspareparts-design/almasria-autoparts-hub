@@ -408,19 +408,23 @@ const NativeHomeScreen = () => {
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="relative rounded-[22px] overflow-hidden border border-white/[0.07] ios-press"
+              className="rounded-[22px] overflow-hidden border border-white/[0.07] bg-white/[0.04] ios-press"
             >
-              <div className="aspect-[4/5]">
+              <div className="relative aspect-[5/4] bg-carbon">
                 <img src={c.img} alt={c.label} loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-carbon/70 to-transparent" />
               </div>
-              <div className="absolute bottom-0 inset-x-0 p-3.5">
-                <p className="ar-display font-bold text-[15px] leading-none">{c.label}</p>
-                <p className="ar-body text-[10.5px] text-white/50 mt-1.5">{c.sub}</p>
+              <div className="px-3.5 py-3 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="ar-display font-bold text-[14.5px] leading-none truncate">{c.label}</p>
+                  <p className="ar-body text-[10.5px] text-white/45 mt-1.5 truncate">{c.sub}</p>
+                </div>
+                <ChevronLeft className="w-4 h-4 text-white/25 shrink-0" />
               </div>
             </Link>
           ))}
         </div>
+
       </motion.section>
 
       {/* ───────────── Brands ───────────── */}
