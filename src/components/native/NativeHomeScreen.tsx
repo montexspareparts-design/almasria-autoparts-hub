@@ -7,7 +7,7 @@ import {
   Truck,
   Headphones,
   ChevronLeft,
-  ScanLine,
+  Camera,
   Car,
   Wrench,
   BookOpen,
@@ -21,12 +21,13 @@ import {
   Sparkles,
   MessageCircle,
   Info,
-  Bell,
+  User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { LazyImage } from "@/components/ui/lazy-image";
+import ImageSearchDialog from "@/components/ImageSearchDialog";
 import { haptic } from "@/lib/haptics";
 import { easeOutIOS, revealUp } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
