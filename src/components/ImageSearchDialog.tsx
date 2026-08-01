@@ -27,9 +27,11 @@ interface MatchedProduct {
 
 interface Props {
   onProductFound?: (searchTerm: string) => void;
+  /** Optional custom trigger element (defaults to a small camera button). */
+  trigger?: React.ReactNode;
 }
 
-const ImageSearchDialog = ({ onProductFound }: Props) => {
+const ImageSearchDialog = ({ onProductFound, trigger }: Props) => {
   const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -103,9 +105,11 @@ const ImageSearchDialog = ({ onProductFound }: Props) => {
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetState(); }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="shrink-0 border-primary/20 hover:border-primary/50 hover:bg-primary/5" title="بحث بالصورة">
-          <Camera className="w-4 h-4 text-primary" />
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" size="icon" className="shrink-0 border-primary/20 hover:border-primary/50 hover:bg-primary/5" title="بحث بالصورة">
+            <Camera className="w-4 h-4 text-primary" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
