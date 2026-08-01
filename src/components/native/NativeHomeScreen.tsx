@@ -247,29 +247,42 @@ const NativeHomeScreen = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-16"
+            className="mt-20"
           >
-            <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
-            <h1 className="ar-display font-black text-[34px] leading-[1.32] mt-3">
+            <div className="flex items-center gap-2.5">
+              <span className="h-px w-7 bg-gold/70" />
+              <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
+            </div>
+            <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-4 drop-shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
               قطع غيار تويوتا
               <br />
-              الأصلية
+              <span className="text-gold">الأصلية</span>
             </h1>
-            <p className="ar-body text-[15px] text-white/60 mt-3 max-w-[19rem]">
+            <p className="ar-body text-[15px] leading-[1.75] text-white/78 mt-4 max-w-[19rem] drop-shadow-[0_1px_12px_rgba(0,0,0,0.8)]">
               كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
             </p>
 
-            <Link
-              to="/products"
-              onClick={() => void haptic("light")}
-              className="inline-flex items-center gap-1.5 mt-6 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press"
-            >
-              تصفّح الكتالوج
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
+            <div className="flex items-center gap-2.5 mt-7">
+              <Link
+                to="/products"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center gap-1.5 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press shadow-[0_18px_40px_-16px_rgba(0,0,0,0.9)]"
+              >
+                تصفّح الكتالوج
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/parts-by-model"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center h-12 px-6 rounded-full border border-white/20 bg-white/[0.06] backdrop-blur-md ar-display font-bold text-[14px] text-white ios-press"
+              >
+                حسب الموديل
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
+
 
       {/* ───────────── Search (understated, floats over the hero seam) ───────────── */}
       <div className={`${GUTTER} -mt-5 relative z-10`}>
