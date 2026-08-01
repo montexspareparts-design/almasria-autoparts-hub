@@ -462,10 +462,15 @@ const NativeHomeScreen = () => {
                   <p className="ar-body text-[12.5px] font-semibold leading-snug line-clamp-2 text-[hsl(var(--n-text))]">
                     {p.name_ar}
                   </p>
-                  <div className="mt-auto pt-1.5 space-y-1">
-                    <AvailabilityBadge state="in-stock" />
-                    <PriceDisplay value={user ? Number(p.base_price || 0) : null} locked={!user} size="sm" />
+                  <div className="mt-auto pt-2 flex flex-col gap-1.5">
+                    <span className="block">
+                      <AvailabilityBadge state="in-stock" />
+                    </span>
+                    <span className="block">
+                      <PriceDisplay value={user ? Number(p.base_price || 0) : null} locked={!user} size="sm" />
+                    </span>
                   </div>
+
                 </div>
               </Link>
             ))}
