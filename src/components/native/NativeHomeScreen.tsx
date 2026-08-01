@@ -26,7 +26,7 @@ import { LazyImage } from "@/components/ui/lazy-image";
 import { haptic } from "@/lib/haptics";
 import { easeOutIOS } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
-import { GUTTER, GroupTitle, ListRow, Skeleton } from "@/components/native/ui/primitives";
+import { GUTTER, Skeleton } from "@/components/native/ui/primitives";
 
 import bannerGenuine from "@/assets/native/banner-genuine.jpg";
 import bannerOils from "@/assets/native/banner-oils.jpg";
@@ -57,7 +57,7 @@ const INK = "hsl(var(--n-brand))";
 const HAIR = "1px solid hsl(var(--n-divider))";
 
 const SEARCH_SCOPES = [
-  { key: "all", label: "الكل", hint: "ابحث بكود الصنف أو البارت نمبر أو الاسم" },
+  { key: "all", label: "الكل", hint: "ابحث بالكود أو البارت نمبر" },
   { key: "code", label: "كود الصنف", hint: "مثال: ١٢٩١٨" },
   { key: "part", label: "بارت نمبر", hint: "مثال: 90919-01275" },
   { key: "name", label: "اسم القطعة", hint: "مثال: فلتر زيت كورولا" },
@@ -149,6 +149,35 @@ const STATS = [
   { value: "12K+", label: "صنف متاح" },
   { value: "48h", label: "زمن التوصيل" },
 ];
+
+/* Hairline navigation row — no card, icon reads as a technical mark */
+const HairRow = ({
+  label,
+  hint,
+  to,
+  icon: Icon,
+}: {
+  label: string;
+  hint: string;
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) => (
+  <Link
+    to={to}
+    onClick={() => void haptic("light")}
+    className="flex items-center gap-3.5 py-3.5 n-press"
+    style={{ borderBottom: HAIR, minHeight: 44 }}
+  >
+    <Icon className="w-[18px] h-[18px] shrink-0 text-[hsl(var(--n-text-2))]" />
+    <span className="flex-1 min-w-0">
+      <span className="block ar-display font-bold text-[14.5px] text-[hsl(var(--n-text))] leading-none">
+        {label}
+      </span>
+      <span className="block ar-body text-[11.5px] text-[hsl(var(--n-text-3))] mt-1.5 truncate">{hint}</span>
+    </span>
+    <ChevronLeft className="w-4 h-4 shrink-0 text-[hsl(var(--n-text-3))]" />
+  </Link>
+);
 
 /* Two-digit technical index, e.g. 01 / 02 */
 const idx = (i: number) => String(i + 1).padStart(2, "0");
@@ -283,10 +312,10 @@ const NativeHomeScreen = () => {
           </div>
 
           {/* statement */}
-          <h1 className="ar-display font-black text-[26px] leading-[1.5] mt-7">
+          <h1 className="ar-display font-black text-[27px] leading-[1.42] mt-7">
             القطعة الصح
-            <span className="text-white/45"> · </span>
-            من أول مرة
+            <br />
+            <span className="text-white/45">من أول مرة</span>
           </h1>
           <p className="ar-body text-[13px] leading-[1.75] text-white/55 mt-2 max-w-[300px]">
             كتالوج تويوتا كامل — ابحث بكود الصنف أو البارت نمبر أو اسم القطعة.
@@ -625,7 +654,7 @@ const NativeHomeScreen = () => {
             AUTHORIZED BRANDS
           </span>
           <h2 className="ar-display font-black text-[19px] text-[hsl(var(--n-text))] mt-1.5">
-            علامات نوزّعها رسمياً
+            علاماتنا الرسمية
           </h2>
 
           <div className="mt-4" style={{ borderTop: HAIR }}>
@@ -647,7 +676,10 @@ const NativeHomeScreen = () => {
                   <span className="block ar-display font-bold text-[14.5px] text-[hsl(var(--n-text))] leading-none">
                     {b.label}
                   </span>
-                  <span className="block n-code text-[9px] tracking-[0.14em] text-[hsl(var(--n-text-3))] mt-1.5 truncate">
+                  <span
+                    className="block n-code text-[9px] tracking-[0.14em] text-[hsl(var(--n-text-3))] mt-1.5 truncate"
+                    style={{ textAlign: "right" }}
+                  >
                     {b.en}
                   </span>
                 </span>
@@ -772,10 +804,11 @@ const NativeHomeScreen = () => {
 
       {/* ══ 13 · Services ══ */}
       <motion.section {...reveal} className={`${GUTTER} mt-9`}>
-        <GroupTitle>الخدمات</GroupTitle>
-        <div className="n-group">
+        <span className="n-code text-[9.5px] tracking-[0.2em] text-[hsl(var(--n-text-3))]">SERVICES</span>
+        <h2 className="ar-display font-black text-[19px] text-[hsl(var(--n-text))] mt-1.5">الخدمات</h2>
+        <div className="mt-3.5" style={{ borderTop: HAIR }}>
           {SERVICES.map((s) => (
-            <ListRow key={s.to} {...s} />
+            <HairRow key={s.to} {...s} />
           ))}
         </div>
       </motion.section>
@@ -809,10 +842,11 @@ const NativeHomeScreen = () => {
 
       {/* ══ 15 · Company ══ */}
       <motion.section {...reveal} className={`${GUTTER} mt-9`}>
-        <GroupTitle>المصرية جروب</GroupTitle>
-        <div className="n-group">
+        <span className="n-code text-[9.5px] tracking-[0.2em] text-[hsl(var(--n-text-3))]">COMPANY</span>
+        <h2 className="ar-display font-black text-[19px] text-[hsl(var(--n-text))] mt-1.5">المصرية جروب</h2>
+        <div className="mt-3.5" style={{ borderTop: HAIR }}>
           {ABOUT_LINKS.map((a) => (
-            <ListRow key={a.to} {...a} />
+            <HairRow key={a.to} {...a} />
           ))}
         </div>
       </motion.section>
