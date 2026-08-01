@@ -1,41 +1,31 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, LayoutGrid, Car, ShoppingBag, User } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { Home, LayoutGrid, ShoppingBag, Package, User } from "lucide-react";
+import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { haptic } from "@/lib/haptics";
-import { easeStandard } from "@/lib/motion";
+import { springTab, easeStandard } from "@/lib/motion";
 
 /**
- * Native bottom tab bar — five primary destinations, edge-anchored.
+ * Floating Liquid-Glass tab bar (iOS 26 pattern).
  *
- * Low-profile chrome attached to the bottom edge with a single hairline,
- * no floating pill, no underline indicator. The active destination is
- * communicated by icon weight, label weight and the Al Masria brand tint.
- * Routes and destinations are unchanged.
+ * - Inset from the screen edges, never flush — it floats above content.
+ * - Collapses to a compact icon-only pill while scrolling down, expands on
+ *   scroll up, matching the system tab bar behaviour.
+ * - Purely presentational navigation over the existing routes.
  */
 
 const TABS = [
   { to: "/", label: "الرئيسية", icon: Home, match: (p: string) => p === "/" },
   {
     to: "/products",
-    label: "الكتالوج",
+    label: "المتجر",
     icon: LayoutGrid,
-    match: (p: string) => p.startsWith("/products") || p.startsWith("/parts-by-type") || p.startsWith("/mtx"),
-  },
-  {
-    to: "/parts-by-model",
-    label: "عربيتي",
-    icon: Car,
-    match: (p: string) => p.startsWith("/parts-by-model"),
+    match: (p: string) => p.startsWith("/products") || p.startsWith("/parts-"),
   },
   { to: "/cart", label: "السلة", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart"), cart: true },
-  {
-    to: "/my-profile",
-    label: "حسابي",
-    icon: User,
-    match: (p: string) => p.startsWith("/my-profile") || p.startsWith("/track-order"),
-  },
+  { to: "/track-order", label: "طلباتي", icon: Package, match: (p: string) => p.startsWith("/track-order") },
+  { to: "/my-profile", label: "حسابي", icon: User, match: (p: string) => p.startsWith("/my-profile") },
 ] as const;
 
 /** Routes that keep their own full-screen chrome (staff / dealer / flows). */
@@ -50,12 +40,9 @@ const HIDDEN_PREFIXES = [
   "/auth-callback",
 ];
 
-const BAR_H = 54;
-
 const NativeTabBar = () => {
   const location = useLocation();
   const { itemCount } = useCart();
-  const reduce = useReducedMotion();
   const [compact, setCompact] = useState(false);
   const lastY = useRef(0);
 
@@ -69,7 +56,7 @@ const NativeTabBar = () => {
         const y = window.scrollY;
         const delta = y - lastY.current;
         if (Math.abs(delta) > 8) {
-          setCompact(delta > 0 && y > 160);
+          setCompact(delta > 0 && y > 120);
           lastY.current = y;
         }
       });
@@ -88,66 +75,90 @@ const NativeTabBar = () => {
 
   return (
     <>
-      {/* spacer so content never sits under the bar */}
-      <div aria-hidden style={{ height: `calc(${BAR_H}px + env(safe-area-inset-bottom))` }} />
+      {/* spacer so page content never hides behind the floating bar */}
+      <div aria-hidden style={{ height: "calc(84px + env(safe-area-inset-bottom))" }} />
 
-      <nav
+      <div
         dir="rtl"
-        aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-50 n-chrome"
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-          borderRadius: 0,
-          border: "none",
-          borderTop: "1px solid hsl(var(--n-border))",
-          boxShadow: "none",
-        }}
+        className="fixed inset-x-0 bottom-0 z-50 pointer-events-none px-5"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
       >
-        <ul className="grid grid-cols-5 mx-auto max-w-[520px]" style={{ height: BAR_H }}>
-          {TABS.map((t) => {
-            const active = t.match(path);
-            const Icon = t.icon;
-            const badge = "cart" in t && t.cart ? itemCount : 0;
-            return (
-              <li key={t.to} className="min-w-0">
-                <Link
-                  to={t.to}
-                  onClick={() => void haptic("light")}
-                  aria-current={active ? "page" : undefined}
-                  aria-label={t.label}
-                  className="h-full flex flex-col items-center justify-center gap-[3px] n-press"
-                  style={{
-                    minHeight: 44,
-                    color: active ? "hsl(var(--n-accent))" : "hsl(var(--n-text-3))",
-                  }}
-                >
-                  <span className="relative">
-                    <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.5 : 1.75} aria-hidden />
-                    {badge > 0 && (
-                      <span
-                        className="absolute -top-1.5 -end-2 min-w-[16px] h-[16px] px-1 rounded-full grid place-items-center ar-body text-[9.5px] font-bold n-num"
-                        style={{ background: "hsl(var(--n-accent))", color: "#fff" }}
-                        aria-label={`${badge} في السلة`}
-                      >
-                        {badge > 99 ? "99+" : badge}
-                      </span>
-                    )}
-                  </span>
-                  <motion.span
-                    animate={reduce ? undefined : { opacity: compact ? 0 : 1, height: compact ? 0 : 14 }}
-                    transition={{ duration: 0.16, ease: easeStandard }}
-                    className="ar-body text-[10px] overflow-hidden flex items-center"
-                    style={{ lineHeight: "14px", fontWeight: active ? 800 : 500 }}
-                  >
-                    {t.label}
-                  </motion.span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+        <motion.nav
+          animate={{ height: compact ? 54 : 66 }}
+          transition={{ duration: 0.25, ease: easeStandard }}
+          className="pointer-events-auto mx-auto max-w-[420px] ios-glass rounded-full overflow-hidden"
+        >
+          <ul className="grid grid-cols-5 h-full">
+            {TABS.map((t) => (
+              <TabItem
+                key={t.to}
+                tab={t}
+                active={t.match(path)}
+                compact={compact}
+                badge={"cart" in t && t.cart ? itemCount : 0}
+              />
+            ))}
+          </ul>
+        </motion.nav>
+      </div>
     </>
+  );
+};
+
+const TabItem = ({
+  tab,
+  active,
+  compact,
+  badge,
+}: {
+  tab: (typeof TABS)[number];
+  active: boolean;
+  compact: boolean;
+  badge: number;
+}) => {
+  const Icon = tab.icon;
+  return (
+    <li className="h-full">
+      <Link
+        to={tab.to}
+        onClick={() => void haptic("light")}
+        aria-current={active ? "page" : undefined}
+        aria-label={tab.label}
+        className="relative h-full flex flex-col items-center justify-center select-none"
+      >
+        {active && (
+          <motion.span
+            layoutId="native-tab-pill"
+            className="absolute inset-y-1.5 inset-x-1.5 rounded-full bg-white/[0.10]"
+            transition={springTab}
+          />
+        )}
+
+        <span className="relative grid place-items-center">
+          <Icon
+            className={`w-[21px] h-[21px] transition-colors duration-200 ${
+              active ? "text-white" : "text-white/45"
+            }`}
+            strokeWidth={active ? 2.2 : 1.7}
+          />
+          {badge > 0 && (
+            <span className="absolute -top-1.5 -left-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-toyota-red text-white text-[10px] font-bold grid place-items-center numeric ring-2 ring-[hsl(0_0%_6%)]">
+              {badge > 99 ? "99+" : badge}
+            </span>
+          )}
+        </span>
+
+        <motion.span
+          animate={{ opacity: compact ? 0 : 1, height: compact ? 0 : 13, marginTop: compact ? 0 : 4 }}
+          transition={{ duration: 0.2, ease: easeStandard }}
+          className={`relative overflow-hidden ar-body text-[10.5px] leading-[13px] ${
+            active ? "text-white font-semibold" : "text-white/45 font-medium"
+          }`}
+        >
+          {tab.label}
+        </motion.span>
+      </Link>
+    </li>
   );
 };
 
