@@ -27,6 +27,8 @@ interface MatchedProduct {
 
 interface Props {
   onProductFound?: (searchTerm: string) => void;
+  /** Optional custom trigger element (defaults to a small camera button). */
+  trigger?: React.ReactNode;
 }
 
 const ImageSearchDialog = ({ onProductFound }: Props) => {
