@@ -358,7 +358,7 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Models — chip rail ───────────── */}
       <motion.section {...revealUp} className="mt-10">
-        <SectionHeader title="اختر موديل عربيتك" to="/parts-by-model" />
+        <SectionHeader title="اختر موديل عربيتك" to="/products" />
         <div className={`flex gap-2.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1`}>
           {MODELS.map((m) => (
             <Link
