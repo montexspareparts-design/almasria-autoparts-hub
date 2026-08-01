@@ -225,7 +225,7 @@ const NativeHomeScreen = () => {
               onClick={() => void haptic("light")}
               className="w-9 h-9 rounded-full bg-white/[0.08] grid place-items-center ios-press"
             >
-              <Bell className="w-[17px] h-[17px] text-white/75" />
+              <User className="w-[17px] h-[17px] text-white/75" />
             </Link>
           </div>
         </div>
@@ -250,7 +250,7 @@ const NativeHomeScreen = () => {
               onClick={() => void haptic("light")}
               className="w-10 h-10 rounded-full ios-glass grid place-items-center ios-press"
             >
-              <Bell className="w-[18px] h-[18px] text-white/80" />
+              <User className="w-[18px] h-[18px] text-white/80" />
             </Link>
           </div>
 
@@ -309,16 +309,16 @@ const NativeHomeScreen = () => {
               aria-label="بحث في الكتالوج"
             />
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              void haptic("medium");
-              navigate("/products");
-            }}
-            aria-label="مسح ضوئي للبارت نمبر"
-            className="w-[52px] h-[52px] rounded-2xl bg-toyota-red grid place-items-center ios-press shadow-[0_10px_28px_-10px_hsl(var(--toyota-red)/0.9)]"
-          >
-            <ScanLine className="w-5 h-5 text-white" />
+          <ImageSearchDialog
+            onProductFound={(term) => navigate(`/products?search=${encodeURIComponent(term)}`)}
+            trigger={
+              <button
+                type="button"
+                onClick={() => void haptic("medium")}
+                aria-label="بحث بصورة القطعة"
+                className="w-[52px] h-[52px] rounded-2xl bg-toyota-red grid place-items-center ios-press shadow-[0_10px_28px_-10px_hsl(var(--toyota-red)/0.9)]"
+              >
+                <Camera className="w-5 h-5 text-white" />
           </button>
         </form>
       </div>
