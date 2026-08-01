@@ -1108,13 +1108,13 @@ html[data-native-app="true"] [contenteditable="true"] {
   --n-r-full: 999px;
 
   /* ── Elevation (restrained) ───────────────────────────────── */
-  --n-elev-1: 0 1px 2px hsl(218 28% 11% / 0.05);
-  --n-elev-2: 0 2px 10px -2px hsl(218 28% 11% / 0.08), 0 1px 2px hsl(218 28% 11% / 0.04);
-  --n-elev-3: 0 12px 30px -12px hsl(218 28% 11% / 0.22), 0 2px 6px hsl(218 28% 11% / 0.06);
+  --n-elev-1: 0 1px 2px hsl(30 10% 10% / 0.05);
+  --n-elev-2: 0 2px 10px -2px hsl(30 10% 10% / 0.08), 0 1px 2px hsl(30 10% 10% / 0.04);
+  --n-elev-3: 0 12px 30px -12px hsl(30 10% 10% / 0.22), 0 2px 6px hsl(30 10% 10% / 0.06);
 
   /* ── Materials ────────────────────────────────────────────── */
-  --n-blur-chrome: blur(24px) saturate(180%);
-  --n-chrome-fill: 0 0% 100% / 0.78;
+  --n-blur-chrome: blur(20px) saturate(160%);
+  --n-chrome-fill: 0 0% 100% / 0.86;
 
   /* ── Spacing (4pt rhythm) ─────────────────────────────────── */
   --n-s1: 4px;  --n-s2: 8px;  --n-s3: 12px; --n-s4: 16px;
@@ -1139,42 +1139,54 @@ html[data-native-app="true"] [contenteditable="true"] {
 /* ── Dark mode: authored, not inverted ───────────────────────── */
 @media (prefers-color-scheme: dark) {
   [data-native-app="true"] {
-    --n-bg: 220 18% 7%;
-    --n-bg-elev: 220 16% 10%;
-    --n-surface: 220 16% 11%;
-    --n-surface-2: 220 14% 14.5%;
-    --n-surface-3: 220 13% 18%;
-    --n-image-bg: 0 0% 100%;      /* product images stay on white */
+    --n-bg: 30 7% 7%;
+    --n-bg-elev: 30 7% 10%;
+    --n-surface: 30 6% 11.5%;
+    --n-surface-2: 30 6% 15%;
+    --n-surface-3: 30 5% 19%;
+    --n-image-bg: 36 12% 94%;     /* soft off-white plate for parts */
 
-    --n-text: 210 20% 96%;
-    --n-text-2: 214 10% 70%;
-    --n-text-3: 214 8% 55%;
+    --n-text: 40 14% 95%;
+    --n-text-2: 36 7% 72%;
+    --n-text-3: 34 5% 56%;
 
-    --n-brand: 213 45% 14%;
-    --n-brand-2: 213 40% 22%;
-    --n-accent: 210 90% 68%;
-    --n-gold: 42 62% 60%;
+    --n-ink: 30 7% 9%;
+    --n-ink-2: 30 6% 14%;
+    --n-brand: 30 7% 9%;
+    --n-brand-2: 30 6% 14%;
+    --n-accent: 357 76% 62%;
+    --n-accent-2: 357 60% 46%;
+    --n-accent-soft: 357 76% 62% / 0.14;
+    --n-olive: 74 26% 58%;
+    --n-gold: 40 52% 60%;
 
-    --n-success: 152 52% 62%;
-    --n-success-bg: 152 30% 15%;
-    --n-warning: 40 85% 64%;
-    --n-warning-bg: 38 40% 15%;
-    --n-error: 353 80% 68%;
-    --n-error-bg: 353 40% 16%;
-    --n-info: 210 90% 68%;
-    --n-info-bg: 212 40% 16%;
+    --n-success: 152 46% 58%;
+    --n-success-bg: 152 26% 14%;
+    --n-warning: 40 82% 62%;
+    --n-warning-bg: 38 34% 14%;
+    --n-error: 6 74% 64%;
+    --n-error-bg: 6 34% 15%;
+    --n-info: 36 8% 78%;
+    --n-info-bg: 30 6% 16%;
 
-    --n-border: 220 12% 22%;
-    --n-border-strong: 220 12% 30%;
-    --n-divider: 220 12% 20%;
-    --n-overlay: 0 0% 0% / 0.55;
+    --n-fit: 152 46% 58%;
+    --n-fit-unknown: 34 6% 60%;
+    --n-stock-in: 152 46% 58%;
+    --n-stock-low: 40 82% 62%;
+    --n-stock-out: 34 5% 52%;
+
+    --n-border: 30 6% 21%;
+    --n-border-strong: 30 6% 30%;
+    --n-divider: 30 6% 19%;
+    --n-overlay: 0 0% 0% / 0.58;
 
     --n-elev-1: 0 1px 2px hsl(0 0% 0% / 0.4);
     --n-elev-2: 0 2px 12px -2px hsl(0 0% 0% / 0.55);
     --n-elev-3: 0 14px 34px -14px hsl(0 0% 0% / 0.7);
-    --n-chrome-fill: 220 16% 11% / 0.72;
+    --n-chrome-fill: 30 6% 11% / 0.84;
   }
 }
+
 
 /* ── Screen shell ────────────────────────────────────────────── */
 .n-screen {
