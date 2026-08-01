@@ -625,7 +625,9 @@ const NativeHomeScreen = () => {
       </footer>
 
       <div className="h-6" />
+      </div>
     </div>
+
   );
 };
 
