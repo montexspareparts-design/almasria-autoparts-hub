@@ -394,7 +394,11 @@ const NativeHomeScreen = () => {
                 to={`/parts-by-model/${m.slug}`}
                 onClick={() => void haptic("light")}
                 className="shrink-0 min-h-[44px] flex flex-col justify-center pe-5 n-press"
-                style={i > 0 ? { borderInlineEnd: "1px solid rgba(255,255,255,0.12)", marginInlineEnd: 20 } : { borderInlineEnd: "1px solid rgba(255,255,255,0.12)", marginInlineEnd: 20 }}
+                style={
+                  i < MODELS.length - 1
+                    ? { borderInlineEnd: "1px solid rgba(255,255,255,0.12)", marginInlineEnd: 20 }
+                    : undefined
+                }
               >
                 <span className="ar-display font-bold text-[15px] text-white leading-none">{m.label}</span>
                 <span className="n-code text-[9px] tracking-[0.12em] text-white/40 mt-1.5">{m.en}</span>
