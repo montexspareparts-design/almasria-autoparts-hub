@@ -215,15 +215,9 @@ const NativeHomeScreen = () => {
       {/* ───────────── Cinematic hero ───────────── */}
       <section ref={heroRef} className="relative">
         <motion.div style={{ y: heroShift, opacity: heroFade }} className="absolute inset-0 will-change-transform">
-          <img
-            src={heroAmbient}
-            alt=""
-            aria-hidden
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-carbon/55 via-carbon/70 to-carbon" />
+          <NativeHero3D />
         </motion.div>
+
 
         <div
           className={`relative ${GUTTER} pb-10`}
