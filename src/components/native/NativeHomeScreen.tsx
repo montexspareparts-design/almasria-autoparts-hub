@@ -31,7 +31,7 @@ import { haptic } from "@/lib/haptics";
 import { easeOutIOS, revealUp } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
 
-import heroAmbient from "@/assets/native/hero-ambient.jpg";
+import NativeHero3D from "@/components/native/NativeHero3D";
 import bannerGenuine from "@/assets/native/banner-genuine.jpg";
 import bannerOils from "@/assets/native/banner-oils.jpg";
 import bannerMtx from "@/assets/native/banner-mtx.jpg";
