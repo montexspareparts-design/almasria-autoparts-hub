@@ -1,18 +1,29 @@
-import { memo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, LayoutGrid, Package, User, ShoppingCart } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Home, LayoutGrid, ShoppingBag, Package, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { haptic } from "@/lib/haptics";
+import { springTab, easeStandard } from "@/lib/motion";
 
 /**
- * Native bottom tab bar — only rendered inside the iOS/Android shell.
- * Purely presentational navigation over existing routes.
+ * Floating Liquid-Glass tab bar (iOS 26 pattern).
+ *
+ * - Inset from the screen edges, never flush — it floats above content.
+ * - Collapses to a compact icon-only pill while scrolling down, expands on
+ *   scroll up, matching the system tab bar behaviour.
+ * - Purely presentational navigation over the existing routes.
  */
 
 const TABS = [
   { to: "/", label: "الرئيسية", icon: Home, match: (p: string) => p === "/" },
-  { to: "/products", label: "المتجر", icon: LayoutGrid, match: (p: string) => p.startsWith("/products") || p.startsWith("/parts-") },
+  {
+    to: "/products",
+    label: "المتجر",
+    icon: LayoutGrid,
+    match: (p: string) => p.startsWith("/products") || p.startsWith("/parts-"),
+  },
+  { to: "/cart", label: "السلة", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart"), cart: true },
   { to: "/track-order", label: "طلباتي", icon: Package, match: (p: string) => p.startsWith("/track-order") },
   { to: "/my-profile", label: "حسابي", icon: User, match: (p: string) => p.startsWith("/my-profile") },
 ] as const;
@@ -31,8 +42,31 @@ const HIDDEN_PREFIXES = [
 
 const NativeTabBar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { itemCount } = useCart();
+  const [compact, setCompact] = useState(false);
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        const delta = y - lastY.current;
+        if (Math.abs(delta) > 8) {
+          setCompact(delta > 0 && y > 120);
+          lastY.current = y;
+        }
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   const path = location.pathname;
   if (HIDDEN_PREFIXES.some((p) => path === p || path.startsWith(p + "/") || path.startsWith(p + "?"))) {
@@ -41,48 +75,32 @@ const NativeTabBar = () => {
 
   return (
     <>
-      {/* spacer so page content never hides behind the bar */}
-      <div aria-hidden style={{ height: "calc(72px + env(safe-area-inset-bottom))" }} />
+      {/* spacer so page content never hides behind the floating bar */}
+      <div aria-hidden style={{ height: "calc(84px + env(safe-area-inset-bottom))" }} />
 
-      <nav
+      <div
         dir="rtl"
-        className="fixed bottom-0 inset-x-0 z-50"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="fixed inset-x-0 bottom-0 z-50 pointer-events-none px-5"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)" }}
       >
-        <div
-          className="absolute inset-0 backdrop-blur-2xl border-t border-white/10"
-          style={{ background: "hsl(var(--carbon) / 0.9)" }}
-        />
-
-
-        {/* center action */}
-        <button
-          type="button"
-          aria-label="عربة التسوق"
-          onClick={() => {
-            void haptic("medium");
-            navigate("/cart");
-          }}
-          className="absolute left-1/2 -translate-x-1/2 -top-6 w-14 h-14 rounded-full bg-toyota-red text-white grid place-items-center shadow-[0_10px_30px_-6px_hsl(var(--toyota-red)/0.7)] ring-4 ring-carbon active:scale-95 transition-transform"
+        <motion.nav
+          animate={{ height: compact ? 54 : 66 }}
+          transition={{ duration: 0.25, ease: easeStandard }}
+          className="pointer-events-auto mx-auto max-w-[420px] ios-glass rounded-full overflow-hidden"
         >
-          <ShoppingCart className="w-6 h-6" strokeWidth={2.2} />
-          {itemCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-gold text-carbon text-[11px] font-black grid place-items-center">
-              {itemCount > 99 ? "99+" : itemCount}
-            </span>
-          )}
-        </button>
-
-        <ul className="relative grid grid-cols-5 items-end h-[72px] px-1">
-          {TABS.slice(0, 2).map((t) => (
-            <TabItem key={t.to} tab={t} active={t.match(path)} />
-          ))}
-          <li aria-hidden />
-          {TABS.slice(2).map((t) => (
-            <TabItem key={t.to} tab={t} active={t.match(path)} />
-          ))}
-        </ul>
-      </nav>
+          <ul className="grid grid-cols-5 h-full">
+            {TABS.map((t) => (
+              <TabItem
+                key={t.to}
+                tab={t}
+                active={t.match(path)}
+                compact={compact}
+                badge={"cart" in t && t.cart ? itemCount : 0}
+              />
+            ))}
+          </ul>
+        </motion.nav>
+      </div>
     </>
   );
 };
@@ -90,9 +108,13 @@ const NativeTabBar = () => {
 const TabItem = ({
   tab,
   active,
+  compact,
+  badge,
 }: {
   tab: (typeof TABS)[number];
   active: boolean;
+  compact: boolean;
+  badge: number;
 }) => {
   const Icon = tab.icon;
   return (
@@ -101,28 +123,40 @@ const TabItem = ({
         to={tab.to}
         onClick={() => void haptic("light")}
         aria-current={active ? "page" : undefined}
-        className="relative h-full flex flex-col items-center justify-center gap-1 select-none active:scale-95 transition-transform"
+        aria-label={tab.label}
+        className="relative h-full flex flex-col items-center justify-center select-none"
       >
         {active && (
           <motion.span
             layoutId="native-tab-pill"
-            className="absolute top-1.5 w-11 h-9 rounded-2xl bg-toyota-red/15"
-            transition={{ type: "spring", stiffness: 400, damping: 32 }}
+            className="absolute inset-y-1.5 inset-x-1.5 rounded-full bg-white/[0.10]"
+            transition={springTab}
           />
         )}
-        <Icon
-          className={`relative w-[22px] h-[22px] transition-colors ${
-            active ? "text-toyota-red" : "text-soft"
-          }`}
-          strokeWidth={active ? 2.4 : 1.9}
-        />
-        <span
-          className={`relative font-tajawal text-[11px] leading-none transition-colors ${
-            active ? "text-white font-bold" : "text-soft font-medium"
+
+        <span className="relative grid place-items-center">
+          <Icon
+            className={`w-[21px] h-[21px] transition-colors duration-200 ${
+              active ? "text-white" : "text-white/45"
+            }`}
+            strokeWidth={active ? 2.2 : 1.7}
+          />
+          {badge > 0 && (
+            <span className="absolute -top-1.5 -left-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-toyota-red text-white text-[10px] font-bold grid place-items-center numeric ring-2 ring-[hsl(0_0%_6%)]">
+              {badge > 99 ? "99+" : badge}
+            </span>
+          )}
+        </span>
+
+        <motion.span
+          animate={{ opacity: compact ? 0 : 1, height: compact ? 0 : 13, marginTop: compact ? 0 : 4 }}
+          transition={{ duration: 0.2, ease: easeStandard }}
+          className={`relative overflow-hidden ar-body text-[10.5px] leading-[13px] ${
+            active ? "text-white font-semibold" : "text-white/45 font-medium"
           }`}
         >
           {tab.label}
-        </span>
+        </motion.span>
       </Link>
     </li>
   );

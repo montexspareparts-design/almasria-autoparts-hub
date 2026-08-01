@@ -959,3 +959,80 @@ html[data-native-app="true"] [contenteditable="true"] {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   NATIVE APP SHELL — iOS-grade surfaces & typography
+   Apple HIG 2026: Liquid Glass, concentric radii, Arabic RTL rules.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Liquid Glass: floats above content, lensing highlight on the top edge. */
+.ios-glass {
+  background: hsl(0 0% 7% / 0.66);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid hsl(0 0% 100% / 0.09);
+  box-shadow:
+    0 12px 34px hsl(0 0% 0% / 0.5),
+    inset 0 1px 0 hsl(0 0% 100% / 0.16);
+}
+
+/* Resting content card — never glass (glass is reserved for chrome). */
+.ios-card {
+  background: hsl(0 0% 100% / 0.045);
+  border: 1px solid hsl(0 0% 100% / 0.07);
+  box-shadow: 0 1px 2px hsl(0 0% 0% / 0.25);
+}
+
+/* iOS grouped-list row separators. */
+.ios-row + .ios-row {
+  border-top: 1px solid hsl(0 0% 100% / 0.065);
+}
+
+/* Arabic display type: Kufi geometry, never negative tracking (breaks joins). */
+.ar-display {
+  font-family: "Noto Kufi Arabic", "Tajawal", "Cairo", sans-serif;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+/* Arabic UI/body: +15% line-height over the Latin equivalent. */
+.ar-body {
+  font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif;
+  letter-spacing: 0;
+  line-height: 1.62;
+}
+
+/* All-caps Latin eyebrow labels — positive tracking. */
+.eyebrow {
+  font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  line-height: 1.2;
+}
+
+/* Prices / codes / VINs stay LTR with tabular figures inside RTL flow. */
+.numeric {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tap-down feedback shared by every native pressable. */
+.ios-press {
+  transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.18s ease;
+}
+.ios-press:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* Momentum scrolling for horizontal rails, no visible scrollbar. */
+.ios-rail {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.ios-rail::-webkit-scrollbar {
+  display: none;
+}
