@@ -222,7 +222,9 @@ const NativeHomeScreen = () => {
             fetchPriority="high"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-carbon/55 via-carbon/70 to-carbon" />
+          <div className="absolute inset-0 bg-gradient-to-b from-carbon/70 via-carbon/82 to-carbon" />
+          <div className="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,transparent_20%,hsl(var(--carbon)/0.85)_100%)]" />
+
         </motion.div>
 
         <div
