@@ -65,9 +65,7 @@ const NativeAppGate = () => {
     }
   }, [user, loading]);
 
-  if (!native || phase === "done") {
-    return phase === "launch" ? <NativeLaunchScreen exiting={exitingLaunch} /> : null;
-  }
+  if (!native || phase === "done") return null;
 
   const finish = (segment: string) => {
     write(SEGMENT_KEY, segment);
