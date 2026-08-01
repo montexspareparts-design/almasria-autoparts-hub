@@ -669,7 +669,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
 
   /* ── Filtering with Arabic normalization + smart year matching ── */
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
+    if (!catalog) return [];
 
     const rawSearch = filters.search?.trim() || "";
     const searchYear = rawSearch ? extractYearFromSearch(rawSearch) : null;
@@ -734,7 +734,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
       return matchesBrand && matchesSearch && matchesCategory && matchesModel && matchesYear && matchesPartNumber && matchesPriceMin && matchesPriceMax;
     };
 
-    let baseResults = products.filter(baseFilter);
+    let baseResults = catalog.filter(baseFilter);
 
     // Step 2: Smart year matching when search contains a year
     if (searchYear) {
@@ -906,7 +906,7 @@ export function useProductListing(options: UseProductListingOptions = {}) {
     }
 
     return result;
-  }, [products, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms, selectedCategoryFallbackKeywords]);
+  }, [catalog, filters, bestSellingIds, dbCategories, maintenanceCategorySlugs, mostSearchedTerms, selectedCategoryFallbackKeywords]);
 
   /* ── Search logging (debounced) ── */
   const lastLoggedSearch = useRef("");
