@@ -381,8 +381,10 @@ const NativeHomeScreen = () => {
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/88 to-carbon/25" />
-              <div className="relative p-6 pt-24 min-h-[260px] flex flex-col justify-end">
+              <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/92 to-carbon/20" />
+              <div className="absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-carbon to-transparent" />
+              <div className="relative p-6 pt-28 min-h-[276px] flex flex-col justify-end">
+
                 <p className="eyebrow text-gold">{b.kicker}</p>
                 <h3 className="ar-display font-bold text-[21px] leading-[1.4] mt-2 drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)]">
                   {b.title}
