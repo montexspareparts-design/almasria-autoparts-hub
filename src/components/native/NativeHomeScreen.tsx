@@ -269,14 +269,24 @@ const NativeHomeScreen = () => {
               كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
             </p>
 
-            <Link
-              to="/products"
-              onClick={() => void haptic("light")}
-              className="inline-flex items-center gap-1.5 mt-6 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press"
-            >
-              تصفّح الكتالوج
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
+            <div className="flex items-center gap-2.5 mt-6">
+              <Link
+                to="/products"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center gap-1.5 h-12 px-7 rounded-full bg-toyota-red text-white ar-display font-bold text-[15px] ios-press shadow-[0_16px_34px_-14px_hsl(var(--toyota-red))]"
+              >
+                تصفّح الكتالوج
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center h-12 px-6 rounded-full border border-gold/45 text-gold ar-display font-bold text-[14px] ios-press"
+              >
+                تواصل معنا
+              </Link>
+            </div>
+
           </motion.div>
         </div>
       </section>
