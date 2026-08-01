@@ -222,7 +222,9 @@ const NativeHomeScreen = () => {
             fetchPriority="high"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-carbon/55 via-carbon/70 to-carbon" />
+          <div className="absolute inset-0 bg-gradient-to-b from-carbon/70 via-carbon/82 to-carbon" />
+          <div className="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_0%,transparent_20%,hsl(var(--carbon)/0.85)_100%)]" />
+
         </motion.div>
 
         <div
@@ -245,29 +247,42 @@ const NativeHomeScreen = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-16"
+            className="mt-20"
           >
-            <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
-            <h1 className="ar-display font-black text-[34px] leading-[1.32] mt-3">
+            <div className="flex items-center gap-2.5">
+              <span className="h-px w-7 bg-gold/70" />
+              <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
+            </div>
+            <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-4 drop-shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
               قطع غيار تويوتا
               <br />
-              الأصلية
+              <span className="text-gold">الأصلية</span>
             </h1>
-            <p className="ar-body text-[15px] text-white/60 mt-3 max-w-[19rem]">
+            <p className="ar-body text-[15px] leading-[1.75] text-white/78 mt-4 max-w-[19rem] drop-shadow-[0_1px_12px_rgba(0,0,0,0.8)]">
               كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
             </p>
 
-            <Link
-              to="/products"
-              onClick={() => void haptic("light")}
-              className="inline-flex items-center gap-1.5 mt-6 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press"
-            >
-              تصفّح الكتالوج
-              <ChevronLeft className="w-4 h-4" />
-            </Link>
+            <div className="flex items-center gap-2.5 mt-7">
+              <Link
+                to="/products"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center gap-1.5 h-12 px-7 rounded-full bg-white text-carbon ar-display font-bold text-[15px] ios-press shadow-[0_18px_40px_-16px_rgba(0,0,0,0.9)]"
+              >
+                تصفّح الكتالوج
+                <ChevronLeft className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/parts-by-model"
+                onClick={() => void haptic("light")}
+                className="inline-flex items-center h-12 px-6 rounded-full border border-white/20 bg-white/[0.06] backdrop-blur-md ar-display font-bold text-[14px] text-white ios-press"
+              >
+                حسب الموديل
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
+
 
       {/* ───────────── Search (understated, floats over the hero seam) ───────────── */}
       <div className={`${GUTTER} -mt-5 relative z-10`}>
@@ -366,16 +381,21 @@ const NativeHomeScreen = () => {
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/55 to-carbon/10" />
-              <div className="relative p-6 min-h-[240px] flex flex-col justify-end">
+              <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/92 to-carbon/20" />
+              <div className="absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-carbon to-transparent" />
+              <div className="relative p-6 pt-28 min-h-[276px] flex flex-col justify-end">
+
                 <p className="eyebrow text-gold">{b.kicker}</p>
-                <h3 className="ar-display font-bold text-[21px] leading-[1.4] mt-2">{b.title}</h3>
-                <p className="ar-body text-[13px] text-white/60 mt-1.5 max-w-[88%]">{b.sub}</p>
-                <span className="self-start inline-flex items-center gap-1 mt-5 ar-body text-[13px] font-bold text-white">
+                <h3 className="ar-display font-bold text-[21px] leading-[1.4] mt-2 drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)]">
+                  {b.title}
+                </h3>
+                <p className="ar-body text-[13px] leading-[1.7] text-white/70 mt-2 max-w-[88%]">{b.sub}</p>
+                <span className="self-start inline-flex items-center gap-1 mt-5 h-9 px-4 rounded-full bg-white/10 border border-white/15 ar-body text-[12.5px] font-bold text-white">
                   اعرف أكتر
                   <ChevronLeft className="w-4 h-4" />
                 </span>
               </div>
+
             </Link>
           ))}
         </div>
@@ -390,19 +410,23 @@ const NativeHomeScreen = () => {
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="relative rounded-[22px] overflow-hidden border border-white/[0.07] ios-press"
+              className="rounded-[22px] overflow-hidden border border-white/[0.07] bg-white/[0.04] ios-press"
             >
-              <div className="aspect-[4/5]">
+              <div className="relative aspect-[5/4] bg-carbon">
                 <img src={c.img} alt={c.label} loading="lazy" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-carbon via-carbon/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-carbon/70 to-transparent" />
               </div>
-              <div className="absolute bottom-0 inset-x-0 p-3.5">
-                <p className="ar-display font-bold text-[15px] leading-none">{c.label}</p>
-                <p className="ar-body text-[10.5px] text-white/50 mt-1.5">{c.sub}</p>
+              <div className="px-3.5 py-3 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="ar-display font-bold text-[14.5px] leading-none truncate">{c.label}</p>
+                  <p className="ar-body text-[10.5px] text-white/45 mt-1.5 truncate">{c.sub}</p>
+                </div>
+                <ChevronLeft className="w-4 h-4 text-white/25 shrink-0" />
               </div>
             </Link>
           ))}
         </div>
+
       </motion.section>
 
       {/* ───────────── Brands ───────────── */}
