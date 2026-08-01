@@ -1307,3 +1307,21 @@ html[data-native-app="true"] [contenteditable="true"] {
   }
   .n-skeleton::after { animation: none; }
 }
+
+/* ── Native structural helpers (hairline-first, card-less) ───── */
+.n-hair-t { border-top: 1px solid hsl(var(--n-divider)); }
+.n-hair-b { border-bottom: 1px solid hsl(var(--n-divider)); }
+.n-ink {
+  background: hsl(var(--n-ink));
+  color: hsl(var(--n-text-on-brand));
+}
+.n-ink-2 { background: hsl(var(--n-ink-2)); }
+/* Fine technical rule used across the command header */
+.n-grid-rule {
+  background-image: repeating-linear-gradient(
+    90deg,
+    hsl(0 0% 100% / 0.5) 0 1px,
+    transparent 1px 56px
+  );
+  opacity: 0.1;
+}
