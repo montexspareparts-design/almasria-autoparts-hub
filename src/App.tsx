@@ -28,6 +28,7 @@ import AnimatedRoutes from "@/components/AnimatedRoutes";
 import { isNativePlatform } from "@/lib/native";
 import { isNativeShell as isNativeShellFn } from "@/lib/nativeShell";
 const NativeTabBar = lazy(() => import("@/components/native/NativeTabBar"));
+const NativeLaunchGate = lazy(() => import("@/components/native/NativeLaunchGate"));
 
 const Index = lazy(() => import("./pages/Index"));
 
@@ -271,6 +272,11 @@ const App = () => (
                {isNativeShell() && (
                  <Suspense fallback={null}>
                    <NativeTabBar />
+                 </Suspense>
+               )}
+               {isNativeShell() && (
+                 <Suspense fallback={null}>
+                   <NativeLaunchGate />
                  </Suspense>
                )}
 
