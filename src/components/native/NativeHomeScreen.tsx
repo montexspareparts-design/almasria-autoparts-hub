@@ -258,15 +258,15 @@ const NativeHomeScreen = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-16"
+            className="mt-[190px]"
           >
             <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
-            <h1 className="ar-display font-black text-[34px] leading-[1.32] mt-3">
+            <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-3 drop-shadow-[0_2px_18px_rgba(0,0,0,0.7)]">
               قطع غيار تويوتا
               <br />
-              الأصلية
+              <span className="text-gold">الأصلية</span>
             </h1>
-            <p className="ar-body text-[15px] text-white/60 mt-3 max-w-[19rem]">
+            <p className="ar-body text-[15px] text-white/70 mt-3 max-w-[19rem] leading-relaxed">
               كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
             </p>
 
@@ -439,12 +439,12 @@ const NativeHomeScreen = () => {
               key={b.to}
               to={b.to}
               onClick={() => void haptic("light")}
-              className="shrink-0 w-[104px] rounded-2xl bg-white p-3 ios-press"
+              className="shrink-0 w-[112px] rounded-[20px] ios-card p-2.5 ios-press"
             >
-              <div className="h-11 grid place-items-center">
-                <img src={b.img} alt={b.label} loading="lazy" className="max-h-10 w-auto object-contain" />
+              <div className="h-[62px] rounded-[14px] bg-white grid place-items-center px-2.5">
+                <img src={b.img} alt={b.label} loading="lazy" className="max-h-9 w-auto object-contain" />
               </div>
-              <p className="ar-body text-[10.5px] font-bold text-carbon text-center mt-2 leading-tight">
+              <p className="ar-body text-[11px] font-bold text-white/85 text-center mt-2.5 mb-0.5 leading-tight">
                 {b.label}
               </p>
             </Link>
