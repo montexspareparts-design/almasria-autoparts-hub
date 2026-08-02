@@ -258,15 +258,15 @@ const NativeHomeScreen = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-16"
+            className="mt-[292px]"
           >
             <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
-            <h1 className="ar-display font-black text-[34px] leading-[1.32] mt-3">
+            <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-3 drop-shadow-[0_2px_18px_rgba(0,0,0,0.7)]">
               قطع غيار تويوتا
               <br />
-              الأصلية
+              <span className="text-gold">الأصلية</span>
             </h1>
-            <p className="ar-body text-[15px] text-white/60 mt-3 max-w-[19rem]">
+            <p className="ar-body text-[15px] text-white/70 mt-3 max-w-[19rem] leading-relaxed">
               كتالوج كامل بضمان الوكالة، وتوصيل خلال ٤٨ ساعة لكل المحافظات.
             </p>
 
@@ -439,12 +439,12 @@ const NativeHomeScreen = () => {
               key={b.to}
               to={b.to}
               onClick={() => void haptic("light")}
-              className="shrink-0 w-[104px] rounded-2xl bg-white p-3 ios-press"
+              className="shrink-0 w-[112px] rounded-[20px] ios-card p-2.5 ios-press"
             >
-              <div className="h-11 grid place-items-center">
-                <img src={b.img} alt={b.label} loading="lazy" className="max-h-10 w-auto object-contain" />
+              <div className="h-[62px] rounded-[14px] bg-white grid place-items-center px-2.5">
+                <img src={b.img} alt={b.label} loading="lazy" className="max-h-9 w-auto object-contain" />
               </div>
-              <p className="ar-body text-[10.5px] font-bold text-carbon text-center mt-2 leading-tight">
+              <p className="ar-body text-[11px] font-bold text-white/85 text-center mt-2.5 mb-0.5 leading-tight">
                 {b.label}
               </p>
             </Link>
@@ -467,30 +467,38 @@ const NativeHomeScreen = () => {
                 key={p.id}
                 to={`/products?search=${encodeURIComponent(p.sku || p.name_ar)}`}
                 onClick={() => void haptic("light")}
-                className="snap-start shrink-0 w-[47%] rounded-[22px] ios-card overflow-hidden ios-press"
+                className="snap-start shrink-0 w-[47%] rounded-[22px] ios-card overflow-hidden ios-press flex flex-col"
               >
-                <div className="aspect-square bg-white p-3">
-                  <LazyImage src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain" />
+                <div className="p-2.5 pb-0">
+                  <div className="aspect-square rounded-[16px] bg-white p-3">
+                    <LazyImage src={p.image_url} alt={p.name_ar} className="w-full h-full object-contain" />
+                  </div>
                 </div>
-                <div className="p-3.5 space-y-1.5">
-                  {p.erp_item_code && (
-                    <p className="ar-body text-[10px] text-gold leading-none numeric">{p.erp_item_code}</p>
-                  )}
-                  {p.part_number && (
-                    <p className="font-mono text-[10px] text-white/40 leading-none truncate numeric">
-                      {p.part_number}
-                    </p>
-                  )}
-                  <p className="ar-body text-[12.5px] font-semibold leading-snug line-clamp-2 min-h-[2.4rem]">
+                <div className="p-3.5 pt-3 flex flex-col flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {p.erp_item_code && (
+                      <span className="ar-body text-[10px] text-gold leading-none numeric rounded-md bg-gold/10 px-1.5 py-1">
+                        {p.erp_item_code}
+                      </span>
+                    )}
+                    {p.part_number && (
+                      <span className="font-mono text-[10px] text-white/40 leading-none truncate numeric max-w-[60%]">
+                        {p.part_number}
+                      </span>
+                    )}
+                  </div>
+                  <p className="ar-body text-[12.5px] font-semibold leading-snug line-clamp-2 min-h-[2.4rem] mt-2">
                     {p.name_ar}
                   </p>
-                  {user ? (
-                    <p className="ar-display text-[15px] font-bold text-white numeric">
-                      {Number(p.base_price || 0).toLocaleString("en-US")} EGP
-                    </p>
-                  ) : (
-                    <p className="ar-body text-[11px] text-white/45">سجّل لرؤية السعر</p>
-                  )}
+                  <div className="mt-auto pt-2.5 border-t border-white/[0.07]">
+                    {user ? (
+                      <p className="ar-display text-[15px] font-bold text-white numeric">
+                        {Number(p.base_price || 0).toLocaleString("en-US")} EGP
+                      </p>
+                    ) : (
+                      <p className="ar-body text-[11px] font-semibold text-gold/80">سجّل لرؤية السعر</p>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
@@ -637,7 +645,8 @@ const NativeHomeScreen = () => {
         </p>
       </footer>
 
-      <div className="h-6" />
+      {/* clearance for the floating glass tab bar */}
+      <div style={{ height: "calc(env(safe-area-inset-bottom) + 104px)" }} />
       </div>
     </div>
 
