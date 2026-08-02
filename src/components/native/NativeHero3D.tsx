@@ -16,7 +16,7 @@ const NativeHero3D = () => (
     />
     {/* cinematic depth — the bottom 45% is solid so hero copy never fights the photo */}
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-carbon/45 via-carbon/25 to-carbon" />
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-carbon via-carbon/92 to-transparent" />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-carbon via-carbon/95 to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-carbon/70 via-transparent to-transparent" />
   </div>
 );
