@@ -258,7 +258,7 @@ const NativeHomeScreen = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: easeOutIOS }}
-            className="mt-[190px]"
+            className="mt-[292px]"
           >
             <p className="eyebrow text-gold">AUTHORIZED DISTRIBUTOR · SINCE 1999</p>
             <h1 className="ar-display font-black text-[36px] leading-[1.28] mt-3 drop-shadow-[0_2px_18px_rgba(0,0,0,0.7)]">
