@@ -38,8 +38,8 @@ workflows:
             ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
           esac
           rm -rf build/ios ios/App/build "$HOME/Library/Developer/Xcode/DerivedData/App-"*
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(MARKETING_VERSION)" ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(CURRENT_PROJECT_VERSION)" ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString $(MARKETING_VERSION)' ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleVersion $(CURRENT_PROJECT_VERSION)' ios/App/App/Info.plist
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
             MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
             -showBuildSettings > /tmp/almasria-build-settings.txt
