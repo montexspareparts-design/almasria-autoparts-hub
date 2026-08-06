@@ -17,9 +17,7 @@ workflows:
           npm install
       - name: Build Web Assets
         script: |
-          # DIAGNOSTIC BUILD — exposes sanitized error details on the fallback
-          # screen. Remove VITE_DIAGNOSTIC_MODE before the next production release.
-          export VITE_DIAGNOSTIC_MODE=true
+          # PRODUCTION BUILD — diagnostic mode disabled.
           export BUILD_COMMIT="${CM_COMMIT:-$(git rev-parse HEAD)}"
           export BUILD_NUMBER="${BUILD_NUMBER:-0}"
           npm run build
