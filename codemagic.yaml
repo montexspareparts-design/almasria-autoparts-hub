@@ -31,25 +31,21 @@ workflows:
             npx cap add ios
           fi
           npx cap sync ios
-      - name: Auto-increment Version & Build Number (Auto-pilot)
+      - name: Enforce Release Identity
         script: |
-          CODEMAGIC_BUILD_NUMBER="${BUILD_NUMBER:-1}"
-          case "$CODEMAGIC_BUILD_NUMBER" in
-            ''|*[!0-9]*) CODEMAGIC_BUILD_NUMBER=1 ;;
+          IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$IOS_BUILD_NUMBER" in
+            ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
           esac
-          IOS_BUILD_NUMBER=$((CODEMAGIC_BUILD_NUMBER + 1))
-          cd ios/App
-          # Marketing version must be higher than any previously approved train (1.0)
-          agvtool new-marketing-version 1.0.1
-          agvtool new-version -all "$IOS_BUILD_NUMBER"
-          # Force the archive's final Info.plist values; prevents App Store uploads
-          # from falling back to the closed 1.0 pre-release train.
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.1" App/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $IOS_BUILD_NUMBER" App/Info.plist
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' App/Info.plist)" = "1.0.1"
-          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
-            MARKETING_VERSION=1.0.1 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
-            -showBuildSettings | grep -q 'MARKETING_VERSION = 1.0.1'
+          rm -rf build/ios ios/App/build "$HOME/Library/Developer/Xcode/DerivedData/App-"*
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString $(MARKETING_VERSION)' ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleVersion $(CURRENT_PROJECT_VERSION)' ios/App/App/Info.plist
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
+            -showBuildSettings > /tmp/almasria-build-settings.txt
+          grep -q 'MARKETING_VERSION = 1.1.0' /tmp/almasria-build-settings.txt
+          grep -q "CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER" /tmp/almasria-build-settings.txt
+          grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.almasria.autoparts' /tmp/almasria-build-settings.txt
       - name: Set up Code Signing
         script: |
           keychain initialize
@@ -57,15 +53,14 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA (Xcode Build)
         script: |
-          CODEMAGIC_BUILD_NUMBER="${BUILD_NUMBER:-1}"
-          case "$CODEMAGIC_BUILD_NUMBER" in
-            ''|*[!0-9]*) CODEMAGIC_BUILD_NUMBER=1 ;;
+          IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$IOS_BUILD_NUMBER" in
+            ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
           esac
-          IOS_BUILD_NUMBER=$((CODEMAGIC_BUILD_NUMBER + 1))
           xcode-project build-ipa \
             --project ios/App/App.xcodeproj \
             --scheme App \
-            --archive-xcargs "MARKETING_VERSION=1.0.1 CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER"
+            --archive-xcargs "MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER"
       - name: Verify Final IPA Version
         script: |
           IPA_PATH="$(find build/ios/ipa -name '*.ipa' -type f | head -n 1)"
@@ -77,8 +72,11 @@ workflows:
           test -n "$APP_PLIST"
           FINAL_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PLIST")"
           FINAL_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST")"
+          FINAL_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PLIST")"
           echo "Verified IPA version: $FINAL_VERSION ($FINAL_BUILD)"
-          test "$FINAL_VERSION" = "1.0.1"
+          test "$FINAL_VERSION" = "1.1.0"
+          test "$FINAL_BUNDLE_ID" = "com.almasria.autoparts"
+          test "$FINAL_BUILD" = "${BUILD_NUMBER:-1}"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
