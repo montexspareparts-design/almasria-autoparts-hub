@@ -380,31 +380,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      try {
-        if (event === "USER_UPDATED") localStorage.removeItem("almasria_remember_me");
+      if (event === "USER_UPDATED") localStorage.removeItem("almasria_remember_me");
+      // Defer: never run async Supabase calls inside the auth callback (lock deadlock).
+      setTimeout(() => {
         void resolvePostAuthRef.current(nextSession, event).catch((error) => {
           recordDiagnostic("pauth", error, "AuthContext.authListener.async");
           setPostAuthState("RECOVERABLE_ERROR");
         });
-      } catch (error) {
-        recordDiagnostic("pauth", error, "AuthContext.authListener.sync");
-        setPostAuthState("RECOVERABLE_ERROR");
-      }
+      }, 0);
     });
 
-    supabase.auth.getSession()
-      .then(({ data: { session: currentSession }, error }) => {
-        if (error) {
-          recordDiagnostic("pauth", error, "AuthContext.initial.getSession");
-          setPostAuthState("RECOVERABLE_ERROR");
+    const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+      Promise.race([p, new Promise<null>((resolve) => setTimeout(() => resolve(null), ms))]);
+
+    void (async () => {
+      try {
+        const result = await withTimeout(supabase.auth.getSession(), 8000);
+        if (!result) {
+          // Network/lock stall — never keep the app on the loading screen.
+          recordDiagnostic("pauth", "getSession timeout", "AuthContext.initial.timeout");
+          setPostAuthState((prev) => (prev === "INITIALIZING" ? "UNAUTHENTICATED" : prev));
           return;
         }
-        void resolvePostAuthRef.current(currentSession, "INITIAL_SESSION");
-      })
-      .catch((error) => {
+        if (result.error) {
+          recordDiagnostic("pauth", result.error, "AuthContext.initial.getSession");
+          setPostAuthState("UNAUTHENTICATED");
+          return;
+        }
+        void resolvePostAuthRef.current(result.data.session, "INITIAL_SESSION");
+      } catch (error) {
         recordDiagnostic("pauth", error, "AuthContext.initial.catch");
-        setPostAuthState("RECOVERABLE_ERROR");
-      });
+        setPostAuthState("UNAUTHENTICATED");
+      }
+    })();
 
     return () => {
       subscription.unsubscribe();
@@ -412,6 +420,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       flowIdRef.current += 1;
     };
   }, [clearSessionCheck]);
+
+  // Global watchdog: the app must never stay stuck on the blocking auth screen.
+  useEffect(() => {
+    if (postAuthState !== "INITIALIZING" && postAuthState !== "AUTHENTICATED_LOADING") return;
+    const timer = setTimeout(() => {
+      recordDiagnostic("pauth", `stuck in ${postAuthState}`, "AuthContext.watchdog");
+      setPostAuthState((prev) =>
+        prev === "INITIALIZING" || prev === "AUTHENTICATED_LOADING" ? "READY" : prev,
+      );
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [postAuthState]);
+
+
 
   const startImpersonation = useCallback((target: { userId: string; name: string }) => {
     const next: ImpersonationState = { userId: target.userId, name: target.name };
