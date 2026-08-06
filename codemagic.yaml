@@ -1,6 +1,6 @@
 workflows:
   ios-release:
-    name: Ionic iOS App Store Build
+    name: ALMASRIA iOS 1.1.0 Production (YAML ONLY)
     instance_type: mac_mini_m1
     max_build_duration: 60
     integrations:
@@ -12,8 +12,19 @@ workflows:
       node: latest
       xcode: latest
     scripts:
+      - name: Confirm YAML Workflow and Source Revision
+        script: |
+          set -euo pipefail
+          echo "=================================================="
+          echo "ALMASRIA RELEASE WORKFLOW: ios-release"
+          echo "EXPECTED VERSION: 1.1.0"
+          echo "SOURCE COMMIT: ${CM_COMMIT:-$(git rev-parse HEAD)}"
+          echo "=================================================="
+          test -f codemagic.yaml
+          grep -q 'name: ALMASRIA iOS 1.1.0 Production (YAML ONLY)' codemagic.yaml
       - name: Install npm dependencies
         script: |
+          set -euo pipefail
           npm install
       - name: Build Web Assets
         script: |
@@ -33,6 +44,7 @@ workflows:
           npx cap sync ios
       - name: Enforce Release Identity
         script: |
+          set -euo pipefail
           IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
           case "$IOS_BUILD_NUMBER" in
             ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
@@ -46,6 +58,7 @@ workflows:
           grep -q 'MARKETING_VERSION = 1.1.0' /tmp/almasria-build-settings.txt
           grep -q "CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER" /tmp/almasria-build-settings.txt
           grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.almasria.autoparts' /tmp/almasria-build-settings.txt
+          echo "Xcode release identity verified: 1.1.0 ($IOS_BUILD_NUMBER)"
       - name: Set up Code Signing
         script: |
           keychain initialize
@@ -53,6 +66,7 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA (Xcode Build)
         script: |
+          set -euo pipefail
           IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
           case "$IOS_BUILD_NUMBER" in
             ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
@@ -63,6 +77,7 @@ workflows:
             --archive-xcargs "MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER"
       - name: Verify Final IPA Version
         script: |
+          set -euo pipefail
           IPA_PATH="$(find build/ios/ipa -name '*.ipa' -type f | head -n 1)"
           test -n "$IPA_PATH"
           rm -rf /tmp/almasria-ipa-check
@@ -73,7 +88,7 @@ workflows:
           FINAL_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PLIST")"
           FINAL_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST")"
           FINAL_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PLIST")"
-          echo "Verified IPA version: $FINAL_VERSION ($FINAL_BUILD)"
+          echo "FINAL IPA VERIFIED BEFORE UPLOAD: $FINAL_VERSION ($FINAL_BUILD), $FINAL_BUNDLE_ID"
           test "$FINAL_VERSION" = "1.1.0"
           test "$FINAL_BUNDLE_ID" = "com.almasria.autoparts"
           test "$FINAL_BUILD" = "${BUILD_NUMBER:-1}"
