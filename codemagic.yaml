@@ -37,10 +37,9 @@ workflows:
           rm -f dist/sw.js dist/sw-push.js
       - name: Prepare iOS Platform
         script: |
-          if [ ! -d "ios" ]; then
-            echo "⚠️ iOS Platform is missing! Recreating from scratch..."
-            npx cap add ios
-          fi
+          set -euo pipefail
+          # Never regenerate iOS in CI: Capacitor defaults would reset the app to version 1.0.
+          test -d ios/App/App.xcodeproj || { echo "ERROR: Tracked iOS project is missing"; exit 1; }
           npx cap sync ios
       - name: Enforce Release Identity
         script: |
@@ -50,8 +49,6 @@ workflows:
             ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
           esac
           rm -rf build/ios ios/App/build "$HOME/Library/Developer/Xcode/DerivedData/App-"*
-          /usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString $(MARKETING_VERSION)' ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c 'Set :CFBundleVersion $(CURRENT_PROJECT_VERSION)' ios/App/App/Info.plist
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
             MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
             -showBuildSettings > /tmp/almasria-build-settings.txt
