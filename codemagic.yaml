@@ -33,10 +33,11 @@ workflows:
           npx cap sync ios
       - name: Auto-increment Version & Build Number (Auto-pilot)
         script: |
-          IOS_BUILD_NUMBER="${BUILD_NUMBER:-${CM_BUILD_ID:-2}}"
-          case "$IOS_BUILD_NUMBER" in
-            ''|*[!0-9]*) IOS_BUILD_NUMBER=2 ;;
+          CODEMAGIC_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$CODEMAGIC_BUILD_NUMBER" in
+            ''|*[!0-9]*) CODEMAGIC_BUILD_NUMBER=1 ;;
           esac
+          IOS_BUILD_NUMBER=$((CODEMAGIC_BUILD_NUMBER + 1))
           cd ios/App
           # Marketing version must be higher than any previously approved train (1.0)
           agvtool new-marketing-version 1.0.1
@@ -56,10 +57,11 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA (Xcode Build)
         script: |
-          IOS_BUILD_NUMBER="${BUILD_NUMBER:-${CM_BUILD_ID:-2}}"
-          case "$IOS_BUILD_NUMBER" in
-            ''|*[!0-9]*) IOS_BUILD_NUMBER=2 ;;
+          CODEMAGIC_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$CODEMAGIC_BUILD_NUMBER" in
+            ''|*[!0-9]*) CODEMAGIC_BUILD_NUMBER=1 ;;
           esac
+          IOS_BUILD_NUMBER=$((CODEMAGIC_BUILD_NUMBER + 1))
           xcode-project build-ipa \
             --project ios/App/App.xcodeproj \
             --scheme App \
