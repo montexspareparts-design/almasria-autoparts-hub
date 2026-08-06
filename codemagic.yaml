@@ -37,6 +37,11 @@ workflows:
           # Marketing version must be higher than any previously approved train (1.0)
           agvtool new-marketing-version 1.0.1
           agvtool new-version -all $(($BUILD_NUMBER + 1))
+          # Force the archive's final Info.plist values; prevents App Store uploads
+          # from falling back to the closed 1.0 pre-release train.
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.0.1" App/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(($BUILD_NUMBER + 1))" App/Info.plist
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' App/Info.plist)" = "1.0.1"
       - name: Set up Code Signing
         script: |
           keychain initialize
