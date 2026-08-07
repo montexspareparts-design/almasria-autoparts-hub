@@ -48,14 +48,18 @@ workflows:
           case "$IOS_BUILD_NUMBER" in
             ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
           esac
+          PLIST=ios/App/App/Info.plist
+          # Write literal values: no Xcode variables can downgrade the version anymore.
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1.0" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $IOS_BUILD_NUMBER" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST" | grep -qx '1.1.0'
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST" | grep -qx "$IOS_BUILD_NUMBER"
           rm -rf build/ios ios/App/build "$HOME/Library/Developer/Xcode/DerivedData/App-"*
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
             MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
             -showBuildSettings > /tmp/almasria-build-settings.txt
-          grep -q 'MARKETING_VERSION = 1.1.0' /tmp/almasria-build-settings.txt
-          grep -q "CURRENT_PROJECT_VERSION = $IOS_BUILD_NUMBER" /tmp/almasria-build-settings.txt
           grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.almasria.autoparts' /tmp/almasria-build-settings.txt
-          echo "Xcode release identity verified: 1.1.0 ($IOS_BUILD_NUMBER)"
+          echo "Info.plist release identity written literally: 1.1.0 ($IOS_BUILD_NUMBER)"
       - name: Set up Code Signing
         script: |
           keychain initialize
