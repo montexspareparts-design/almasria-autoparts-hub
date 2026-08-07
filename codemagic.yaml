@@ -81,8 +81,10 @@ workflows:
           rm -rf /tmp/almasria-ipa-check
           mkdir -p /tmp/almasria-ipa-check
           unzip -q "$IPA_PATH" -d /tmp/almasria-ipa-check
-          APP_PLIST="$(find /tmp/almasria-ipa-check/Payload -name Info.plist -type f | head -n 1)"
-          test -n "$APP_PLIST"
+          APP_BUNDLE="$(find /tmp/almasria-ipa-check/Payload -maxdepth 1 -name '*.app' -type d | head -n 1)"
+          test -n "$APP_BUNDLE" || { echo "ERROR: No top-level .app bundle found in IPA"; exit 1; }
+          APP_PLIST="$APP_BUNDLE/Info.plist"
+          test -f "$APP_PLIST" || { echo "ERROR: Main app Info.plist not found at $APP_PLIST"; exit 1; }
           FINAL_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PLIST")"
           FINAL_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST")"
           FINAL_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PLIST")"
