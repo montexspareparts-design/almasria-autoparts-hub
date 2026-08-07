@@ -1,6 +1,6 @@
 workflows:
   ios-release:
-    name: Ionic iOS App Store Build
+    name: ALMASRIA iOS 1.1.0 Production (YAML ONLY)
     instance_type: mac_mini_m1
     max_build_duration: 60
     integrations:
@@ -12,29 +12,51 @@ workflows:
       node: latest
       xcode: latest
     scripts:
+      - name: Confirm YAML Workflow and Source Revision
+        script: |
+          set -euo pipefail
+          echo "=================================================="
+          echo "ALMASRIA RELEASE WORKFLOW: ios-release"
+          echo "EXPECTED VERSION: 1.1.0"
+          echo "SOURCE COMMIT: ${CM_COMMIT:-$(git rev-parse HEAD)}"
+          echo "=================================================="
+          test -f codemagic.yaml
+          grep -q 'name: ALMASRIA iOS 1.1.0 Production (YAML ONLY)' codemagic.yaml
       - name: Install npm dependencies
         script: |
+          set -euo pipefail
           npm install
       - name: Build Web Assets
         script: |
-          # PRODUCTION BUILD — diagnostic mode disabled.
           export BUILD_COMMIT="${CM_COMMIT:-$(git rev-parse HEAD)}"
           export BUILD_NUMBER="${BUILD_NUMBER:-0}"
           npm run build
-          # Native TestFlight build must not bundle web service workers.
-          # They are web-only and can trigger iOS notification/service-worker flows.
           rm -f dist/sw.js dist/sw-push.js
       - name: Prepare iOS Platform
         script: |
-          if [ ! -d "ios" ]; then
-            echo "⚠️ iOS Platform is missing! Recreating from scratch..."
-            npx cap add ios
-          fi
+          set -euo pipefail
+          # Never regenerate iOS in CI: Capacitor defaults would reset the app to version 1.0.
+          test -d ios/App/App.xcodeproj || { echo "ERROR: Tracked iOS project is missing"; exit 1; }
           npx cap sync ios
-      - name: Auto-increment Build Number (Auto-pilot)
+      - name: Enforce Release Identity
         script: |
-          cd ios/App
-          agvtool new-version -all $BUILD_NUMBER
+          set -euo pipefail
+          IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$IOS_BUILD_NUMBER" in
+            ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
+          esac
+          PLIST=ios/App/App/Info.plist
+          # Write literal values: no Xcode variable can downgrade the version anymore.
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1.0" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $IOS_BUILD_NUMBER" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$PLIST" | grep -qx '1.1.0'
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST" | grep -qx "$IOS_BUILD_NUMBER"
+          rm -rf build/ios ios/App/build "$HOME/Library/Developer/Xcode/DerivedData/App-"*
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION="$IOS_BUILD_NUMBER" \
+            -showBuildSettings > /tmp/almasria-build-settings.txt
+          grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.almasria.autoparts' /tmp/almasria-build-settings.txt
+          echo "Info.plist release identity written literally: 1.1.0 ($IOS_BUILD_NUMBER)"
       - name: Set up Code Signing
         script: |
           keychain initialize
@@ -42,9 +64,31 @@ workflows:
           xcode-project use-profiles
       - name: Build IPA (Xcode Build)
         script: |
+          set -euo pipefail
+          IOS_BUILD_NUMBER="${BUILD_NUMBER:-1}"
+          case "$IOS_BUILD_NUMBER" in
+            ''|*[!0-9]*) IOS_BUILD_NUMBER=1 ;;
+          esac
           xcode-project build-ipa \
             --project ios/App/App.xcodeproj \
-            --scheme App
+            --scheme App \
+            --archive-xcargs "MARKETING_VERSION=1.1.0 CURRENT_PROJECT_VERSION=$IOS_BUILD_NUMBER"
+      - name: Verify Final IPA Version
+        script: |
+          set -euo pipefail
+          IPA_PATH="$(find build/ios/ipa -name '*.ipa' -type f | head -n 1)"
+          test -n "$IPA_PATH"
+          rm -rf /tmp/almasria-ipa-check
+          mkdir -p /tmp/almasria-ipa-check
+          unzip -q "$IPA_PATH" -d /tmp/almasria-ipa-check
+          APP_PLIST="$(find /tmp/almasria-ipa-check/Payload -name Info.plist -type f | head -n 1)"
+          test -n "$APP_PLIST"
+          FINAL_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PLIST")"
+          FINAL_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP_PLIST")"
+          FINAL_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PLIST")"
+          echo "FINAL IPA VERIFIED BEFORE UPLOAD: $FINAL_VERSION ($FINAL_BUILD), $FINAL_BUNDLE_ID"
+          test "$FINAL_VERSION" = "1.1.0"
+          test "$FINAL_BUNDLE_ID" = "com.almasria.autoparts"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
