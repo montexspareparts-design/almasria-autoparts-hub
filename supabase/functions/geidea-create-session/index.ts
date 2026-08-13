@@ -4,7 +4,9 @@ import {
   geideaApiBase,
   geideaBasicAuth,
   geideaCheckoutScript,
+  geideaCreateSessionSignature,
   geideaEnv,
+  geideaTimestamp,
 } from "../_shared/geidea.ts";
 
 const corsHeaders = {
