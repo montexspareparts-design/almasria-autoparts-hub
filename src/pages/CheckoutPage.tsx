@@ -50,6 +50,7 @@ const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", des
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
   { id: "paymob", label: "بطاقات بنكية عبر Paymob", icon: CreditCard },
+  { id: "geidea", label: "الدفع الآمن عبر Geidea", icon: ShieldCheck },
   { id: "instapay", label: "InstaPay", icon: Smartphone },
   { id: "bank_transfer", label: "تحويل بنكي", icon: Building2 },
   { id: "wallet", label: "محفظة إلكترونية", icon: Wallet },
@@ -219,7 +220,7 @@ const CheckoutPage = () => {
       }
 
       clearCart();
-      if (payment === "paymob") {
+      if (payment === "paymob" || payment === "geidea") {
         navigate(`/payment?order_id=${order.id}&amount=${orderTotal}`);
         return;
       }
