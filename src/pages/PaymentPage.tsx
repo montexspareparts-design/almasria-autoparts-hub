@@ -403,24 +403,35 @@ const PaymentPage = () => {
                   </motion.div>
                 )}
 
-                <Button
-                  onClick={initiatePayment}
-                  disabled={loading || !orderId}
-                  className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold gap-2"
-                  size="lg"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                      جاري التجهيز...
-                    </>
-                  ) : (
-                    <>
-                      متابعة الدفع
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
-                    </>
-                  )}
-                </Button>
+                {selectedMethod === "geidea" ? (
+                  orderId ? (
+                    <GeideaCheckout
+                      orderId={orderId}
+                      currency="EGP"
+                      returnUrl={buildPaymobReturnUrl()}
+                    />
+                  ) : null
+                ) : (
+                  <Button
+                    onClick={initiatePayment}
+                    disabled={loading || !orderId}
+                    className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold gap-2"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        جاري التجهيز...
+                      </>
+                    ) : (
+                      <>
+                        متابعة الدفع
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                )}
+
               </motion.div>
             )}
 
