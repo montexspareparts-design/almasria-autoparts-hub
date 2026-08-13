@@ -15,6 +15,8 @@ import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
 import { isNativePlatform, isNativeIOS, openExternal } from "@/lib/native";
+import GeideaCheckout from "@/components/GeideaCheckout";
+
 
 type PaymentMethod = "card" | "wallet" | "kiosk" | "geidea";
 
