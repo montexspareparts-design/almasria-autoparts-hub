@@ -52,12 +52,21 @@ const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
     description: "ادفع من أقرب فرع أمان أو مصاري",
     color: "text-green-600",
   },
+  {
+    id: "geidea",
+    label: "الدفع عبر جيديا",
+    labelEn: "Geidea Secure Checkout",
+    icon: ShieldCheck,
+    description: "بوابة جيديا الآمنة للبطاقات البنكية",
+    color: "text-amber-600",
+  },
 ];
 
 // Hide Kiosk on ALL native mobile apps (iOS + Android). Web is unaffected.
 const PAYMENT_METHODS = isNativePlatform()
   ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
   : ALL_PAYMENT_METHODS;
+
 
 const ERROR_MESSAGES: Record<string, string> = {
   "DECLINED": "تم رفض البطاقة. جرب بطاقة أخرى أو طريقة دفع مختلفة.",
