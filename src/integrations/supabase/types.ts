@@ -1967,6 +1967,62 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          order_number: string | null
+          provider: string
+          provider_order_id: string | null
+          raw_response: Json | null
+          session_id: string | null
+          signature_valid: boolean | null
+          status: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          order_number?: string | null
+          provider?: string
+          provider_order_id?: string | null
+          raw_response?: Json | null
+          session_id?: string | null
+          signature_valid?: boolean | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          order_number?: string | null
+          provider?: string
+          provider_order_id?: string | null
+          raw_response?: Json | null
+          session_id?: string | null
+          signature_valid?: boolean | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_transactions: {
         Row: {
           amount_cents: number | null
