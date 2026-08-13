@@ -15,8 +15,10 @@ import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
 import { isNativePlatform, isNativeIOS, openExternal } from "@/lib/native";
+import GeideaCheckout from "@/components/GeideaCheckout";
 
-type PaymentMethod = "card" | "wallet" | "kiosk";
+
+type PaymentMethod = "card" | "wallet" | "kiosk" | "geidea";
 
 interface PaymentMethodOption {
   id: PaymentMethod;
@@ -52,12 +54,21 @@ const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
     description: "ادفع من أقرب فرع أمان أو مصاري",
     color: "text-green-600",
   },
+  {
+    id: "geidea",
+    label: "الدفع عبر جيديا",
+    labelEn: "Geidea Secure Checkout",
+    icon: ShieldCheck,
+    description: "بوابة جيديا الآمنة للبطاقات البنكية",
+    color: "text-amber-600",
+  },
 ];
 
 // Hide Kiosk on ALL native mobile apps (iOS + Android). Web is unaffected.
 const PAYMENT_METHODS = isNativePlatform()
   ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
   : ALL_PAYMENT_METHODS;
+
 
 const ERROR_MESSAGES: Record<string, string> = {
   "DECLINED": "تم رفض البطاقة. جرب بطاقة أخرى أو طريقة دفع مختلفة.",
@@ -392,24 +403,35 @@ const PaymentPage = () => {
                   </motion.div>
                 )}
 
-                <Button
-                  onClick={initiatePayment}
-                  disabled={loading || !orderId}
-                  className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold gap-2"
-                  size="lg"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                      جاري التجهيز...
-                    </>
-                  ) : (
-                    <>
-                      متابعة الدفع
-                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
-                    </>
-                  )}
-                </Button>
+                {selectedMethod === "geidea" ? (
+                  orderId ? (
+                    <GeideaCheckout
+                      orderId={orderId}
+                      currency="EGP"
+                      returnUrl={buildPaymobReturnUrl()}
+                    />
+                  ) : null
+                ) : (
+                  <Button
+                    onClick={initiatePayment}
+                    disabled={loading || !orderId}
+                    className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold gap-2"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                        جاري التجهيز...
+                      </>
+                    ) : (
+                      <>
+                        متابعة الدفع
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                )}
+
               </motion.div>
             )}
 
