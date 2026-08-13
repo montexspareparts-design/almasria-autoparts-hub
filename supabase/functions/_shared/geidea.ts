@@ -7,14 +7,12 @@ export const geideaEnv = (): GeideaEnv =>
   (Deno.env.get("GEIDEA_ENV") || "test").toLowerCase() === "live" ? "live" : "test";
 
 export const geideaApiBase = () =>
-  geideaEnv() === "live"
-    ? "https://api.merchant.geidea.net"
-    : "https://api-merchant.staging.geidea.net";
+  // Egypt environment uses the same production endpoint for both test and live;
+  // the merchant account/credentials determine the mode. For KSA/UAE, add region-specific branches.
+  "https://api.merchant.geidea.net";
 
 export const geideaCheckoutScript = () =>
-  geideaEnv() === "live"
-    ? "https://www.merchant.geidea.net/hpp/geideaCheckout.min.js"
-    : "https://www.merchant.staging.geidea.net/hpp/geideaCheckout.min.js";
+  "https://www.merchant.geidea.net/hpp/geideaCheckout.min.js";
 
 export const geideaCredentials = () => {
   const publicKey = Deno.env.get("GEIDEA_MERCHANT_PUBLIC_KEY");
@@ -43,6 +41,35 @@ const hmacSha256Base64 = async (data: string, key: string) => {
 
 /** Geidea formats amounts with exactly two decimals in the signature payload. */
 export const geideaAmountString = (amount: number) => amount.toFixed(2);
+
+/** Builds the timestamp Geidea expects in the create-session signature. */
+export const geideaTimestamp = () => {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  const h = String(now.getUTCHours()).padStart(2, "0");
+  const min = String(now.getUTCMinutes()).padStart(2, "0");
+  const s = String(now.getUTCSeconds()).padStart(2, "0");
+  return `${y}/${m}/${d} ${h}:${min}:${s}`;
+};
+
+/** Create-session signature: Base64(HMAC-SHA256(publicKey + amount + currency + merchantReferenceId + timestamp, apiPassword)). */
+export const geideaCreateSessionSignature = async (payload: {
+  amount: number;
+  currency: string;
+  merchantReferenceId?: string | null;
+  timestamp?: string | null;
+}) => {
+  const { publicKey, apiPassword } = geideaCredentials();
+  const amountStr = geideaAmountString(payload.amount);
+  const currency = payload.currency ?? "";
+  const merchantReferenceId = payload.merchantReferenceId ?? "";
+  const timestamp = payload.timestamp ?? geideaTimestamp();
+  const data = `${publicKey}${amountStr}${currency}${merchantReferenceId}${timestamp}`;
+  return hmacSha256Base64(data, apiPassword);
+};
+
 
 /**
  * Verifies a Geidea callback signature server-side.
