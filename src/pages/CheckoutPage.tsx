@@ -220,7 +220,7 @@ const CheckoutPage = () => {
       }
 
       clearCart();
-      if (payment === "paymob") {
+      if (payment === "paymob" || payment === "geidea") {
         navigate(`/payment?order_id=${order.id}&amount=${orderTotal}`);
         return;
       }
