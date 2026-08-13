@@ -4,7 +4,9 @@ import {
   geideaApiBase,
   geideaBasicAuth,
   geideaCheckoutScript,
+  geideaCreateSessionSignature,
   geideaEnv,
+  geideaTimestamp,
 } from "../_shared/geidea.ts";
 
 const corsHeaders = {
@@ -71,17 +73,27 @@ Deno.serve(async (req) => {
     }
 
     const callbackUrl = `${supabaseUrl}/functions/v1/geidea-webhook`;
+    const timestamp = geideaTimestamp();
+    const amount = Number(order.total_amount.toFixed ? order.total_amount.toFixed(2) : order.total_amount);
+    const signature = await geideaCreateSessionSignature({
+      amount,
+      currency,
+      merchantReferenceId: order.order_number,
+      timestamp,
+    });
 
     const sessionRes = await fetch(`${geideaApiBase()}/payment-intent/api/v2/direct/session`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: geideaBasicAuth() },
       body: JSON.stringify({
-        amount: Number(order.total_amount.toFixed ? order.total_amount.toFixed(2) : order.total_amount),
+        amount,
         currency,
         merchantReferenceId: order.order_number,
         callbackUrl,
         ...(return_url ? { returnUrl: return_url } : {}),
         paymentOperation: "Pay",
+        timestamp,
+        signature,
       }),
     });
 
