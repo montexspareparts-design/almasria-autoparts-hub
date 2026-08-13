@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { buildPaymobReturnUrl, ensureActiveSession } from "@/lib/paymob";
 import { isNativePlatform, isNativeIOS, openExternal } from "@/lib/native";
 
-type PaymentMethod = "card" | "wallet" | "kiosk";
+type PaymentMethod = "card" | "wallet" | "kiosk" | "geidea";
 
 interface PaymentMethodOption {
   id: PaymentMethod;
