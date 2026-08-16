@@ -86,27 +86,27 @@ const NativeSignatureHero = ({ loading = false }: { loading?: boolean }) => {
         {/* precision line */}
         <div className="relative mt-3.5 pd-edge-t opacity-70" />
 
-        {/* action + metrics */}
-        <div className="relative mt-3.5 flex items-center gap-2">
-          <Link
-            to={
-              activeVehicle
-                ? `/products?search=${encodeURIComponent(activeVehicle.model)}`
-                : "/products"
-            }
-            onClick={() => void haptic("light")}
-            className="h-10 px-4 rounded-full bg-gold text-black text-[12.5px] font-semibold grid place-items-center ios-press shrink-0"
-          >
-            {activeVehicle ? "شوف القطع المطابقة" : "تصفّح الكتالوج"}
-          </Link>
-          <div className="flex-1 min-w-0 flex items-center justify-end gap-3 overflow-hidden">
-            {METRICS.map((m) => (
-              <span key={m.label} className="flex items-center gap-1 shrink-0">
-                <m.icon className="w-[13px] h-[13px] text-white/35" />
-                <span className="text-[10.5px] text-white/45 leading-none whitespace-nowrap">{m.label}</span>
-              </span>
-            ))}
-          </div>
+        {/* action */}
+        <Link
+          to={
+            activeVehicle
+              ? `/products?search=${encodeURIComponent(activeVehicle.model)}`
+              : "/products"
+          }
+          onClick={() => void haptic("light")}
+          className="relative mt-3.5 h-11 w-full rounded-[13px] bg-gold text-black text-[13.5px] font-semibold grid place-items-center ios-press"
+        >
+          {activeVehicle ? "شوف القطع المطابقة" : "تصفّح الكتالوج"}
+        </Link>
+
+        {/* spec strip */}
+        <div className="relative mt-3 flex items-center justify-between gap-2">
+          {METRICS.map((m) => (
+            <span key={m.label} className="flex items-center gap-1.5 min-w-0">
+              <m.icon className="w-[13px] h-[13px] text-white/30 shrink-0" />
+              <span className="text-[10.5px] text-white/45 leading-none truncate">{m.label}</span>
+            </span>
+          ))}
         </div>
       </div>
 
