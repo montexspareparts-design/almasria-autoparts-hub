@@ -67,7 +67,7 @@ const getNotificationTarget = (
 
   // Regular user — go to orders
   if (n.type === "order" || msg.includes("طلب")) {
-    return { path: "/my-orders", query: "" };
+    return { path: "/track-order", query: "" };
   }
 
   return null;
@@ -282,7 +282,7 @@ const NotificationBell = () => {
             className="w-full text-xs text-primary"
             onClick={() => {
               setOpen(false);
-              navigate(isAdmin ? "/admin?section=orders" : isDealer ? "/dealer?tab=notifications" : "/my-orders");
+              navigate(isAdmin ? "/admin?section=orders" : isDealer ? "/dealer?tab=notifications" : "/track-order");
             }}
           >
             عرض كل الإشعارات
