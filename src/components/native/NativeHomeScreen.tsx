@@ -409,12 +409,18 @@ const NativeHomeScreen = () => {
 
 /* ── Building blocks ─────────────────────────────────────── */
 
-const SectionHeader = ({ title, to }: { title: string; to: string }) => (
-  <div className={`${GUTTER} flex items-baseline justify-between`}>
-    <h2 className="text-[16px] font-semibold text-white">{title}</h2>
+const SectionHeader = ({ title, to, kicker }: { title: string; to: string; kicker?: string }) => (
+  <div className={`${GUTTER} flex items-center justify-between gap-3`}>
+    <div className="flex items-center gap-2.5 min-w-0">
+      <span className="pd-rule shrink-0" />
+      <div className="min-w-0">
+        {kicker && <span className="block pd-index leading-none mb-1">{kicker}</span>}
+        <h2 className="text-[16px] font-semibold text-white leading-tight truncate">{title}</h2>
+      </div>
+    </div>
     <Link
       to={to}
-      className="text-[12px] text-gold inline-flex items-center gap-0.5 ios-press py-1"
+      className="text-[12px] text-gold inline-flex items-center gap-0.5 ios-press py-1 shrink-0"
     >
       عرض الكل
       <ChevronLeft className="w-3.5 h-3.5" />
@@ -423,7 +429,10 @@ const SectionHeader = ({ title, to }: { title: string; to: string }) => (
 );
 
 const GroupTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-[11px] text-white/40 mb-2 px-1">{children}</h2>
+  <h2 className="text-[11px] text-white/40 mb-2 px-1 flex items-center gap-2">
+    <span className="pd-rule h-3 opacity-70" />
+    {children}
+  </h2>
 );
 
 const ListRow = ({
