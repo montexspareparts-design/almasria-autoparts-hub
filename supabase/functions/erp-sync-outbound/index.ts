@@ -420,20 +420,20 @@ Deno.serve(async (req) => {
           const { data: prof } = await supabase
             .from("profiles")
             .select("phone, full_name")
-            .eq("id", ord.user_id)
+            .eq("user_id", ord.user_id)
             .maybeSingle();
           customerPhone = normalizeEg(prof?.phone);
           if (!data.customer_name && prof?.full_name) data.customer_name = prof.full_name;
         }
         // Last resort: extract an Egyptian mobile from the shipping address text
         if (!customerPhone && ord?.shipping_address) {
-          const m = String(ord.shipping_address).match(/(01[0-9]{9})/);
-          if (m) customerPhone = m[1];
+          const m = String(ord.shipping_address).match(/01\d{8,10}/);
+          if (m) customerPhone = m[0].slice(0, 11);
         }
       }
       if (!customerPhone && data.shipping_address) {
-        const m = String(data.shipping_address).match(/(01[0-9]{9})/);
-        if (m) customerPhone = m[1];
+        const m = String(data.shipping_address).match(/01\d{8,10}/);
+        if (m) customerPhone = m[0].slice(0, 11);
       }
 
       const orderNotes = [
