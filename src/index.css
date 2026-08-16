@@ -79,9 +79,14 @@
   }
 
   html, body {
-    overflow-x: hidden;
+    /* `clip` (not `hidden`) — `overflow-x: hidden` turns html/body into a
+       scroll container, which breaks touch scrolling inside the Android
+       WebView. `clip` hides horizontal overflow without that side effect. */
+    overflow-x: clip;
+    overflow-y: visible;
     max-width: 100vw;
   }
+
 
   body {
     @apply bg-background text-foreground font-body;
