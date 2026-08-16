@@ -10,6 +10,8 @@ import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
 import DealerAuthDialog from "@/components/DealerAuthDialog";
 import { isNativePlatform } from "@/lib/native";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAppHeader from "@/components/native/NativeAppHeader";
 
 const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0, filter: "blur(8px)" },
