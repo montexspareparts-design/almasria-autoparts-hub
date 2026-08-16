@@ -465,7 +465,12 @@ const CheckoutPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`font-black text-sm ${active ? 'text-toyota-red' : 'text-white'}`}>
-                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : `${opt.cost} ج.م`}
+                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : (opt.id === "bosta" && freeShipping) ? (
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-white/40 line-through text-xs">{opt.cost} ج.م</span>
+                                  <span className="text-green-400">مجاني</span>
+                                </span>
+                              ) : `${opt.cost} ج.م`}
                             </span>
                             {active && !isBostaPending && <CheckCircle2 className="w-5 h-5 text-gold" />}
                             {isBostaPending && active && <Loader2 className="w-4 h-4 text-gold animate-spin" />}
