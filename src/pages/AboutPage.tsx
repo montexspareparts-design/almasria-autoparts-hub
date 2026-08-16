@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import heroBg from "@/assets/hero-corporate.webp";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAboutHighlights from "@/components/native/NativeAboutHighlights";
+
 
 const Footer = lazy(() => import("@/components/Footer"));
 
@@ -80,6 +83,15 @@ const AboutPage = () => {
       />
 
       <Navbar />
+
+      {/* Native shell only: marketing hero/stats moved off the app home screen. */}
+      {isNativeShell() && (
+        <div style={{ paddingTop: "calc(env(safe-area-inset-top) + 52px)" }}>
+          <NativeAboutHighlights />
+        </div>
+      )}
+
+
 
       {/* ═══ 1. Hero ═══ */}
       <section

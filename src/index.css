@@ -1055,3 +1055,74 @@ html[data-native-app="true"] [contenteditable="true"] {
 .ios-rail::-webkit-scrollbar {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PRECISION DARK — native home design system
+   Carbon surface ramp + single gold action accent.
+   Latin numerals only, base weight 500, zero letter-spacing.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --carbon-0: 0 0% 4%;    /* app background      */
+  --carbon-1: 0 0% 7%;    /* raised surface      */
+  --carbon-2: 0 0% 10%;   /* card surface        */
+  --carbon-3: 0 0% 14%;   /* elevated / pressed  */
+  --pd-hairline: 0 0% 100% / 0.08;
+}
+
+.pd-root {
+  background: hsl(var(--carbon-0));
+  font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0;
+  font-variant-numeric: lining-nums tabular-nums;
+  -moz-font-feature-settings: "lnum";
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+.pd-mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  font-variant-numeric: lining-nums tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.pd-s1 { background: hsl(var(--carbon-1)); }
+.pd-s2 { background: hsl(var(--carbon-2)); }
+.pd-s3 { background: hsl(var(--carbon-3)); }
+.pd-hair { border: 1px solid hsl(var(--pd-hairline)); }
+.pd-hair-t { border-top: 1px solid hsl(var(--pd-hairline)); }
+.pd-hair-b { border-bottom: 1px solid hsl(var(--pd-hairline)); }
+
+/* Card: flat surface, hairline, no blur (backdrop-filter is banned on
+   the native home path — it destroys scroll performance in the WebView). */
+.pd-card {
+  background: hsl(var(--carbon-2));
+  border: 1px solid hsl(var(--pd-hairline));
+  border-radius: 16px;
+}
+
+/* Minimum comfortable hit area (44×44 per HIG / Material). */
+.pd-tap { min-width: 44px; min-height: 44px; }
+
+.pd-rail {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.pd-rail::-webkit-scrollbar { display: none; }
+.pd-snap { scroll-snap-align: start; }
+
+/* Skeletons reserve exact geometry → CLS stays under 0.1. */
+.pd-skeleton {
+  background: linear-gradient(90deg, hsl(var(--carbon-2)) 0%, hsl(var(--carbon-3)) 50%, hsl(var(--carbon-2)) 100%);
+  background-size: 200% 100%;
+  animation: pd-shimmer 1.4s linear infinite;
+}
+@keyframes pd-shimmer {
+  to { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pd-skeleton { animation: none; }
+}
