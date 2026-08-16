@@ -1,90 +1,87 @@
-# إعادة تصميم الصفحة الرئيسية — Luxury Toyota Experience
+# خطة إعادة تصميم واجهة التطبيق حول «توافق العربية» (موبايل فقط)
 
-طلبك مفصّل ومحدد بالظبط (ألوان/خطوط/سكاشن)، فهنفّذ مباشرة بدون اقتراح اتجاهات بديلة.
+نطاق التنفيذ: **شاشة التطبيق الأصلي فقط** (`NativeHomeScreen`) — الموقع لا يتغير. لا مساس بالـ routing أو Auth أو السلة أو الدفع.
 
-## النطاق
+---
 
-- إعادة تصميم **صفحة `/` للزائر/القطاعي (B2C) فقط**.
-- B2B (التجار) عندهم Dashboard منفصل ولن يتأثر — قاعدة فصل B2B/B2C في الذاكرة.
-- إخفاء الأسعار للزائر غير المسجّل سيظل كما هو ("سجّل لرؤية السعر") — قاعدة جوهرية.
-- الـ Navbar الموجود حالياً هيتم تحديث ستايله فقط (مش استبدال logic) عشان أدوار الـ Admin/Dealer/Moderator تستمر تشتغل.
+## 1. الملفات
 
-## التغييرات
+**جديدة**
+- `src/contexts/GarageContext.tsx` — حالة العربية المختارة عالمياً.
+- `src/data/vehicleCatalogue.ts` — كتالوج الموديلات (Toyota فقط، مبني من الداتا الحقيقية).
+- `src/components/native/GarageBar.tsx` — شريط «بتشتري لعربية …».
+- `src/components/native/VehiclePickerSheet.tsx` — Bottom sheet: الموديل ← سنة الصنع.
+- `src/components/native/FitPartCard.tsx` — كارت منتج ببادج التوافق.
+- `src/hooks/useFitmentProducts.ts` — جلب القطع المطابقة للعربية النشطة.
 
-### 1. Design Tokens (`src/index.css` + `tailwind.config.ts`)
-- إضافة tokens جديدة بصيغة HSL:
-  - `--carbon: 0 0% 4%` (#0A0A0A خلفية)
-  - `--surface: 0 0% 8%` (#141414 كروت)
-  - `--toyota-red: 353 92% 48%` (#EB0A1E)
-  - `--gold: 44 53% 54%` (#C9A84C) — موجود بالفعل، نتأكد منه
-  - `--text-secondary: 0 0% 60%` (#9A9A9A)
-- إضافة gradients: `--gradient-spotlight`, `--gradient-red-glow`
-- إضافة shadows: `--shadow-red-glow`, `--shadow-spotlight`
-- خطوط Google: **Tajawal** (عربي) + **Space Grotesk** (لاتيني) عبر `<link>` في `index.html` مع `&display=swap`.
+**تعديل**
+- `src/components/native/NativeHomeScreen.tsx` — إدخال GarageBar + قسم «يناسب عربيتك».
+- `src/App.tsx` — لف التطبيق بـ `GarageProvider`.
+- `src/pages/MyProfilePage.tsx` — مزامنة العربية المحفوظة مع الجراج.
 
-### 2. HeroSection جديد (`src/components/HeroSection.tsx` — إعادة كتابة)
-- خلفية carbon black بالـ token الجديد.
-- نص ضخم خلفي `TOYOTA GENUINE PARTS` بحجم clamp(80px → 180px) ولون أبيض شفاف ~6%.
-- صورة منتج Toyota أصلي 3D عائمة في المنتصف (هنولّد صورة فلتر/قرص فرامل أصلي على خلفية شفافة via imagegen premium).
-- glow أحمر خلف الصورة + parallax float بسيط (CSS keyframes).
-- Overlay: `قطع غيار تويوتا الأصلية` (display) + subtext `ضمان الجودة. ضمان الأمان. ضمان تويوتا.`.
-- زر CTA أحمر متوهج `تسوق الآن ←` يوجه لـ `/parts-by-type`.
-- خطوط حمراء فاصلة.
+**بدون تعديل**: `ProductCard.tsx` (الويب)، `AuthContext`، `useProductListing`، `CartContext`، أي صفحة تانية.
 
-### 3. Navbar محدث
-- إضافة state للـ scroll: شفاف فوق + frosted glass (`backdrop-blur-xl bg-carbon/70`) بعد scroll > 20px.
-- زر `اطلب الآن` أحمر pill على اليسار (RTL).
-- نحافظ على كل روابط الأدوار الموجودة.
+---
 
-### 4. شريط الثقة الجديد (`src/components/TrustBadgesStrip.tsx`)
-- 4 عدّادات متحركة (CountUp on viewport):
-  - +5,000 قطعة غيار أصلية
-  - ضمان أصالة 100%
-  - توصيل سريع
-  - +10 سنوات خبرة
-- يحل محل `KeyMetrics`.
+## 2. مكان حالة العربية وطريقة الحفظ
 
-### 5. قسم المنتجات الأكثر طلباً (`src/components/PopularProducts.tsx` — جديد)
-- يستبدل `FeaturedProducts` على الصفحة الرئيسية.
-- Tabs الفئات: محرك / فرامل / زيوت / فلاتر / كهرباء.
-- كروت داكنة (#141414) + spotlight gradient خلف الصورة + red glow عند الـ hover + fade-up على scroll.
-- يلتزم بقاعدة الذاكرة: 3 أعمدة (كود الصنف + بارت نمبر + اسم الصنف) — حالياً مطبّقة في `ProductCard`.
-- زر `أضف للسلة` (يستخدم نفس Cart context الموجود).
+`GarageContext` يحمل: `vehicles[]`, `activeVehicle`, `setActiveVehicle`, `addVehicle`, `removeVehicle`.
+الشكل: `{ id, model, modelKey, year, displayName }`.
 
-### 6. قسم "الأصلي يدوم. الرخيص يكلف." (`src/components/WhyGenuineSection.tsx` — جديد)
-- Split layout: يسار عنوان bold + اقتباس، يمين 3 كروت (أمان / ضمان / كفاءة).
-- خلفية carbon + Toyota logo watermark شفاف ~3%.
-- يحل محل `WhyChooseUs`.
+الحفظ على مستويين:
+1. **localStorage** بمفتاح `almasria.garage` — يشتغل فوراً حتى للزائر غير المسجّل ويصمد بعد إعادة فتح التطبيق (مع معالجة null/JSON تالف بدون كراش).
+2. **`profiles.car_model` / `profiles.car_year`** الموجودين فعلاً — يتزامنوا للمستخدم المسجّل، فيبقى الجراج متبع للحساب على أي جهاز. القطاعي = عربية واحدة، التاجر = أكتر من عربية (محلياً فقط لحين وجود جدول).
 
-### 7. Footer محدث
-- خلفية carbon، روابط سريعة، زر WhatsApp أخضر بارز، tagline.
-- سيستخدم نفس `Footer.tsx` الموجود مع تحديث ستايله.
+---
 
-### 8. تحديث `src/pages/Index.tsx`
-- ترتيب جديد:
-  1. Navbar
-  2. HeroSection (جديد)
-  3. TrustBadgesStrip (جديد)
-  4. PopularProducts (جديد)
-  5. WhyGenuineSection (جديد)
-  6. MaintenanceBundles (يبقى)
-  7. DistributionNetwork (يبقى)
-  8. FAQ (يبقى)
-  9. ContactSimple (يبقى)
-  10. Footer
-- حذف: AboutBrief, KeyMetrics, ProductsShowcase, FeaturedProducts, WhyChooseUs, MTXSection, OurClientsSection (تخفيف الزحام لصالح Luxury Feel).
+## 3. النواقص الحقيقية في الداتا (أهم نقطة)
 
-### 9. أصول
-- توليد صورة hero بـ imagegen premium: "Toyota genuine engine oil filter, floating in space, dramatic red rim light, photorealistic, transparent background, premium product photography".
+فحصت قاعدة البيانات فعلياً:
 
-## ما الذي **لن** يتغير
-- لا تعديل على الـ database أو RLS أو edge functions.
-- لا تعديل على B2B/Dealer pages.
-- لا تعديل على Auth/Cart/Pricing logic.
-- ProductCard الداخلي يفضل بنفس الـ 3-column rule.
+| البند | الحالة |
+|---|---|
+| إجمالي الأصناف | 12,695 |
+| **الأصناف النشطة (المعروضة)** | **459 فقط** |
+| أصناف عليها `compatible_models` | 7,739 (منها **419 نشطة**) |
+| أصناف عليها `year_from` | 6,730 |
+| `part_number` | 12,447 |
+| `erp_item_code` | 12,695 |
 
-## ملاحظات
-- بعد التنفيذ، الصفحة محتاجة **إعادة نشر** عشان تظهر مباشرة + يحلّ مشكلة Lighthouse Performance المعلّقة.
-- التصميم RTL-first مع fallback LTR.
+**الخلاصة: جدول ربط القطعة بالعربية موجود فعلاً وتغطيته ممتازة — 419 من 459 صنف نشط (91%) عليهم موديلات.** ده يعني الفكرة قابلة للتنفيذ دلوقتي بدون أي backend جديد.
 
-موافق أمشي؟
+الموديلات الموجودة فعلاً في الداتا (مش افتراضية):
+`هاي اس (2751)`, `كوستر (1769)`, `كورولا (1582)`, `هاي لوكس (1193)`, `لاند كروزر (962)`, `فورتشنر (416)`, `ياريس (308)`, `بيلتا (89)`, `افنزا (38)`, `راف فور (12)`, `بريفيا`, `برادو`, `كامري`, `راش`, `ايكو`, `ديمكس`.
+
+**الناقص الوحيد**: مفيش تطبيع (normalization) بين نص `profiles.car_model` وبين قيم `compatible_models`. الحل بدون تغيير داتا: `vehicleCatalogue.ts` يبقى فيه `modelKey` + `aliases[]` لكل موديل (مثلاً `هايس / هاي اس / HiAce`) والمطابقة تتم عليه.
+
+**لا يوجد ولن يُخترع أي endpoint جديد.** أسعار الجملة و`product_tier_prices` موجودة بالفعل ونستخدمها كما هي.
+
+---
+
+## 4. تعارضات مع الباك المرفوع — والقرار
+
+| ما في الباك | الواقع | القرار |
+|---|---|---|
+| ألوان `ink #16181D` + `signal #F7B500` أصفر | المشروع على هوية Carbon/Gold/Toyota-Red متفق عليها ومنفّذة | **نرفض الأصفر** — الـ GarageBar يستخدم `--gold` الحالي على `--carbon` |
+| ماركات: هيونداي، كيا، نيسان، شيفروليه… | الشركة موزّع **تويوتا** والداتا كلها تويوتا | **كتالوج تويوتا فقط** |
+| «الماركة ← الموديل ← السنة» 3 خطوات | ماركة واحدة | **خطوتين**: الموديل ← السنة |
+| `accountType: individual/business` | الواقع `isDealer` + `tier` من `AuthContext` | نستخدم الموجود |
+| بناء ProductCard جديد | قاعدة الذاكرة: 3 أعمدة إجبارية (كود الصنف + بارت نمبر + اسم الصنف) | الكارت الجديد يلتزم بالقاعدة |
+| offline cache للـ Play policy | الـ Service Worker **معطّل عمداً** على النيتف (`native.ts`) | كاش خفيف في localStorage لآخر نتيجة، بدون إعادة تفعيل SW |
+| بناء Bottom nav جديد | `NativeTabBar` موجود بـ 5 تبويبات | نستخدمه كما هو |
+| سعر الجملة على الرئيسية | الشاشة الحالية بتعرض `base_price` للكل — **خطأ حقيقي: التاجر بيشوف سعر قطاعي** | نصلحه في الكارت الجديد |
+
+---
+
+## 5. سلوك بادج التوافق
+
+يعتمد على `productFitment.ts` الموجود (بيتعامل مع الزيوت كأصناف بلا سنة):
+- مطابق → `مطابق ✓` أخضر
+- خارج المدى → `مش مطابق` أحمر + الكارت بشفافية 60%
+- مفيش عربية مختارة → **بدون أي بادج**
+
+قسم «يناسب عربيتك» يظهر فقط بعد اختيار عربية، فوق الفئات مباشرة.
+
+---
+
+موافق أمشي بالتنفيذ؟
