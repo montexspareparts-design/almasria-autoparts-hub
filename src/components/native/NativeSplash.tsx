@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import logo from "@/assets/almasria-logo-dark.png";
+import logo from "@/assets/almasria-logo.png";
 import { easeOutIOS } from "@/lib/motion";
 
 const GOLD = "hsl(44 53% 54%)";
@@ -74,11 +74,14 @@ const NativeSplash = ({ leaving }: { leaving: boolean }) => (
         transition={{ duration: 1.25, ease: easeOutIOS }}
         className="relative"
       >
-        <img
-          src={logo}
-          alt="ALMASRIA GROUP"
-          className="w-[60vw] max-w-[268px] object-contain drop-shadow-[0_18px_50px_rgba(0,0,0,0.55)]"
-        />
+        {/* light plate keeps the wordmark legible on the dark carbon backdrop */}
+        <div className="rounded-[26px] bg-white/95 px-6 py-5 shadow-[0_24px_70px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/40">
+          <img
+            src={logo}
+            alt="ALMASRIA GROUP"
+            className="w-[52vw] max-w-[236px] object-contain"
+          />
+        </div>
         {/* specular sweep across the mark */}
         <motion.div
           aria-hidden
