@@ -84,8 +84,13 @@ const PaymentPage = () => {
 
   const orderId = searchParams.get("order_id");
   const amount = searchParams.get("amount");
+  const methodParam = searchParams.get("method");
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("card");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
+    (["card", "wallet", "kiosk", "geidea"] as const).includes(methodParam as PaymentMethod)
+      ? (methodParam as PaymentMethod)
+      : "card"
+  );
   const [walletPhone, setWalletPhone] = useState("");
   const [step, setStep] = useState<"choose" | "pay">("choose");
   const [loading, setLoading] = useState(false);

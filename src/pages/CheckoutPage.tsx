@@ -53,7 +53,7 @@ const paymentMethods = [
   { id: "geidea", label: "الدفع الآمن عبر Geidea", icon: ShieldCheck },
   { id: "instapay", label: "InstaPay", icon: Smartphone },
   { id: "bank_transfer", label: "تحويل بنكي", icon: Building2 },
-  { id: "wallet", label: "محفظة إلكترونية", icon: Wallet },
+  { id: "wallet", label: "محفظة إلكترونية (فودافون كاش / إتصالات / أورنج)", icon: Wallet },
   { id: "fawry", label: "Fawry", icon: Store },
 ];
 
@@ -220,8 +220,9 @@ const CheckoutPage = () => {
       }
 
       clearCart();
-      if (payment === "paymob" || payment === "geidea") {
-        navigate(`/payment?order_id=${order.id}&amount=${orderTotal}`);
+      if (payment === "paymob" || payment === "geidea" || payment === "wallet") {
+        const methodParam = payment === "wallet" ? "&method=wallet" : payment === "geidea" ? "&method=geidea" : "";
+        navigate(`/payment?order_id=${order.id}&amount=${orderTotal}${methodParam}`);
         return;
       }
       toast({ title: "تم تقديم طلبك بنجاح! ✅", description: `رقم الطلب: ${orderNumber}` });
@@ -498,7 +499,7 @@ const CheckoutPage = () => {
                       );
                     })}
                   </RadioGroup>
-                  {["instapay", "wallet", "bank_transfer"].includes(payment) && (
+                  {["instapay", "bank_transfer"].includes(payment) && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-5">
                       <PaymentInstructionsBanner
                         paymentMethod={payment}
