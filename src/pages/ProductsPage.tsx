@@ -127,8 +127,10 @@ const ProductsPage = () => {
   useEffect(() => { if (listing.filters.categoryId) trackCategory(listing.filters.categoryId); }, [listing.filters.categoryId, trackCategory]);
 
   // Brand showcase page (no specific brand selected AND no category filter)
-  const hasCategoryFilter = searchParams.has("category");
+  const hasCategoryFilter =
+    searchParams.has("category") || !!searchParams.get("search")?.trim();
   if (!config && !hasCategoryFilter) {
+
     return (
       <div className="min-h-screen bg-dark-section">
         <SEOHead
