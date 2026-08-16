@@ -131,11 +131,13 @@ Deno.serve(async (req) => {
 
     await supabase.from("whatsapp_send_logs").insert({
       phone: WAREHOUSE_PHONE,
-      message_type: "warehouse_new_paid_order",
+      recipient_name: "أ. عبدالحميد - المخازن",
+      template: "warehouse_new_paid_order",
+      message_preview: message.slice(0, 500),
       status: result.success ? "sent" : "failed",
-      order_id: order.id,
-      error_message: result.success ? null : JSON.stringify(result.data ?? result),
-    }).then(() => {}, () => {});
+      error_message: result.success ? null : JSON.stringify(result.data ?? {}),
+      provider_response: (result.data ?? {}) as any,
+    });
 
     return new Response(JSON.stringify({ success: result.success, order: order.order_number }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
