@@ -41,6 +41,8 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAuthScreen from "@/components/native/NativeAuthScreen";
 
 const DealerRegister = () => {
   const navigate = useNavigate();
@@ -230,6 +232,8 @@ const DealerRegister = () => {
       </div>
     );
   }
+
+  if (isNativeShell()) return <NativeAuthScreen segment="dealer" />;
 
   return (
     <div className="min-h-screen bg-background">
