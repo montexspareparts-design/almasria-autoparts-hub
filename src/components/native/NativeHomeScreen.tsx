@@ -368,8 +368,28 @@ const NativeHomeScreen = () => {
             );
           })}
         </div>
-
       </section>
+
+      {/* ───────────── Trust / value strip ───────────── */}
+      <section className={`${GUTTER} mt-3 pd-reveal`} style={{ "--d": "50ms" } as React.CSSProperties}>
+        <div className="rounded-[14px] pd-card overflow-hidden">
+          <div className="grid grid-cols-3 divide-x divide-x-reverse divide-white/[0.06]">
+            {[
+              { k: "GENUINE", t: "قطع أصلية", s: "موزّع معتمد" },
+              { k: "FREE SHIP", t: "شحن مجاني", s: "فوق 3000 ج" },
+              { k: "NATIONWIDE", t: "كل مصر", s: "توصيل سريع" },
+            ].map((it) => (
+              <div key={it.k} className="px-2 py-3 text-center">
+                <span className="block pd-index leading-none">{it.k}</span>
+                <span className="block text-[12.5px] font-semibold text-white mt-1.5 leading-none">{it.t}</span>
+                <span className="block text-[10.5px] text-white/40 mt-1 leading-none pd-mono">{it.s}</span>
+              </div>
+            ))}
+          </div>
+          <div className="h-px bg-gradient-to-l from-transparent via-gold/25 to-transparent" />
+        </div>
+      </section>
+
 
       {/* ───────────── Fits your car (2-col grid) ───────────── */}
       {activeVehicle && (
