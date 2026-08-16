@@ -56,12 +56,18 @@ import brandFbk from "@/assets/brand-fbk-logo.webp";
 
 const GUTTER = "px-4";
 
-const QUICK_ACTIONS = [
-  { label: "حسب الموديل", to: "/products", icon: Car },
-  { label: "حسب النوع", to: "/parts-by-type", icon: Wrench },
+const QUICK_ACTIONS: {
+  label: string;
+  to?: string;
+  sheet?: "model" | "type";
+  icon: any;
+}[] = [
+  { label: "حسب الموديل", sheet: "model", icon: Car },
+  { label: "حسب النوع", sheet: "type", icon: Wrench },
   { label: "تتبّع الطلب", to: "/track-order", icon: PackageSearch },
   { label: "الكتالوجات", to: "/catalogs", icon: BookOpen },
 ];
+
 
 const CATEGORIES = [
   { slug: "filters", label: "فلاتر", img: catFilters },
