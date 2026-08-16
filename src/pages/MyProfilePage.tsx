@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CarModelSelector from "@/components/CarModelSelector";
+import { useGarage } from "@/contexts/GarageContext";
+import { resolveModel } from "@/data/vehicleCatalogue";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { User, Phone, Mail, Car, Save, Loader2, ArrowRight, Lock, Eye, EyeOff, Sparkles, X, Trash2, ShieldAlert } from "lucide-react";
@@ -20,6 +22,7 @@ const egyptianPhoneRegex = /^01[0-25]\d{8}$/;
 
 const MyProfilePage = () => {
   const { user } = useAuth();
+  const { addVehicle } = useGarage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
