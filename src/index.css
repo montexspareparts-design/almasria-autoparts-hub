@@ -79,9 +79,14 @@
   }
 
   html, body {
-    overflow-x: hidden;
+    /* `clip` (not `hidden`) — `overflow-x: hidden` turns html/body into a
+       scroll container, which breaks touch scrolling inside the Android
+       WebView. `clip` hides horizontal overflow without that side effect. */
+    overflow-x: clip;
+    overflow-y: visible;
     max-width: 100vw;
   }
+
 
   body {
     @apply bg-background text-foreground font-body;
@@ -101,9 +106,10 @@
       word-break: break-word;
     }
     #root {
-      overflow-x: hidden;
+      overflow-x: clip;
       max-width: 100vw;
     }
+
     /* Prevent iOS Safari from auto-zooming when focusing inputs (font-size must be ≥16px). */
     input:not([type="checkbox"]):not([type="radio"]),
     select,
@@ -938,7 +944,19 @@ html[data-native-app="true"] body {
   /* Pushes normal flow content below the notch. Fixed headers are
      padded separately so they stay flush with the screen edge. */
   padding-top: env(safe-area-inset-top);
-  overscroll-behavior-y: none;
+  /* `contain` (not `none`) — `none` disables the whole overscroll gesture on
+     some Android WebView builds, which reads as "the page won't scroll". */
+  overscroll-behavior-y: contain;
+}
+
+/* Vertical touch scrolling must always work inside the native shell. */
+html[data-native-app="true"],
+html[data-native-app="true"] body,
+html[data-native-app="true"] #root {
+  height: auto;
+  min-height: 100%;
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Fixed top chrome (site navbar) keeps its glass background under the
@@ -956,6 +974,7 @@ html[data-native-app="true"] input,
 html[data-native-app="true"] textarea,
 html[data-native-app="true"] [contenteditable="true"] {
   -webkit-touch-callout: default;
+
   -webkit-user-select: text;
   user-select: text;
 }
