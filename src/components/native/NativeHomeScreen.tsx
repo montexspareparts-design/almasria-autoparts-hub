@@ -33,6 +33,10 @@ import { easeOutIOS, revealUp } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
 
 import NativeHero3D from "@/components/native/NativeHero3D";
+import GarageBar from "@/components/native/GarageBar";
+import FitPartCard from "@/components/native/FitPartCard";
+import { useGarage } from "@/contexts/GarageContext";
+import { useFitmentProducts } from "@/hooks/useFitmentProducts";
 import bannerGenuine from "@/assets/native/banner-genuine.jpg";
 import bannerOils from "@/assets/native/banner-oils.jpg";
 import bannerMtx from "@/assets/native/banner-mtx.jpg";
