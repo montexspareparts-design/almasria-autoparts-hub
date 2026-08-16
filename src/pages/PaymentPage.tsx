@@ -31,30 +31,6 @@ interface PaymentMethodOption {
 
 const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   {
-    id: "card",
-    label: "بطاقة بنكية",
-    labelEn: "Visa / Mastercard / Meeza",
-    icon: CreditCard,
-    description: "ادفع ببطاقتك البنكية مباشرة",
-    color: "text-blue-600",
-  },
-  {
-    id: "wallet",
-    label: "محفظة إلكترونية",
-    labelEn: "Vodafone Cash / Orange / Etisalat",
-    icon: Smartphone,
-    description: "ادفع من محفظتك الإلكترونية",
-    color: "text-red-600",
-  },
-  {
-    id: "kiosk",
-    label: "فروع أمان / مصاري",
-    labelEn: "Aman / Masary Kiosk",
-    icon: Store,
-    description: "ادفع من أقرب فرع أمان أو مصاري",
-    color: "text-green-600",
-  },
-  {
     id: "geidea",
     label: "الدفع عبر جيديا",
     labelEn: "Geidea Secure Checkout",
@@ -64,10 +40,7 @@ const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   },
 ];
 
-// Hide Kiosk on ALL native mobile apps (iOS + Android). Web is unaffected.
-const PAYMENT_METHODS = isNativePlatform()
-  ? ALL_PAYMENT_METHODS.filter((m) => m.id !== "kiosk")
-  : ALL_PAYMENT_METHODS;
+const PAYMENT_METHODS = ALL_PAYMENT_METHODS;
 
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -84,13 +57,9 @@ const PaymentPage = () => {
 
   const orderId = searchParams.get("order_id");
   const amount = searchParams.get("amount");
-  const methodParam = searchParams.get("method");
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
-    (["card", "wallet", "kiosk", "geidea"] as const).includes(methodParam as PaymentMethod)
-      ? (methodParam as PaymentMethod)
-      : "card"
-  );
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("geidea");
+
   const [walletPhone, setWalletPhone] = useState("");
   const [step, setStep] = useState<"choose" | "pay">("choose");
   const [loading, setLoading] = useState(false);
