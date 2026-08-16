@@ -95,12 +95,20 @@ Deno.serve(async (req) => {
 
   if (paid && amountMatches) {
     if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
-      await supabase.from("orders").update({ status: "processing" }).eq("id", order.id);
-      console.log(`Geidea: order ${orderNumber} confirmed and moved to processing`);
+      const { error: updErr } = await supabase
+        .from("orders")
+        .update({ status: "processing", payment_status: "paid" })
+        .eq("id", order.id);
+      if (updErr) {
+        console.error(`Geidea: failed to update order ${orderNumber}:`, updErr.message, updErr.details);
+      } else {
+        console.log(`Geidea: order ${orderNumber} confirmed and moved to processing`);
+      }
     }
   } else {
     console.log(`Geidea: order ${orderNumber} not confirmed (status=${status}, code=${responseCode})`);
   }
+
 
   return json({ received: true });
 });
