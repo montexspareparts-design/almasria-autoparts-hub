@@ -322,9 +322,9 @@ const NativeHomeScreen = () => {
       </section>
 
       {/* ───────────── New arrivals (grid, not a rail) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="وصل حديثاً" to="/products" />
-        <div className={`${GUTTER} mt-3 grid grid-cols-2 gap-3`}>
+      <section className="mt-8 pd-reveal" style={{ "--d": "160ms" } as React.CSSProperties}>
+        <SectionHeader title="وصل حديثاً" to="/products" kicker="NEW ARRIVALS" />
+        <div className={`${GUTTER} mt-3.5 grid grid-cols-2 gap-3`}>
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-[268px] rounded-[16px] pd-skeleton" />
