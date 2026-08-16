@@ -187,7 +187,11 @@ const NativeHomeScreen = () => {
 
 
   return (
-    <div dir="rtl" className="pd-root min-h-screen text-white overflow-x-hidden">
+    <div
+      dir="rtl"
+      className="pd-root min-h-screen text-white overflow-x-hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 84px)" }}
+    >
       {/* one ambient gold light source behind everything */}
       <div className="pd-aura" aria-hidden />
 
