@@ -213,13 +213,17 @@ const NativeHomeScreen = () => {
           </div>
         </div>
 
-        <div className={`${GUTTER} pb-3`}>
+        <div className={`${GUTTER} pb-3 relative`}>
           <form onSubmit={submitSearch} className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-2 h-11 px-3 rounded-[12px] pd-s2 pd-hair">
               <Search className="w-[17px] h-[17px] text-white/40 shrink-0" />
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSuggestOpen(true);
+                }}
+                onFocus={() => setSuggestOpen(true)}
                 placeholder="كود الصنف أو البارت نمبر"
                 className="flex-1 min-w-0 bg-transparent outline-none text-[14px] text-white placeholder:text-white/35"
                 type="search"
@@ -228,7 +232,27 @@ const NativeHomeScreen = () => {
                 autoComplete="off"
                 aria-label="بحث في الكتالوج"
               />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="مسح البحث"
+                  onClick={() => {
+                    setQuery("");
+                    setSuggestOpen(false);
+                  }}
+                  className="text-white/40 text-[16px] leading-none px-1"
+                >
+                  ×
+                </button>
+              )}
             </div>
+            <button
+              type="submit"
+              aria-label="بحث"
+              className="w-11 h-11 rounded-[12px] bg-gold text-black grid place-items-center ios-press shrink-0"
+            >
+              <Search className="w-[19px] h-[19px]" />
+            </button>
             <ImageSearchDialog
               onProductFound={(term) => navigate(`/products?search=${encodeURIComponent(term)}`)}
               trigger={
@@ -243,7 +267,50 @@ const NativeHomeScreen = () => {
               }
             />
           </form>
+
+          {suggestOpen && debounced.length >= 2 && (
+            <div className="absolute left-4 right-4 top-[56px] z-50 rounded-[14px] pd-s2 pd-hair overflow-hidden shadow-2xl shadow-black/60 max-h-[60vh] overflow-y-auto">
+              {suggestLoading && suggestions.length === 0 ? (
+                <div className="py-5 text-center text-[13px] text-white/50">جارٍ البحث…</div>
+              ) : suggestions.length === 0 ? (
+                <div className="py-5 text-center text-[13px] text-white/50">لا توجد نتائج مطابقة</div>
+              ) : (
+                suggestions.map((p: any) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      void haptic("light");
+                      setSuggestOpen(false);
+                      navigate(`/products?search=${encodeURIComponent(p.erp_item_code || p.sku || p.name_ar)}`);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-right border-b border-white/5 last:border-0 active:bg-white/5"
+                  >
+                    <div className="w-11 h-11 rounded-[10px] bg-white shrink-0 overflow-hidden grid place-items-center">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt="" loading="lazy" className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <PackageSearch className="w-5 h-5 text-black/20" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] text-white truncate">{p.name_ar}</p>
+                      <p className="text-[11px] text-white/45 pd-mono truncate">
+                        {[p.erp_item_code, p.part_number || p.sku].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    {p.stock_quantity > 0 ? (
+                      <span className="text-[10px] text-gold shrink-0">متاح</span>
+                    ) : (
+                      <span className="text-[10px] text-white/30 shrink-0">نافد</span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
+
         <div className={`pd-edge-t transition-opacity duration-300 ${scrolled ? "opacity-100" : "opacity-0"}`} />
       </header>
 
