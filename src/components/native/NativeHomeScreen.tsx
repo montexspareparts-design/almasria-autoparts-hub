@@ -250,29 +250,34 @@ const NativeHomeScreen = () => {
       )}
 
       {/* ───────────── Categories (rail 1 of 2) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="تسوّق حسب الفئة" to="/products" />
-        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3 pb-1`}>
-          {CATEGORIES.map((c) => (
+      <section className="mt-8 pd-reveal" style={{ "--d": "80ms" } as React.CSSProperties}>
+        <SectionHeader title="تسوّق حسب الفئة" to="/products" kicker="CATEGORIES" />
+        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3.5 pb-1`}>
+          {CATEGORIES.map((c, i) => (
             <Link
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="pd-snap shrink-0 w-[124px] rounded-[16px] overflow-hidden pd-hair relative ios-press"
+              className="pd-snap shrink-0 w-[136px] rounded-[18px] overflow-hidden pd-hair relative ios-press bg-carbon"
             >
-              <div className="aspect-[4/3]">
+              <div className="aspect-[3/4]">
                 <img
                   src={c.img}
                   alt={c.label}
                   loading="lazy"
                   decoding="async"
-                  width={124}
-                  height={93}
+                  width={136}
+                  height={181}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="pd-s2 h-10 flex items-center px-3">
-                <span className="text-[12.5px] font-medium">{c.label}</span>
+              <div className="absolute inset-0 pd-scrim" />
+              <span className="absolute top-2.5 right-3 pd-index">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="absolute inset-x-0 bottom-0 p-3">
+                <span className="block text-[13px] font-semibold text-white leading-tight">{c.label}</span>
+                <span className="mt-1.5 block h-[2px] w-7 rounded bg-gold" />
               </div>
             </Link>
           ))}
@@ -280,17 +285,17 @@ const NativeHomeScreen = () => {
       </section>
 
       {/* ───────────── Brands (rail 2 of 2) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="ماركاتنا" to="/products" />
-        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3 pb-1`}>
+      <section className="mt-8 pd-reveal" style={{ "--d": "120ms" } as React.CSSProperties}>
+        <SectionHeader title="ماركاتنا" to="/products" kicker="BRANDS" />
+        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3.5 pb-1`}>
           {BRANDS.map((b) => (
             <Link
               key={b.to}
               to={b.to}
               onClick={() => void haptic("light")}
-              className="pd-snap shrink-0 w-[104px] pd-card p-2 ios-press"
+              className="pd-snap shrink-0 w-[112px] pd-card p-2 ios-press"
             >
-              <div className="h-[56px] rounded-[10px] bg-white grid place-items-center px-2">
+              <div className="h-[60px] rounded-[12px] bg-white grid place-items-center px-2">
                 <img src={b.img} alt={b.label} loading="lazy" decoding="async" className="max-h-8 w-auto object-contain" />
               </div>
               <p className="text-[11px] text-white/70 text-center mt-2 leading-tight truncate">{b.label}</p>
