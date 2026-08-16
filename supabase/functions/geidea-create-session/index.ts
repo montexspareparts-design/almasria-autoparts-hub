@@ -91,23 +91,40 @@ Deno.serve(async (req) => {
       timestamp,
     });
 
-    const sessionRes = await fetch(`${geideaApiBase()}/payment-intent/api/v2/direct/session`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: geideaBasicAuth() },
-      body: JSON.stringify({
-        amount,
-        currency,
-        merchantReferenceId: order.order_number,
-        callbackUrl,
-        ...(return_url ? { returnUrl: return_url } : {}),
-        paymentOperation: "Pay",
-        ...(paymentMethods.length ? { paymentMethods } : {}),
-        timestamp,
-        signature,
-      }),
-    });
+    // Geidea only renders the wallet/MEEZA tabs when the session explicitly
+    // lists the methods. We try the documented spellings in order and fall
+    // back to "no list" (account defaults) if Geidea rejects the value.
+    const methodCandidates: (string[] | null)[] = paymentMethods.length
+      ? [paymentMethods, null]
+      : [
+          ["card", "MeezaDigital", "MeezaQr", "ValU", "Souhoola"],
+          ["card", "Meeza Digital"],
+          null,
+        ];
 
-    const raw = await sessionRes.json().catch(() => ({}));
+    let sessionRes!: Response;
+    let raw: any = {};
+    for (const methods of methodCandidates) {
+      sessionRes = await fetch(`${geideaApiBase()}/payment-intent/api/v2/direct/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: geideaBasicAuth() },
+        body: JSON.stringify({
+          amount,
+          currency,
+          merchantReferenceId: order.order_number,
+          callbackUrl,
+          ...(return_url ? { returnUrl: return_url } : {}),
+          paymentOperation: "Pay",
+          ...(methods ? { paymentMethods: methods } : {}),
+          timestamp,
+          signature,
+        }),
+      });
+
+      raw = await sessionRes.json().catch(() => ({}));
+      if (sessionRes.ok && raw?.session?.id) break;
+    }
+
 
     await supabase.from("payment_logs").insert({
       provider: "geidea",
