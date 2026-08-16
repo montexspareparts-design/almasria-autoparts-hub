@@ -137,9 +137,12 @@ const NativeHomeScreen = () => {
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
     void haptic("light");
+    setSuggestOpen(false);
+    (document.activeElement as HTMLElement | null)?.blur?.();
     if (!query.trim()) return navigate("/products");
     navigate(`/products?search=${encodeURIComponent(query.trim())}`);
   };
+
 
   return (
     <div dir="rtl" className="pd-root min-h-screen text-white overflow-x-hidden">
