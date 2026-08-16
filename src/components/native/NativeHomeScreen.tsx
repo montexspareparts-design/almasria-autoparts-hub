@@ -111,6 +111,8 @@ const NativeHomeScreen = () => {
   const { activeVehicle } = useGarage();
   const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(6);
   const [query, setQuery] = useState("");
+  const [picker, setPicker] = useState<"model" | "type" | null>(null);
+
   const [debounced, setDebounced] = useState("");
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
