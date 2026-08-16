@@ -100,9 +100,7 @@ Deno.serve(async (req) => {
           .map((it, i) => {
             const p = it.products || {};
             const code = p.erp_item_code || p.sku || "-";
-            return `${i + 1}) ${p.name_ar || "صنف"}\n   كود: ${code} | الكمية: ${it.quantity} | السعر: ${Number(
-              it.unit_price,
-            ).toLocaleString("ar-EG")} ج.م`;
+            return `${i + 1}) ${p.name_ar || "صنف"}\n   كود: ${code} | الكمية: ${it.quantity}`;
           })
           .join("\n")
       : "لا توجد أصناف";
@@ -115,9 +113,7 @@ Deno.serve(async (req) => {
 
     const message =
       `✅ *طلب مدفوع - تجهيز مخزن*\n\n` +
-      `📦 رقم الطلب: ${order.order_number}\n` +
-      `💳 طريقة الدفع: ${order.payment_method || "-"}\n` +
-      `💰 الإجمالي: ${Number(order.total_amount).toLocaleString("ar-EG")} ج.م\n\n` +
+      `📦 رقم الطلب: ${order.order_number}\n\n` +
       `👤 *بيانات العميل*\n` +
       `الاسم: ${customerName}\n` +
       `الموبايل: ${customerPhone || "غير متاح"}\n` +
