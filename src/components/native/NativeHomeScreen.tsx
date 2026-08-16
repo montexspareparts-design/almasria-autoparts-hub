@@ -201,18 +201,31 @@ const NativeHomeScreen = () => {
         className={`sticky top-0 z-40 pd-s1 pd-hair-b pd-head ${scrolled ? "pd-head-solid" : ""}`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className={`h-[52px] ${GUTTER} flex items-center justify-between gap-3`}>
-          <img src={logoDark} alt="المصرية جروب" className="h-7 w-auto object-contain" />
-          <div className="flex items-center shrink-0">
+        <div className={`h-[58px] ${GUTTER} flex items-center justify-between gap-3`}>
+          <Link to="/" aria-label="الرئيسية" className="flex items-center min-w-0">
+            <span className="relative grid place-items-center">
+              <span
+                className="absolute inset-0 -m-2 rounded-full bg-[hsl(var(--pd-accent)/0.16)] blur-lg"
+                aria-hidden
+              />
+              <img
+                src={logoDark}
+                alt="المصرية جروب"
+                className="relative h-8 w-auto object-contain"
+              />
+            </span>
+          </Link>
+
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               to="/cart"
               aria-label="السلة"
               onClick={() => void haptic("light")}
-              className="relative pd-tap rounded-full grid place-items-center ios-press"
+              className="relative w-9 h-9 rounded-[11px] pd-s2 pd-hair grid place-items-center ios-press"
             >
-              <ShoppingBag className="w-[19px] h-[19px] text-white/80" />
+              <ShoppingBag className="w-[17px] h-[17px] text-white/85" />
               {itemCount > 0 && (
-                <span className="absolute top-1 left-1 min-w-[17px] h-[17px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold grid place-items-center pd-mono">
+                <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-bold grid place-items-center pd-mono ring-2 ring-[hsl(var(--carbon-1))]">
                   {itemCount > 99 ? "99" : itemCount}
                 </span>
               )}
@@ -221,53 +234,50 @@ const NativeHomeScreen = () => {
               to={user ? "/my-profile" : "/auth"}
               aria-label="حسابي"
               onClick={() => void haptic("light")}
-              className="pd-tap rounded-full grid place-items-center ios-press"
+              className="w-9 h-9 rounded-[11px] pd-s2 pd-hair grid place-items-center ios-press"
             >
-              <User className="w-[19px] h-[19px] text-white/80" />
+              <User className="w-[17px] h-[17px] text-white/85" />
             </Link>
           </div>
         </div>
 
         <div className={`${GUTTER} pb-3 relative`}>
-          <form onSubmit={submitSearch} className="flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2 h-11 px-3 rounded-[12px] pd-s2 pd-hair">
-              <Search className="w-[17px] h-[17px] text-white/40 shrink-0" />
-              <input
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setSuggestOpen(true);
+          <form
+            onSubmit={submitSearch}
+            className="flex items-center gap-1.5 h-12 pr-3 pl-1.5 rounded-[14px] pd-s2 pd-hair shadow-lg shadow-black/30"
+          >
+            <Search className="w-[18px] h-[18px] text-gold shrink-0" />
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSuggestOpen(true);
+              }}
+              onFocus={() => setSuggestOpen(true)}
+              placeholder="ابحث بكود الصنف أو البارت نمبر"
+              className="flex-1 min-w-0 bg-transparent outline-none text-[14px] text-white placeholder:text-white/35"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              aria-label="بحث في الكتالوج"
+            />
+            {query && (
+              <button
+                type="button"
+                aria-label="مسح البحث"
+                onClick={() => {
+                  setQuery("");
+                  setSuggestOpen(false);
                 }}
-                onFocus={() => setSuggestOpen(true)}
-                placeholder="كود الصنف أو البارت نمبر"
-                className="flex-1 min-w-0 bg-transparent outline-none text-[14px] text-white placeholder:text-white/35"
-                type="search"
-                inputMode="search"
-                enterKeyHint="search"
-                autoComplete="off"
-                aria-label="بحث في الكتالوج"
-              />
-              {query && (
-                <button
-                  type="button"
-                  aria-label="مسح البحث"
-                  onClick={() => {
-                    setQuery("");
-                    setSuggestOpen(false);
-                  }}
-                  className="text-white/40 text-[16px] leading-none px-1"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              aria-label="بحث"
-              className="w-11 h-11 rounded-[12px] bg-gold text-white grid place-items-center ios-press shrink-0"
-            >
-              <Search className="w-[19px] h-[19px]" />
-            </button>
+                className="w-6 h-6 rounded-full bg-white/10 text-white/60 text-[14px] leading-none grid place-items-center shrink-0"
+              >
+                ×
+              </button>
+            )}
+
+            <span className="w-px h-6 bg-white/10 shrink-0" aria-hidden />
+
             <ImageSearchDialog
               onProductFound={(term) => navigate(`/products?search=${encodeURIComponent(term)}`)}
               trigger={
@@ -275,13 +285,21 @@ const NativeHomeScreen = () => {
                   type="button"
                   onClick={() => void haptic("medium")}
                   aria-label="بحث بصورة القطعة"
-                  className="w-11 h-11 rounded-[12px] pd-s3 pd-hair grid place-items-center ios-press shrink-0"
+                  className="w-9 h-9 rounded-[10px] grid place-items-center ios-press shrink-0"
                 >
-                  <Camera className="w-[19px] h-[19px] text-gold" />
+                  <Camera className="w-[18px] h-[18px] text-white/70" />
                 </button>
               }
             />
+            <button
+              type="submit"
+              aria-label="بحث"
+              className="w-9 h-9 rounded-[10px] bg-gold text-white grid place-items-center ios-press shrink-0 shadow-md shadow-[hsl(var(--pd-accent)/0.35)]"
+            >
+              <Search className="w-[17px] h-[17px]" />
+            </button>
           </form>
+
 
           {suggestOpen && debounced.length >= 2 && (
             <div className="absolute left-4 right-4 top-[56px] z-50 rounded-[14px] pd-s2 pd-hair overflow-hidden shadow-2xl shadow-black/60 max-h-[60vh] overflow-y-auto">
