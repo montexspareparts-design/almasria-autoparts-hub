@@ -105,7 +105,37 @@ const NativeHomeScreen = () => {
   const { activeVehicle } = useGarage();
   const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(6);
   const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 250);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const { data: suggestions = [], isFetching: suggestLoading } = useQuery({
+    queryKey: ["native_home_suggest", debounced],
+    enabled: debounced.length >= 2,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const s = debounced.replace(/[%,]/g, " ").trim();
+      const { data } = await supabase
+        .from("products")
+        .select("id, name_ar, sku, erp_item_code, part_number, image_url, brand, stock_quantity")
+        .eq("is_active", true)
+        .or(
+          [
+            `sku.ilike.%${s}%`,
+            `erp_item_code.ilike.%${s}%`,
+            `part_number.ilike.%${s}%`,
+            `name_ar.ilike.%${s}%`,
+          ].join(","),
+        )
+        .limit(8);
+      return data || [];
+    },
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -113,6 +143,7 @@ const NativeHomeScreen = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["native_home_products"],
