@@ -282,6 +282,7 @@ const App = () => (
                )}
 
               </PermissionRequestProvider>
+              </GarageProvider>
             </CartProvider>
           </AuthProvider>
           </LanguageProvider>
