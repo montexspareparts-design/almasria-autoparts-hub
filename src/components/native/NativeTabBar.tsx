@@ -28,16 +28,16 @@ const TABS = [
   { to: "/my-profile", label: "حسابي", icon: User, match: (p: string) => p.startsWith("/my-profile") },
 ] as const;
 
-/** Routes that keep their own full-screen chrome (staff / dealer / flows). */
+/** Routes that keep their own full-screen chrome (staff / dealer / auth flows). */
 const HIDDEN_PREFIXES = [
   "/admin",
-  "/dealer",
+  "/dealer", // covers /dealer, /dealer-login, /dealer-register, /dealer-apply
   "/staff",
-  "/auth",
+  "/auth", // covers /auth and /auth-callback
+  "/client-register",
   "/checkout",
   "/payment",
   "/reset-password",
-  "/auth-callback",
 ];
 
 const NativeTabBar = () => {
