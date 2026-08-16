@@ -591,8 +591,20 @@ const CheckoutPage = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-soft">الشحن</span>
-                      <span className="font-bold text-white/90">{shipping === "pickup" ? "مجاني ✨" : (bostaLoading ? "جاري الحساب..." : bostaFee != null ? `${bostaFee} ج.م` : "—")}</span>
+                      <span className="font-bold text-white/90">
+                        {shipping === "pickup" ? "مجاني ✨" : bostaLoading ? "جاري الحساب..." : freeShipping ? (
+                          <span className="flex items-center gap-2">
+                            {bostaFee != null && <span className="text-white/40 line-through text-xs">{bostaFee} ج.م</span>}
+                            <span className="text-green-400">مجاني 🎉</span>
+                          </span>
+                        ) : bostaFee != null ? `${bostaFee} ج.م` : "—"}
+                      </span>
                     </div>
+                    {shipping === "bosta" && !freeShipping && (
+                      <p className="text-[11px] text-gold/90 bg-[hsl(var(--gold)/0.08)] border border-[hsl(var(--gold)/0.25)] rounded-lg px-3 py-2">
+                        أضف {missingForFreeShipping.toLocaleString("ar-EG")} ج.م للحصول على شحن مجاني (عند {FREE_SHIPPING_THRESHOLD.toLocaleString("ar-EG")} ج.م)
+                      </p>
+                    )}
                   </div>
 
                   {/* Grand Total */}
