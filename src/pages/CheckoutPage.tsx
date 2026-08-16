@@ -84,6 +84,9 @@ const CheckoutPage = () => {
   const [bostaLoading, setBostaLoading] = useState(false);
   const [bostaError, setBostaError] = useState<string | null>(null);
 
+  const freeShipping = qualifiesForFreeShipping(subtotal);
+  const missingForFreeShipping = amountLeftForFreeShipping(subtotal);
+
   // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
@@ -110,7 +113,7 @@ const CheckoutPage = () => {
           const fee = Number((data as any)?.fee);
           if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
           setBostaFee(fee);
-          setShippingCost(fee);
+          setShippingCost(freeShipping ? 0 : fee);
         } catch (e: any) {
           if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
         } finally {
@@ -121,7 +124,7 @@ const CheckoutPage = () => {
     }, 700);
 
     return () => clearTimeout(timer);
-  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost]);
+  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost, freeShipping]);
 
   const orderTotal = total;
 
