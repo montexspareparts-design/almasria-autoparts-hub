@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Android signing & local build artifacts (NEVER commit)
+*.jks
+*.keystore
+keystore.properties
+android/local.properties
+android/.gradle/
+android/app/build/

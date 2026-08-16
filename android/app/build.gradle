@@ -7,6 +7,9 @@ android {
         applicationId "com.almasria.autoparts"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
+        // Play بيرفض أي AAB بنفس الـ versionCode المرفوع قبل كده.
+        // versionName للعرض للمستخدم فقط (زوّده لما يبقى فيه تغيير ملحوظ).
         versionCode 1
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
