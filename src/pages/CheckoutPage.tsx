@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
+import { FREE_SHIPPING_THRESHOLD, qualifiesForFreeShipping, amountLeftForFreeShipping } from "@/lib/freeShipping";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
@@ -84,6 +85,9 @@ const CheckoutPage = () => {
   const [bostaLoading, setBostaLoading] = useState(false);
   const [bostaError, setBostaError] = useState<string | null>(null);
 
+  const freeShipping = qualifiesForFreeShipping(subtotal);
+  const missingForFreeShipping = amountLeftForFreeShipping(subtotal);
+
   // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
@@ -110,7 +114,7 @@ const CheckoutPage = () => {
           const fee = Number((data as any)?.fee);
           if (!isFinite(fee) || fee <= 0) throw new Error("لم نتمكن من حساب التكلفة");
           setBostaFee(fee);
-          setShippingCost(fee);
+          setShippingCost(freeShipping ? 0 : fee);
         } catch (e: any) {
           if (!cancelled) { setBostaError(e?.message || "فشل حساب الشحن"); setBostaFee(null); setShippingCost(0); }
         } finally {
@@ -121,7 +125,7 @@ const CheckoutPage = () => {
     }, 700);
 
     return () => clearTimeout(timer);
-  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost]);
+  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost, freeShipping]);
 
   const orderTotal = total;
 
@@ -461,7 +465,12 @@ const CheckoutPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`font-black text-sm ${active ? 'text-toyota-red' : 'text-white'}`}>
-                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : `${opt.cost} ج.م`}
+                              {opt.cost === 0 ? "مجاني" : isBostaPending ? "—" : (opt.id === "bosta" && freeShipping) ? (
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-white/40 line-through text-xs">{opt.cost} ج.م</span>
+                                  <span className="text-green-400">مجاني</span>
+                                </span>
+                              ) : `${opt.cost} ج.م`}
                             </span>
                             {active && !isBostaPending && <CheckCircle2 className="w-5 h-5 text-gold" />}
                             {isBostaPending && active && <Loader2 className="w-4 h-4 text-gold animate-spin" />}
@@ -587,8 +596,20 @@ const CheckoutPage = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-soft">الشحن</span>
-                      <span className="font-bold text-white/90">{shipping === "pickup" ? "مجاني ✨" : (bostaLoading ? "جاري الحساب..." : bostaFee != null ? `${bostaFee} ج.م` : "—")}</span>
+                      <span className="font-bold text-white/90">
+                        {shipping === "pickup" ? "مجاني ✨" : bostaLoading ? "جاري الحساب..." : freeShipping ? (
+                          <span className="flex items-center gap-2">
+                            {bostaFee != null && <span className="text-white/40 line-through text-xs">{bostaFee} ج.م</span>}
+                            <span className="text-green-400">مجاني 🎉</span>
+                          </span>
+                        ) : bostaFee != null ? `${bostaFee} ج.م` : "—"}
+                      </span>
                     </div>
+                    {shipping === "bosta" && !freeShipping && (
+                      <p className="text-[11px] text-gold/90 bg-[hsl(var(--gold)/0.08)] border border-[hsl(var(--gold)/0.25)] rounded-lg px-3 py-2">
+                        أضف {missingForFreeShipping.toLocaleString("ar-EG")} ج.م للحصول على شحن مجاني (عند {FREE_SHIPPING_THRESHOLD.toLocaleString("ar-EG")} ج.م)
+                      </p>
+                    )}
                   </div>
 
                   {/* Grand Total */}
