@@ -179,6 +179,7 @@ const App = () => (
           <LanguageProvider>
           <AuthProvider>
             <CartProvider>
+              <GarageProvider>
               <PermissionRequestProvider>
               <SEOHead />
               {!isNativeShell() && <PageVisitTracker />}
