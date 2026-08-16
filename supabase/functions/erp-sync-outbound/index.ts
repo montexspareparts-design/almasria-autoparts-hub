@@ -441,9 +441,19 @@ Deno.serve(async (req) => {
         customerPhone ? `موبايل العميل: ${customerPhone}` : "",
         String(data.notes || "").trim(),
       ].filter(Boolean).join(" | ");
+      // CreateOrder only persists its documented core fields. Al Faisal silently
+      // ignores arbitrary reference/notes keys and returns docno=0 because the
+      // visible document number is assigned internally when the draft is posted.
+      // Prefix our order number in the supported customerName field so staff can
+      // always see and search the website reference on the imported draft.
+      const rawCustomerName = String(data.customer_name || "").trim();
+      const customerNameWithOrder = [orderNo ? `[${orderNo}]` : "", rawCustomerName]
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, 150);
       const payload: any = {
         customerId: data.erp_customer_code ? String(data.erp_customer_code) : "",
-        customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
+        customerName: customerNameWithOrder,
         phone: customerPhone || "0000000000",
         // Phone under all common keys Al Faisal might accept
         mobile: customerPhone || "",
