@@ -19,10 +19,6 @@ const NativeAppHeader = () => {
 
   return (
     <>
-      <div
-        aria-hidden
-        style={{ height: "calc(env(safe-area-inset-top) + 52px)" }}
-      />
       <header
         dir="rtl"
         className="fixed top-0 inset-x-0 z-50 ios-glass border-x-0 border-t-0 rounded-none"
