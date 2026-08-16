@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -28,7 +28,7 @@ import ImageSearchDialog from "@/components/ImageSearchDialog";
 import { haptic } from "@/lib/haptics";
 import logoDark from "@/assets/almasria-logo-dark.png";
 
-import GarageBar from "@/components/native/GarageBar";
+import NativeSignatureHero from "@/components/native/NativeSignatureHero";
 import FitPartCard from "@/components/native/FitPartCard";
 import { useGarage } from "@/contexts/GarageContext";
 import { useFitmentProducts } from "@/hooks/useFitmentProducts";
