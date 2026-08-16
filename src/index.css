@@ -944,7 +944,19 @@ html[data-native-app="true"] body {
   /* Pushes normal flow content below the notch. Fixed headers are
      padded separately so they stay flush with the screen edge. */
   padding-top: env(safe-area-inset-top);
-  overscroll-behavior-y: none;
+  /* `contain` (not `none`) — `none` disables the whole overscroll gesture on
+     some Android WebView builds, which reads as "the page won't scroll". */
+  overscroll-behavior-y: contain;
+}
+
+/* Vertical touch scrolling must always work inside the native shell. */
+html[data-native-app="true"],
+html[data-native-app="true"] body,
+html[data-native-app="true"] #root {
+  height: auto;
+  min-height: 100%;
+  touch-action: pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Fixed top chrome (site navbar) keeps its glass background under the
@@ -962,6 +974,7 @@ html[data-native-app="true"] input,
 html[data-native-app="true"] textarea,
 html[data-native-app="true"] [contenteditable="true"] {
   -webkit-touch-callout: default;
+
   -webkit-user-select: text;
   user-select: text;
 }
