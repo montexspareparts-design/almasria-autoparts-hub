@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { haptic } from "@/lib/haptics";
@@ -17,37 +19,55 @@ interface Props {
   onClose: () => void;
 }
 
-/** Lightweight bottom sheet used by the native home quick actions. */
+/**
+ * Lightweight bottom sheet used by the native home quick actions.
+ * Rendered in a portal on <body> so it always sits above the sticky
+ * header and the floating tab bar (no visual overlap).
+ */
 const NativePickerSheet = ({ open, title, kicker, options, onClose }: Props) => {
   const navigate = useNavigate();
-  if (!open) return null;
 
-  return (
-    <div dir="rtl" className="fixed inset-0 z-[120]">
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div dir="rtl" className="fixed inset-0 z-[300] pd-root">
       <button
         aria-label="إغلاق"
         onClick={onClose}
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-black/80 animate-in fade-in duration-150"
       />
       <div
-        className="absolute inset-x-0 bottom-0 pd-s1 rounded-t-[20px] pd-hair max-h-[72vh] overflow-y-auto"
+        className="absolute inset-x-0 bottom-0 pd-s1 rounded-t-[22px] border-t border-white/10 shadow-2xl shadow-black/80 max-h-[78vh] flex flex-col animate-in slide-in-from-bottom duration-200"
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
       >
-        <div className="sticky top-0 pd-s1 px-4 pt-4 pb-3 flex items-center justify-between">
-          <div>
+        <div className="pt-2.5 pb-1 grid place-items-center shrink-0">
+          <span className="w-10 h-1 rounded-full bg-white/15" />
+        </div>
+
+        <div className="px-4 pb-3 flex items-center justify-between shrink-0 border-b border-white/[0.07]">
+          <div className="min-w-0">
             {kicker && <p className="pd-mono text-[10px] text-gold/70 mb-1">{kicker}</p>}
-            <h3 className="text-[15px] text-white font-semibold">{title}</h3>
+            <h3 className="text-[15px] text-white font-semibold truncate">{title}</h3>
           </div>
           <button
             onClick={onClose}
             aria-label="إغلاق"
-            className="w-9 h-9 rounded-full pd-s3 grid place-items-center"
+            className="w-9 h-9 rounded-full pd-s3 grid place-items-center shrink-0"
           >
             <X className="w-4 h-4 text-white/70" />
           </button>
         </div>
 
-        <div className="px-4 pb-2 grid grid-cols-2 gap-2">
+        <div className="px-4 pt-3 pb-2 grid grid-cols-2 gap-2 overflow-y-auto overscroll-contain">
           {options.map((o) => (
             <button
               key={o.to}
@@ -64,7 +84,8 @@ const NativePickerSheet = ({ open, title, kicker, options, onClose }: Props) => 
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 
