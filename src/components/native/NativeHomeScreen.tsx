@@ -212,7 +212,7 @@ const NativeHomeScreen = () => {
             >
               <ShoppingBag className="w-[19px] h-[19px] text-white/80" />
               {itemCount > 0 && (
-                <span className="absolute top-1 left-1 min-w-[17px] h-[17px] px-1 rounded-full bg-gold text-black text-[10px] font-semibold grid place-items-center pd-mono">
+                <span className="absolute top-1 left-1 min-w-[17px] h-[17px] px-1 rounded-full bg-gold text-white text-[10px] font-semibold grid place-items-center pd-mono">
                   {itemCount > 99 ? "99" : itemCount}
                 </span>
               )}
@@ -264,7 +264,7 @@ const NativeHomeScreen = () => {
             <button
               type="submit"
               aria-label="بحث"
-              className="w-11 h-11 rounded-[12px] bg-gold text-black grid place-items-center ios-press shrink-0"
+              className="w-11 h-11 rounded-[12px] bg-gold text-white grid place-items-center ios-press shrink-0"
             >
               <Search className="w-[19px] h-[19px]" />
             </button>
@@ -502,7 +502,7 @@ const NativeHomeScreen = () => {
               <Link
                 to="/auth"
                 onClick={() => void haptic("light")}
-                className="flex-1 h-11 grid place-items-center rounded-[12px] bg-gold text-black text-[13.5px] font-semibold ios-press"
+                className="flex-1 h-11 grid place-items-center rounded-[12px] bg-gold text-white text-[13.5px] font-semibold ios-press"
               >
                 إنشاء حساب
               </Link>
