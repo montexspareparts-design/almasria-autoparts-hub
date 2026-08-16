@@ -16,7 +16,9 @@ const NativeSplash = ({ leaving }: { leaving: boolean }) => (
     initial={{ opacity: 1 }}
     animate={{ opacity: leaving ? 0 : 1, scale: leaving ? 1.06 : 1 }}
     transition={{ duration: 0.55, ease: easeOutIOS }}
-    className="fixed inset-0 z-[200] flex items-center justify-center overflow-hidden"
+    className={`fixed inset-0 z-[200] flex items-center justify-center overflow-hidden ${
+      leaving ? "pointer-events-none" : ""
+    }`}
     style={{
       background:
         "radial-gradient(120% 90% at 50% 12%, #12294b 0%, #0b1e3a 42%, #08172c 70%, #050c17 100%)",
