@@ -329,10 +329,10 @@ const Navbar = () => {
                       variant="outline"
                       size="sm"
                       className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                      onClick={() => navigate("/dealer-apply")}
+                      onClick={() => navigate("/track-order")}
                     >
-                      <Briefcase className="w-3.5 h-3.5" />
-                      {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
+                      <Package className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "طلباتي" : "My Orders"}
                     </Button>
                   </>
                 )}
