@@ -20,6 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { pushOrderToERP } from "@/lib/erpSync";
 import { generateOrderNumber } from "@/lib/orderNumber";
 import { notifyNewOrderWhatsApp } from "@/lib/whatsapp";
+import { FREE_SHIPPING_THRESHOLD, qualifiesForFreeShipping, amountLeftForFreeShipping } from "@/lib/freeShipping";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
