@@ -19,6 +19,7 @@ const RequestSchema = z.object({
   order_id: z.string().uuid(),
   currency: z.string().length(3).optional(),
   return_url: z.string().url().optional(),
+  payment_methods: z.array(z.string().min(2).max(30)).max(10).optional(),
 });
 
 const json = (body: unknown, status = 200) =>
@@ -47,6 +48,14 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
 
     const { order_id, return_url } = parsed.data;
+    // Wallets & alternative methods enabled on the Geidea merchant account
+    // (MEEZA Digital / Meeza QR / ValU / Souhoola / Apple Pay ... ).
+    // Empty list => Geidea shows every method enabled on the account.
+    const envMethods = (Deno.env.get("GEIDEA_PAYMENT_METHODS") || "")
+      .split(",").map((m) => m.trim()).filter(Boolean);
+    const paymentMethods = parsed.data.payment_methods?.length
+      ? parsed.data.payment_methods
+      : envMethods;
     const currency = (parsed.data.currency || Deno.env.get("GEIDEA_CURRENCY") || "EGP").toUpperCase();
 
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -92,6 +101,7 @@ Deno.serve(async (req) => {
         callbackUrl,
         ...(return_url ? { returnUrl: return_url } : {}),
         paymentOperation: "Pay",
+        ...(paymentMethods.length ? { paymentMethods } : {}),
         timestamp,
         signature,
       }),
