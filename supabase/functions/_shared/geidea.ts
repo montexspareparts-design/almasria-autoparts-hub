@@ -4,7 +4,9 @@
 export type GeideaEnv = "test" | "live";
 
 export const geideaEnv = (): GeideaEnv =>
-  (Deno.env.get("GEIDEA_ENV") || "test").toLowerCase() === "live" ? "live" : "test";
+  (Deno.env.get("GEIDEA_MODE") || Deno.env.get("GEIDEA_ENV") || "test").toLowerCase() === "live"
+    ? "live"
+    : "test";
 
 export const geideaApiBase = () =>
   // Egypt environment uses the same production endpoint for both test and live;
@@ -15,8 +17,13 @@ export const geideaCheckoutScript = () =>
   "https://www.merchant.geidea.net/hpp/geideaCheckout.min.js";
 
 export const geideaCredentials = () => {
-  const publicKey = Deno.env.get("GEIDEA_MERCHANT_PUBLIC_KEY");
-  const apiPassword = Deno.env.get("GEIDEA_API_PASSWORD");
+  const live = geideaEnv() === "live";
+  const publicKey = live
+    ? Deno.env.get("GEIDEA_MERCHANT_PUBLIC_KEY_LIVE") || Deno.env.get("GEIDEA_MERCHANT_PUBLIC_KEY")
+    : Deno.env.get("GEIDEA_MERCHANT_PUBLIC_KEY");
+  const apiPassword = live
+    ? Deno.env.get("GEIDEA_API_PASSWORD_LIVE") || Deno.env.get("GEIDEA_API_PASSWORD")
+    : Deno.env.get("GEIDEA_API_PASSWORD");
   if (!publicKey || !apiPassword) throw new Error("Geidea credentials are not configured");
   return { publicKey, apiPassword };
 };
