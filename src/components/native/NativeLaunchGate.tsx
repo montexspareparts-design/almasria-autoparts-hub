@@ -8,17 +8,19 @@ import { ONBOARD_KEY } from "./NativeOnboarding";
 
 const NativeOnboarding = lazy(() => import("./NativeOnboarding"));
 
-const SPLASH_MS = 1900;
+const MIN_SPLASH_MS = 1800;
+const MAX_SPLASH_MS = 4500; // never hang if auth stalls
+const FADE_MS = 550;
 const SESSION_SPLASH_KEY = "almasria_splash_shown";
 
 /** Routes that must never be covered (deep links / OAuth returns). */
 const BYPASS = ["/auth-callback", "/payment-callback", "/reset-password"];
 
 /**
- * Native launch experience:
- *   1. Cinematic splash (logo zoom + gold shimmer) on every cold start.
- *   2. First-run gate: wholesale vs retail → login / register / continue as guest.
- * Web is completely untouched.
+ * Native launch experience — single, uninterrupted sequence:
+ *   splash (held until auth resolves) → onboarding (already mounted beneath
+ *   the fading splash) → app. The app is never visible in between, so there
+ *   is no flash of the home screen and no overlap between layers.
  */
 const NativeLaunchGate = () => {
   const native = isNativeShell();
@@ -27,7 +29,7 @@ const NativeLaunchGate = () => {
 
   const bypass = BYPASS.some((p) => pathname.startsWith(p));
 
-  const [splash, setSplash] = useState(() => {
+  const [splashActive, setSplashActive] = useState(() => {
     if (!native) return false;
     try {
       return sessionStorage.getItem(SESSION_SPLASH_KEY) !== "1";
@@ -35,6 +37,8 @@ const NativeLaunchGate = () => {
       return true;
     }
   });
+  const [minElapsed, setMinElapsed] = useState(!splashActive);
+  const [timedOut, setTimedOut] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [onboarded, setOnboarded] = useState(() => {
     try {
@@ -44,28 +48,39 @@ const NativeLaunchGate = () => {
     }
   });
 
+  // minimum + maximum splash timers
   useEffect(() => {
-    if (!splash) return;
-    const t1 = setTimeout(() => setLeaving(true), SPLASH_MS);
-    const t2 = setTimeout(() => {
-      setSplash(false);
+    if (!splashActive) return;
+    const t1 = setTimeout(() => setMinElapsed(true), MIN_SPLASH_MS);
+    const t2 = setTimeout(() => setTimedOut(true), MAX_SPLASH_MS);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [splashActive]);
+
+  // splash may hand off only once auth state is known (or we timed out)
+  const canHandOff = splashActive && minElapsed && (!loading || timedOut);
+
+  useEffect(() => {
+    if (!canHandOff || leaving) return;
+    setLeaving(true);
+    const t = setTimeout(() => {
+      setSplashActive(false);
       try {
         sessionStorage.setItem(SESSION_SPLASH_KEY, "1");
       } catch {
         /* ignore */
       }
-    }, SPLASH_MS + 550);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [splash]);
+    }, FADE_MS);
+    return () => clearTimeout(t);
+  }, [canHandOff, leaving]);
 
-  const showOnboarding = native && !bypass && !splash && !onboarded && !loading && !user;
-  // While auth is still resolving we keep an opaque cover so the home screen
-  // never flashes behind the splash/onboarding (that was the visual "clash").
-  const showCover = native && !bypass && !splash && !onboarded && loading;
-  const locked = native && !bypass && (splash || showOnboarding || showCover);
+  const needsOnboarding = !onboarded && !user;
+  // Mount onboarding as soon as the splash starts fading so it is already
+  // painted underneath — the user never sees the app in between.
+  const showOnboarding = native && !bypass && needsOnboarding && (leaving || !splashActive);
+  const locked = native && !bypass && (splashActive || showOnboarding);
 
   useEffect(() => {
     if (!locked) return;
@@ -80,22 +95,15 @@ const NativeLaunchGate = () => {
 
   return (
     <>
-      <AnimatePresence>{splash && <NativeSplash key="splash" leaving={leaving} />}</AnimatePresence>
-      {showCover && (
-        <div
-          className="fixed inset-0 z-[140]"
-          style={{
-            background:
-              "radial-gradient(130% 90% at 50% -10%, #16305a 0%, #0d2140 38%, #0A1A2F 68%, #050c17 100%)",
-          }}
-        />
-      )}
       <AnimatePresence>
         {showOnboarding && (
           <Suspense fallback={null}>
             <NativeOnboarding key="onboarding" onDone={() => setOnboarded(true)} />
           </Suspense>
         )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {splashActive && <NativeSplash key="splash" leaving={leaving} />}
       </AnimatePresence>
     </>
   );
