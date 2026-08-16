@@ -219,16 +219,19 @@ const NativeHomeScreen = () => {
       </section>
 
       {/* ───────────── Quick actions ───────────── */}
-      <section className={`${GUTTER} mt-3`}>
+      <section className={`${GUTTER} mt-3 pd-reveal`} style={{ "--d": "40ms" } as React.CSSProperties}>
         <div className="grid grid-cols-4 gap-2">
-          {QUICK_ACTIONS.map((a) => (
+          {QUICK_ACTIONS.map((a, i) => (
             <Link
               key={a.to}
               to={a.to}
               onClick={() => void haptic("light")}
-              className="pd-card h-[74px] flex flex-col items-center justify-center gap-1.5 ios-press"
+              className="pd-card h-[78px] flex flex-col items-center justify-center gap-1.5 ios-press relative overflow-hidden"
             >
-              <a.icon className="w-5 h-5 text-gold" />
+              <span className="absolute top-0 inset-x-3 h-px bg-gradient-to-l from-transparent via-gold/30 to-transparent" />
+              <span className="w-8 h-8 rounded-[10px] bg-gold/[0.09] border border-gold/15 grid place-items-center">
+                <a.icon className="w-[17px] h-[17px] text-gold" />
+              </span>
               <span className="text-[10.5px] text-white/70 leading-none text-center px-1">{a.label}</span>
             </Link>
           ))}
@@ -237,9 +240,10 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Fits your car (2-col grid) ───────────── */}
       {activeVehicle && (
-        <section className="mt-7">
+        <section className="mt-8 pd-reveal" style={{ "--d": "60ms" } as React.CSSProperties}>
           <SectionHeader
             title={`يركّب على ${activeVehicle.displayName}`}
+            kicker="EXACT FITMENT"
             to={`/products?search=${encodeURIComponent(activeVehicle.model)}`}
           />
           <div className={`${GUTTER} mt-3 grid grid-cols-2 gap-3`}>
