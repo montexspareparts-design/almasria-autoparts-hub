@@ -249,7 +249,13 @@ const NativeHomeScreen = () => {
             <Search className="w-[18px] h-[18px] text-gold shrink-0" />
             <input
               value={query}
+              onCompositionStart={() => { composingRef.current = true; }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                setQuery((e.target as HTMLInputElement).value);
+              }}
               onChange={(e) => {
+                if (composingRef.current) return;
                 setQuery(e.target.value);
                 setSuggestOpen(true);
               }}
