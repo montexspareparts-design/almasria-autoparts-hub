@@ -399,14 +399,58 @@ Deno.serve(async (req) => {
       // The website order number MUST always be visible inside the Faisal order,
       // so it is prefixed into every notes/remarks field AND sent as reference keys.
       const orderNo = String(data.order_number || "").trim();
+
+      // ── Customer phone resolution (never send 0000000000 if a real number exists)
+      const digitsOnly = (v: unknown) => String(v ?? "").replace(/[^\d]/g, "");
+      const normalizeEg = (v: unknown) => {
+        let d = digitsOnly(v);
+        if (d.startsWith("20") && d.length >= 12) d = "0" + d.slice(2);
+        if (d.length === 10 && d.startsWith("1")) d = "0" + d;
+        return d.length >= 10 ? d : "";
+      };
+      let customerPhone = normalizeEg(data.customer_phone);
+      if (!customerPhone && data.order_id) {
+        // Fall back to the profile stored server-side
+        const { data: ord } = await supabase
+          .from("orders")
+          .select("user_id, shipping_address")
+          .eq("id", data.order_id)
+          .maybeSingle();
+        if (ord?.user_id) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("phone, full_name")
+            .eq("user_id", ord.user_id)
+            .maybeSingle();
+          customerPhone = normalizeEg(prof?.phone);
+          if (!data.customer_name && prof?.full_name) data.customer_name = prof.full_name;
+        }
+        // Last resort: extract an Egyptian mobile from the shipping address text
+        if (!customerPhone && ord?.shipping_address) {
+          const m = String(ord.shipping_address).match(/01\d{8,10}/);
+          if (m) customerPhone = m[0].slice(0, 11);
+        }
+      }
+      if (!customerPhone && data.shipping_address) {
+        const m = String(data.shipping_address).match(/01\d{8,10}/);
+        if (m) customerPhone = m[0].slice(0, 11);
+      }
+
       const orderNotes = [
         orderNo ? `رقم الطلب على الموقع: ${orderNo}` : "",
+        customerPhone ? `موبايل العميل: ${customerPhone}` : "",
         String(data.notes || "").trim(),
       ].filter(Boolean).join(" | ");
       const payload: any = {
         customerId: data.erp_customer_code ? String(data.erp_customer_code) : "",
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
-        phone: data.customer_phone || "0000000000",
+        phone: customerPhone || "0000000000",
+        // Phone under all common keys Al Faisal might accept
+        mobile: customerPhone || "",
+        telephone: customerPhone || "",
+        tel: customerPhone || "",
+        customerPhone: customerPhone || "",
+        customerMobile: customerPhone || "",
         items: data.items?.map((item: any) => ({
           productId: String(item.erp_item_code || ""),
           quantity: Number(item.quantity) || 1,
@@ -416,17 +460,27 @@ Deno.serve(async (req) => {
         orderNumber: orderNo,
         orderNo: orderNo,
         referenceNumber: orderNo,
+        referenceNo: orderNo,
         refNo: orderNo,
+        docRef: orderNo,
+        docNo: orderNo,
+        documentNo: orderNo,
+        documentNumber: orderNo,
         ecommerceOrderNo: orderNo,
         externalOrderNo: orderNo,
         // Pass notes under all common keys Al Faisal might accept
         notes: orderNotes,
+        note: orderNotes,
         remarks: orderNotes,
         remark: orderNotes,
         comment: orderNotes,
         comments: orderNotes,
         description: orderNotes,
+        statement: orderNotes,
+        bayan: orderNotes,
+        memo: orderNotes,
       };
+
 
       if (isMock) {
         result = {
