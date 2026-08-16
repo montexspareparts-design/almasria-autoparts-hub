@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.webp";
-import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe, ShoppingCart } from "lucide-react";
+import { Menu, X, Briefcase, User, LogOut, BookOpen, Download, Globe, ShoppingCart, Package } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -329,10 +329,10 @@ const Navbar = () => {
                       variant="outline"
                       size="sm"
                       className="gap-1.5 text-[13px] font-semibold h-8 px-3 border-secondary-foreground/15 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
-                      onClick={() => navigate("/dealer-apply")}
+                      onClick={() => navigate("/track-order")}
                     >
-                      <Briefcase className="w-3.5 h-3.5" />
-                      {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
+                      <Package className="w-3.5 h-3.5" />
+                      {lang === "ar" ? "طلباتي" : "My Orders"}
                     </Button>
                   </>
                 )}
@@ -474,8 +474,8 @@ const Navbar = () => {
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-secondary-foreground/70 font-semibold" onClick={() => { navigate("/my-profile"); setIsOpen(false); }}>
                           <User className="w-4 h-4" /> {lang === "ar" ? "حسابي" : "My Profile"}
                         </Button>
-                        <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/dealer-apply"); setIsOpen(false); }}>
-                          <Briefcase className="w-4 h-4" /> {lang === "ar" ? "تقديم طلب اعتماد" : "Apply as Dealer"}
+                        <Button variant="outline" size="sm" className="w-full gap-2 font-semibold" onClick={() => { navigate("/track-order"); setIsOpen(false); }}>
+                          <Package className="w-4 h-4" /> {lang === "ar" ? "طلباتي" : "My Orders"}
                         </Button>
                       </>
                     )}
