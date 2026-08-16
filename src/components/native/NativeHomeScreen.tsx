@@ -338,10 +338,11 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Guest CTA ───────────── */}
       {!user && (
-        <section className={`${GUTTER} mt-7`}>
-          <div className="pd-card p-4">
-            <h3 className="text-[15px] font-semibold">اعرف أسعارك الخاصة</h3>
-            <p className="text-[12.5px] text-white/55 mt-1.5 leading-relaxed">
+        <section className={`${GUTTER} mt-8`}>
+          <div className="pd-hero pd-sheen p-4">
+            <span className="relative pd-index">PRIVATE PRICING</span>
+            <h3 className="relative text-[16px] font-semibold mt-2">اعرف أسعارك الخاصة</h3>
+            <p className="relative text-[12.5px] text-white/55 mt-1.5 leading-relaxed">
               سجّل حسابك وشوف الأسعار والعروض المخصصة ليك.
             </p>
             <div className="flex gap-2.5 mt-4">
