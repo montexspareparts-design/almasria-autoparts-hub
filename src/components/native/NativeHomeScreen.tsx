@@ -225,7 +225,7 @@ const NativeHomeScreen = () => {
             >
               <ShoppingBag className="w-[17px] h-[17px] text-white/85" />
               {itemCount > 0 && (
-                <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-bold grid place-items-center pd-mono ring-2 ring-[hsl(var(--pd-s0))]">
+                <span className="absolute -top-1.5 -left-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gold text-white text-[10px] font-bold grid place-items-center pd-mono ring-2 ring-[hsl(var(--carbon-1))]">
                   {itemCount > 99 ? "99" : itemCount}
                 </span>
               )}
