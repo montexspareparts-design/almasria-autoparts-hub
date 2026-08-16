@@ -114,6 +114,7 @@ const NativeHomeScreen = () => {
   const { activeVehicle } = useGarage();
   const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(6);
   const [query, setQuery] = useState("");
+  const composingRef = useRef(false);
   const [picker, setPicker] = useState<"model" | "type" | null>(null);
 
   const [debounced, setDebounced] = useState("");
