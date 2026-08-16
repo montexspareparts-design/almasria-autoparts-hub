@@ -106,9 +106,10 @@
       word-break: break-word;
     }
     #root {
-      overflow-x: hidden;
+      overflow-x: clip;
       max-width: 100vw;
     }
+
     /* Prevent iOS Safari from auto-zooming when focusing inputs (font-size must be ≥16px). */
     input:not([type="checkbox"]):not([type="radio"]),
     select,
