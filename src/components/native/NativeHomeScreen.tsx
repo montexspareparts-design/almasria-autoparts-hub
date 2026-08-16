@@ -135,9 +135,13 @@ const NativeHomeScreen = () => {
 
   return (
     <div dir="rtl" className="pd-root min-h-screen text-white overflow-x-hidden">
+      {/* one ambient gold light source behind everything */}
+      <div className="pd-aura" aria-hidden />
+
+      <div className="pd-layer">
       {/* ───────────── Sticky header + search ───────────── */}
       <header
-        className="sticky top-0 z-40 pd-s1 pd-hair-b"
+        className={`sticky top-0 z-40 pd-s1 pd-hair-b pd-head ${scrolled ? "pd-head-solid" : ""}`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className={`h-[52px] ${GUTTER} flex items-center justify-between gap-3`}>
@@ -198,11 +202,12 @@ const NativeHomeScreen = () => {
             />
           </form>
         </div>
+        <div className={`pd-edge-t transition-opacity duration-300 ${scrolled ? "opacity-100" : "opacity-0"}`} />
       </header>
 
-      {/* ───────────── Garage ───────────── */}
-      <section className={`${GUTTER} pt-4`}>
-        <GarageBar />
+      {/* ───────────── Signature hero / garage ───────────── */}
+      <section className={`${GUTTER} pt-4 pd-reveal`}>
+        <NativeSignatureHero />
       </section>
 
       {/* ───────────── Quick actions ───────────── */}
