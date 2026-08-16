@@ -169,6 +169,10 @@ const Navbar = () => {
     );
   };
 
+  // Inside the iOS/Android shell we never render the website navbar —
+  // a slim native header is used instead (no hamburger / EN switch clutter).
+  if (isNativeShell()) return <NativeAppHeader />;
+
   return (
     <motion.nav
       initial={{ y: -80 }}
