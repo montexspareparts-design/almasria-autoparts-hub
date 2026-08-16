@@ -33,6 +33,10 @@ import { easeOutIOS, revealUp } from "@/lib/motion";
 import logoDark from "@/assets/almasria-logo-dark.png";
 
 import NativeHero3D from "@/components/native/NativeHero3D";
+import GarageBar from "@/components/native/GarageBar";
+import FitPartCard from "@/components/native/FitPartCard";
+import { useGarage } from "@/contexts/GarageContext";
+import { useFitmentProducts } from "@/hooks/useFitmentProducts";
 import bannerGenuine from "@/assets/native/banner-genuine.jpg";
 import bannerOils from "@/assets/native/banner-oils.jpg";
 import bannerMtx from "@/assets/native/banner-mtx.jpg";
@@ -149,6 +153,8 @@ const STATS = [
 const NativeHomeScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { activeVehicle } = useGarage();
+  const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(10);
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
@@ -356,6 +362,38 @@ const NativeHomeScreen = () => {
         </div>
       </div>
 
+      {/* ───────────── Garage — active vehicle ───────────── */}
+      <motion.section {...revealUp} className={`${GUTTER} mt-7`}>
+        <GarageBar />
+      </motion.section>
+
+      {/* ───────────── Fits your car ───────────── */}
+      {activeVehicle && (
+        <motion.section {...revealUp} className="mt-9">
+          <SectionHeader
+            title={`يناسب ${activeVehicle.displayName}`}
+            to={`/products?search=${encodeURIComponent(activeVehicle.model)}`}
+          />
+          <div className={`flex gap-3.5 overflow-x-auto ios-rail ${GUTTER} mt-4 pb-1 snap-x`}>
+            {fitLoading &&
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-[47%] h-64 rounded-[22px] ios-card animate-pulse" />
+              ))}
+            {!fitLoading && fitProducts.length === 0 && (
+              <div className="w-full rounded-2xl ios-card px-4 py-5">
+                <p className="ar-body text-[12.5px] text-white/60">
+                  لسه مفيش أصناف متاحة مربوطة بـ {activeVehicle.displayName} — جرّب البحث بكود الصنف أو كلّمنا.
+                </p>
+              </div>
+            )}
+            {!fitLoading &&
+              fitProducts.map((p: any) => (
+                <FitPartCard key={p.id} product={p} year={activeVehicle.year} className="w-[47%]" />
+              ))}
+          </div>
+        </motion.section>
+      )}
+
       {/* ───────────── Models — chip rail ───────────── */}
       <motion.section {...revealUp} className="mt-10">
         <SectionHeader title="اختر موديل عربيتك" to="/products" />
@@ -373,6 +411,7 @@ const NativeHomeScreen = () => {
           ))}
         </div>
       </motion.section>
+
 
       {/* ───────────── Editorial features ───────────── */}
       <motion.section {...revealUp} className="mt-10">
