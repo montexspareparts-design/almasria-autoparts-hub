@@ -32,6 +32,9 @@ import NativeSignatureHero from "@/components/native/NativeSignatureHero";
 import FitPartCard from "@/components/native/FitPartCard";
 import { useGarage } from "@/contexts/GarageContext";
 import { useFitmentProducts } from "@/hooks/useFitmentProducts";
+import NativePickerSheet from "@/components/native/NativePickerSheet";
+import { VEHICLE_MODELS } from "@/data/vehicleCatalogue";
+
 
 import catFilters from "@/assets/native/cat-filters.jpg";
 import catOils from "@/assets/native/cat-oils.jpg";
