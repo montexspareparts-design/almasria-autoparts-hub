@@ -81,6 +81,15 @@ const AboutPage = () => {
 
       <Navbar />
 
+      {/* Native shell only: marketing hero/stats moved off the app home screen. */}
+      {isNativeShell() && (
+        <div style={{ paddingTop: "calc(env(safe-area-inset-top) + 52px)" }}>
+          <NativeAboutHighlights />
+        </div>
+      )}
+
+
+
       {/* ═══ 1. Hero ═══ */}
       <section
         className="relative min-h-[55vh] flex items-center justify-center overflow-hidden"
