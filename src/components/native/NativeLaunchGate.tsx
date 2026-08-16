@@ -63,8 +63,14 @@ const NativeLaunchGate = () => {
   const canHandOff = splashActive && minElapsed && (!loading || timedOut);
 
   useEffect(() => {
-    if (!canHandOff || leaving) return;
+    if (!canHandOff) return;
     setLeaving(true);
+  }, [canHandOff]);
+
+  // Unmount the splash after the fade — kept in its own effect so the
+  // timer isn't cleared by the `leaving` state change itself.
+  useEffect(() => {
+    if (!leaving) return;
     const t = setTimeout(() => {
       setSplashActive(false);
       try {
@@ -74,7 +80,8 @@ const NativeLaunchGate = () => {
       }
     }, FADE_MS);
     return () => clearTimeout(t);
-  }, [canHandOff, leaving]);
+  }, [leaving]);
+
 
   const needsOnboarding = !onboarded && !user;
   // Mount onboarding as soon as the splash starts fading so it is already
