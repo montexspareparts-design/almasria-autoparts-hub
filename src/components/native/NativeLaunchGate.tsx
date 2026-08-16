@@ -61,13 +61,35 @@ const NativeLaunchGate = () => {
     };
   }, [splash]);
 
-  if (!native || bypass) return null;
+  const showOnboarding = native && !bypass && !splash && !onboarded && !loading && !user;
+  // While auth is still resolving we keep an opaque cover so the home screen
+  // never flashes behind the splash/onboarding (that was the visual "clash").
+  const showCover = native && !bypass && !splash && !onboarded && loading;
+  const locked = native && !bypass && (splash || showOnboarding || showCover);
 
-  const showOnboarding = !splash && !onboarded && !loading && !user;
+  useEffect(() => {
+    if (!locked) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [locked]);
+
+  if (!native || bypass) return null;
 
   return (
     <>
       <AnimatePresence>{splash && <NativeSplash key="splash" leaving={leaving} />}</AnimatePresence>
+      {showCover && (
+        <div
+          className="fixed inset-0 z-[140]"
+          style={{
+            background:
+              "radial-gradient(130% 90% at 50% -10%, #16305a 0%, #0d2140 38%, #0A1A2F 68%, #050c17 100%)",
+          }}
+        />
+      )}
       <AnimatePresence>
         {showOnboarding && (
           <Suspense fallback={null}>
