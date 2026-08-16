@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Car, Plus, Repeat2, ShieldCheck, Truck, Boxes, ChevronLeft } from "lucide-react";
+import { ShieldCheck, Truck, Boxes } from "lucide-react";
 import { useGarage } from "@/contexts/GarageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import VehiclePickerSheet from "@/components/native/VehiclePickerSheet";
