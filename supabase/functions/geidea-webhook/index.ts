@@ -36,7 +36,13 @@ Deno.serve(async (req) => {
   const amount = Number(orderObj.amount ?? 0);
   const currency: string = orderObj.currency ?? "EGP";
   const status: string = orderObj.status ?? "";
-  const responseCode: string = orderObj.detailedResponseCode ?? orderObj.responseCode ?? "";
+  const detailedStatus: string = orderObj.detailedStatus ?? "";
+  const payTx = Array.isArray(orderObj.transactions)
+    ? orderObj.transactions.find((t: any) => t?.type === "Pay")
+    : null;
+  const responseCode: string = orderObj.detailedResponseCode ?? orderObj.responseCode ??
+    payTx?.codes?.detailedResponseCode ?? payTx?.codes?.responseCode ?? "";
+
 
   const signatureValid = await verifyGeideaSignature({
     signature,
