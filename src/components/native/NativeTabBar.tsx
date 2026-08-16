@@ -69,7 +69,7 @@ const NativeTabBar = () => {
   }, []);
 
   const path = location.pathname;
-  if (HIDDEN_PREFIXES.some((p) => path === p || path.startsWith(p + "/") || path.startsWith(p + "?"))) {
+  if (HIDDEN_PREFIXES.some((p) => path.startsWith(p))) {
     return null;
   }
 
