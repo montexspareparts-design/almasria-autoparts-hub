@@ -10,6 +10,8 @@ import { useCart } from "@/contexts/CartContext";
 import NotificationBell from "@/components/NotificationBell";
 import DealerAuthDialog from "@/components/DealerAuthDialog";
 import { isNativePlatform } from "@/lib/native";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAppHeader from "@/components/native/NativeAppHeader";
 
 const mobileMenuVariants = {
   hidden: { opacity: 0, height: 0, filter: "blur(8px)" },
@@ -168,6 +170,10 @@ const Navbar = () => {
       </a>
     );
   };
+
+  // Inside the iOS/Android shell we never render the website navbar —
+  // a slim native header is used instead (no hamburger / EN switch clutter).
+  if (isNativeShell()) return <NativeAppHeader />;
 
   return (
     <motion.nav
