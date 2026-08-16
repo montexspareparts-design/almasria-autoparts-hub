@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { StableInput, StableTextarea } from "@/components/ui/stable-input";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +89,13 @@ const CheckoutPage = () => {
   const freeShipping = qualifiesForFreeShipping(subtotal);
   const missingForFreeShipping = amountLeftForFreeShipping(subtotal);
 
+  // Debounce address typing so keystrokes never trigger network/context churn
+  const [addr, setAddr] = useState({ city: "", address: "" });
+  useEffect(() => {
+    const t = setTimeout(() => setAddr({ city: form.city, address: form.address }), 600);
+    return () => clearTimeout(t);
+  }, [form.city, form.address]);
+
   // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
@@ -95,16 +103,16 @@ const CheckoutPage = () => {
     const dropOffCity = BOSTA_CITY_MAP[form.governorate];
     if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
 
+    let cancelled = false;
     const timer = setTimeout(() => {
-      let cancelled = false;
       setBostaLoading(true); setBostaError(null);
       (async () => {
         try {
           const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
             body: {
               dropOffCity,
-              dropOffAreaAr: form.city,
-              dropOffAddressAr: form.address,
+              dropOffAreaAr: addr.city,
+              dropOffAddressAr: addr.address,
               cod: payment === "cod" ? total : 0,
             },
           });
@@ -121,11 +129,11 @@ const CheckoutPage = () => {
           if (!cancelled) setBostaLoading(false);
         }
       })();
-      return () => { cancelled = true; };
-    }, 700);
+    }, 400);
 
-    return () => clearTimeout(timer);
-  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost, freeShipping]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [shipping, form.governorate, addr.city, addr.address, payment, total, setShippingCost, freeShipping]);
+
 
   const orderTotal = total;
 
@@ -370,19 +378,19 @@ const CheckoutPage = () => {
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider flex items-center gap-1.5 font-display">
                         <User className="w-3 h-3" /> الاسم الكامل <span className="text-toyota-red">*</span>
                       </Label>
-                      <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="محمد أحمد" className={inputCls} />
+                      <StableInput value={form.name} onValueChange={(v) => setForm((p) => ({ ...p, name: v }))} placeholder="محمد أحمد" className={inputCls} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider flex items-center gap-1.5 font-display">
                         <Phone className="w-3 h-3" /> رقم الهاتف <span className="text-toyota-red">*</span>
                       </Label>
-                      <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01xxxxxxxxx" dir="ltr" className={inputCls} />
+                      <StableInput value={form.phone} onValueChange={(v) => setForm((p) => ({ ...p, phone: v }))} placeholder="01xxxxxxxxx" dir="ltr" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2 space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider flex items-center gap-1.5 font-display">
                         <Mail className="w-3 h-3" /> البريد الإلكتروني
                       </Label>
-                      <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="example@email.com" dir="ltr" className={inputCls} />
+                      <StableInput type="email" value={form.email} onValueChange={(v) => setForm((p) => ({ ...p, email: v }))} placeholder="example@email.com" dir="ltr" className={inputCls} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider flex items-center gap-1.5 font-display">
@@ -391,7 +399,7 @@ const CheckoutPage = () => {
                       <div className="relative">
                         <select
                           value={form.governorate}
-                          onChange={(e) => setForm({ ...form, governorate: e.target.value })}
+                          onChange={(e) => { const v = e.target.value; setForm((p) => ({ ...p, governorate: v })); }}
                           className={`appearance-none flex w-full px-4 py-2 ${inputCls}`}
                         >
                           <option value="" className="bg-carbon">اختر المحافظة</option>
@@ -402,24 +410,25 @@ const CheckoutPage = () => {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider font-display">المدينة</Label>
-                      <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="المدينة / الحي" className={inputCls} />
+                      <StableInput value={form.city} onValueChange={(v) => setForm((p) => ({ ...p, city: v }))} placeholder="المدينة / الحي" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2 space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider flex items-center gap-1.5 font-display">
                         <FileText className="w-3 h-3" /> العنوان التفصيلي <span className="text-toyota-red">*</span>
                       </Label>
-                      <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="الشارع - المبنى - الطابق - الشقة" className={inputCls} />
+                      <StableInput value={form.address} onValueChange={(v) => setForm((p) => ({ ...p, address: v }))} placeholder="الشارع - المبنى - الطابق - الشقة" className={inputCls} />
                     </div>
                     <div className="sm:col-span-2 space-y-2">
                       <Label className="text-[11px] font-bold text-gold/80 uppercase tracking-wider font-display">ملاحظات</Label>
-                      <Textarea
+                      <StableTextarea
                         value={form.notes}
-                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        onValueChange={(v) => setForm((p) => ({ ...p, notes: v }))}
                         placeholder="ملاحظات إضافية على الطلب..."
                         className={`${inputCls} h-auto min-h-[90px] py-3`}
                         rows={3}
                       />
                     </div>
+
                   </div>
                 </div>
               </>)}

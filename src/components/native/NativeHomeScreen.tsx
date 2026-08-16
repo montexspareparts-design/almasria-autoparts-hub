@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -114,6 +114,7 @@ const NativeHomeScreen = () => {
   const { activeVehicle } = useGarage();
   const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(6);
   const [query, setQuery] = useState("");
+  const composingRef = useRef(false);
   const [picker, setPicker] = useState<"model" | "type" | null>(null);
 
   const [debounced, setDebounced] = useState("");
@@ -249,7 +250,13 @@ const NativeHomeScreen = () => {
             <Search className="w-[18px] h-[18px] text-gold shrink-0" />
             <input
               value={query}
+              onCompositionStart={() => { composingRef.current = true; }}
+              onCompositionEnd={(e) => {
+                composingRef.current = false;
+                setQuery((e.target as HTMLInputElement).value);
+              }}
               onChange={(e) => {
+                if (composingRef.current) return;
                 setQuery(e.target.value);
                 setSuggestOpen(true);
               }}
