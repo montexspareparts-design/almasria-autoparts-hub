@@ -258,7 +258,7 @@ const NativeHomeScreen = () => {
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="pd-snap shrink-0 w-[136px] rounded-[18px] overflow-hidden pd-hair relative ios-press bg-carbon"
+              className="pd-snap shrink-0 w-[136px] rounded-[18px] overflow-hidden pd-hair relative ios-press pd-s2"
             >
               <div className="aspect-[3/4]">
                 <img
