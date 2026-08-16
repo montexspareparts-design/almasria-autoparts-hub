@@ -87,7 +87,10 @@ Deno.serve(async (req) => {
   if (!order) return json({ error: "Order not found" }, 404);
 
   // Only a signature-verified, paid, amount-matching callback confirms an order.
-  const paid = String(status).toLowerCase() === "paid" || responseCode === "000";
+  const paid = ["paid", "success"].includes(String(status).toLowerCase()) ||
+    String(detailedStatus).toLowerCase() === "paid" ||
+    responseCode === "000";
+
   const amountMatches = Math.abs(Number(order.total_amount) - amount) < 0.01;
 
   if (paid && amountMatches) {
