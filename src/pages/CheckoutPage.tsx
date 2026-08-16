@@ -89,6 +89,13 @@ const CheckoutPage = () => {
   const freeShipping = qualifiesForFreeShipping(subtotal);
   const missingForFreeShipping = amountLeftForFreeShipping(subtotal);
 
+  // Debounce address typing so keystrokes never trigger network/context churn
+  const [addr, setAddr] = useState({ city: "", address: "" });
+  useEffect(() => {
+    const t = setTimeout(() => setAddr({ city: form.city, address: form.address }), 600);
+    return () => clearTimeout(t);
+  }, [form.city, form.address]);
+
   // Auto-calc Bosta fee whenever shipping destination changes
   useEffect(() => {
     if (shipping !== "bosta") { setShippingCost(0); return; }
@@ -96,16 +103,16 @@ const CheckoutPage = () => {
     const dropOffCity = BOSTA_CITY_MAP[form.governorate];
     if (!dropOffCity) { setBostaError("المحافظة غير مدعومة"); setBostaFee(null); return; }
 
+    let cancelled = false;
     const timer = setTimeout(() => {
-      let cancelled = false;
       setBostaLoading(true); setBostaError(null);
       (async () => {
         try {
           const { data, error } = await supabase.functions.invoke("bosta-calc-pricing", {
             body: {
               dropOffCity,
-              dropOffAreaAr: form.city,
-              dropOffAddressAr: form.address,
+              dropOffAreaAr: addr.city,
+              dropOffAddressAr: addr.address,
               cod: payment === "cod" ? total : 0,
             },
           });
@@ -122,11 +129,11 @@ const CheckoutPage = () => {
           if (!cancelled) setBostaLoading(false);
         }
       })();
-      return () => { cancelled = true; };
-    }, 700);
+    }, 400);
 
-    return () => clearTimeout(timer);
-  }, [shipping, form.governorate, form.city, form.address, payment, total, setShippingCost, freeShipping]);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [shipping, form.governorate, addr.city, addr.address, payment, total, setShippingCost, freeShipping]);
+
 
   const orderTotal = total;
 
