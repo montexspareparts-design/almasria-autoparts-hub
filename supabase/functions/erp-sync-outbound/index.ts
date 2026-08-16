@@ -396,8 +396,13 @@ Deno.serve(async (req) => {
       referenceNumber = data.order_number;
 
       // Map to Al Faisal CreateOrder format (per API docs)
-      // Include pickup branch in notes/remarks so it appears in Faisal ERP order
-      const orderNotes = String(data.notes || "").trim();
+      // The website order number MUST always be visible inside the Faisal order,
+      // so it is prefixed into every notes/remarks field AND sent as reference keys.
+      const orderNo = String(data.order_number || "").trim();
+      const orderNotes = [
+        orderNo ? `رقم الطلب على الموقع: ${orderNo}` : "",
+        String(data.notes || "").trim(),
+      ].filter(Boolean).join(" | ");
       const payload: any = {
         customerId: data.erp_customer_code ? String(data.erp_customer_code) : "",
         customerName: data.erp_customer_code ? "" : (data.customer_name || ""),
@@ -407,6 +412,13 @@ Deno.serve(async (req) => {
           quantity: Number(item.quantity) || 1,
           price: Number(item.unit_price) || 0,
         })),
+        // Website order number under all common reference keys Al Faisal might accept
+        orderNumber: orderNo,
+        orderNo: orderNo,
+        referenceNumber: orderNo,
+        refNo: orderNo,
+        ecommerceOrderNo: orderNo,
+        externalOrderNo: orderNo,
         // Pass notes under all common keys Al Faisal might accept
         notes: orderNotes,
         remarks: orderNotes,
