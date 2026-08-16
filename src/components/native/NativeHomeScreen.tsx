@@ -153,6 +153,8 @@ const STATS = [
 const NativeHomeScreen = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { activeVehicle } = useGarage();
+  const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(10);
   const [query, setQuery] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
