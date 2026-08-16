@@ -13,6 +13,8 @@ import { z } from "zod";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SIGNUP_MESSAGES, mapAuthError, logSignupError } from "@/lib/signupErrors";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAuthScreen from "@/components/native/NativeAuthScreen";
 
 const governorates = [
   "القاهرة", "الجيزة", "الإسكندرية", "الشرقية", "الدقهلية", "البحيرة",
@@ -184,6 +186,9 @@ const ClientRegister = () => {
       setLoading(false);
     }
   };
+
+  // Native shell → the single consolidated dark auth screen (retail signup).
+  if (isNativeShell() && !submitted) return <NativeAuthScreen segment="retail" mode="register" />;
 
   if (submitted) {
     return (

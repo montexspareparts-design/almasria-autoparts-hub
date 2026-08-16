@@ -19,6 +19,8 @@ import { mapLoginError } from "@/lib/loginErrors";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 import DiagnosticFooter from "@/components/DiagnosticFooter";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAuthScreen from "@/components/native/NativeAuthScreen";
 
 type AuthMethod = "phone" | "email" | "auto";
 const REMEMBER_KEY = "almasria_remember_me";
@@ -202,6 +204,8 @@ const DealerLogin = () => {
   }
 
   // ─── Login Form ───
+  // Native shell → the single consolidated dark auth screen (dealer tab).
+  if (isNativeShell()) return <NativeAuthScreen segment="dealer" />;
 
   return (
     <div className="min-h-screen bg-muted/30 flex items-center justify-center px-4 py-8" dir="rtl">

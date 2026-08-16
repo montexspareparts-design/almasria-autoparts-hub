@@ -5,6 +5,7 @@ import { Building2, User, LogIn, UserPlus, ArrowRight, ChevronRight, ShieldCheck
 import logo from "@/assets/almasria-logo-dark.png";
 import { easeOutIOS, springSoft } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
+import { setAppSegment } from "@/lib/appSegment";
 
 export const ONBOARD_KEY = "almasria_app_onboarded";
 export const SEGMENT_KEY = "almasria_app_segment";
@@ -49,7 +50,7 @@ const NativeOnboarding = ({ onDone }: { onDone: () => void }) => {
   const complete = (to?: string) => {
     try {
       localStorage.setItem(ONBOARD_KEY, "1");
-      if (segment) localStorage.setItem(SEGMENT_KEY, segment);
+      setAppSegment(segment === "wholesale" ? "dealer" : segment === "retail" ? "retail" : "guest");
     } catch {
       /* ignore */
     }
@@ -91,7 +92,7 @@ const NativeOnboarding = ({ onDone }: { onDone: () => void }) => {
       />
 
       <div
-        className="relative min-h-full flex flex-col px-6"
+        className="relative min-h-full flex flex-col px-5 sm:px-6"
         style={{
           paddingTop: "calc(env(safe-area-inset-top) + 34px)",
           paddingBottom: "calc(env(safe-area-inset-bottom) + 26px)",
@@ -210,17 +211,37 @@ const NativeOnboarding = ({ onDone }: { onDone: () => void }) => {
                 })}
               </div>
 
+              {/* Third door — never a wall: browse first, choose later */}
+              <motion.button
+                type="button"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.44, duration: 0.5, ease: easeOutIOS }}
+                whileTap={{ scale: 0.975 }}
+                onClick={() => {
+                  void haptic("light");
+                  complete();
+                }}
+                className="mt-5 w-full h-12 rounded-2xl border border-white/12 bg-white/[0.05] text-white/75 text-[14px] font-bold flex items-center justify-center gap-2 active:bg-white/[0.1]"
+              >
+                تصفح كزائر
+                <ArrowRight className="w-4 h-4 rotate-180" />
+              </motion.button>
+              <p className="mt-2.5 text-[11px] text-white/30 text-center">
+                تقدر تحدد نوع حسابك بعدين من صفحة حسابي
+              </p>
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex items-center justify-center gap-5"
+                className="mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-2"
               >
                 {TRUST.map((t) => {
                   const Icon = t.icon;
                   return (
-                    <span key={t.label} className="flex items-center gap-1.5 text-[11px] text-white/40">
-                      <Icon className="w-3.5 h-3.5 text-gold/70" strokeWidth={1.8} />
+                    <span key={t.label} className="flex items-center gap-1.5 text-[11px] text-white/40 whitespace-nowrap">
+                      <Icon className="w-3.5 h-3.5 text-gold/70 shrink-0" strokeWidth={1.8} />
                       {t.label}
                     </span>
                   );
@@ -317,7 +338,7 @@ const NativeOnboarding = ({ onDone }: { onDone: () => void }) => {
           )}
         </AnimatePresence>
 
-        <p className="text-[10px] text-white/25 text-center leading-relaxed">
+        <p className="mt-6 text-[10px] text-white/25 text-center leading-relaxed px-2">
           بالمتابعة أنت توافق على الشروط وسياسة الخصوصية الخاصة بالمصرية جروب
         </p>
       </div>
