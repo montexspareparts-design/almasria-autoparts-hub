@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
       const { error: updErr } = await supabase
         .from("orders")
-        .update({ status: "processing", payment_status: "paid" })
+        .update({ status: "processing" })
         .eq("id", order.id);
       if (updErr) {
         console.error(`Geidea: failed to update order ${orderNumber}:`, updErr.message, updErr.details);
