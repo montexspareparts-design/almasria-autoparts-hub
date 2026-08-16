@@ -286,8 +286,33 @@ const CartPage = () => {
                     )}
                     <div className="flex justify-between items-center">
                       <span className="text-soft">الشحن</span>
-                      <span className="font-bold text-white/80">{shippingCost > 0 ? `${shippingCost.toLocaleString("ar-EG")} ج.م` : "يحدد لاحقاً"}</span>
+                      <span className="font-bold text-white/80">
+                        {freeShipping ? <span className="text-green-400">مجاني 🎉</span> : shippingCost > 0 ? `${shippingCost.toLocaleString("ar-EG")} ج.م` : "يحدد لاحقاً"}
+                      </span>
                     </div>
+                  </div>
+
+                  {/* Free shipping progress */}
+                  <div className="mt-4 rounded-xl border border-[hsl(var(--gold)/0.3)] bg-[hsl(var(--gold)/0.07)] p-3.5">
+                    <div className="flex items-center gap-2 text-xs font-tajawal font-bold">
+                      <Truck className="w-4 h-4 text-gold" />
+                      {freeShipping ? (
+                        <span className="text-green-400">مبروك! طلبك حصل على شحن مجاني</span>
+                      ) : (
+                        <span className="text-gold">
+                          أضف {amountLeftForFreeShipping(subtotal).toLocaleString("ar-EG")} ج.م وتحصل على شحن مجاني
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%` }}
+                        transition={{ duration: 0.6 }}
+                        className={`h-full rounded-full ${freeShipping ? "bg-green-400" : "bg-gradient-to-r from-toyota-red to-gold"}`}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-soft">الشحن مجاني للطلبات من {FREE_SHIPPING_THRESHOLD.toLocaleString("ar-EG")} ج.م</p>
                   </div>
 
                   {/* Divider with sparkle */}
