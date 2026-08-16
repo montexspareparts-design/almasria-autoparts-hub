@@ -89,39 +89,39 @@ const FitPartCard = ({ product: p, year, className = "" }: Props) => {
       </div>
 
       <div className="p-3 pt-2.5 flex flex-col flex-1">
-        <div className="flex items-center gap-1.5 min-h-[20px]">
-          {p.erp_item_code && (
-            <span className="pd-mono text-[10px] text-gold leading-none rounded bg-gold/10 px-1.5 py-1">
-              {p.erp_item_code}
-            </span>
-          )}
-          {p.part_number && (
-            <span className="pd-mono text-[10px] text-white/40 leading-none truncate max-w-[58%]">
-              {p.part_number}
-            </span>
-          )}
-        </div>
+        {p.erp_item_code && (
+          <span className="pd-mono text-[9.5px] font-bold text-gold leading-none tracking-wider">
+            SKU: {p.erp_item_code}
+          </span>
+        )}
 
-        <p className="text-[12.5px] font-medium leading-[1.55] line-clamp-2 min-h-[2.5rem] mt-1.5 text-white/90">
+        <p className="text-[12.5px] font-bold leading-[1.55] line-clamp-2 min-h-[2.5rem] mt-1.5 text-white">
           {p.name_ar}
         </p>
 
-        <div className="mt-auto pt-2.5 flex items-center justify-between gap-2">
+        {p.part_number && (
+          <span className="pd-mono text-[9.5px] text-white/40 leading-none mt-2 truncate">
+            PN: {p.part_number}
+          </span>
+        )}
+
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2">
           {price.kind === "visible" ? (
-            <span className="pd-mono text-[14px] font-semibold text-white">{price.label}</span>
+            <span className="pd-mono text-[15px] font-bold text-white">{price.label}</span>
           ) : (
-            <span className="text-[11px] font-medium text-gold/85 leading-tight">{price.label}</span>
+            <span className="text-[11px] font-medium text-gold/90 leading-tight">{price.label}</span>
           )}
           <button
             type="button"
             onClick={onAdd}
             aria-label={quickAdd ? "أضف إلى السلة" : price.label}
-            className="w-9 h-9 shrink-0 rounded-full bg-gold grid place-items-center ios-press"
+            className="w-9 h-9 shrink-0 rounded-[12px] bg-gold grid place-items-center ios-press shadow-lg shadow-[hsl(var(--pd-accent)/0.3)]"
           >
-            <Plus className="w-[18px] h-[18px] text-black" strokeWidth={2.6} />
+            <Plus className="w-[18px] h-[18px] text-white" strokeWidth={2.6} />
           </button>
         </div>
       </div>
+
     </Link>
   );
 };
