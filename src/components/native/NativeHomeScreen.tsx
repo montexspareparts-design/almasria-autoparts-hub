@@ -413,6 +413,7 @@ const NativeHomeScreen = () => {
 
       {/* clearance for the floating tab bar */}
       <div style={{ height: "calc(env(safe-area-inset-bottom) + 104px)" }} />
+      </div>
     </div>
   );
 };
