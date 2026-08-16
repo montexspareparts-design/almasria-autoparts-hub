@@ -1063,29 +1063,43 @@ html[data-native-app="true"] [contenteditable="true"] {
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-  --carbon-0: 0 0% 4%;    /* app background      */
-  --carbon-1: 0 0% 7%;    /* raised surface      */
-  --carbon-2: 0 0% 10%;   /* card surface        */
-  --carbon-3: 0 0% 14%;   /* elevated / pressed  */
+  --carbon-0: 240 9% 4%;   /* #0A0A0C app background   */
+  --carbon-1: 225 12% 8%;  /* raised surface           */
+  --carbon-2: 225 12% 9%;  /* #141519 card surface     */
+  --carbon-3: 222 11% 19%; /* #2A2D34 elevated/pressed */
   --pd-hairline: 0 0% 100% / 0.08;
+  /* Performance Carbon — Toyota red is the single action accent. */
+  --pd-accent: 2 100% 44%; /* #E10600 */
 }
 
 .pd-root {
   background: hsl(var(--carbon-0));
-  font-family: "IBM Plex Sans Arabic", "Cairo", sans-serif;
+  font-family: "IBM Plex Sans Arabic", "DM Sans", "Cairo", sans-serif;
   font-weight: 500;
   letter-spacing: 0;
   font-variant-numeric: lining-nums tabular-nums;
   -moz-font-feature-settings: "lnum";
   font-feature-settings: "lnum" 1, "tnum" 1;
+  /* Scoped accent swap: every gold utility inside the native home
+     resolves to Toyota red without touching the website theme. */
+  --gold: var(--pd-accent);
 }
 
+/* Latin technical type: part numbers, prices, index numerals. */
 .pd-mono {
-  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  font-family: "Space Grotesk", "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
   font-variant-numeric: lining-nums tabular-nums;
   direction: ltr;
   unicode-bidi: isolate;
 }
+
+/* Display headings (Latin kickers / numerals). */
+.pd-display {
+  font-family: "Space Grotesk", "IBM Plex Sans Arabic", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 
 .pd-s1 { background: hsl(var(--carbon-1)); }
 .pd-s2 { background: hsl(var(--carbon-2)); }
