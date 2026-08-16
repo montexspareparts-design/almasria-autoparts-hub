@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
@@ -28,7 +28,7 @@ import ImageSearchDialog from "@/components/ImageSearchDialog";
 import { haptic } from "@/lib/haptics";
 import logoDark from "@/assets/almasria-logo-dark.png";
 
-import GarageBar from "@/components/native/GarageBar";
+import NativeSignatureHero from "@/components/native/NativeSignatureHero";
 import FitPartCard from "@/components/native/FitPartCard";
 import { useGarage } from "@/contexts/GarageContext";
 import { useFitmentProducts } from "@/hooks/useFitmentProducts";
@@ -105,6 +105,14 @@ const NativeHomeScreen = () => {
   const { activeVehicle } = useGarage();
   const { products: fitProducts, isLoading: fitLoading } = useFitmentProducts(6);
   const [query, setQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["native_home_products"],
@@ -135,9 +143,13 @@ const NativeHomeScreen = () => {
 
   return (
     <div dir="rtl" className="pd-root min-h-screen text-white overflow-x-hidden">
+      {/* one ambient gold light source behind everything */}
+      <div className="pd-aura" aria-hidden />
+
+      <div className="pd-layer">
       {/* ───────────── Sticky header + search ───────────── */}
       <header
-        className="sticky top-0 z-40 pd-s1 pd-hair-b"
+        className={`sticky top-0 z-40 pd-s1 pd-hair-b pd-head ${scrolled ? "pd-head-solid" : ""}`}
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className={`h-[52px] ${GUTTER} flex items-center justify-between gap-3`}>
@@ -198,24 +210,28 @@ const NativeHomeScreen = () => {
             />
           </form>
         </div>
+        <div className={`pd-edge-t transition-opacity duration-300 ${scrolled ? "opacity-100" : "opacity-0"}`} />
       </header>
 
-      {/* ───────────── Garage ───────────── */}
-      <section className={`${GUTTER} pt-4`}>
-        <GarageBar />
+      {/* ───────────── Signature hero / garage ───────────── */}
+      <section className={`${GUTTER} pt-4 pd-reveal`}>
+        <NativeSignatureHero />
       </section>
 
       {/* ───────────── Quick actions ───────────── */}
-      <section className={`${GUTTER} mt-3`}>
+      <section className={`${GUTTER} mt-3 pd-reveal`} style={{ "--d": "40ms" } as React.CSSProperties}>
         <div className="grid grid-cols-4 gap-2">
-          {QUICK_ACTIONS.map((a) => (
+          {QUICK_ACTIONS.map((a, i) => (
             <Link
               key={a.to}
               to={a.to}
               onClick={() => void haptic("light")}
-              className="pd-card h-[74px] flex flex-col items-center justify-center gap-1.5 ios-press"
+              className="pd-card h-[78px] flex flex-col items-center justify-center gap-1.5 ios-press relative overflow-hidden"
             >
-              <a.icon className="w-5 h-5 text-gold" />
+              <span className="absolute top-0 inset-x-3 h-px bg-gradient-to-l from-transparent via-gold/30 to-transparent" />
+              <span className="w-8 h-8 rounded-[10px] bg-gold/[0.09] border border-gold/15 grid place-items-center">
+                <a.icon className="w-[17px] h-[17px] text-gold" />
+              </span>
               <span className="text-[10.5px] text-white/70 leading-none text-center px-1">{a.label}</span>
             </Link>
           ))}
@@ -224,9 +240,10 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Fits your car (2-col grid) ───────────── */}
       {activeVehicle && (
-        <section className="mt-7">
+        <section className="mt-8 pd-reveal" style={{ "--d": "60ms" } as React.CSSProperties}>
           <SectionHeader
             title={`يركّب على ${activeVehicle.displayName}`}
+            kicker="EXACT FITMENT"
             to={`/products?search=${encodeURIComponent(activeVehicle.model)}`}
           />
           <div className={`${GUTTER} mt-3 grid grid-cols-2 gap-3`}>
@@ -250,29 +267,34 @@ const NativeHomeScreen = () => {
       )}
 
       {/* ───────────── Categories (rail 1 of 2) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="تسوّق حسب الفئة" to="/products" />
-        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3 pb-1`}>
-          {CATEGORIES.map((c) => (
+      <section className="mt-8 pd-reveal" style={{ "--d": "80ms" } as React.CSSProperties}>
+        <SectionHeader title="تسوّق حسب الفئة" to="/products" kicker="CATEGORIES" />
+        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3.5 pb-1`}>
+          {CATEGORIES.map((c, i) => (
             <Link
               key={c.slug}
               to={`/products?category=${c.slug}`}
               onClick={() => void haptic("light")}
-              className="pd-snap shrink-0 w-[124px] rounded-[16px] overflow-hidden pd-hair relative ios-press"
+              className="pd-snap shrink-0 w-[136px] rounded-[18px] overflow-hidden pd-hair relative ios-press pd-s2"
             >
-              <div className="aspect-[4/3]">
+              <div className="aspect-[3/4]">
                 <img
                   src={c.img}
                   alt={c.label}
                   loading="lazy"
                   decoding="async"
-                  width={124}
-                  height={93}
+                  width={136}
+                  height={181}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="pd-s2 h-10 flex items-center px-3">
-                <span className="text-[12.5px] font-medium">{c.label}</span>
+              <div className="absolute inset-0 pd-scrim" />
+              <span className="absolute top-2.5 right-3 pd-index">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="absolute inset-x-0 bottom-0 p-3">
+                <span className="block text-[13px] font-semibold text-white leading-tight">{c.label}</span>
+                <span className="mt-1.5 block h-[2px] w-7 rounded bg-gold" />
               </div>
             </Link>
           ))}
@@ -280,17 +302,17 @@ const NativeHomeScreen = () => {
       </section>
 
       {/* ───────────── Brands (rail 2 of 2) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="ماركاتنا" to="/products" />
-        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3 pb-1`}>
+      <section className="mt-8 pd-reveal" style={{ "--d": "120ms" } as React.CSSProperties}>
+        <SectionHeader title="ماركاتنا" to="/products" kicker="BRANDS" />
+        <div className={`flex gap-3 overflow-x-auto pd-rail ${GUTTER} mt-3.5 pb-1`}>
           {BRANDS.map((b) => (
             <Link
               key={b.to}
               to={b.to}
               onClick={() => void haptic("light")}
-              className="pd-snap shrink-0 w-[104px] pd-card p-2 ios-press"
+              className="pd-snap shrink-0 w-[112px] pd-card p-2 ios-press"
             >
-              <div className="h-[56px] rounded-[10px] bg-white grid place-items-center px-2">
+              <div className="h-[60px] rounded-[12px] bg-white grid place-items-center px-2">
                 <img src={b.img} alt={b.label} loading="lazy" decoding="async" className="max-h-8 w-auto object-contain" />
               </div>
               <p className="text-[11px] text-white/70 text-center mt-2 leading-tight truncate">{b.label}</p>
@@ -300,9 +322,9 @@ const NativeHomeScreen = () => {
       </section>
 
       {/* ───────────── New arrivals (grid, not a rail) ───────────── */}
-      <section className="mt-7">
-        <SectionHeader title="وصل حديثاً" to="/products" />
-        <div className={`${GUTTER} mt-3 grid grid-cols-2 gap-3`}>
+      <section className="mt-8 pd-reveal" style={{ "--d": "160ms" } as React.CSSProperties}>
+        <SectionHeader title="وصل حديثاً" to="/products" kicker="NEW ARRIVALS" />
+        <div className={`${GUTTER} mt-3.5 grid grid-cols-2 gap-3`}>
           {isLoading &&
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-[268px] rounded-[16px] pd-skeleton" />
@@ -316,13 +338,14 @@ const NativeHomeScreen = () => {
 
       {/* ───────────── Guest CTA ───────────── */}
       {!user && (
-        <section className={`${GUTTER} mt-7`}>
-          <div className="pd-card p-4">
-            <h3 className="text-[15px] font-semibold">اعرف أسعارك الخاصة</h3>
-            <p className="text-[12.5px] text-white/55 mt-1.5 leading-relaxed">
+        <section className={`${GUTTER} mt-8`}>
+          <div className="pd-hero pd-sheen p-4">
+            <span className="relative pd-index">PRIVATE PRICING</span>
+            <h3 className="relative text-[16px] font-semibold mt-2">اعرف أسعارك الخاصة</h3>
+            <p className="relative text-[12.5px] text-white/55 mt-1.5 leading-relaxed">
               سجّل حسابك وشوف الأسعار والعروض المخصصة ليك.
             </p>
-            <div className="flex gap-2.5 mt-4">
+            <div className="relative flex gap-2.5 mt-4">
               <Link
                 to="/auth"
                 onClick={() => void haptic("light")}
@@ -403,18 +426,25 @@ const NativeHomeScreen = () => {
 
       {/* clearance for the floating tab bar */}
       <div style={{ height: "calc(env(safe-area-inset-bottom) + 104px)" }} />
+      </div>
     </div>
   );
 };
 
 /* ── Building blocks ─────────────────────────────────────── */
 
-const SectionHeader = ({ title, to }: { title: string; to: string }) => (
-  <div className={`${GUTTER} flex items-baseline justify-between`}>
-    <h2 className="text-[16px] font-semibold text-white">{title}</h2>
+const SectionHeader = ({ title, to, kicker }: { title: string; to: string; kicker?: string }) => (
+  <div className={`${GUTTER} flex items-center justify-between gap-3`}>
+    <div className="flex items-center gap-2.5 min-w-0">
+      <span className="pd-rule shrink-0" />
+      <div className="min-w-0">
+        {kicker && <span className="block pd-index leading-none mb-1">{kicker}</span>}
+        <h2 className="text-[16px] font-semibold text-white leading-tight truncate">{title}</h2>
+      </div>
+    </div>
     <Link
       to={to}
-      className="text-[12px] text-gold inline-flex items-center gap-0.5 ios-press py-1"
+      className="text-[12px] text-gold inline-flex items-center gap-0.5 ios-press py-1 shrink-0"
     >
       عرض الكل
       <ChevronLeft className="w-3.5 h-3.5" />
@@ -423,7 +453,10 @@ const SectionHeader = ({ title, to }: { title: string; to: string }) => (
 );
 
 const GroupTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-[11px] text-white/40 mb-2 px-1">{children}</h2>
+  <h2 className="text-[11px] text-white/40 mb-2 px-1 flex items-center gap-2">
+    <span className="pd-rule h-3 opacity-70" />
+    {children}
+  </h2>
 );
 
 const ListRow = ({
