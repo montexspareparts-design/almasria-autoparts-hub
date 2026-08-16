@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import CouponInput from "@/components/CouponInput";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { FREE_SHIPPING_THRESHOLD, qualifiesForFreeShipping, amountLeftForFreeShipping } from "@/lib/freeShipping";
 
 /**
  * Luxury Cart — matches Hero theme:
@@ -20,6 +21,7 @@ const CartPage = () => {
 
   const minOrderAmount = dealerAccount?.min_order_amount ?? 0;
   const belowMinOrder = isDealer && minOrderAmount > 0 && subtotal < minOrderAmount;
+  const freeShipping = qualifiesForFreeShipping(subtotal);
 
   // ====== EMPTY STATE ======
   if (items.length === 0) {
