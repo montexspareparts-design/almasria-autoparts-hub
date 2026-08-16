@@ -36,17 +36,26 @@ Deno.serve(async (req) => {
   const amount = Number(orderObj.amount ?? 0);
   const currency: string = orderObj.currency ?? "EGP";
   const status: string = orderObj.status ?? "";
-  const responseCode: string = orderObj.detailedResponseCode ?? orderObj.responseCode ?? "";
+  const detailedStatus: string = orderObj.detailedStatus ?? "";
+  const payTx = Array.isArray(orderObj.transactions)
+    ? orderObj.transactions.find((t: any) => t?.type === "Pay")
+    : null;
+  const responseCode: string = orderObj.detailedResponseCode ?? orderObj.responseCode ??
+    payTx?.codes?.detailedResponseCode ?? payTx?.codes?.responseCode ?? "";
+
 
   const signatureValid = await verifyGeideaSignature({
     signature,
     orderId: orderObj.orderId ?? null,
     amount,
     currency,
-    timestamp: (body.timestamp as string) ?? orderObj.timestamp ?? null,
+    timestamp: (body.timeStamp as string) ?? (body.timestamp as string) ?? orderObj.timeStamp ??
+      orderObj.timestamp ?? null,
     responseCode,
+    status,
     merchantReferenceId: orderNumber,
   }).catch(() => false);
+
 
   const { data: order } = orderNumber
     ? await supabase
@@ -78,17 +87,28 @@ Deno.serve(async (req) => {
   if (!order) return json({ error: "Order not found" }, 404);
 
   // Only a signature-verified, paid, amount-matching callback confirms an order.
-  const paid = String(status).toLowerCase() === "paid" || responseCode === "000";
+  const paid = ["paid", "success"].includes(String(status).toLowerCase()) ||
+    String(detailedStatus).toLowerCase() === "paid" ||
+    responseCode === "000";
+
   const amountMatches = Math.abs(Number(order.total_amount) - amount) < 0.01;
 
   if (paid && amountMatches) {
     if (["awaiting_payment", "confirmed", "pending"].includes(order.status)) {
-      await supabase.from("orders").update({ status: "processing" }).eq("id", order.id);
-      console.log(`Geidea: order ${orderNumber} confirmed and moved to processing`);
+      const { error: updErr } = await supabase
+        .from("orders")
+        .update({ status: "processing" })
+        .eq("id", order.id);
+      if (updErr) {
+        console.error(`Geidea: failed to update order ${orderNumber}:`, updErr.message, updErr.details);
+      } else {
+        console.log(`Geidea: order ${orderNumber} confirmed and moved to processing`);
+      }
     }
   } else {
     console.log(`Geidea: order ${orderNumber} not confirmed (status=${status}, code=${responseCode})`);
   }
+
 
   return json({ received: true });
 });

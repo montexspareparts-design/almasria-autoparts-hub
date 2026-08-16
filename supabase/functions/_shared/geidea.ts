@@ -92,6 +92,7 @@ export const verifyGeideaSignature = async (payload: {
   currency?: string | null;
   timestamp?: string | null;
   responseCode?: string | null;
+  status?: string | null;
   merchantReferenceId?: string | null;
 }) => {
   if (!payload.signature) return false;
@@ -102,9 +103,13 @@ export const verifyGeideaSignature = async (payload: {
   const currency = payload.currency ?? "";
   const timestamp = payload.timestamp ?? "";
   const responseCode = payload.responseCode ?? "";
+  const status = payload.status ?? "";
   const merchantRef = payload.merchantReferenceId ?? "";
 
   const candidates = [
+    // Geidea callback (documented order): publicKey + amount + currency + orderId + status + merchantReferenceId + timestamp
+    `${publicKey}${amountStr}${currency}${orderId}${status}${merchantRef}${timestamp}`,
+    `${publicKey}${amountStr}${currency}${orderId}${responseCode}${merchantRef}${timestamp}`,
     `${publicKey}${orderId}${amountStr}${currency}${timestamp}`,
     `${publicKey}${orderId}${responseCode}${amountStr}${currency}${timestamp}`,
     `${publicKey}${orderId}${responseCode}${merchantRef}${amountStr}${currency}${timestamp}`,
@@ -116,3 +121,4 @@ export const verifyGeideaSignature = async (payload: {
   }
   return false;
 };
+
