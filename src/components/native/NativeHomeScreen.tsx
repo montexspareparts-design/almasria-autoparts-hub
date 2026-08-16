@@ -553,8 +553,30 @@ const NativeHomeScreen = () => {
       {/* clearance for the floating tab bar */}
       <div style={{ height: "calc(env(safe-area-inset-bottom) + 104px)" }} />
       </div>
+
+      <NativePickerSheet
+        open={picker === "model"}
+        onClose={() => setPicker(null)}
+        title="اختر موديل العربية"
+        kicker="BROWSE BY MODEL"
+        options={VEHICLE_MODELS.map((m) => ({
+          label: m.label,
+          to: `/products?search=${encodeURIComponent(m.label)}`,
+        }))}
+      />
+      <NativePickerSheet
+        open={picker === "type"}
+        onClose={() => setPicker(null)}
+        title="اختر نوع القطعة"
+        kicker="BROWSE BY TYPE"
+        options={CATEGORIES.map((c) => ({
+          label: c.label,
+          to: `/products?category=${c.slug}`,
+        }))}
+      />
     </div>
   );
+
 };
 
 /* ── Building blocks ─────────────────────────────────────── */
