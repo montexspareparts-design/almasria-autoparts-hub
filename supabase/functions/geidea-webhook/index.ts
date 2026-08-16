@@ -43,10 +43,13 @@ Deno.serve(async (req) => {
     orderId: orderObj.orderId ?? null,
     amount,
     currency,
-    timestamp: (body.timestamp as string) ?? orderObj.timestamp ?? null,
+    timestamp: (body.timeStamp as string) ?? (body.timestamp as string) ?? orderObj.timeStamp ??
+      orderObj.timestamp ?? null,
     responseCode,
+    status,
     merchantReferenceId: orderNumber,
   }).catch(() => false);
+
 
   const { data: order } = orderNumber
     ? await supabase
