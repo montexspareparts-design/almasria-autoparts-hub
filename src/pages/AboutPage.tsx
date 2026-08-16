@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import heroBg from "@/assets/hero-corporate.webp";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAboutHighlights from "@/components/native/NativeAboutHighlights";
+
 
 const Footer = lazy(() => import("@/components/Footer"));
 
