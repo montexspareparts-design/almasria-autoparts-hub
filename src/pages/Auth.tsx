@@ -17,6 +17,8 @@ import { mapLoginError } from "@/lib/loginErrors";
 import { startGoogleOAuth } from "@/lib/googleOAuth";
 import AppleSignInButton from "@/components/AppleSignInButton";
 import DiagnosticFooter from "@/components/DiagnosticFooter";
+import { isNativeShell } from "@/lib/nativeShell";
+import NativeAuthScreen from "@/components/native/NativeAuthScreen";
 
 const isPhone = isPhoneLike;
 type AuthMode = "login" | "register";
