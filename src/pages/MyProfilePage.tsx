@@ -117,6 +117,10 @@ const MyProfilePage = () => {
         description: error.message,
       });
     } else {
+      // Keep the native garage in sync with the saved car.
+      const resolved = resolveModel(carModel);
+      if (resolved && carYear) addVehicle(resolved.key, resolved.label, parseInt(carYear));
+
       toast.success("تم حفظ بياناتك بنجاح ✅", {
         description: phone
           ? `تم تحديث رقم الهاتف إلى ${phone} — هنقدر نتواصل معاك بخصوص طلباتك`
