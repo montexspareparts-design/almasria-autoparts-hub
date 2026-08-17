@@ -29,7 +29,6 @@ export const isDiagnosticMode = (): boolean => {
 /** Build commit SHA injected at build time (see vite.config.ts). */
 export const getBuildCommit = (): string => {
   try {
-    // @ts-expect-error - injected via vite define
     return typeof __BUILD_COMMIT__ !== "undefined" ? String(__BUILD_COMMIT__) : "dev";
   } catch {
     return "dev";
@@ -38,10 +37,18 @@ export const getBuildCommit = (): string => {
 
 export const getBuildNumber = (): string => {
   try {
-    // @ts-expect-error - injected via vite define
     return typeof __BUILD_NUMBER__ !== "undefined" ? String(__BUILD_NUMBER__) : "0";
   } catch {
     return "0";
+  }
+};
+
+/** Human-readable build timestamp injected at build time. */
+export const getBuildTime = (): string => {
+  try {
+    return typeof __BUILD_TIME__ !== "undefined" ? String(__BUILD_TIME__) : "dev";
+  } catch {
+    return "dev";
   }
 };
 

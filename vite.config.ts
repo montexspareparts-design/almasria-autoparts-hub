@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => ({
   define: {
     __BUILD_COMMIT__: JSON.stringify(BUILD_COMMIT),
     __BUILD_NUMBER__: JSON.stringify(BUILD_NUMBER),
+    // Stamp every build so a stale native bundle is immediately obvious.
+    __BUILD_TIME__: JSON.stringify(
+      new Date().toISOString().slice(5, 16).replace("T", " ")
+    ),
   },
   server: {
     host: "::",
