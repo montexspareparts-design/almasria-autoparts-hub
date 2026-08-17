@@ -53,7 +53,7 @@ export const initNativeChrome = async (): Promise<void> => {
     const { StatusBar, Style } = await import("@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Dark });
     try {
-      await StatusBar.setBackgroundColor({ color: "#0A1A2F" });
+      await StatusBar.setBackgroundColor({ color: "#0A0A0C" });
     } catch {
       /* iOS does not support background colour */
     }
