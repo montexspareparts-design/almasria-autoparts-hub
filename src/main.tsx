@@ -64,8 +64,25 @@ const removeSplash = () => {
  */
 const registerServiceWorkerUpdateChecks = () => {
   if (isNativePlatform()) {
+    // A leftover service worker inside the native WebView serves stale asset
+    // URLs and makes the app hang on the splash screen. Purge it.
+    void (async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
     return undefined;
   }
+
 
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
     return undefined;
