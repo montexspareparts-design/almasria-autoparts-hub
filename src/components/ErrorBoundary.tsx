@@ -178,19 +178,26 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
           </div>
 
-          {import.meta.env.DEV && this.state.error && (
-            <details className="text-right bg-muted/50 rounded-lg p-3 text-xs">
-              <summary className="cursor-pointer font-medium text-muted-foreground">
-                تفاصيل تقنية (Dev)
-              </summary>
-              <pre className="mt-2 overflow-auto text-destructive whitespace-pre-wrap break-words">
-                {message}
-                {this.state.error.stack && `\n\n${this.state.error.stack}`}
-              </pre>
-            </details>
-          )}
+          {/* Always available on device: lets a user send us the real error
+              from a production build (TestFlight / Play) instead of only a code. */}
+          <details className="text-right bg-muted/50 rounded-lg p-3 text-xs">
+            <summary className="cursor-pointer font-medium text-muted-foreground">
+              تفاصيل تقنية
+            </summary>
+            <div className="mt-2 space-y-2">
+              {this.renderDiagnosticPanel()}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="w-full"
+                onClick={this.handleCopyDetails}
+              >
+                نسخ التفاصيل
+              </Button>
+            </div>
+          </details>
 
-          {isDiagnosticMode() && this.renderDiagnosticPanel()}
 
 
 
