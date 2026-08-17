@@ -93,10 +93,10 @@ const NativeSplash = ({ leaving }: { leaving: boolean }) => (
       />
     </div>
 
-    {/* bottom progress */}
+    {/* bottom progress + build stamp */}
     <div
-      className="absolute bottom-0 left-0 right-0 flex justify-center"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 40px)" }}
+      className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-2"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 32px)" }}
     >
       <div className="h-[2px] w-24 rounded-full overflow-hidden bg-white/10">
         <motion.div
@@ -107,6 +107,9 @@ const NativeSplash = ({ leaving }: { leaving: boolean }) => (
           style={{ background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)` }}
         />
       </div>
+      <span className="text-[9px] font-mono tracking-widest text-white/25" dir="ltr">
+        build {getBuildTime()}
+      </span>
     </div>
   </motion.div>
 );
