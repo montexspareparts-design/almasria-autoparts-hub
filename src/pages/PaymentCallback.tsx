@@ -460,6 +460,13 @@ const PaymentCallback = () => {
             </motion.div>
           )}
 
+          {fromNativeApp && status !== "loading" && (
+            <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              جاري العودة إلى التطبيق تلقائياً…
+            </p>
+          )}
+
         </div>
       </div>
       {!appMode && <Footer />}
