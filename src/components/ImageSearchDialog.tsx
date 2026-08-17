@@ -5,6 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { compressImageToDataUrl } from "@/lib/compressImage";
+
 
 interface IdentifiedPart {
   part_name_ar: string;
@@ -38,22 +40,26 @@ const ImageSearchDialog = ({ onProductFound, trigger }: Props) => {
   const [result, setResult] = useState<{ identification: IdentifiedPart; products: MatchedProduct[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "حجم الصورة كبير", description: "الحد الأقصى 5 ميجابايت", variant: "destructive" });
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "ملف غير مدعوم", description: "اختر صورة من فضلك", variant: "destructive" });
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImagePreview(ev.target?.result as string);
+    try {
+      const dataUrl = await compressImageToDataUrl(file);
+      setImagePreview(dataUrl);
       setResult(null);
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      toast({ title: "تعذّر قراءة الصورة", description: "جرّب صورة أخرى", variant: "destructive" });
+    } finally {
+      e.target.value = "";
+    }
   };
+
 
   const handleSearch = async () => {
     if (!imagePreview) return;

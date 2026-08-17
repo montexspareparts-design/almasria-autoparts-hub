@@ -342,22 +342,24 @@ const AIChatBot = forwardRef<HTMLDivElement>((_, _ref) => {
     synth.speak(utterance);
   }, [speakingMsgIndex]);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("يرجى اختيار صورة فقط");
+      e.target.value = "";
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("حجم الصورة كبير جداً (الحد الأقصى 5MB)");
-      return;
+    try {
+      const { compressImageToDataUrl } = await import("@/lib/compressImage");
+      setPendingImage(await compressImageToDataUrl(file));
+    } catch {
+      toast.error("تعذّر قراءة الصورة، جرّب صورة أخرى");
+    } finally {
+      e.target.value = "";
     }
-    const reader = new FileReader();
-    reader.onload = () => setPendingImage(reader.result as string);
-    reader.readAsDataURL(file);
-    e.target.value = "";
   };
+
 
   const streamChat = async (allMessages: Message[]) => {
     const apiMessages = allMessages.map(({ role, content }) => ({ role, content }));
