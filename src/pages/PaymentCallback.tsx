@@ -160,6 +160,17 @@ const PaymentCallback = () => {
     returnToNativeApp("/payment-callback", { order: merchantOrderId, status });
   };
 
+  // The gateway opens this page in an external browser. As soon as we have a
+  // resolved status, hand control back to the app automatically so the
+  // customer never lingers on a web page with a URL bar.
+  useEffect(() => {
+    if (!fromNativeApp || status === "loading") return;
+    const t = setTimeout(() => {
+      returnToNativeApp("/payment-callback", { order: merchantOrderId, status });
+    }, status === "success" ? 2200 : 2600);
+    return () => clearTimeout(t);
+  }, [fromNativeApp, status, merchantOrderId]);
+
   // "Home" must never dump a native-app user on the public website.
   const goHome = () => {
     if (fromNativeApp) {
