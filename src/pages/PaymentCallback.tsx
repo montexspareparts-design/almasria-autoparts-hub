@@ -43,6 +43,10 @@ const PaymentCallback = () => {
     try { return sessionStorage.getItem("almasria_payment_from_app") === "1"; } catch { return false; }
   })();
 
+  /** App-like presentation: no website navbar/footer, focused result card. */
+  const appMode = fromNativeApp || isNativePlatform();
+
+
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
