@@ -76,7 +76,9 @@ const VehicleShowcase3D = ({ modelKey, modelName, label }: { modelKey?: string; 
 
       <div
         className="v3d-stage"
-        style={{ transform: `rotateX(${8 + tilt.x}deg) rotateY(${tilt.y}deg)` }}
+        style={{
+          transform: `translate3d(${tilt.y * 0.45}px, ${tilt.x * 0.2}px, 0) rotate(${tilt.y * 0.08}deg)`,
+        }}
       >
         <img
           src={src}
