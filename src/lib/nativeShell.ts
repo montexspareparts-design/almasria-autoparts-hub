@@ -53,11 +53,28 @@ export const initNativeChrome = async (): Promise<void> => {
     const { StatusBar, Style } = await import("@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Dark });
     try {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+    } catch {
+      /* iOS */
+    }
+    try {
       await StatusBar.setBackgroundColor({ color: "#0A0A0C" });
     } catch {
       /* iOS does not support background colour */
     }
+    // Re-apply after the app returns from the background / external browser
+    try {
+      const { App } = await import("@capacitor/app");
+      App.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive) return;
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: "#0A0A0C" }).catch(() => {});
+      });
+    } catch {
+      /* ignore */
+    }
   } catch {
     /* plugin unavailable — ignore */
   }
+
 };
