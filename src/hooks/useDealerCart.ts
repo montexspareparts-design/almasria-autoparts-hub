@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -58,13 +58,18 @@ export const useDealerCart = () => {
     setLoading(false);
   }, [user, isDealer]);
 
+  const fetchCartRef = useRef(fetchCart);
+  useEffect(() => { fetchCartRef.current = fetchCart; }, [fetchCart]);
+
   useEffect(() => {
-    fetchCart();
+    fetchCartRef.current();
 
     if (!user || !isDealer) return;
 
+    // Unique channel name per mount — reusing a name returns an already
+    // subscribed channel and `.on()` after subscribe() throws.
     const channel = supabase
-      .channel(`dealer-cart-${user.id}`)
+      .channel(`dealer-cart-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -74,7 +79,7 @@ export const useDealerCart = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchCart();
+          fetchCartRef.current();
         }
       )
       .subscribe();
@@ -82,7 +87,7 @@ export const useDealerCart = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isDealer, fetchCart]);
+  }, [user, isDealer]);
 
   const addItem = useCallback(async (productId: string, qty: number = 1) => {
     if (!user) return;
