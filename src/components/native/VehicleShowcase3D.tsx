@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import hiaceImg from "@/assets/vehicles/toyota-hiace.png";
+import corollaImg from "@/assets/vehicles/toyota-corolla.png";
+import fortunerImg from "@/assets/vehicles/toyota-fortuner.png";
+import camryImg from "@/assets/vehicles/toyota-camry.png";
+import rav4Img from "@/assets/vehicles/toyota-rav4.png";
+import pradoImg from "@/assets/vehicles/toyota-prado.png";
+import hiluxImg from "@/assets/vehicles/toyota-hilux.png";
+import coasterImg from "@/assets/vehicles/toyota-coaster.png";
 
 /**
  * Precision Dark — 3D vehicle showcase.
@@ -10,6 +17,14 @@ import hiaceImg from "@/assets/vehicles/toyota-hiace.png";
 
 const MODEL_IMAGES: Record<string, string> = {
   hiace: hiaceImg,
+  corolla: corollaImg,
+  fortuner: fortunerImg,
+  camry: camryImg,
+  rav4: rav4Img,
+  prado: pradoImg,
+  "land-cruiser": pradoImg,
+  hilux: hiluxImg,
+  coaster: coasterImg,
 };
 
 export const hasVehicleRender = (modelKey?: string | null) =>
