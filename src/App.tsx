@@ -62,6 +62,7 @@ const InstallApp = lazy(() => import("./pages/InstallApp"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
+const DeleteAccountPage = lazy(() => import("./pages/DeleteAccountPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const GenuineVsCounterfeitGuide = lazy(() => import("./pages/GenuineVsCounterfeitGuide"));
