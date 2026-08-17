@@ -91,16 +91,25 @@ Deno.serve(async (req) => {
       timestamp,
     });
 
-    // Geidea only renders the wallet/MEEZA tabs when the session explicitly
-    // lists the methods. We try the documented spellings in order and fall
-    // back to "no list" (account defaults) if Geidea rejects the value.
-    const methodCandidates: (string[] | null)[] = paymentMethods.length
-      ? [paymentMethods, null]
-      : [
-          ["card", "MeezaDigital", "MeezaQr", "ValU", "Souhoola"],
-          ["card", "Meeza Digital"],
-          null,
-        ];
+    // Geidea expects one comma-separated string, not an array. The HPP's
+    // canonical identifiers are `cardScheme` and `meezadigital`; sending an
+    // array (or labels such as "Meeza Digital") returns response code 039 and
+    // previously caused our fallback session to open as card-only.
+    const normalizeMethod = (method: string) => {
+      const key = method.replace(/[\s_-]/g, "").toLowerCase();
+      if (["card", "cards", "cardscheme"].includes(key)) return "cardScheme";
+      if (["meeza", "meezadigital", "meezaqr", "wallet", "mobilewallet"].includes(key)) {
+        return "meezadigital";
+      }
+      return method.trim();
+    };
+    const configuredMethods = paymentMethods.length
+      ? paymentMethods.map(normalizeMethod)
+      : ["cardScheme", "meezadigital"];
+    const methodCandidates: (string | null)[] = [
+      [...new Set(configuredMethods)].join(","),
+      null,
+    ];
 
     let sessionRes!: Response;
     let raw: any = {};
@@ -115,7 +124,7 @@ Deno.serve(async (req) => {
           callbackUrl,
           ...(return_url ? { returnUrl: return_url } : {}),
           paymentOperation: "Pay",
-          ...(methods ? { paymentMethods: methods } : {}),
+           ...(methods ? { paymentMethods: methods } : {}),
           timestamp,
           signature,
         }),
