@@ -19,7 +19,6 @@ const RequestSchema = z.object({
   order_id: z.string().uuid(),
   currency: z.string().length(3).optional(),
   return_url: z.string().url().optional(),
-  payment_methods: z.array(z.string().min(2).max(30)).max(10).optional(),
 });
 
 const json = (body: unknown, status = 200) =>
@@ -48,14 +47,6 @@ Deno.serve(async (req) => {
     if (!parsed.success) return json({ error: parsed.error.flatten() }, 400);
 
     const { order_id, return_url } = parsed.data;
-    // Wallets & alternative methods enabled on the Geidea merchant account
-    // (MEEZA Digital / Meeza QR / ValU / Souhoola / Apple Pay ... ).
-    // Empty list => Geidea shows every method enabled on the account.
-    const envMethods = (Deno.env.get("GEIDEA_PAYMENT_METHODS") || "")
-      .split(",").map((m) => m.trim()).filter(Boolean);
-    const paymentMethods = parsed.data.payment_methods?.length
-      ? parsed.data.payment_methods
-      : envMethods;
     const currency = (parsed.data.currency || Deno.env.get("GEIDEA_CURRENCY") || "EGP").toUpperCase();
 
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -91,48 +82,25 @@ Deno.serve(async (req) => {
       timestamp,
     });
 
-    // Geidea expects one comma-separated string, not an array. The HPP's
-    // canonical identifiers are `cardScheme` and `meezadigital`; sending an
-    // array (or labels such as "Meeza Digital") returns response code 039 and
-    // previously caused our fallback session to open as card-only.
-    const normalizeMethod = (method: string) => {
-      const key = method.replace(/[\s_-]/g, "").toLowerCase();
-      if (["card", "cards", "cardscheme"].includes(key)) return "cardScheme";
-      if (["meeza", "meezadigital", "meezaqr", "wallet", "mobilewallet"].includes(key)) {
-        return "meezadigital";
-      }
-      return method.trim();
-    };
-    const configuredMethods = paymentMethods.length
-      ? paymentMethods.map(normalizeMethod)
-      : ["cardScheme", "meezadigital"];
-    const methodCandidates: (string | null)[] = [
-      [...new Set(configuredMethods)].join(","),
-      null,
-    ];
-
-    let sessionRes!: Response;
-    let raw: any = {};
-    for (const methods of methodCandidates) {
-      sessionRes = await fetch(`${geideaApiBase()}/payment-intent/api/v2/direct/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: geideaBasicAuth() },
-        body: JSON.stringify({
-          amount,
-          currency,
-          merchantReferenceId: order.order_number,
-          callbackUrl,
-          ...(return_url ? { returnUrl: return_url } : {}),
-          paymentOperation: "Pay",
-           ...(methods ? { paymentMethods: methods } : {}),
-          timestamp,
-          signature,
-        }),
-      });
-
-      raw = await sessionRes.json().catch(() => ({}));
-      if (sessionRes.ok && raw?.session?.id) break;
-    }
+    // Geidea HPP automatically exposes every method provisioned on the
+    // merchant account. MEEZA registration and gateway credentials are
+    // configured by Geidea Operations; Create Session has no supported field
+    // for forcing an unprovisioned wallet to appear.
+    const sessionRes = await fetch(`${geideaApiBase()}/payment-intent/api/v2/direct/session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: geideaBasicAuth() },
+      body: JSON.stringify({
+        amount,
+        currency,
+        merchantReferenceId: order.order_number,
+        callbackUrl,
+        ...(return_url ? { returnUrl: return_url } : {}),
+        paymentOperation: "Pay",
+        timestamp,
+        signature,
+      }),
+    });
+    const raw: any = await sessionRes.json().catch(() => ({}));
 
 
     await supabase.from("payment_logs").insert({
