@@ -322,7 +322,26 @@ Deno.serve(async (req) => {
       });
       const walletData = await walletRes.json();
       console.log("Wallet response:", JSON.stringify(walletData));
+      if (!walletRes.ok) {
+        throw new Error("Failed to initiate wallet payment");
+      }
       walletRedirectUrl = walletData?.redirect_url || walletData?.iframe_redirection_url || null;
+      const walletTransactionId = walletData?.id?.toString();
+      if (walletTransactionId) {
+        const { error: transactionError } = await supabase.from("payment_transactions").insert({
+          order_id: order.id,
+          order_number: order.order_number,
+          paymob_transaction_id: walletTransactionId,
+          amount_cents: amountCents,
+          currency: "EGP",
+          status: "pending",
+          payment_method: "wallet",
+          raw_payload: { initiation: true, paymob_order_id: paymobOrderId },
+        });
+        if (transactionError) {
+          console.error("Failed to persist wallet transaction reference:", transactionError.message);
+        }
+      }
     } else if (paymentMethod === "kiosk") {
       // For kiosk, call the pay endpoint to get bill reference
       console.log("Step 4: Creating kiosk bill...");

@@ -42,17 +42,18 @@ Deno.serve(async (req) => {
       const { data: { user } } = await authClient.auth.getUser();
       userId = user?.id ?? null;
     }
+    if (!userId) return json({ error: "Unauthorized" }, 401);
 
     const parsed = RequestSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: "Invalid request" }, 400);
 
-    const { order_number: orderNumber, transaction_id: transactionId, provider } = parsed.data;
+    const { order_number: orderNumber, transaction_id: requestedTransactionId, provider } = parsed.data;
     const admin = createClient(supabaseUrl, serviceRoleKey);
     let orderQuery = admin
       .from("orders")
       .select("id, user_id, order_number, status, total_amount")
       .eq("order_number", orderNumber);
-    if (userId) orderQuery = orderQuery.eq("user_id", userId);
+    orderQuery = orderQuery.eq("user_id", userId);
     const { data: order } = await orderQuery.maybeSingle();
 
     if (!order) return json({ error: "Order not found" }, 404);
@@ -60,9 +61,58 @@ Deno.serve(async (req) => {
       return json({ status: "success" });
     }
 
-    if (provider === "geidea" || !transactionId) {
+    if (provider === "geidea") {
+      const { data: verifiedPayment } = await admin
+        .from("payment_logs")
+        .select("amount, status, raw_response")
+        .eq("provider", "geidea")
+        .eq("event_type", "webhook")
+        .eq("order_number", orderNumber)
+        .eq("signature_valid", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const payload = verifiedPayment?.raw_response as Record<string, any> | null;
+      const orderPayload = (payload?.order ?? payload) as Record<string, any> | null;
+      const payTx = Array.isArray(orderPayload?.transactions)
+        ? orderPayload?.transactions.find((item: any) => item?.type === "Pay")
+        : null;
+      const responseCode = String(
+        orderPayload?.detailedResponseCode ?? orderPayload?.responseCode ??
+          payTx?.codes?.detailedResponseCode ?? payTx?.codes?.responseCode ?? "",
+      );
+      const providerStatus = String(orderPayload?.status ?? verifiedPayment?.status ?? "").toLowerCase();
+      const paid = ["paid", "success"].includes(providerStatus) || responseCode === "000";
+      const amountMatches = verifiedPayment &&
+        Math.abs(Number(verifiedPayment.amount) - Number(order.total_amount)) < 0.01;
+
+      if (paid && amountMatches) {
+        const { error: updateError } = await admin
+          .from("orders")
+          .update({ status: "processing" })
+          .eq("id", order.id);
+        if (updateError) throw updateError;
+        return json({ status: "success" });
+      }
       return json({ status: "pending" });
     }
+
+    let transactionId = requestedTransactionId;
+    let storedTransactionCreatedAt: string | null = null;
+    if (!transactionId) {
+      const { data: storedTransaction } = await admin
+        .from("payment_transactions")
+        .select("paymob_transaction_id, created_at")
+        .eq("order_id", order.id)
+        .neq("paymob_transaction_id", "")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      transactionId = storedTransaction?.paymob_transaction_id || undefined;
+      storedTransactionCreatedAt = storedTransaction?.created_at || null;
+    }
+    if (!transactionId || !/^\d+$/.test(transactionId)) return json({ status: "pending" });
 
     const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
     if (!paymobApiKey) return json({ status: "pending" });
@@ -89,7 +139,13 @@ Deno.serve(async (req) => {
     }
 
     const success = tx?.success === true && tx?.pending !== true;
-    const failed = tx?.success === false && tx?.pending !== true;
+    const providerFailed = tx?.success === false && tx?.pending !== true;
+    const paymentMethod = String(tx?.source_data?.type || "").toLowerCase();
+    const createdAt = tx?.created_at || storedTransactionCreatedAt;
+    const createdAtMs = createdAt ? new Date(createdAt).getTime() : Date.now();
+    const walletGraceActive = paymentMethod === "wallet" &&
+      Date.now() - createdAtMs < 10 * 60 * 1000;
+    const failed = providerFailed && !walletGraceActive;
     const reconciledStatus = success ? "success" : failed ? "failed" : "pending";
 
     const { data: existingTx } = await admin
@@ -110,7 +166,7 @@ Deno.serve(async (req) => {
       card_brand: tx.source_data?.sub_type || null,
       is_refunded: tx.is_refunded === true,
       is_voided: tx.is_voided === true,
-      error_message: failed ? (tx.data?.message || tx.txn_response_code || null) : null,
+      error_message: providerFailed ? (tx.data?.message || tx.txn_response_code || null) : null,
       raw_payload: { reconciliation: true, obj: tx },
     };
 

@@ -112,7 +112,8 @@ const PaymentCallback = () => {
         return;
       }
 
-      // Poll for up to ~30s if the webhook hasn't landed yet.
+      // Wallet and card providers can take a few minutes to settle after the
+      // customer returns, so keep the result pending until the server confirms it.
       if (authoritative === "paid") {
         if (!cancelled) setStatus("success");
         return;
@@ -120,14 +121,14 @@ const PaymentCallback = () => {
       if (isPendingQuery || authoritative === "pending" || authoritative === null || isSuccessQuery) {
         if (!cancelled) setStatus("pending");
         const poll = async () => {
-          if (cancelled || attempts >= 10) return;
+          if (cancelled || attempts >= 60) return;
           attempts += 1;
           await new Promise((r) => setTimeout(r, 3000));
           const s = await fetchOrderStatus();
           if (cancelled) return;
           if (s === "paid") setStatus("success");
           else if (s === "failed") setStatus("failed");
-          else if (attempts < 10) poll();
+          else if (attempts < 60) poll();
         };
         poll();
         return;
