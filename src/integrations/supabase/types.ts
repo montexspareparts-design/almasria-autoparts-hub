@@ -245,6 +245,57 @@ export type Database = {
         }
         Relationships: []
       }
+      client_error_reports: {
+        Row: {
+          build_commit: string | null
+          build_number: string | null
+          code: string | null
+          component_stack: string | null
+          created_at: string
+          error_message: string | null
+          error_name: string | null
+          id: string
+          is_native: boolean | null
+          platform: string | null
+          route: string | null
+          stack: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          build_commit?: string | null
+          build_number?: string | null
+          code?: string | null
+          component_stack?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_name?: string | null
+          id?: string
+          is_native?: boolean | null
+          platform?: string | null
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          build_commit?: string | null
+          build_number?: string | null
+          code?: string | null
+          component_stack?: string | null
+          created_at?: string
+          error_message?: string | null
+          error_name?: string | null
+          id?: string
+          is_native?: boolean | null
+          platform?: string | null
+          route?: string | null
+          stack?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       coupon_usage: {
         Row: {
           coupon_id: string
