@@ -9,6 +9,7 @@ import hiluxImg from "@/assets/vehicles/toyota-hilux.png";
 import coasterImg from "@/assets/vehicles/toyota-coaster.png";
 import bz4xImg from "@/assets/vehicles/toyota-bz4x.png";
 import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.png";
+import { resolveModel } from "@/data/vehicleCatalogue";
 
 /**
  * Precision Dark — 3D vehicle showcase.
@@ -31,11 +32,19 @@ const MODEL_IMAGES: Record<string, string> = {
   "urban-cruiser": urbanCruiserImg,
 };
 
-export const hasVehicleRender = (modelKey?: string | null) =>
-  !!modelKey && !!MODEL_IMAGES[modelKey];
+const resolveRenderKey = (modelKey?: string | null, modelName?: string | null) => {
+  if (modelKey && MODEL_IMAGES[modelKey]) return modelKey;
+  return resolveModel(modelName || modelKey)?.key ?? null;
+};
 
-const VehicleShowcase3D = ({ modelKey, label }: { modelKey: string; label: string }) => {
-  const src = MODEL_IMAGES[modelKey];
+export const hasVehicleRender = (modelKey?: string | null, modelName?: string | null) => {
+  const key = resolveRenderKey(modelKey, modelName);
+  return !!key && !!MODEL_IMAGES[key];
+};
+
+const VehicleShowcase3D = ({ modelKey, modelName, label }: { modelKey: string; modelName?: string; label: string }) => {
+  const renderKey = resolveRenderKey(modelKey, modelName);
+  const src = renderKey ? MODEL_IMAGES[renderKey] : undefined;
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
@@ -66,7 +75,8 @@ const VehicleShowcase3D = ({ modelKey, label }: { modelKey: string; label: strin
         <img
           src={src}
           alt={label}
-          loading="lazy"
+          loading="eager"
+          fetchPriority="high"
           decoding="async"
           className="v3d-car"
           draggable={false}
