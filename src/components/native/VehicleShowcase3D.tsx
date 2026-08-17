@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import hiaceImg from "@/assets/vehicles/toyota-hiace.png";
-import corollaImg from "@/assets/vehicles/toyota-corolla.png";
-import fortunerImg from "@/assets/vehicles/toyota-fortuner.png";
-import camryImg from "@/assets/vehicles/toyota-camry.png";
-import rav4Img from "@/assets/vehicles/toyota-rav4.png";
-import pradoImg from "@/assets/vehicles/toyota-prado.png";
-import hiluxImg from "@/assets/vehicles/toyota-hilux.png";
-import coasterImg from "@/assets/vehicles/toyota-coaster.png";
-import bz4xImg from "@/assets/vehicles/toyota-bz4x.png";
-import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.png";
+import hiaceImg from "@/assets/vehicles/toyota-hiace.webp";
+import corollaImg from "@/assets/vehicles/toyota-corolla.webp";
+import fortunerImg from "@/assets/vehicles/toyota-fortuner.webp";
+import camryImg from "@/assets/vehicles/toyota-camry.webp";
+import rav4Img from "@/assets/vehicles/toyota-rav4.webp";
+import pradoImg from "@/assets/vehicles/toyota-prado.webp";
+import hiluxImg from "@/assets/vehicles/toyota-hilux.webp";
+import coasterImg from "@/assets/vehicles/toyota-coaster.webp";
+import bz4xImg from "@/assets/vehicles/toyota-bz4x.webp";
+import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.webp";
 import { resolveModel } from "@/data/vehicleCatalogue";
 
 /**
