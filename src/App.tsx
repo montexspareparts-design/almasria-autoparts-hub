@@ -62,6 +62,7 @@ const InstallApp = lazy(() => import("./pages/InstallApp"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const PaymentPage = lazy(() => import("./pages/PaymentPage"));
 const PoliciesPage = lazy(() => import("./pages/PoliciesPage"));
+const DeleteAccountPage = lazy(() => import("./pages/DeleteAccountPage"));
 const MyProfilePage = lazy(() => import("./pages/MyProfilePage"));
 const TrackOrderPage = lazy(() => import("./pages/TrackOrderPage"));
 const GenuineVsCounterfeitGuide = lazy(() => import("./pages/GenuineVsCounterfeitGuide"));
@@ -247,6 +248,8 @@ const App = () => (
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
+                    <Route path="/delete-account" element={<DeleteAccountPage />} />
+
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="/guides/identifying-genuine-toyota-parts" element={<GenuineVsCounterfeitGuide />} />
