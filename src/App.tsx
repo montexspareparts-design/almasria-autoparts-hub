@@ -157,9 +157,15 @@ const DeferredComponent = ({ delay, children }: { delay: number; children: React
   );
 };
 
+/** Distraction-free routes: no chat bubble, WhatsApp float, lead popups… */
+const isDistractionFreeRoute = (pathname: string) =>
+  /^\/(payment-callback|payment|checkout)(\/|$)/.test(pathname);
+
 const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: ReactNode }) => {
   const { loading, postAuthState } = useAuth();
+  const { pathname } = useLocation();
   if (isNativeShell()) return null;
+  if (isDistractionFreeRoute(pathname)) return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
