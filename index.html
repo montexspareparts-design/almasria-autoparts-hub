@@ -122,6 +122,51 @@
       <div class="splash-ring"></div>
     </div>
     <div id="root"></div>
+    <script>
+      // Boot watchdog: guarantees the app never hangs on the splash screen.
+      (function () {
+        var splash = document.getElementById('splash-screen');
+        var root = document.getElementById('root');
+        var bootError = null;
+        window.addEventListener('error', function (e) {
+          if (!bootError) bootError = (e && (e.message || (e.error && e.error.message))) || 'script error';
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          if (!bootError) bootError = (e && e.reason && (e.reason.message || String(e.reason))) || 'promise error';
+        });
+
+        function hide() {
+          if (!splash) return;
+          splash.style.opacity = '0';
+          setTimeout(function () { if (splash && splash.parentNode) splash.parentNode.removeChild(splash); }, 300);
+          splash = null;
+        }
+
+        // Poll for the first React paint, then drop the splash immediately.
+        var start = Date.now();
+        var poll = setInterval(function () {
+          if (root && root.childElementCount > 0) {
+            clearInterval(poll);
+            hide();
+          } else if (Date.now() - start > 9000) {
+            clearInterval(poll);
+            hide();
+            if (root && root.childElementCount === 0) {
+              root.innerHTML =
+                '<div dir="rtl" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:#0A0A0C;color:#fff;font-family:system-ui,sans-serif;text-align:center">' +
+                '<div style="font-size:20px;font-weight:800;color:#E10600">تعذّر تشغيل التطبيق</div>' +
+                '<div style="font-size:14px;opacity:.7;max-width:320px">حصلت مشكلة أثناء التحميل. جرّب إعادة المحاولة.</div>' +
+                (bootError ? '<div style="font-size:11px;opacity:.4;direction:ltr;max-width:320px;word-break:break-all">' + String(bootError).slice(0, 200) + '</div>' : '') +
+                '<button id="boot-retry" style="margin-top:8px;padding:12px 28px;border-radius:14px;border:0;background:#E10600;color:#fff;font-size:15px;font-weight:700">إعادة المحاولة</button>' +
+                '</div>';
+              var btn = document.getElementById('boot-retry');
+              if (btn) btn.addEventListener('click', function () { location.reload(); });
+            }
+          }
+        }, 120);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
+
   </body>
 </html>

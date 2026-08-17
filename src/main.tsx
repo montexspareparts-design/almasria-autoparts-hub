@@ -9,13 +9,26 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { disableNativeNotificationSurfaces, isNativePlatform, registerDeepLinkListener } from "@/lib/native";
 import { initNativeUiPreview, initNativeChrome } from "@/lib/nativeShell";
 
-disableNativeNotificationSurfaces();
-initNativeUiPreview();
-void initNativeChrome();
-installGlobalErrorDiagnostics();
-installMobileErrorReporter();
-initHighContrastEarly();
-registerDeepLinkListener();
+/** Never let a single boot-time side effect block the React render. */
+const safe = (label: string, fn: () => unknown) => {
+  try {
+    const r = fn();
+    if (r && typeof (r as Promise<unknown>).catch === "function") {
+      (r as Promise<unknown>).catch((e) => console.warn(`[boot] ${label} failed`, e));
+    }
+  } catch (e) {
+    console.warn(`[boot] ${label} failed`, e);
+  }
+};
+
+safe("disableNativeNotificationSurfaces", disableNativeNotificationSurfaces);
+safe("initNativeUiPreview", initNativeUiPreview);
+safe("initNativeChrome", initNativeChrome);
+safe("installGlobalErrorDiagnostics", installGlobalErrorDiagnostics);
+safe("installMobileErrorReporter", installMobileErrorReporter);
+safe("initHighContrastEarly", initHighContrastEarly);
+safe("registerDeepLinkListener", () => registerDeepLinkListener());
+
 
 const enforceCanonicalHost = () => {
   if (typeof window === "undefined") {
@@ -51,8 +64,25 @@ const removeSplash = () => {
  */
 const registerServiceWorkerUpdateChecks = () => {
   if (isNativePlatform()) {
+    // A leftover service worker inside the native WebView serves stale asset
+    // URLs and makes the app hang on the splash screen. Purge it.
+    void (async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
     return undefined;
   }
+
 
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
     return undefined;
