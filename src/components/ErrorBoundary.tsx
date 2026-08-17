@@ -12,6 +12,7 @@ import {
   sanitize,
 } from "@/lib/runtimeDiagnostics";
 import { Capacitor } from "@capacitor/core";
+import { reportClientError } from "@/lib/reportClientError";
 
 interface Props {
   children: ReactNode;
