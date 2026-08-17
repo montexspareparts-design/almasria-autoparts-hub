@@ -1264,6 +1264,7 @@ html[data-native-app="true"] [contenteditable="true"] {
 /* === Precision Dark — 3D vehicle showcase (native garage plate) === */
 .v3d {
   position: relative;
+  z-index: 2;
   height: 132px;
   margin-top: 4px;
   perspective: 900px;
@@ -1280,6 +1281,7 @@ html[data-native-app="true"] [contenteditable="true"] {
   background: radial-gradient(ellipse at center, hsl(var(--toyota-red) / 0.35), transparent 70%);
   filter: blur(10px);
   pointer-events: none;
+  z-index: 0;
 }
 .v3d-grid {
   position: absolute;
@@ -1294,32 +1296,38 @@ html[data-native-app="true"] [contenteditable="true"] {
   -webkit-mask-image: linear-gradient(to top, #000, transparent);
   mask-image: linear-gradient(to top, #000, transparent);
   pointer-events: none;
+  z-index: 0;
 }
 .v3d-stage {
   position: absolute;
   inset: 0;
-  transform-style: preserve-3d;
   transition: transform 220ms ease-out;
-  will-change: transform;
+  z-index: 2;
 }
 .v3d-car {
   position: absolute;
   left: 50%;
-  top: 2px;
+  top: 0;
   width: 78%;
+  height: 118px;
   max-width: 280px;
+  object-fit: contain;
+  opacity: 1;
+  z-index: 3;
   transform: translateX(-50%);
-  filter: drop-shadow(0 16px 18px rgb(0 0 0 / 0.55))
-    drop-shadow(0 0 22px hsl(var(--toyota-red) / 0.18));
+  filter: drop-shadow(0 12px 12px rgb(0 0 0 / 0.5));
   animation: v3d-float 5.5s ease-in-out infinite;
   user-select: none;
 }
 .v3d-reflection {
   position: absolute;
   left: 50%;
-  top: 2px;
+  top: 0;
   width: 78%;
+  height: 118px;
   max-width: 280px;
+  object-fit: contain;
+  z-index: 1;
   transform: translateX(-50%) scaleY(-1) translateY(-6px);
   opacity: 0.16;
   filter: blur(2px);
@@ -1338,6 +1346,7 @@ html[data-native-app="true"] [contenteditable="true"] {
   border-radius: 999px;
   background: radial-gradient(ellipse at center, rgb(0 0 0 / 0.8), transparent 72%);
   filter: blur(5px);
+  z-index: 2;
   animation: v3d-shadow-pulse 5.5s ease-in-out infinite;
 }
 @keyframes v3d-float {

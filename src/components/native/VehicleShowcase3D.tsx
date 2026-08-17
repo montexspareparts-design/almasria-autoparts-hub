@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import hiaceImg from "@/assets/vehicles/toyota-hiace.png";
-import corollaImg from "@/assets/vehicles/toyota-corolla.png";
-import fortunerImg from "@/assets/vehicles/toyota-fortuner.png";
-import camryImg from "@/assets/vehicles/toyota-camry.png";
-import rav4Img from "@/assets/vehicles/toyota-rav4.png";
-import pradoImg from "@/assets/vehicles/toyota-prado.png";
-import hiluxImg from "@/assets/vehicles/toyota-hilux.png";
-import coasterImg from "@/assets/vehicles/toyota-coaster.png";
-import bz4xImg from "@/assets/vehicles/toyota-bz4x.png";
-import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.png";
+import hiaceImg from "@/assets/vehicles/toyota-hiace.webp";
+import corollaImg from "@/assets/vehicles/toyota-corolla.webp";
+import fortunerImg from "@/assets/vehicles/toyota-fortuner.webp";
+import camryImg from "@/assets/vehicles/toyota-camry.webp";
+import rav4Img from "@/assets/vehicles/toyota-rav4.webp";
+import pradoImg from "@/assets/vehicles/toyota-prado.webp";
+import hiluxImg from "@/assets/vehicles/toyota-hilux.webp";
+import coasterImg from "@/assets/vehicles/toyota-coaster.webp";
+import bz4xImg from "@/assets/vehicles/toyota-bz4x.webp";
+import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.webp";
 import { resolveModel } from "@/data/vehicleCatalogue";
 
 /**
@@ -32,18 +32,24 @@ const MODEL_IMAGES: Record<string, string> = {
   "urban-cruiser": urbanCruiserImg,
 };
 
-const resolveRenderKey = (modelKey?: string | null, modelName?: string | null) => {
-  if (modelKey && MODEL_IMAGES[modelKey]) return modelKey;
-  return resolveModel(modelName || modelKey)?.key ?? null;
+const resolveRenderKey = (...candidates: Array<string | null | undefined>) => {
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const normalizedKey = candidate.trim().toLowerCase().replace(/_/g, "-");
+    if (MODEL_IMAGES[normalizedKey]) return normalizedKey;
+    const resolvedKey = resolveModel(candidate)?.key;
+    if (resolvedKey && MODEL_IMAGES[resolvedKey]) return resolvedKey;
+  }
+  return null;
 };
 
-export const hasVehicleRender = (modelKey?: string | null, modelName?: string | null) => {
-  const key = resolveRenderKey(modelKey, modelName);
+export const hasVehicleRender = (...candidates: Array<string | null | undefined>) => {
+  const key = resolveRenderKey(...candidates);
   return !!key && !!MODEL_IMAGES[key];
 };
 
-const VehicleShowcase3D = ({ modelKey, modelName, label }: { modelKey: string; modelName?: string; label: string }) => {
-  const renderKey = resolveRenderKey(modelKey, modelName);
+const VehicleShowcase3D = ({ modelKey, modelName, label }: { modelKey?: string; modelName?: string; label: string }) => {
+  const renderKey = resolveRenderKey(modelKey, modelName, label);
   const src = renderKey ? MODEL_IMAGES[renderKey] : undefined;
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const ref = useRef<HTMLDivElement>(null);
@@ -70,7 +76,9 @@ const VehicleShowcase3D = ({ modelKey, modelName, label }: { modelKey: string; m
 
       <div
         className="v3d-stage"
-        style={{ transform: `rotateX(${8 + tilt.x}deg) rotateY(${tilt.y}deg)` }}
+        style={{
+          transform: `translate3d(${tilt.y * 0.45}px, ${tilt.x * 0.2}px, 0) rotate(${tilt.y * 0.08}deg)`,
+        }}
       >
         <img
           src={src}
