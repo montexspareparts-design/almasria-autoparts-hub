@@ -5,6 +5,7 @@ import { useGarage } from "@/contexts/GarageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import VehiclePickerSheet from "@/components/native/VehiclePickerSheet";
 import { haptic } from "@/lib/haptics";
+import VehicleShowcase3D, { hasVehicleRender } from "@/components/native/VehicleShowcase3D";
 
 /**
  * Precision Dark — signature hero plate.
@@ -73,6 +74,14 @@ const NativeSignatureHero = ({ loading = false }: { loading?: boolean }) => {
             {activeVehicle ? "تغيير" : "اختيار"}
           </span>
         </button>
+
+        {/* 3D vehicle render */}
+        {activeVehicle && hasVehicleRender(activeVehicle.modelKey) && (
+          <VehicleShowcase3D
+            modelKey={activeVehicle.modelKey}
+            label={activeVehicle.displayName}
+          />
+        )}
 
         {/* precision line */}
         <div className="relative mt-4 pd-edge-t opacity-70" />
