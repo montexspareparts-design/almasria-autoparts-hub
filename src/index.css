@@ -1305,9 +1305,11 @@ html[data-native-app="true"] [contenteditable="true"] {
 .v3d-car {
   position: absolute;
   left: 50%;
-  top: 2px;
+  top: 0;
   width: 78%;
+  height: 118px;
   max-width: 280px;
+  object-fit: contain;
   transform: translateX(-50%);
   filter: drop-shadow(0 16px 18px rgb(0 0 0 / 0.55))
     drop-shadow(0 0 22px hsl(var(--toyota-red) / 0.18));
@@ -1317,9 +1319,11 @@ html[data-native-app="true"] [contenteditable="true"] {
 .v3d-reflection {
   position: absolute;
   left: 50%;
-  top: 2px;
+  top: 0;
   width: 78%;
+  height: 118px;
   max-width: 280px;
+  object-fit: contain;
   transform: translateX(-50%) scaleY(-1) translateY(-6px);
   opacity: 0.16;
   filter: blur(2px);
