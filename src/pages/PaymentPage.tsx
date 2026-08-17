@@ -32,11 +32,19 @@ interface PaymentMethodOption {
 const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: "geidea",
-    label: "الدفع عبر جيديا",
-    labelEn: "Geidea Secure Checkout",
+    label: "الدفع بالفيزا",
+    labelEn: "Visa / Mastercard / Meeza",
     icon: ShieldCheck,
     description: "بوابة جيديا الآمنة للبطاقات البنكية",
     color: "text-amber-600",
+  },
+  {
+    id: "wallet",
+    label: "محفظة إلكترونية",
+    labelEn: "Vodafone Cash / Etisalat / Orange",
+    icon: Smartphone,
+    description: "ادفع من محفظتك على الموبايل",
+    color: "text-orange-500",
   },
 ];
 
