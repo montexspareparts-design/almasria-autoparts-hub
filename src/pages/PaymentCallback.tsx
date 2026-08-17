@@ -458,7 +458,7 @@ const PaymentCallback = () => {
 
         </div>
       </div>
-      <Footer />
+      {!appMode && <Footer />}
     </div>
   );
 };
