@@ -17,7 +17,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -157,9 +157,15 @@ const DeferredComponent = ({ delay, children }: { delay: number; children: React
   );
 };
 
+/** Distraction-free routes: no chat bubble, WhatsApp float, lead popups… */
+const isDistractionFreeRoute = (pathname: string) =>
+  /^\/(payment-callback|payment|checkout)(\/|$)/.test(pathname);
+
 const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: ReactNode }) => {
   const { loading, postAuthState } = useAuth();
+  const { pathname } = useLocation();
   if (isNativeShell()) return null;
+  if (isDistractionFreeRoute(pathname)) return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };

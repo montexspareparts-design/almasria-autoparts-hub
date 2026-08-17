@@ -43,6 +43,10 @@ const PaymentCallback = () => {
     try { return sessionStorage.getItem("almasria_payment_from_app") === "1"; } catch { return false; }
   })();
 
+  /** App-like presentation: no website navbar/footer, focused result card. */
+  const appMode = fromNativeApp || isNativePlatform();
+
+
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
@@ -160,6 +164,17 @@ const PaymentCallback = () => {
     returnToNativeApp("/payment-callback", { order: merchantOrderId, status });
   };
 
+  // The gateway opens this page in an external browser. As soon as we have a
+  // resolved status, hand control back to the app automatically so the
+  // customer never lingers on a web page with a URL bar.
+  useEffect(() => {
+    if (!fromNativeApp || status === "loading") return;
+    const t = setTimeout(() => {
+      returnToNativeApp("/payment-callback", { order: merchantOrderId, status });
+    }, status === "success" ? 2200 : 2600);
+    return () => clearTimeout(t);
+  }, [fromNativeApp, status, merchantOrderId]);
+
   // "Home" must never dump a native-app user on the public website.
   const goHome = () => {
     if (fromNativeApp) {
@@ -180,8 +195,8 @@ const PaymentCallback = () => {
 
   return (
     <div className="min-h-[100svh] bg-background flex flex-col">
-      <Navbar />
-      <div className="pt-20 md:pt-28 pb-8 md:pb-12 flex items-center justify-center flex-1">
+      {!appMode && <Navbar />}
+      <div className={`${appMode ? "pt-8 pb-10" : "pt-20 md:pt-28 pb-8 md:pb-12"} flex items-center justify-center flex-1`}>
         <div className="max-w-lg w-full mx-auto px-4 text-center">
 
           {/* Loading */}
@@ -445,9 +460,16 @@ const PaymentCallback = () => {
             </motion.div>
           )}
 
+          {fromNativeApp && status !== "loading" && (
+            <p className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              جاري العودة إلى التطبيق تلقائياً…
+            </p>
+          )}
+
         </div>
       </div>
-      <Footer />
+      {!appMode && <Footer />}
     </div>
   );
 };
