@@ -32,27 +32,28 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const authHeader = req.headers.get("Authorization");
-    if (!supabaseUrl || !anonKey || !serviceRoleKey || !authHeader) {
-      return json({ error: "Unauthorized" }, 401);
-    }
+    if (!supabaseUrl || !anonKey || !serviceRoleKey) return json({ error: "Unavailable" }, 503);
 
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user } } = await authClient.auth.getUser();
-    if (!user) return json({ error: "Unauthorized" }, 401);
+    let userId: string | null = null;
+    if (authHeader) {
+      const authClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await authClient.auth.getUser();
+      userId = user?.id ?? null;
+    }
 
     const parsed = RequestSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: "Invalid request" }, 400);
 
     const { order_number: orderNumber, transaction_id: transactionId, provider } = parsed.data;
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const { data: order } = await admin
+    let orderQuery = admin
       .from("orders")
       .select("id, user_id, order_number, status, total_amount")
-      .eq("order_number", orderNumber)
-      .eq("user_id", user.id)
-      .maybeSingle();
+      .eq("order_number", orderNumber);
+    if (userId) orderQuery = orderQuery.eq("user_id", userId);
+    const { data: order } = await orderQuery.maybeSingle();
 
     if (!order) return json({ error: "Order not found" }, 404);
     if (["processing", "shipped", "delivered"].includes(String(order.status))) {
