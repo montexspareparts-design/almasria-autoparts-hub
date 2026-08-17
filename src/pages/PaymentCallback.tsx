@@ -8,8 +8,8 @@ import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { normalizePaymobOrderReference, PAYMOB_NATIVE_FLAG } from "@/lib/paymob";
-import { APP_URL_SCHEME, openExternal } from "@/lib/native";
+import { normalizePaymobOrderReference, NATIVE_SRC_VALUES } from "@/lib/paymob";
+import { isNativePlatform, returnToNativeApp } from "@/lib/native";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +30,18 @@ const PaymentCallback = () => {
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
   const provider = searchParams.get("provider") === "geidea" ? "geidea" : "paymob";
-  const fromNativeApp = searchParams.get("src") === "ios";
+  // The payment flow may bounce through several gateway redirects, so the
+  // `src` flag can be dropped along the way. Persist it for the browser
+  // session the first time we see it.
+  const srcParam = (searchParams.get("src") || "").toLowerCase();
+  const fromNativeApp = (() => {
+    if (isNativePlatform()) return false;
+    if (NATIVE_SRC_VALUES.includes(srcParam)) {
+      try { sessionStorage.setItem("almasria_payment_from_app", "1"); } catch { /* ignore */ }
+      return true;
+    }
+    try { return sessionStorage.getItem("almasria_payment_from_app") === "1"; } catch { return false; }
+  })();
 
   useEffect(() => {
     let cancelled = false;
@@ -145,12 +156,24 @@ const PaymentCallback = () => {
 
   const handleReturnToApp = () => {
     // Deep link back into the native app if the user is on the public web
-    // callback but the payment was started from the iOS app.
-    openExternal(`${APP_URL_SCHEME}://payment-callback?order=${encodeURIComponent(merchantOrderId || "")}`);
+    // callback but the payment was started from the mobile app.
+    returnToNativeApp("/payment-callback", { order: merchantOrderId, status });
   };
 
+  // "Home" must never dump a native-app user on the public website.
+  const goHome = () => {
+    if (fromNativeApp) {
+      returnToNativeApp("/", { order: merchantOrderId });
+      return;
+    }
+    navigate("/");
+  };
 
   const handleRetryPayment = () => {
+    if (fromNativeApp) {
+      returnToNativeApp("/payment-callback", { order: merchantOrderId, retry: "1" });
+      return;
+    }
     if (orderId) navigate(`/payment?order_id=${orderId}`);
     else navigate("/");
   };
@@ -319,7 +342,7 @@ const PaymentCallback = () => {
                 className="flex flex-col gap-2.5 pt-2"
               >
                 <Button
-                  onClick={() => navigate("/dealer")}
+                  onClick={() => (fromNativeApp ? returnToNativeApp("/", { order: merchantOrderId }) : navigate("/dealer"))}
                   size="lg"
                   className="gap-2 h-12 text-sm font-bold rounded-xl shadow-md shadow-primary/20"
                 >
@@ -328,7 +351,7 @@ const PaymentCallback = () => {
                 </Button>
                 <Button
                   variant="ghost"
-                  onClick={() => navigate("/")}
+                  onClick={goHome}
                   className="gap-2 text-muted-foreground text-sm"
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -368,7 +391,7 @@ const PaymentCallback = () => {
                   <span className="font-bold text-sm font-mono text-foreground" dir="ltr">{orderNumber}</span>
                 </div>
               )}
-              <Button onClick={() => navigate("/")} className="gap-2 h-11">
+              <Button onClick={goHome} className="gap-2 h-11">
                 <ShoppingBag className="w-4 h-4" />
                 العودة للرئيسية
               </Button>
@@ -414,7 +437,7 @@ const PaymentCallback = () => {
                   <CreditCard className="w-4 h-4" />
                   ادفع مرة أخرى
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/")} className="gap-2 h-11">
+                <Button variant="outline" onClick={goHome} className="gap-2 h-11">
                   <ShoppingBag className="w-4 h-4" />
                   العودة للرئيسية
                 </Button>

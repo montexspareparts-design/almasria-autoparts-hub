@@ -6,7 +6,9 @@ export const PAYMOB_ATTEMPT_SEPARATOR = "--pm--";
 // Query flag added to the public callback URL when the payment attempt
 // originated inside the native app, so the public page can offer a
 // "return to app" deep link once done.
-export const PAYMOB_NATIVE_FLAG = "src=ios";
+export const PAYMOB_NATIVE_FLAG = "src=app";
+// Any of these values means "this attempt started inside the native app".
+export const NATIVE_SRC_VALUES = ["app", "ios", "android", "native"];
 
 export const isValidPaymobPublicKey = (key?: string | null) =>
   Boolean(key && (key.startsWith("egy_pk_") || key.startsWith("pak_pk_")));
