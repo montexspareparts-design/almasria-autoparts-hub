@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import logo from "@/assets/almasria-logo-dark.png";
 import { easeOutIOS } from "@/lib/motion";
+import { getBuildTime } from "@/lib/runtimeDiagnostics";
 
 const GOLD = "hsl(44 53% 54%)";
 
