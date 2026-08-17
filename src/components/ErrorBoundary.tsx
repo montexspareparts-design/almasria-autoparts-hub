@@ -88,6 +88,24 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null, code: "" });
     window.location.reload();
   };
+  handleCopyDetails = () => {
+    const err = this.state.error;
+    const stored = getLastDiagnosticRecord();
+    const text = [
+      `code: ${this.state.code || "ERR-APP-000"}`,
+      `error: ${sanitize(err?.name || stored?.name || "Error")}: ${sanitize(err?.message || stored?.message || "unknown")}`,
+      `route: ${typeof window !== "undefined" ? window.location.pathname : stored?.route ?? "?"}`,
+      `build: #${getBuildNumber()} commit: ${getBuildCommit()}`,
+      (err?.stack ? extractStackFrames(err.stack, 5) : stored?.frames ?? []).join("\n"),
+      stored?.componentStack ?? "",
+    ].join("\n");
+    try {
+      navigator.clipboard?.writeText(text);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
 
   handleGoHome = () => {
     this.setState({ hasError: false, error: null, code: "" });
