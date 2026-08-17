@@ -7,6 +7,8 @@ import rav4Img from "@/assets/vehicles/toyota-rav4.png";
 import pradoImg from "@/assets/vehicles/toyota-prado.png";
 import hiluxImg from "@/assets/vehicles/toyota-hilux.png";
 import coasterImg from "@/assets/vehicles/toyota-coaster.png";
+import bz4xImg from "@/assets/vehicles/toyota-bz4x.png";
+import urbanCruiserImg from "@/assets/vehicles/toyota-urban-cruiser.png";
 
 /**
  * Precision Dark — 3D vehicle showcase.
@@ -25,6 +27,8 @@ const MODEL_IMAGES: Record<string, string> = {
   "land-cruiser": pradoImg,
   hilux: hiluxImg,
   coaster: coasterImg,
+  bz4x: bz4xImg,
+  "urban-cruiser": urbanCruiserImg,
 };
 
 export const hasVehicleRender = (modelKey?: string | null) =>
