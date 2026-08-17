@@ -445,7 +445,7 @@ const ProductCard = memo(({
 
         {/* Price drop alert — visible to all logged-in customers when price visible */}
         {stockAvailable && canSeePrice && price != null && !isDealer && (
-          <div className="mt-2 flex justify-center">
+          <div className="mt-2 flex justify-center overflow-hidden">
             <PriceDropAlertButton productId={product.id} currentPrice={Number(price)} />
           </div>
         )}
