@@ -76,9 +76,10 @@ const NativeSignatureHero = ({ loading = false }: { loading?: boolean }) => {
         </button>
 
         {/* 3D vehicle render */}
-        {activeVehicle && hasVehicleRender(activeVehicle.modelKey) && (
+        {activeVehicle && hasVehicleRender(activeVehicle.modelKey, activeVehicle.model) && (
           <VehicleShowcase3D
             modelKey={activeVehicle.modelKey}
+            modelName={activeVehicle.model}
             label={activeVehicle.displayName}
           />
         )}
