@@ -31,9 +31,22 @@ call npx cap sync android || goto :fail
 
 echo.
 echo [6/6] Cleaning Gradle build cache...
-cd android
-call gradlew.bat clean
-cd ..
+REM Auto-detect a valid JDK if JAVA_HOME is missing/invalid
+if not exist "%JAVA_HOME%\bin\java.exe" (
+  if exist "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
+)
+if not exist "%JAVA_HOME%\bin\java.exe" (
+  if exist "%LOCALAPPDATA%\Programs\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=%LOCALAPPDATA%\Programs\Android Studio\jbr"
+)
+if not exist "%JAVA_HOME%\bin\java.exe" (
+  echo    [skip] No valid JDK found - do "Build ^> Clean Project" inside Android Studio instead.
+) else (
+  echo    Using JAVA_HOME=%JAVA_HOME%
+  cd android
+  call gradlew.bat clean
+  cd ..
+)
+
 
 echo.
 echo ===========================================================
