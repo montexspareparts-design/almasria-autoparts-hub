@@ -14,6 +14,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * but this MUST be removed before an App Store archive.
  */
 const BRAND_NAVY = '#0A1A2F';
+const CARBON_BG = '#0A0A0C';
 
 const config: CapacitorConfig = {
   appId: 'com.almasria.autoparts',
@@ -27,7 +28,7 @@ const config: CapacitorConfig = {
     limitsNavigationsToAppBoundDomains: false,
   },
   android: {
-    backgroundColor: BRAND_NAVY,
+    backgroundColor: CARBON_BG,
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
@@ -44,7 +45,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: BRAND_NAVY,
+      backgroundColor: CARBON_BG,
       overlaysWebView: false,
     },
     Keyboard: {
