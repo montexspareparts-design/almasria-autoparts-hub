@@ -51,7 +51,8 @@ const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", des
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
-  { id: "geidea", label: "الدفع الآمن عبر Geidea", icon: ShieldCheck },
+  { id: "geidea", label: "الدفع بالفيزا", icon: ShieldCheck },
+  { id: "wallet", label: "محفظة إلكترونية (فودافون كاش / إتصالات / أورنج)", icon: Smartphone },
 ];
 
 

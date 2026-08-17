@@ -32,11 +32,19 @@ interface PaymentMethodOption {
 const ALL_PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: "geidea",
-    label: "الدفع عبر جيديا",
-    labelEn: "Geidea Secure Checkout",
+    label: "الدفع بالفيزا",
+    labelEn: "Visa / Mastercard / Meeza",
     icon: ShieldCheck,
     description: "بوابة جيديا الآمنة للبطاقات البنكية",
     color: "text-amber-600",
+  },
+  {
+    id: "wallet",
+    label: "محفظة إلكترونية",
+    labelEn: "Vodafone Cash / Etisalat / Orange",
+    icon: Smartphone,
+    description: "ادفع من محفظتك على الموبايل",
+    color: "text-orange-500",
   },
 ];
 
@@ -58,7 +66,9 @@ const PaymentPage = () => {
   const orderId = searchParams.get("order_id");
   const amount = searchParams.get("amount");
 
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>("geidea");
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
+    searchParams.get("method") === "wallet" ? "wallet" : "geidea"
+  );
 
   const [walletPhone, setWalletPhone] = useState("");
   const [step, setStep] = useState<"choose" | "pay">("choose");
