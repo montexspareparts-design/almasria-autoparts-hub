@@ -97,7 +97,7 @@ const NativeTabBar = () => {
           {/* subtle red energy line along the top edge */}
           <span
             aria-hidden
-            className="absolute inset-x-10 top-0 h-px bg-gradient-to-l from-transparent via-toyota-red/60 to-transparent"
+            className="absolute inset-x-10 top-0 h-px bg-gradient-to-l from-transparent via-[hsl(var(--toyota-red)/0.6)] to-transparent"
           />
           <ul className="grid grid-cols-5 h-full px-1">
             {TABS.map((t) => (
@@ -140,7 +140,7 @@ const TabItem = ({
         {active && (
           <motion.span
             layoutId="native-tab-pill"
-            className="absolute inset-y-[7px] inset-x-1 rounded-[18px] bg-toyota-red/[0.14] border border-toyota-red/25 shadow-[0_0_18px_-4px_hsl(var(--toyota-red)/0.55)]"
+            className="absolute inset-y-[7px] inset-x-1 rounded-[18px] bg-[hsl(var(--toyota-red)/0.14)] border border-[hsl(var(--toyota-red)/0.28)] shadow-[0_0_18px_-4px_hsl(var(--toyota-red)/0.55)]"
             transition={springTab}
           />
         )}
