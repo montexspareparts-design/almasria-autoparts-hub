@@ -99,6 +99,9 @@ verify_jwt = false
 [functions.geidea-create-session]
 verify_jwt = false
 
+[functions.verify-payment-status]
+verify_jwt = false
+
 
 [functions.erp-push-pending-orders]
 verify_jwt = false

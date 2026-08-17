@@ -142,7 +142,15 @@ Deno.serve(async (req) => {
     }
 
     const orderNumber = orderId;
-    const txStatus = success && !isPending ? "success" : isPending ? "pending" : "failed";
+    const paymentMethod = String(transaction.source_data?.type || "").toLowerCase();
+    const transactionCreatedAt = transaction.created_at ? new Date(transaction.created_at).getTime() : Date.now();
+    const walletGraceActive = paymentMethod === "wallet" &&
+      Date.now() - transactionCreatedAt < 10 * 60 * 1000;
+    const txStatus = success && !isPending
+      ? "success"
+      : isPending || walletGraceActive
+        ? "pending"
+        : "failed";
 
     // Look up the internal order
     const { data: order } = await supabase

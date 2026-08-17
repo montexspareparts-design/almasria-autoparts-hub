@@ -29,6 +29,7 @@ const PaymentCallback = () => {
   );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
+  const provider = searchParams.get("provider") === "geidea" ? "geidea" : "paymob";
   const fromNativeApp = searchParams.get("src") === "ios";
 
   useEffect(() => {
@@ -53,6 +54,20 @@ const PaymentCallback = () => {
       const fetchOrderStatus = async (): Promise<"paid" | "failed" | "pending" | null> => {
         if (!merchantOrderId || !user) return null;
         try {
+          // Webhooks can be delayed or temporarily unavailable. Reconcile the
+          // transaction server-side with the payment provider before reading
+          // the local status; credentials never reach the browser.
+          const { data: verification } = await supabase.functions.invoke("verify-payment-status", {
+            body: {
+              order_number: merchantOrderId,
+              transaction_id: txnId || undefined,
+              provider,
+            },
+          });
+
+          if (verification?.status === "success") return "paid";
+          if (verification?.status === "failed") return "failed";
+
           const { data: order } = await supabase
             .from("orders")
             .select("id, order_number, status")
@@ -90,41 +105,43 @@ const PaymentCallback = () => {
 
       const authoritative = await fetchOrderStatus();
 
-      // If the URL says "failed" and the DB agrees (or has no info), mark failed.
-      if (!isSuccessQuery && !isPendingQuery && authoritative !== "paid") {
+      // A browser return URL is not authoritative. Only a server-verified
+      // failed transaction may render a failure result.
+      if (authoritative === "failed") {
         if (!cancelled) setStatus("failed");
         return;
       }
 
-      // Poll for up to ~30s if the webhook hasn't landed yet.
+      // Wallet and card providers can take a few minutes to settle after the
+      // customer returns, so keep the result pending until the server confirms it.
       if (authoritative === "paid") {
         if (!cancelled) setStatus("success");
         return;
       }
-      if (isPendingQuery || authoritative === "pending" || isSuccessQuery) {
+      if (isPendingQuery || authoritative === "pending" || authoritative === null || isSuccessQuery) {
         if (!cancelled) setStatus("pending");
         const poll = async () => {
-          if (cancelled || attempts >= 10) return;
+          if (cancelled || attempts >= 60) return;
           attempts += 1;
           await new Promise((r) => setTimeout(r, 3000));
           const s = await fetchOrderStatus();
           if (cancelled) return;
           if (s === "paid") setStatus("success");
           else if (s === "failed") setStatus("failed");
-          else if (attempts < 10) poll();
+          else if (attempts < 60) poll();
         };
         poll();
         return;
       }
 
-      if (!cancelled) setStatus("failed");
+      if (!cancelled) setStatus("pending");
     };
 
     processCallback();
     return () => {
       cancelled = true;
     };
-  }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents]);
+  }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents, provider]);
 
   const handleReturnToApp = () => {
     // Deep link back into the native app if the user is on the public web
