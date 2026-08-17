@@ -56,6 +56,12 @@ export class ErrorBoundary extends Component<Props, State> {
     if (error.stack) console.error(`[ErrorBoundary][${code}] stack:`, error.stack);
     if (errorInfo?.componentStack) console.error(`[ErrorBoundary][${code}] component:`, errorInfo.componentStack);
 
+    // Ship the real crash to the backend so production (Play/TestFlight)
+    // failures are diagnosable without a screenshot.
+    void reportClientError({ code, error, componentStack: errorInfo?.componentStack });
+
+
+
     // Auto-recover on FIRST crash only (rate-limited). Fixes transient
     // post-auth crashes on iOS WebView where the boundary would otherwise
     // trap the user on an error screen after a successful login.
