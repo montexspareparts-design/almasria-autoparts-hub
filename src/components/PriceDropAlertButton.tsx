@@ -91,16 +91,17 @@ const PriceDropAlertButton = ({ productId, currentPrice, variant = "full" }: Pro
       size="sm"
       onClick={toggle}
       disabled={loading}
-      className="gap-1.5"
+      className="h-7 w-auto max-w-full px-2.5 gap-1 rounded-full text-[11px] leading-none font-medium whitespace-nowrap shrink-0"
     >
       {loading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
       ) : active ? (
-        <><BellOff className="w-3.5 h-3.5" /> إلغاء تنبيه السعر</>
+        <><BellOff className="w-3 h-3 shrink-0" /> إلغاء تنبيه السعر</>
       ) : (
-        <><TrendingDown className="w-3.5 h-3.5" /> نبهني عند انخفاض السعر</>
+        <><TrendingDown className="w-3 h-3 shrink-0" /> نبهني عند انخفاض السعر</>
       )}
     </Button>
+
   );
 };
 
