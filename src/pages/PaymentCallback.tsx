@@ -191,8 +191,8 @@ const PaymentCallback = () => {
 
   return (
     <div className="min-h-[100svh] bg-background flex flex-col">
-      <Navbar />
-      <div className="pt-20 md:pt-28 pb-8 md:pb-12 flex items-center justify-center flex-1">
+      {!appMode && <Navbar />}
+      <div className={`${appMode ? "pt-8 pb-10" : "pt-20 md:pt-28 pb-8 md:pb-12"} flex items-center justify-center flex-1`}>
         <div className="max-w-lg w-full mx-auto px-4 text-center">
 
           {/* Loading */}
