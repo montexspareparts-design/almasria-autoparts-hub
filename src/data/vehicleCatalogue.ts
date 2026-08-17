@@ -34,6 +34,8 @@ export const VEHICLE_MODELS: VehicleModel[] = [
   { key: "previa", label: "بريفيا", aliases: ["بريفيا", "previa"], yearFrom: 1995 },
   { key: "rush", label: "راش", aliases: ["راش", "rush"], yearFrom: 2006 },
   { key: "echo", label: "ايكو", aliases: ["ايكو", "إيكو", "echo"], yearFrom: 1999 },
+  { key: "bz4x", label: "bZ4X", aliases: ["bz4x", "bz 4x", "بي زد فور اكس"], yearFrom: 2022 },
+  { key: "urban-cruiser", label: "اوربان كروزر", aliases: ["اوربان كروزر", "أوربان كروزر", "urban cruiser", "urban-cruiser"], yearFrom: 2020 },
   { key: "dyna", label: "دينا", aliases: ["دينا", "dyna"], yearFrom: 1995 },
 ];
 
