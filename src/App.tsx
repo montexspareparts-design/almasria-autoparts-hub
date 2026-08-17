@@ -248,6 +248,8 @@ const App = () => (
                     <Route path="/payment-callback" element={<PaymentCallback />} />
                     <Route path="/payment" element={<PaymentPage />} />
                     <Route path="/policies" element={<PoliciesPage />} />
+                    <Route path="/delete-account" element={<DeleteAccountPage />} />
+
                     <Route path="/my-profile" element={<MyProfilePage />} />
                     <Route path="/track-order" element={<TrackOrderPage />} />
                     <Route path="/guides/identifying-genuine-toyota-parts" element={<GenuineVsCounterfeitGuide />} />
