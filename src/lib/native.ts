@@ -133,7 +133,7 @@ export const buildAppDeepLink = (
   path: string,
   params?: Record<string, string | undefined | null>
 ): string => {
-  const host = path.replace(/^\/+/, "") || "home";
+  const host = path.replace(/^\/+/, "");
   const search = new URLSearchParams();
   Object.entries(params ?? {}).forEach(([key, value]) => {
     if (value) search.set(key, value);
