@@ -124,6 +124,38 @@ export const openExternal = async (url: string): Promise<void> => {
   }
 };
 
+/**
+ * Builds a custom-scheme deep link that hands control back to the native
+ * app (e.g. `com.almasria.autoparts://payment-callback?order=ORD-1`).
+ * `path` must be one of the whitelisted deep-link paths.
+ */
+export const buildAppDeepLink = (
+  path: string,
+  params?: Record<string, string | undefined | null>
+): string => {
+  const host = path.replace(/^\/+/, "");
+  const search = new URLSearchParams();
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value) search.set(key, value);
+  });
+  const qs = search.toString();
+  return `${APP_URL_SCHEME}://${host}${qs ? `?${qs}` : ""}`;
+};
+
+/**
+ * Called from the PUBLIC web callback page (opened in Safari/Chrome from the
+ * native app). Jumps back into the installed app instead of leaving the user
+ * stranded on the website.
+ */
+export const returnToNativeApp = (
+  path: string,
+  params?: Record<string, string | undefined | null>
+): void => {
+  if (typeof window === "undefined") return;
+  window.location.href = buildAppDeepLink(path, params);
+};
+
+
 export const closeInAppBrowser = async (): Promise<void> => {
   if (!isNativePlatform()) return;
   try {
