@@ -393,7 +393,7 @@ const PaymentCallback = () => {
               )}
               <Button onClick={goHome} className="gap-2 h-11">
                 <ShoppingBag className="w-4 h-4" />
-                العودة للرئيسية
+                {fromNativeApp ? "العودة إلى التطبيق" : "العودة للرئيسية"}
               </Button>
             </motion.div>
           )}
