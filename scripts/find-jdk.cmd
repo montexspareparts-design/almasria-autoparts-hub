@@ -32,12 +32,13 @@ for %%P in (
   "C:\Program Files\Android\Android Studio\jbr"
   "%LOCALAPPDATA%\Programs\Android Studio\jbr"
 ) do (
-  if exist "%%~P\bin\java.exe" (
-    "%%~P\bin\java.exe" -version 2>nul
+  set "JAVA_TRY=%%~P\bin\java.exe"
+  if exist "!JAVA_TRY!" (
+    "!JAVA_TRY!" -version 2>nul
     if !errorlevel! equ 0 (
       if not defined FOUND_JDK (
         set "FOUND_JDK=%%~P"
-        for /f "usebackq tokens=3" %%v in (`"%%~P\bin\java.exe" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
+        for /f "usebackq tokens=3" %%v in (`"!JAVA_TRY!" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
       )
     )
   )
