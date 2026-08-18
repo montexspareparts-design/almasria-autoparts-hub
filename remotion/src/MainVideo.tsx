@@ -1,3 +1,4 @@
+import { loadFont } from "@remotion/google-fonts/IBMPlexSansArabic";
 import {
   AbsoluteFill,
   useCurrentFrame,
@@ -8,6 +9,8 @@ import {
   Sequence,
   spring,
 } from "remotion";
+
+const { fontFamily: AR } = loadFont("normal", { weights: ["400", "600", "700"], subsets: ["arabic", "latin"] });
 
 /* ─────────────────── CREATIVE DIRECTION ───────────────────
    Style: Luxury Cinematic — dark, warm, editorial
@@ -21,22 +24,22 @@ import {
 const scenes = [
   // 1. Opening — dramatic parts close-up
   { src: "images/v2-parts-hero.jpg", dur: 90, zoom: { from: 1.15, to: 1 }, pan: { xFrom: 30, xTo: -10, yFrom: -10, yTo: 5 },
-    text: { title: "GENUINE PARTS", sub: "100% Original Toyota Quality", pos: "bottom-left" as const } },
+    text: { title: "قطع غيار أصلية", sub: "جودة تويوتا الأصلية 100%", pos: "bottom-left" as const } },
   // 2. Mechanic at work
   { src: "images/v2-mechanic.jpg", dur: 75, zoom: { from: 1, to: 1.12 }, pan: { xFrom: -15, xTo: 20, yFrom: 5, yTo: -8 },
-    text: { title: "EXPERT SERVICE", sub: "Trusted by 5,000+ Workshops", pos: "bottom-right" as const } },
+    text: { title: "خبرة يُعتمد عليها", sub: "ثقة أكثر من 5000 مركز صيانة", pos: "bottom-right" as const } },
   // 3. Warehouse scale
   { src: "images/v2-warehouse.jpg", dur: 80, zoom: { from: 1, to: 1.16 }, pan: { xFrom: 20, xTo: -25, yFrom: 0, yTo: -12 },
-    text: { title: "MASSIVE INVENTORY", sub: "10,000+ Parts Ready to Ship", pos: "center" as const } },
+    text: { title: "مخزون ضخم", sub: "أكثر من 10,000 صنف جاهز للشحن", pos: "center" as const } },
   // 4. Oils product shot
   { src: "images/v2-oils.jpg", dur: 70, zoom: { from: 1.08, to: 1 }, pan: { xFrom: -10, xTo: 15, yFrom: -5, yTo: 5 },
-    text: { title: "PREMIUM OILS", sub: "Genuine Toyota Motor Oil", pos: "bottom-left" as const } },
+    text: { title: "زيوت تويوتا الأصلية", sub: "حماية كاملة لمحرك عربيتك", pos: "bottom-left" as const } },
   // 5. Land Cruiser driving
   { src: "images/v2-landcruiser.jpg", dur: 85, zoom: { from: 1, to: 1.14 }, pan: { xFrom: 25, xTo: -20, yFrom: 5, yTo: -10 },
-    text: { title: "BUILT FOR EGYPT", sub: "Performance You Can Trust", pos: "bottom-left" as const } },
+    text: { title: "مصمّمة لطرق مصر", sub: "أداء تقدر تعتمد عليه", pos: "bottom-left" as const } },
   // 6. Distribution fleet
   { src: "images/v2-distribution.jpg", dur: 80, zoom: { from: 1.1, to: 1 }, pan: { xFrom: -15, xTo: 10, yFrom: -8, yTo: 8 },
-    text: { title: "NATIONWIDE DELIVERY", sub: "From Our Warehouse to Your Door", pos: "center" as const } },
+    text: { title: "شحن لكل المحافظات", sub: "من مخازننا لباب بيتك", pos: "center" as const } },
 ];
 
 const CROSSFADE = 18;
@@ -124,12 +127,12 @@ const Shot = ({ scene, shotIndex }: { scene: typeof scenes[0]; shotIndex: number
           padding: "4px 0",
         }}>
           <div style={{
-            fontFamily: "Liberation Sans, Arial, sans-serif",
+            fontFamily: AR,
             fontWeight: 900,
             fontSize: 64,
             color: "white",
-            letterSpacing: 5,
-            textTransform: "uppercase",
+            letterSpacing: 0,
+            
             textAlign,
             transform: `translateY(${interpolate(titleSpring, [0, 1], [80, 0])}px)`,
             textShadow: "0 4px 40px rgba(0,0,0,0.6), 0 0 80px rgba(220,38,38,0.15)",
@@ -140,12 +143,12 @@ const Shot = ({ scene, shotIndex }: { scene: typeof scenes[0]; shotIndex: number
 
         {/* Subtitle */}
         <div style={{
-          fontFamily: "Liberation Sans, Arial, sans-serif",
+          fontFamily: AR,
           fontWeight: 400,
           fontSize: 22,
           color: "rgba(255,255,255,0.65)",
-          letterSpacing: 3,
-          textTransform: "uppercase",
+          letterSpacing: 0,
+          
           textAlign,
           opacity: subSpring,
           transform: `translateY(${interpolate(subSpring, [0, 1], [20, 0])}px)`,
@@ -174,9 +177,9 @@ const StatsScene = () => {
   const fadeIn = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp" });
 
   const stats = [
-    { value: "25+", label: "YEARS OF EXCELLENCE", delay: 10 },
-    { value: "10K+", label: "PARTS IN STOCK", delay: 20 },
-    { value: "5K+", label: "TRUSTED CLIENTS", delay: 30 },
+    { value: "25+", label: "سنة من التميز", delay: 10 },
+    { value: "10K+", label: "صنف في المخزون", delay: 20 },
+    { value: "5K+", label: "عميل يثق بنا", delay: 30 },
   ];
 
   return (
@@ -209,9 +212,9 @@ const StatsScene = () => {
             <div key={i} style={{ textAlign: "center", opacity: s, transform: `translateY(${interpolate(s, [0, 1], [40, 0])}px) scale(${interpolate(s, [0, 1], [0.9, 1])})` }}>
               {/* Value */}
               <div style={{
-                fontFamily: "Liberation Sans, Arial, sans-serif",
+                fontFamily: AR,
                 fontWeight: 900, fontSize: 72, color: "white",
-                letterSpacing: 3,
+                letterSpacing: 0,
                 textShadow: "0 0 40px rgba(220,38,38,0.3)",
               }}>
                 {stat.value}
@@ -224,9 +227,9 @@ const StatsScene = () => {
               }} />
               {/* Label */}
               <div style={{
-                fontFamily: "Liberation Sans, Arial, sans-serif",
+                fontFamily: AR,
                 fontWeight: 400, fontSize: 16, color: "rgba(255,255,255,0.45)",
-                letterSpacing: 4,
+                letterSpacing: 1,
               }}>
                 {stat.label}
               </div>
@@ -331,15 +334,15 @@ const LogoReveal = () => {
         {/* Tagline */}
         <div style={{
           marginTop: 40,
-          fontFamily: "Liberation Sans, Arial, sans-serif",
+          fontFamily: AR,
           fontWeight: 300, fontSize: 20,
           color: "rgba(255,255,255,0.5)",
-          letterSpacing: 10,
-          textTransform: "uppercase",
+          letterSpacing: 2,
+          
           opacity: taglineOpacity,
           transform: `translateY(${taglineY}px)`,
         }}>
-          YOUR TRUSTED PARTNER SINCE 1999
+          شريكك الموثوق منذ 1999
         </div>
 
         {/* Bottom accent */}
@@ -408,11 +411,11 @@ const CornerBadge = () => {
         boxShadow: "0 0 10px rgba(220,38,38,0.5)",
       }} />
       <div style={{
-        fontFamily: "Liberation Sans, Arial, sans-serif",
+        fontFamily: AR,
         fontWeight: 700, fontSize: 13, color: "rgba(255,255,255,0.5)",
-        letterSpacing: 4, textTransform: "uppercase",
+        letterSpacing: 1, 
       }}>
-        AL MASRIA GROUP
+        المصرية جروب
       </div>
     </div>
   );
@@ -436,7 +439,7 @@ export const MainVideo = () => {
   const logoDur = 150;
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#060609" }}>
+    <AbsoluteFill style={{ backgroundColor: "#060609", direction: "rtl" }}>
       {/* Photo shots */}
       {scenes.map((scene, i) => (
         <Sequence key={i} from={sceneStarts[i]} durationInFrames={scene.dur}>
