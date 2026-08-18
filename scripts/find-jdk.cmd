@@ -8,6 +8,23 @@ setlocal enabledelayedexpansion
 set "FOUND_JDK="
 set "FOUND_VER="
 
+REM --- 1) Wildcard search: any JDK 21 folder under common Windows locations ---
+for /d %%P in (
+  "C:\Program Files\Java\jdk-21*"
+  "C:\Program Files\Eclipse Adoptium\jdk-21*"
+  "C:\Program Files\Microsoft\jdk-21*"
+  "%LOCALAPPDATA%\Programs\Eclipse Adoptium\jdk-21*"
+) do (
+  if not defined FOUND_JDK (
+    if exist "%%~P\bin\java.exe" (
+      set "FOUND_JDK=%%~P"
+      for /f "usebackq tokens=3" %%v in (`"%%~P\bin\java.exe" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
+    )
+  )
+)
+
+
+REM --- 2) Exact fallback list for known version paths ---
 for %%P in (
   "C:\Program Files\Java\jdk-21"
   "C:\Program Files\Java\jdk-21.0.0"
@@ -43,6 +60,7 @@ for %%P in (
     )
   )
 )
+
 
 if not defined FOUND_JDK (
   echo.
