@@ -10,8 +10,10 @@ android {
         // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
         // Play بيرفض أي AAB بنفس الـ versionCode المرفوع قبل كده.
         // versionName للعرض للمستخدم فقط (زوّده لما يبقى فيه تغيير ملحوظ).
-        versionCode 1
-        versionName "1.0.0"
+        // النسخة اللي رفعتها قبل كده = 1 (versionName 1.0.0)
+        // النسخة الجديدة = 2 (versionName 1.1.0)
+        versionCode 2
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
