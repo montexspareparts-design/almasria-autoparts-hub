@@ -6,6 +6,10 @@ def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+def requiredSigningProperties = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+def hasCompleteReleaseSigning = keystorePropertiesFile.exists() && requiredSigningProperties.every {
+    keystoreProperties[it]?.toString()?.trim()
+}
 
 android {
     namespace = "com.almasria.autoparts"
@@ -30,7 +34,7 @@ android {
     }
     signingConfigs {
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (hasCompleteReleaseSigning) {
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
                 keyAlias keystoreProperties['keyAlias']
@@ -40,11 +44,36 @@ android {
     }
     buildTypes {
         release {
-            if (keystorePropertiesFile.exists()) {
+            if (hasCompleteReleaseSigning) {
                 signingConfig signingConfigs.release
             }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// لا تسمح أبداً بإنتاج نسخة Release غير موقعة ورفعها بالخطأ إلى Google Play.
+gradle.taskGraph.whenReady { graph ->
+    def requestsRelease = graph.allTasks.any { task ->
+        task.path == ':app:bundleRelease' || task.path == ':app:assembleRelease'
+    }
+
+    if (requestsRelease) {
+        if (!keystorePropertiesFile.exists()) {
+            throw new GradleException('Release signing is missing: create android/keystore.properties before building.')
+        }
+
+        def missingProperties = requiredSigningProperties.findAll {
+            !keystoreProperties[it]?.toString()?.trim()
+        }
+        if (!missingProperties.isEmpty()) {
+            throw new GradleException('Release signing configuration is incomplete. Missing: ' + missingProperties.join(', '))
+        }
+
+        def configuredStoreFile = file(keystoreProperties['storeFile'])
+        if (!configuredStoreFile.exists()) {
+            throw new GradleException('Release keystore file was not found at the configured storeFile path.')
         }
     }
 }

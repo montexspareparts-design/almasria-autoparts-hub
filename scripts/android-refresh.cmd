@@ -105,25 +105,44 @@ set "JAVA_HOME=%FOUND_JDK%"
 set "PATH=%FOUND_JDK%\bin;%PATH%"
 
 cd android
-REM Run a quick Gradle clean to verify the JDK actually works
+REM Verify Gradle/JDK, build the signed release bundle, then verify its signature.
 call gradlew.bat --version ^>nul 2^>^&1
 if errorlevel 1 (
   echo    [X] JDK found at %FOUND_JDK% but Gradle refused it. It may be 32-bit or corrupt.
   goto :fail
 )
 
-echo    Running Gradle clean...
-call gradlew.bat clean
+echo    Building signed release bundle...
+call gradlew.bat clean bundleRelease || goto :build_fail
+
+set "AAB_PATH=app\build\outputs\bundle\release\app-release.aab"
+if not exist "%AAB_PATH%" (
+  echo    [X] Release bundle was not created.
+  goto :build_fail
+)
+
+echo    Verifying AAB signature...
+"%JAVA_HOME%\bin\jarsigner.exe" -verify "%AAB_PATH%" ^>nul 2^>^&1
+if errorlevel 1 (
+  echo    [X] The generated AAB is NOT signed. It is unsafe to upload.
+  del /q "%AAB_PATH%" 2^>nul
+  goto :build_fail
+)
+
+echo    [OK] Signed AAB verified:
+echo    %CD%\%AAB_PATH%
 cd ..
 
 
 echo.
 echo ===========================================================
-echo  DONE. Now press Run in Android Studio.
-echo  If the old UI still shows: uninstall the app from the
-echo  phone first, then Run again.
+echo  DONE. The signed AAB is ready for Google Play.
 echo ===========================================================
 goto :eof
+
+:build_fail
+cd ..
+goto :fail
 
 :pull_fail
 echo.
