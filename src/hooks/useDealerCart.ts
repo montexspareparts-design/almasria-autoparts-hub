@@ -66,26 +66,23 @@ export const useDealerCart = () => {
 
     if (!user || !isDealer) return;
 
-    // Unique channel name per mount — reusing a name returns an already
-    // subscribed channel and `.on()` after subscribe() throws.
-    const channel = supabase
-      .channel(`dealer-cart-${user.id}-${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'dealer_cart_items',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchCartRef.current();
-        }
-      )
-      .subscribe();
+    // Cart mutations already refresh immediately. Polling and foreground
+    // refresh avoid Realtime channel reuse races in native WebViews.
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchCartRef.current();
+    };
+    const refreshOnFocus = () => fetchCartRef.current();
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchCartRef.current();
+    }, 15_000);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshOnFocus);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshOnFocus);
     };
   }, [user, isDealer]);
 
@@ -103,21 +100,24 @@ export const useDealerCart = () => {
   }, [user, items, fetchCart]);
 
   const updateQuantity = useCallback(async (productId: string, qty: number) => {
+    if (!user) return;
     if (qty <= 0) {
-      await supabase.from("dealer_cart_items").delete().eq("user_id", user!.id).eq("product_id", productId);
+      await supabase.from("dealer_cart_items").delete().eq("user_id", user.id).eq("product_id", productId);
     } else {
-      await supabase.from("dealer_cart_items").update({ quantity: qty, updated_at: new Date().toISOString() }).eq("user_id", user!.id).eq("product_id", productId);
+      await supabase.from("dealer_cart_items").update({ quantity: qty, updated_at: new Date().toISOString() }).eq("user_id", user.id).eq("product_id", productId);
     }
     await fetchCart();
   }, [user, fetchCart]);
 
   const removeItem = useCallback(async (productId: string) => {
-    await supabase.from("dealer_cart_items").delete().eq("user_id", user!.id).eq("product_id", productId);
+    if (!user) return;
+    await supabase.from("dealer_cart_items").delete().eq("user_id", user.id).eq("product_id", productId);
     await fetchCart();
   }, [user, fetchCart]);
 
   const clearCart = useCallback(async () => {
-    await supabase.from("dealer_cart_items").delete().eq("user_id", user!.id);
+    if (!user) return;
+    await supabase.from("dealer_cart_items").delete().eq("user_id", user.id);
     setItems([]);
   }, [user]);
 
