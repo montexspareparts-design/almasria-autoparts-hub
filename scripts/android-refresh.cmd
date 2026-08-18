@@ -30,10 +30,24 @@ echo [5/6] Syncing Capacitor (android)...
 call npx cap sync android || goto :fail
 
 echo.
-echo [6/6] Detecting a working JDK for Gradle...
-REM Find any valid JDK 21 or 17 installation on this machine.
-REM Order matters: 21 preferred, then 17 (both work with Gradle 8.14).
+echo [6/6] Detecting a working JDK 21 for Gradle...
 set "FOUND_JDK="
+
+REM --- 1) Wildcard search for any JDK 21 installation ---
+for /d %%P in (
+  "C:\Program Files\Java\jdk-21*"
+  "C:\Program Files\Eclipse Adoptium\jdk-21*"
+  "C:\Program Files\Microsoft\jdk-21*"
+  "%LOCALAPPDATA%\Programs\Eclipse Adoptium\jdk-21*"
+) do (
+  if not defined FOUND_JDK (
+    if exist "%%~P\bin\java.exe" (
+      set "FOUND_JDK=%%~P"
+    )
+  )
+)
+
+REM --- 2) Exact fallback list for known JDK 21 paths ---
 for %%P in (
   "C:\Program Files\Java\jdk-21"
   "C:\Program Files\Java\jdk-21.0.0"
@@ -44,17 +58,8 @@ for %%P in (
   "C:\Program Files\Eclipse Adoptium\jdk-21.0.4-hotspot"
   "C:\Program Files\Eclipse Adoptium\jdk-21.0.5-hotspot"
   "C:\Program Files\Eclipse Adoptium\jdk-21.0.6-hotspot"
+  "C:\Program Files\Eclipse Adoptium\jdk-21.0.12-hotspot"
   "C:\Program Files\Microsoft\jdk-21"
-  "C:\Program Files\Java\jdk-17"
-  "C:\Program Files\Java\jdk-17.0.0"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.0-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.1-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.2-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.3-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.4-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.5-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.6-hotspot"
-  "C:\Program Files\Microsoft\jdk-17"
 ) do (
   if not defined FOUND_JDK (
     if exist "%%~P\bin\java.exe" (
@@ -64,17 +69,18 @@ for %%P in (
 )
 
 if not defined FOUND_JDK (
-  echo    [X] No JDK 21 or 17 found in the usual Windows locations.
+  echo    [X] No JDK 21 found in the usual Windows locations.
   echo.
+  echo    This project requires JDK 21 for Gradle 8.14 / Capacitor 8.
   echo    Please install Eclipse Temurin JDK 21 from:
   echo    https://adoptium.net/temurin/releases/?version=21^&os=windows
   echo.
-  echo    Or if you already have JDK 21/17 elsewhere, run the build with:
+  echo    Or if you already have JDK 21 elsewhere, set JAVA_HOME manually:
   echo    set "JAVA_HOME=C:\Path\To\Your\jdk-21" ^&^& gradlew.bat bundleRelease
   echo.
-  echo    The Android Studio bundled JBR may not work with this Gradle version.
   goto :fail
 )
+
 
 echo    Using JDK: %FOUND_JDK%
 set "JAVA_HOME=%FOUND_JDK%"
