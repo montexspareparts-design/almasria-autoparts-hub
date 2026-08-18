@@ -26,11 +26,11 @@ await renderMedia({
   composition,
   serveUrl: bundled,
   codec: "h264",
-  outputLocation: "/mnt/documents/hero-video.mp4",
+  outputLocation: "/mnt/documents/almasria-promo-ar.mp4",
   puppeteerInstance: browser,
   muted: true,
   concurrency: 1,
 });
 
 await browser.close({ silent: false });
-console.log("Done! Video at /mnt/documents/hero-video.mp4");
+console.log("Done! Video at /mnt/documents/almasria-promo-ar.mp4");
