@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// توقيع الإصدار: ضع بيانات المفتاح في android/keystore.properties (غير مرفوع على Git)
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.almasria.autoparts"
     compileSdk = rootProject.ext.compileSdkVersion
