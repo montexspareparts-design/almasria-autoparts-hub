@@ -10,15 +10,25 @@ cd /d "%~dp0.."
 
 echo.
 echo [1/7] Stashing any local changes so we can pull cleanly...
+set "STASH_BEFORE="
+for /f %%H in ('git rev-parse -q --verify refs/stash 2^>nul') do set "STASH_BEFORE=%%H"
 git stash push -u -m "android-refresh-auto-stash" || goto :fail
+set "STASH_AFTER="
+for /f %%H in ('git rev-parse -q --verify refs/stash 2^>nul') do set "STASH_AFTER=%%H"
+set "STASH_CREATED=0"
+if not "%STASH_AFTER%"=="%STASH_BEFORE%" set "STASH_CREATED=1"
 
 echo.
 echo [2/7] Pulling latest code from GitHub...
-git pull --rebase || goto :restore_fail
+git pull --rebase || goto :pull_fail
 
 echo.
 echo [3/7] Restoring local stash (if any was created)...
-git stash pop
+if "%STASH_CREATED%"=="1" (
+  git stash pop || goto :stash_conflict
+) else (
+  echo    No local changes needed restoring.
+)
 
 echo.
 echo [4/7] Installing dependencies...
@@ -30,15 +40,15 @@ if exist dist rmdir /s /q dist
 if exist android\app\src\main\assets\public rmdir /s /q android\app\src\main\assets\public
 
 echo.
-echo [4/6] Building web app...
+echo [6/7] Building web app...
 call npm run build || goto :fail
 
 echo.
-echo [5/6] Syncing Capacitor (android)...
+echo [7/7] Syncing Capacitor (android)...
 call npx cap sync android || goto :fail
 
 echo.
-echo [6/6] Detecting a working JDK 21 for Gradle...
+echo [BUILD] Detecting a working JDK 21 for Gradle...
 set "FOUND_JDK="
 
 REM --- 1) Wildcard search for any JDK 21 installation ---
@@ -114,6 +124,21 @@ echo  If the old UI still shows: uninstall the app from the
 echo  phone first, then Run again.
 echo ===========================================================
 goto :eof
+
+:pull_fail
+echo.
+echo [X] Git pull failed.
+if "%STASH_CREATED%"=="1" (
+  echo Restoring your local changes...
+  git stash pop
+)
+goto :fail
+
+:stash_conflict
+echo.
+echo [X] Git updated successfully, but your local changes conflict with it.
+echo Your work is preserved. Resolve the files marked by Git, then run this script again.
+goto :fail
 
 :fail
 echo.
