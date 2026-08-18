@@ -37,7 +37,7 @@ for %%P in (
     if !errorlevel! equ 0 (
       if not defined FOUND_JDK (
         set "FOUND_JDK=%%~P"
-        for /f "tokens=3" %%v in ('"%%~P\bin\java.exe" -version 2^>^&1 ^| find "version"') do set "FOUND_VER=%%v"
+        for /f "usebackq tokens=3" %%v in (`"%%~P\bin\java.exe" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
       )
     )
   )
