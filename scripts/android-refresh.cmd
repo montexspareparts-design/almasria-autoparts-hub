@@ -9,15 +9,23 @@ setlocal
 cd /d "%~dp0.."
 
 echo.
-echo [1/6] Pulling latest code from GitHub...
-git pull --rebase || goto :fail
+echo [1/7] Stashing any local changes so we can pull cleanly...
+git stash push -u -m "android-refresh-auto-stash" || goto :fail
 
 echo.
-echo [2/6] Installing dependencies...
+echo [2/7] Pulling latest code from GitHub...
+git pull --rebase || goto :restore_fail
+
+echo.
+echo [3/7] Restoring local stash (if any was created)...
+git stash pop
+
+echo.
+echo [4/7] Installing dependencies...
 call npm install || goto :fail
 
 echo.
-echo [3/6] Cleaning old build output...
+echo [5/7] Cleaning old build output...
 if exist dist rmdir /s /q dist
 if exist android\app\src\main\assets\public rmdir /s /q android\app\src\main\assets\public
 

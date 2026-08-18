@@ -1,70 +1,75 @@
 @echo off
 REM ===========================================================
-REM  find-jdk.cmd - Search for a usable JDK 21/17 on Windows
+REM  find-jdk.cmd - Search for a usable JDK 21 on Windows
 REM  Usage:  scripts\find-jdk.cmd
 REM ===========================================================
 setlocal enabledelayedexpansion
 
 set "FOUND_JDK="
 set "FOUND_VER="
+set "_TEST_JAVA="
 
-REM --- 1) Wildcard search: any JDK 21 folder under common Windows locations ---
-for /d %%P in (
-  "C:\Program Files\Java\jdk-21*"
-  "C:\Program Files\Eclipse Adoptium\jdk-21*"
-  "C:\Program Files\Microsoft\jdk-21*"
-  "%LOCALAPPDATA%\Programs\Eclipse Adoptium\jdk-21*"
-) do (
-  if not defined FOUND_JDK (
-    if exist "%%~P\bin\java.exe" (
-      set "FOUND_JDK=%%~P"
-      for /f "usebackq tokens=3" %%v in (`"%%~P\bin\java.exe" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
-    )
-  )
-)
+REM --- Common root folders that may contain a JDK ---
+set "JDK_ROOTS=C:\Program Files\Java;C:\Program Files\Eclipse Adoptium;C:\Program Files\Microsoft;%LOCALAPPDATA%\Programs\Eclipse Adoptium;%LOCALAPPDATA%\Programs\Java"
 
-
-REM --- 2) Exact fallback list for known version paths ---
-for %%P in (
-  "C:\Program Files\Java\jdk-21"
-  "C:\Program Files\Java\jdk-21.0.0"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.0-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.1-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.2-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.3-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.4-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.5-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-21.0.6-hotspot"
-  "C:\Program Files\Microsoft\jdk-21"
-  "C:\Program Files\Java\jdk-17"
-  "C:\Program Files\Java\jdk-17.0.0"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.0-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.1-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.2-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.3-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.4-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.5-hotspot"
-  "C:\Program Files\Eclipse Adoptium\jdk-17.0.6-hotspot"
-  "C:\Program Files\Microsoft\jdk-17"
-  "C:\Program Files\Android\Android Studio\jbr"
-  "%LOCALAPPDATA%\Programs\Android Studio\jbr"
-) do (
-  set "JAVA_TRY=%%~P\bin\java.exe"
-  if exist "!JAVA_TRY!" (
-    "!JAVA_TRY!" -version 2>nul
-    if !errorlevel! equ 0 (
+for %%R in (%JDK_ROOTS%) do (
+  if exist "%%~R" (
+    for /d %%D in ("%%~R\jdk-21*") do (
       if not defined FOUND_JDK (
-        set "FOUND_JDK=%%~P"
-        for /f "usebackq tokens=3" %%v in (`"!JAVA_TRY!" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
+        set "_TEST_JAVA=%%~D\bin\java.exe"
+        if exist "!_TEST_JAVA!" (
+          "!_TEST_JAVA!" -version 2>nul
+          if !errorlevel! equ 0 (
+            set "FOUND_JDK=%%~D"
+            for /f "usebackq tokens=3" %%v in (`"!_TEST_JAVA!" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
+          )
+        )
       )
     )
   )
 )
 
+REM --- Exact fallback list for common JDK 21 paths ---
+if not defined FOUND_JDK (
+  for %%P in (
+    "C:\Program Files\Java\jdk-21"
+    "C:\Program Files\Java\jdk-21.0.0"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.0-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.1-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.2-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.3-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.4-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.5-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.6-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.7-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.8-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.9-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.10-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.11-hotspot"
+    "C:\Program Files\Eclipse Adoptium\jdk-21.0.12-hotspot"
+    "C:\Program Files\Microsoft\jdk-21"
+    "%LOCALAPPDATA%\Programs\Eclipse Adoptium\jdk-21.0.12-hotspot"
+  ) do (
+    if not defined FOUND_JDK (
+      set "_TEST_JAVA=%%~P\bin\java.exe"
+      if exist "!_TEST_JAVA!" (
+        "!_TEST_JAVA!" -version 2>nul
+        if !errorlevel! equ 0 (
+          set "FOUND_JDK=%%~P"
+          for /f "usebackq tokens=3" %%v in (`"!_TEST_JAVA!" -version 2^>^&1 ^| find "version"`) do set "FOUND_VER=%%v"
+        )
+      )
+    )
+  )
+)
 
 if not defined FOUND_JDK (
   echo.
-  echo [X] No usable JDK found on this machine.
+  echo [X] No usable JDK 21 found on this machine.
+  echo.
+  echo This project requires JDK 21 for Gradle 8.14 / Capacitor 8.
+  echo JDK 17 will NOT work — it produces the error:
+  echo    "error: invalid source release: 21"
   echo.
   echo Solution: Download Eclipse Temurin JDK 21 for Windows:
   echo https://adoptium.net/temurin/releases/?version=21^&os=windows
@@ -74,7 +79,7 @@ if not defined FOUND_JDK (
 )
 
 echo.
-echo [OK] Usable JDK found:
+echo [OK] Usable JDK 21 found:
 echo    Path: %FOUND_JDK%
 echo    Version: %FOUND_VER%
 echo.
