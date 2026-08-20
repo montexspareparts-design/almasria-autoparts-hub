@@ -224,8 +224,8 @@ const CheckoutPage = () => {
       }
 
       clearCart();
-      if (payment === "paymob" || payment === "geidea" || payment === "wallet") {
-        const methodParam = payment === "geidea" ? "&method=geidea" : "";
+      if (payment === "geidea") {
+        const methodParam = "&method=geidea";
         navigate(`/payment?order_id=${order.id}&amount=${orderTotal}${methodParam}`);
         return;
       }
