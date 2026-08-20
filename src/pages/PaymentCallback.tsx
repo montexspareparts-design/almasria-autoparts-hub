@@ -29,7 +29,7 @@ const PaymentCallback = () => {
   );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
-  const provider = searchParams.get("provider") === "geidea" ? "geidea" : "geidea";
+  const provider = "geidea";
   // The payment flow may bounce through several gateway redirects, so the
   // `src` flag can be dropped along the way. Persist it for the browser
   // session the first time we see it.

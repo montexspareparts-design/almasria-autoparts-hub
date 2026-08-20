@@ -23,7 +23,9 @@ export const isValidPaymobPublicKey = (key?: string | null) =>
  */
 export const buildPaymobReturnUrl = () => {
   const base = `${publicWebOrigin()}${PAYMOB_CALLBACK_PATH}`;
-  return isNativePlatform() ? `${base}?${PAYMOB_NATIVE_FLAG}` : base;
+  const url = new URL(isNativePlatform() ? `${base}?${PAYMOB_NATIVE_FLAG}` : base);
+  url.searchParams.set("provider", "geidea");
+  return url.toString();
 };
 
 export const normalizePaymobOrderReference = (reference?: string | null) =>
