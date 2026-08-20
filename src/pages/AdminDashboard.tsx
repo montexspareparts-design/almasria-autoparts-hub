@@ -40,7 +40,6 @@ const AdminQuantityDiscounts = lazy(() => import("@/components/AdminQuantityDisc
 const AdminCustomerIntelligence = lazy(() => import("@/components/AdminCustomerIntelligence"));
 const AdminTaskActionAuditLog = lazy(() => import("@/components/AdminTaskActionAuditLog"));
 const AdminProductInsights = lazy(() => import("@/components/AdminProductInsights"));
-const AdminPaymobSettings = lazy(() => import("@/components/AdminPaymobSettings"));
 const AdminPaymentReminders = lazy(() => import("@/components/AdminPaymentReminders"));
 const AdminInstaPayReceipts = lazy(() => import("@/components/AdminInstaPayReceipts"));
 const AdminMaintenanceBundles = lazy(() => import("@/components/AdminMaintenanceBundles"));
@@ -182,7 +181,6 @@ const sidebarGroups: SidebarGroup[] = [
   {
     label: "⚙️ إعدادات متقدمة",
     items: [
-      { id: "paymob", label: "إعدادات Paymob", icon: Briefcase },
       { id: "stock-settings", label: "إعدادات المخزون", icon: ShieldCheck },
       { id: "year-coverage", label: "تغطية السنوات", icon: Clock },
       { id: "daily-report-editor", label: "محرر أسئلة التقرير اليومي", icon: HelpCircle },
@@ -957,8 +955,6 @@ const AdminDashboard = () => {
         return <Suspense fallback={<SectionLoader />}><AdminERPSync /></Suspense>;
       case "erp-customers":
         return <Suspense fallback={<SectionLoader />}><AdminERPCustomers /></Suspense>;
-      case "paymob":
-        return <Suspense fallback={<SectionLoader />}><AdminPaymobSettings /></Suspense>;
       case "stock-settings":
         return <Suspense fallback={<SectionLoader />}><AdminStockSettings /></Suspense>;
       case "staff-roles":
