@@ -29,7 +29,7 @@ const PaymentCallback = () => {
   );
   const txnId = searchParams.get("id");
   const amountCents = searchParams.get("amount_cents");
-  const provider = searchParams.get("provider") === "geidea" ? "geidea" : "paymob";
+  const provider = searchParams.get("provider") === "geidea" ? "geidea" : "geidea";
   // The payment flow may bounce through several gateway redirects, so the
   // `src` flag can be dropped along the way. Persist it for the browser
   // session the first time we see it.
@@ -64,7 +64,7 @@ const PaymentCallback = () => {
       }
 
       // Authoritative source of truth = the order + latest payment
-      // transaction (updated by paymob-webhook). Never trust URL params
+      // transaction (updated by geidea-webhook). Never trust URL params
       // alone — they are trivially spoofable.
       const fetchOrderStatus = async (): Promise<"paid" | "failed" | "pending" | null> => {
         if (!merchantOrderId || !user) return null;
