@@ -641,15 +641,15 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
                               <Button
                                 size="sm"
                                 className="w-full gap-2 rounded-lg h-10"
-                                disabled={paymobLoading === order.id}
-                                onClick={() => handlePaymob(order)}
+                                disabled={geideaLoading === order.id}
+                                onClick={() => handleGeideaPay(order)}
                               >
-                                {paymobLoading === order.id ? (
+                                {geideaLoading === order.id ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <CreditCard className="w-4 h-4" />
                                 )}
-                                {paymobLoading === order.id ? "جاري التحميل..." : "ادفع بالبطاقة الآن"}
+                                {geideaLoading === order.id ? "جاري التحميل..." : "ادفع الآن"}
                               </Button>
                             </div>
                           </div>
