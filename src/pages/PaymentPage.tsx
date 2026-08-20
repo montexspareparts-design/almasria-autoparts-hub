@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  CreditCard, ShieldCheck, Loader2, AlertCircle, Package, XCircle
+  CreditCard, ShieldCheck, Loader2, AlertCircle, Package, XCircle, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
