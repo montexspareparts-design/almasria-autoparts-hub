@@ -136,32 +136,15 @@ const DealerOrdersList = ({ userId, onNavigateToPayment }: { userId: string; onN
   const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [reordering, setReordering] = useState<string | null>(null);
-  const [paymobLoading, setPaymobLoading] = useState<string | null>(null);
+  const [geideaLoading, setGeideaLoading] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { addItem } = useDealerCart();
 
-  const handlePaymob = async (order: Order) => {
-    setPaymobLoading(order.id);
-    try {
-      const { buildPaymobReturnUrl, ensureActiveSession } = await import("@/lib/paymob");
-      await ensureActiveSession();
-
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { order_id: order.id, return_url: buildPaymobReturnUrl() },
-      });
-      if (error || !data?.iframe_url) {
-        toast({ title: "حدث خطأ في بوابة الدفع", description: data?.error || "يرجى المحاولة مرة أخرى", variant: "destructive" });
-        return;
-      }
-      // Redirect externally — Paymob blocks iframe embedding
-      window.location.href = data.iframe_url;
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "حدث خطأ غير متوقع";
-      toast({ title: "حدث خطأ", description: message, variant: "destructive" });
-    } finally {
-      setPaymobLoading(null);
-    }
+  const handleGeideaPay = (order: Order) => {
+    setGeideaLoading(order.id);
+    onNavigateToPayment?.({ id: order.id, orderNumber: order.order_number, amount: order.total_amount });
+    setGeideaLoading(null);
   };
 
   useEffect(() => {
