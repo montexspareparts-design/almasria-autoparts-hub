@@ -3,10 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Truck, Zap, Store, CreditCard, Banknote, Smartphone, Building2,
-  Wallet, ShieldCheck, Package, Loader2, MapPin, User, Phone, Mail, FileText,
+  ShieldCheck, Package, Loader2, MapPin, User, Phone, Mail, FileText,
   Sparkles, CheckCircle2, Lock, ChevronDown, BadgeCheck
 } from "lucide-react";
-import PaymobCheckout from "@/components/PaymobCheckout";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,7 @@ const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", des
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
-  { id: "geidea", label: "الدفع بالفيزا", icon: ShieldCheck },
-  { id: "wallet", label: "محفظة إلكترونية (فودافون كاش / إتصالات / أورنج)", icon: Smartphone },
+  { id: "geidea", label: "الدفع بالفيزا أو المحفظة", icon: ShieldCheck },
 ];
 
 
@@ -71,9 +69,6 @@ const CheckoutPage = () => {
   const [shipping, setShipping] = useState<"bosta" | "pickup">("bosta");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
-  const [paymobClientSecret] = useState<string | null>(null);
-  const [paymobOrderId] = useState<string | null>(null);
-  const [paymobPublicKey] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "", phone: "", email: "", governorate: "", city: "", address: "", notes: "",
