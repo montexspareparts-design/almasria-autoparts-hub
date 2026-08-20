@@ -77,7 +77,7 @@ const PaymentPage = () => {
       {/* Luxury header band */}
       <div className="relative pt-20 md:pt-24 pb-10 md:pb-14 overflow-hidden bg-hero-gradient">
         <div className="absolute inset-0 bg-red-glow opacity-40 pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-px gold-divider" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
         <div className="relative container mx-auto px-4 max-w-2xl text-center">
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-primary/15 border border-primary/30 backdrop-blur-md flex items-center justify-center mx-auto mb-4 shadow-red-glow">
@@ -101,7 +101,7 @@ const PaymentPage = () => {
               transition={{ delay: 0.1 }}
               className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 mb-4 md:mb-6 shadow-xl overflow-hidden"
             >
-              <div className="absolute inset-x-0 top-0 h-px gold-divider" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
                   <Package className="w-4.5 h-4.5 text-muted-foreground" />
@@ -155,7 +155,7 @@ const PaymentPage = () => {
               transition={{ delay: 0.2 }}
               className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-xl overflow-hidden"
             >
-              <div className="absolute inset-0 bg-subtle-radial pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent pointer-events-none" />
               <div className="relative">
                 <div className="flex items-center gap-3 sm:gap-4 mb-5">
                   <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
