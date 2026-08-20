@@ -1,3 +1,7 @@
+// Paymob is ARCHIVED / DISABLED. Payments run through Geidea.
+// Flip to true (and re-wire UI + edge functions) only to reactivate Paymob.
+export const PAYMOB_ENABLED = false;
+
 import { supabase } from "@/integrations/supabase/client";
 import { isNativePlatform, publicWebOrigin } from "@/lib/native";
 
