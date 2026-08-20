@@ -73,48 +73,56 @@ const PaymentPage = () => {
   return (
     <div className="min-h-[100svh] bg-background flex flex-col">
       <Navbar />
-      <div className="pt-20 md:pt-24 pb-8 md:pb-12 flex-1">
-        <div className="container mx-auto px-3 sm:px-4 max-w-2xl">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-4 md:mb-6"
-          >
-            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 md:mb-4">
-              <CreditCard className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+
+      {/* Luxury header band */}
+      <div className="relative pt-20 md:pt-24 pb-10 md:pb-14 overflow-hidden bg-hero-gradient">
+        <div className="absolute inset-0 bg-red-glow opacity-40 pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+        <div className="relative container mx-auto px-4 max-w-2xl text-center">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-primary/15 border border-primary/30 backdrop-blur-md flex items-center justify-center mx-auto mb-4 shadow-red-glow">
+              <CreditCard className="w-7 h-7 md:w-8 md:h-8 text-primary" />
             </div>
-            <h1 className="text-xl md:text-3xl font-black text-foreground">إتمام الدفع</h1>
-            <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">اختر طريقة الدفع المناسبة لك</p>
-            <div className="mt-4">
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-white">إتمام الدفع</h1>
+            <p className="text-xs md:text-sm text-white/60 mt-2">معاملة مؤمّنة بالكامل عبر بوابة جيديا</p>
+            <div className="mt-5 flex justify-center">
               <AuthorizedDistributorBadges variant="compact" />
             </div>
           </motion.div>
+        </div>
+      </div>
 
+      <div className="flex-1 pb-10 md:pb-16 -mt-6 md:-mt-8">
+        <div className="container mx-auto px-3 sm:px-4 max-w-2xl">
           {(orderInfo?.orderNumber || displayAmount) && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-card border border-border rounded-xl p-3.5 sm:p-5 mb-4 md:mb-6"
+              className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 mb-4 md:mb-6 shadow-xl overflow-hidden"
             >
-              <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center">
+                  <Package className="w-4.5 h-4.5 text-muted-foreground" />
+                </div>
                 <h2 className="font-bold text-sm sm:text-base text-foreground">تفاصيل الطلب</h2>
               </div>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-3">
                 {orderInfo?.orderNumber && (
                   <div className="flex justify-between items-center">
                     <span className="text-muted-foreground text-xs sm:text-sm">رقم الطلب</span>
-                    <span className="font-bold font-mono text-foreground text-xs sm:text-sm" dir="ltr">
+                    <span className="font-bold font-mono text-foreground text-xs sm:text-sm bg-muted px-2.5 py-1 rounded-lg" dir="ltr">
                       {orderInfo.orderNumber}
                     </span>
                   </div>
                 )}
                 {displayAmount && (
-                  <div className="flex justify-between items-center pt-2 border-t border-border">
+                  <div className="flex justify-between items-end pt-3 border-t border-dashed border-border">
                     <span className="text-muted-foreground text-xs sm:text-sm">المبلغ المطلوب</span>
-                    <span className="text-base sm:text-lg font-black text-primary">
-                      {displayAmount} ج.م
+                    <span className="text-2xl sm:text-3xl font-black text-primary leading-none">
+                      {displayAmount}
+                      <span className="text-xs font-bold text-muted-foreground mr-1.5">ج.م</span>
                     </span>
                   </div>
                 )}
@@ -126,11 +134,11 @@ const PaymentPage = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-destructive/5 border border-destructive/20 rounded-xl p-3.5 sm:p-5 mb-4 md:mb-6"
+              className="bg-destructive/5 border border-destructive/20 rounded-2xl p-4 sm:p-5 mb-4 md:mb-6"
             >
-              <div className="flex items-start gap-2.5 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                  <XCircle className="w-5 h-5 text-destructive" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm sm:text-base text-foreground">تعذر إتمام الدفع</p>
@@ -142,33 +150,44 @@ const PaymentPage = () => {
 
           {!error && orderId && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-card border border-border rounded-xl p-4 sm:p-6"
+              className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-xl overflow-hidden"
             >
-              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-3 sm:gap-4 mb-5">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm sm:text-base text-foreground">الدفع بالفيزا أو المحفظة</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Visa / Mastercard / Meeza / محافظ إلكترونية</p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm sm:text-base text-foreground">الدفع بالفيزا أو المحفظة</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground">Visa / Mastercard / Meeza / محافظ إلكترونية عبر جيديا</p>
-                </div>
+                <GeideaCheckout orderId={orderId} currency="EGP" returnUrl={buildPaymobReturnUrl()} />
               </div>
-              <GeideaCheckout orderId={orderId} currency="EGP" returnUrl={buildPaymobReturnUrl()} />
             </motion.div>
           )}
 
-          <div className="mt-4 sm:mt-6 flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
-            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
-            <span>معاملة آمنة ومشفرة عبر جيديا</span>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            {[
+              { icon: ShieldCheck, label: "تشفير كامل" },
+              { icon: CreditCard, label: "كل وسائل الدفع" },
+              { icon: Package, label: "تأكيد فوري" },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="bg-muted/50 border border-border rounded-xl py-3 px-2">
+                <Icon className="w-4 h-4 mx-auto text-primary mb-1.5" />
+                <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{label}</span>
+              </div>
+            ))}
           </div>
 
-          <div className="text-center mt-3 sm:mt-4 pb-4">
+          <div className="text-center mt-5 pb-2">
             <Button variant="ghost" size="sm" asChild className="gap-2 text-muted-foreground text-xs sm:text-sm">
               <Link to="/">
-                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <ArrowRight className="w-4 h-4" />
                 العودة للرئيسية
               </Link>
             </Button>
@@ -179,5 +198,6 @@ const PaymentPage = () => {
     </div>
   );
 };
+
 
 export default PaymentPage;
