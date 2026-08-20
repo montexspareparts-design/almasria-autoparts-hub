@@ -60,8 +60,6 @@ interface OrderItem {
   } | null;
 }
 
-const isElectronicPayment = (method?: string | null) =>
-  !!method && ["instapay", "wallet", "bank_transfer"].includes(method);
 
 const orderStages = [
   { key: "pending", label: "تم استلام الطلب", icon: Inbox },
