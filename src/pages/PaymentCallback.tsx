@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { normalizePaymobOrderReference, NATIVE_SRC_VALUES } from "@/lib/paymob";
+import { normalizePaymobOrderReference, NATIVE_SRC_VALUES } from "@/lib/payment-return";
 import { isNativePlatform, returnToNativeApp } from "@/lib/native";
 
 const PaymentCallback = () => {

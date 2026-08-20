@@ -11,7 +11,7 @@ import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadge
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { buildPaymobReturnUrl } from "@/lib/paymob";
+import { buildPaymobReturnUrl } from "@/lib/payment-return";
 import GeideaCheckout from "@/components/GeideaCheckout";
 
 const PaymentPage = () => {

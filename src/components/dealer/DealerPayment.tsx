@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import GeideaCheckout from "@/components/GeideaCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { buildPaymobReturnUrl } from "@/lib/paymob";
+import { buildPaymobReturnUrl } from "@/lib/payment-return";
 
 type PaymentMethod = "cod" | "geidea";
 
