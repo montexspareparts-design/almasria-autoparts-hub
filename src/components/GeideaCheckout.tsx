@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,13 @@ const loadScript = (src: string) =>
 
 const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: GeideaCheckoutProps) => {
   const [loading, setLoading] = useState(false);
+  const pollRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (pollRef.current) window.clearInterval(pollRef.current);
+  }, []);
+
+
 
   const start = useCallback(async () => {
     try {
@@ -64,12 +71,43 @@ const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: Gei
         return;
       }
 
+      const goToCallback = () => {
+        window.location.href = `/payment-callback?provider=geidea&merchant_order_id=${encodeURIComponent(
+          data.order_number,
+        )}`;
+      };
+
+      // Wallet payments (Meeza / Vodafone Cash…) are confirmed out-of-band:
+      // the HPP success callback often never fires because the customer
+      // approves on their phone. Poll the order until the verified webhook
+      // moves it forward, then show the confirmation screen automatically.
+      const startPolling = () => {
+        if (pollRef.current) return;
+        let ticks = 0;
+        pollRef.current = window.setInterval(async () => {
+          ticks += 1;
+          if (ticks > 100) {
+            window.clearInterval(pollRef.current!);
+            pollRef.current = null;
+            return;
+          }
+          const { data: order } = await supabase
+            .from("orders")
+            .select("status")
+            .eq("id", orderId)
+            .maybeSingle();
+          if (order && ["processing", "shipped", "delivered"].includes(String(order.status))) {
+            window.clearInterval(pollRef.current!);
+            pollRef.current = null;
+            goToCallback();
+          }
+        }, 5000);
+      };
+
       const checkout = new window.GeideaCheckout(
         () => {
           // Final confirmation happens server-side via the verified webhook.
-          window.location.href = `/payment-callback?provider=geidea&merchant_order_id=${encodeURIComponent(
-            data.order_number,
-          )}`;
+          goToCallback();
         },
         (err) => {
           console.error("Geidea payment error", err);
@@ -82,6 +120,7 @@ const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: Gei
 
       onStarted?.();
       checkout.startPayment(data.session_id);
+      startPolling();
     } catch (e) {
       console.error("Geidea checkout error", e);
       toast({ title: "حدث خطأ غير متوقع", variant: "destructive" });
@@ -89,6 +128,7 @@ const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: Gei
       setLoading(false);
     }
   }, [orderId, currency, returnUrl, onStarted]);
+
 
   return (
     <div className="space-y-2">
