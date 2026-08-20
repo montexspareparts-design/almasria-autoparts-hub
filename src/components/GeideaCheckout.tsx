@@ -38,6 +38,13 @@ const loadScript = (src: string) =>
 
 const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: GeideaCheckoutProps) => {
   const [loading, setLoading] = useState(false);
+  const pollRef = useRef<number | null>(null);
+
+  useEffect(() => () => {
+    if (pollRef.current) window.clearInterval(pollRef.current);
+  }, []);
+
+
 
   const start = useCallback(async () => {
     try {
