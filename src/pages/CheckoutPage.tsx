@@ -3,10 +3,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Truck, Zap, Store, CreditCard, Banknote, Smartphone, Building2,
-  Wallet, ShieldCheck, Package, Loader2, MapPin, User, Phone, Mail, FileText,
+  ShieldCheck, Package, Loader2, MapPin, User, Phone, Mail, FileText,
   Sparkles, CheckCircle2, Lock, ChevronDown, BadgeCheck
 } from "lucide-react";
-import PaymobCheckout from "@/components/PaymobCheckout";
 import PaymentInstructionsBanner from "@/components/PaymentInstructionsBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,8 +50,7 @@ const PICKUP_OPTION = { id: "pickup", label: "استلام من الفرع", des
 
 const paymentMethods = [
   { id: "cod", label: "الدفع عند الاستلام", icon: Banknote },
-  { id: "geidea", label: "الدفع بالفيزا", icon: ShieldCheck },
-  { id: "wallet", label: "محفظة إلكترونية (فودافون كاش / إتصالات / أورنج)", icon: Smartphone },
+  { id: "geidea", label: "الدفع بالفيزا أو المحفظة", icon: ShieldCheck },
 ];
 
 
@@ -71,9 +69,6 @@ const CheckoutPage = () => {
   const [shipping, setShipping] = useState<"bosta" | "pickup">("bosta");
   const [payment, setPayment] = useState("cod");
   const [submitting, setSubmitting] = useState(false);
-  const [paymobClientSecret] = useState<string | null>(null);
-  const [paymobOrderId] = useState<string | null>(null);
-  const [paymobPublicKey] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "", phone: "", email: "", governorate: "", city: "", address: "", notes: "",
@@ -229,8 +224,8 @@ const CheckoutPage = () => {
       }
 
       clearCart();
-      if (payment === "paymob" || payment === "geidea" || payment === "wallet") {
-        const methodParam = payment === "wallet" ? "&method=wallet" : payment === "geidea" ? "&method=geidea" : "";
+      if (payment === "geidea") {
+        const methodParam = "&method=geidea";
         navigate(`/payment?order_id=${order.id}&amount=${orderTotal}${methodParam}`);
         return;
       }
@@ -244,31 +239,11 @@ const CheckoutPage = () => {
     }
   };
 
-  if (items.length === 0 && !paymobClientSecret) {
+  if (items.length === 0) {
     navigate("/cart");
     return null;
   }
 
-  if (paymobClientSecret && paymobPublicKey) {
-    return (
-      <div className="min-h-screen bg-carbon">
-        <Navbar />
-        <div className="pt-24 pb-12">
-          <div className="container mx-auto px-4 max-w-lg text-center">
-            <h1 className="text-2xl font-black text-white mb-6 font-tajawal">💳 إتمام الدفع</h1>
-            <div className="bg-card border border-[hsl(var(--gold)/0.3)] rounded-2xl p-6">
-              <PaymobCheckout clientSecret={paymobClientSecret} publicKey={paymobPublicKey} />
-            </div>
-            <p className="text-xs text-soft mt-4">أكمل الدفع داخل النافذة، ثم ستعود تلقائياً لصفحة التأكيد.</p>
-            {paymobOrderId && (
-              <Button variant="outline" className="mt-4" onClick={() => navigate(`/?highlight=${paymobOrderId}`)}>العودة للرئيسية</Button>
-            )}
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   // Premium luxury card wrapper
   const sectionCard = (delay: number, children: React.ReactNode) => (

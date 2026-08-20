@@ -330,7 +330,7 @@ const TrackOrderPage = () => {
                           <p className="text-[10px] text-muted-foreground">طريقة الدفع</p>
                           <p className="font-semibold text-xs">
                             {order.payment_method === "cod" ? "الدفع عند الاستلام" :
-                             order.payment_method === "paymob" ? "بطاقة بنكية" :
+                             order.payment_method === "paymob" || order.payment_method === "geidea" ? "بطاقة بنكية / محفظة" :
                              order.payment_method}
                           </p>
                         </div>

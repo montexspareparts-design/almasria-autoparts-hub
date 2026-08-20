@@ -10,20 +10,19 @@ export const PAYMOB_NATIVE_FLAG = "src=app";
 // Any of these values means "this attempt started inside the native app".
 export const NATIVE_SRC_VALUES = ["app", "ios", "android", "native"];
 
-export const isValidPaymobPublicKey = (key?: string | null) =>
-  Boolean(key && (key.startsWith("egy_pk_") || key.startsWith("pak_pk_")));
-
 /**
- * Builds the Paymob `return_url`.
+ * Builds the Geidea/return URL.
  *
  * On the web: uses the current origin so preview / custom domains keep
- * working. On native: always the canonical HTTPS domain — Paymob will
+ * working. On native: always the canonical HTTPS domain — Geidea will
  * reject `capacitor://` schemes and the app couldn't receive a redirect
  * to `capacitor://localhost` from a third-party origin anyway.
  */
 export const buildPaymobReturnUrl = () => {
   const base = `${publicWebOrigin()}${PAYMOB_CALLBACK_PATH}`;
-  return isNativePlatform() ? `${base}?${PAYMOB_NATIVE_FLAG}` : base;
+  const url = new URL(isNativePlatform() ? `${base}?${PAYMOB_NATIVE_FLAG}` : base);
+  url.searchParams.set("provider", "geidea");
+  return url.toString();
 };
 
 export const normalizePaymobOrderReference = (reference?: string | null) =>
