@@ -16,12 +16,8 @@ const json = (body: unknown, status = 200) =>
 const RequestSchema = z.object({
   order_number: z.string().min(1).max(80),
   transaction_id: z.string().regex(/^\d+$/).optional(),
-  provider: z.enum(["paymob", "geidea"]).default("paymob"),
+  provider: z.enum(["paymob", "geidea"]).default("geidea"),
 });
-
-const PAYMOB_ATTEMPT_SEPARATOR = "--pm--";
-const normalizeOrderReference = (value?: string | null) =>
-  value ? value.split(PAYMOB_ATTEMPT_SEPARATOR)[0] : null;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -47,13 +43,13 @@ Deno.serve(async (req) => {
     const parsed = RequestSchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return json({ error: "Invalid request" }, 400);
 
-    const { order_number: orderNumber, transaction_id: requestedTransactionId, provider } = parsed.data;
+    const { order_number: orderNumber } = parsed.data;
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    let orderQuery = admin
+    const orderQuery = admin
       .from("orders")
       .select("id, user_id, order_number, status, total_amount")
-      .eq("order_number", orderNumber);
-    orderQuery = orderQuery.eq("user_id", userId);
+      .eq("order_number", orderNumber)
+      .eq("user_id", userId);
     const { data: order } = await orderQuery.maybeSingle();
 
     if (!order) return json({ error: "Order not found" }, 404);
@@ -61,130 +57,40 @@ Deno.serve(async (req) => {
       return json({ status: "success" });
     }
 
-    if (provider === "geidea") {
-      const { data: verifiedPayment } = await admin
-        .from("payment_logs")
-        .select("amount, status, raw_response")
-        .eq("provider", "geidea")
-        .eq("event_type", "webhook")
-        .eq("order_number", orderNumber)
-        .eq("signature_valid", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const payload = verifiedPayment?.raw_response as Record<string, any> | null;
-      const orderPayload = (payload?.order ?? payload) as Record<string, any> | null;
-      const payTx = Array.isArray(orderPayload?.transactions)
-        ? orderPayload?.transactions.find((item: any) => item?.type === "Pay")
-        : null;
-      const responseCode = String(
-        orderPayload?.detailedResponseCode ?? orderPayload?.responseCode ??
-          payTx?.codes?.detailedResponseCode ?? payTx?.codes?.responseCode ?? "",
-      );
-      const providerStatus = String(orderPayload?.status ?? verifiedPayment?.status ?? "").toLowerCase();
-      const paid = ["paid", "success"].includes(providerStatus) || responseCode === "000";
-      const amountMatches = verifiedPayment &&
-        Math.abs(Number(verifiedPayment.amount) - Number(order.total_amount)) < 0.01;
-
-      if (paid && amountMatches) {
-        const { error: updateError } = await admin
-          .from("orders")
-          .update({ status: "processing" })
-          .eq("id", order.id);
-        if (updateError) throw updateError;
-        return json({ status: "success" });
-      }
-      return json({ status: "pending" });
-    }
-
-    let transactionId = requestedTransactionId;
-    let storedTransactionCreatedAt: string | null = null;
-    if (!transactionId) {
-      const { data: storedTransaction } = await admin
-        .from("payment_transactions")
-        .select("paymob_transaction_id, created_at")
-        .eq("order_id", order.id)
-        .neq("paymob_transaction_id", "")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      transactionId = storedTransaction?.paymob_transaction_id || undefined;
-      storedTransactionCreatedAt = storedTransaction?.created_at || null;
-    }
-    if (!transactionId || !/^\d+$/.test(transactionId)) return json({ status: "pending" });
-
-    const paymobApiKey = Deno.env.get("PAYMOB_API_KEY");
-    if (!paymobApiKey) return json({ status: "pending" });
-
-    const authRes = await fetch("https://accept.paymob.com/api/auth/tokens", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: paymobApiKey }),
-    });
-    const authData = await authRes.json().catch(() => ({}));
-    if (!authRes.ok || !authData.token) return json({ status: "pending" });
-
-    const txRes = await fetch(`https://accept.paymob.com/api/acceptance/transactions/${transactionId}`, {
-      headers: { Authorization: `Bearer ${authData.token}` },
-    });
-    const tx = await txRes.json().catch(() => ({}));
-    if (!txRes.ok) return json({ status: "pending" });
-
-    const txOrderNumber = normalizeOrderReference(tx?.order?.merchant_order_id ?? tx?.merchant_order_id);
-    const amountMatches = Number(tx?.amount_cents) === Math.round(Number(order.total_amount) * 100);
-    if (txOrderNumber !== order.order_number || !amountMatches) {
-      console.error("Payment reconciliation mismatch", { orderNumber, transactionId });
-      return json({ status: "pending" });
-    }
-
-    const success = tx?.success === true && tx?.pending !== true;
-    const providerFailed = tx?.success === false && tx?.pending !== true;
-    const paymentMethod = String(tx?.source_data?.type || "").toLowerCase();
-    const createdAt = tx?.created_at || storedTransactionCreatedAt;
-    const createdAtMs = createdAt ? new Date(createdAt).getTime() : Date.now();
-    const walletGraceActive = paymentMethod === "wallet" &&
-      Date.now() - createdAtMs < 10 * 60 * 1000;
-    const failed = providerFailed && !walletGraceActive;
-    const reconciledStatus = success ? "success" : failed ? "failed" : "pending";
-
-    const { data: existingTx } = await admin
-      .from("payment_transactions")
-      .select("id")
-      .eq("paymob_transaction_id", transactionId)
+    const { data: verifiedPayment } = await admin
+      .from("payment_logs")
+      .select("amount, status, raw_response")
+      .eq("provider", "geidea")
+      .eq("event_type", "webhook")
+      .eq("order_number", orderNumber)
+      .eq("signature_valid", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    const txRecord = {
-      order_id: order.id,
-      order_number: order.order_number,
-      paymob_transaction_id: transactionId,
-      amount_cents: Number(tx.amount_cents),
-      currency: tx.currency || "EGP",
-      status: reconciledStatus,
-      payment_method: tx.source_data?.type || null,
-      card_last_four: tx.source_data?.pan || null,
-      card_brand: tx.source_data?.sub_type || null,
-      is_refunded: tx.is_refunded === true,
-      is_voided: tx.is_voided === true,
-      error_message: providerFailed ? (tx.data?.message || tx.txn_response_code || null) : null,
-      raw_payload: { reconciliation: true, obj: tx },
-    };
+    const payload = verifiedPayment?.raw_response as Record<string, any> | null;
+    const orderPayload = (payload?.order ?? payload) as Record<string, any> | null;
+    const payTx = Array.isArray(orderPayload?.transactions)
+      ? orderPayload?.transactions.find((item: any) => item?.type === "Pay")
+      : null;
+    const responseCode = String(
+      orderPayload?.detailedResponseCode ?? orderPayload?.responseCode ??
+        payTx?.codes?.detailedResponseCode ?? payTx?.codes?.responseCode ?? "",
+    );
+    const providerStatus = String(orderPayload?.status ?? verifiedPayment?.status ?? "").toLowerCase();
+    const paid = ["paid", "success"].includes(providerStatus) || responseCode === "000";
+    const amountMatches = verifiedPayment &&
+      Math.abs(Number(verifiedPayment.amount) - Number(order.total_amount)) < 0.01;
 
-    if (existingTx?.id) {
-      await admin.from("payment_transactions").update(txRecord).eq("id", existingTx.id);
-    } else {
-      await admin.from("payment_transactions").insert(txRecord);
-    }
-
-    if (success && ["awaiting_payment", "confirmed", "pending"].includes(String(order.status))) {
+    if (paid && amountMatches) {
       const { error: updateError } = await admin
         .from("orders")
         .update({ status: "processing" })
         .eq("id", order.id);
       if (updateError) throw updateError;
+      return json({ status: "success" });
     }
-
-    return json({ status: reconciledStatus });
+    return json({ status: "pending" });
   } catch (error) {
     console.error("verify-payment-status error", error instanceof Error ? error.message : error);
     return json({ status: "pending" });
