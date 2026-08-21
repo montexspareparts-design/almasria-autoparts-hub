@@ -6,12 +6,20 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Content-Security-Policy: upgrade-insecure-requests
-  Cache-Control: no-cache, no-store, must-revalidate
-  Pragma: no-cache
-  Expires: 0
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/404.html
+  Cache-Control: public, max-age=0, must-revalidate
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
 
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
@@ -36,4 +44,4 @@
   Cache-Control: public, max-age=86400
 
 /sitemap.xml
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=0, must-revalidate
