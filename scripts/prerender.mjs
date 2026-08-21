@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROUTES, SITE } from "./seo-routes.mjs";
+import { LEGACY_REDIRECTS } from "./legacy-redirects.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
