@@ -68,6 +68,36 @@ for (const route of ROUTES) {
   count++;
 }
 
+// Legacy URL redirects as real static pages (hosting ignores _redirects).
+function buildRedirectHtml(newPath) {
+  const target = `${SITE}${newPath}`;
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تم نقل الصفحة | المصرية جروب</title>
+<link rel="canonical" href="${target}" />
+<meta http-equiv="refresh" content="0; url=${newPath}" />
+</head>
+<body>
+<p>تم نقل هذه الصفحة إلى عنوان جديد. لو لم يتم تحويلك تلقائيًا، اضغط على الرابط:</p>
+<p><a href="${newPath}">${target}</a></p>
+<script>location.replace(${JSON.stringify(newPath)});</script>
+</body>
+</html>
+`;
+}
+
+let redirectCount = 0;
+for (const [oldPath, newPath] of Object.entries(LEGACY_REDIRECTS)) {
+  const outDir = join(dist, oldPath.replace(/^\//, ""));
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, "index.html"), buildRedirectHtml(newPath), "utf8");
+  redirectCount++;
+}
+
+
 // Real 404 page (host serves it with a 404 status).
 const notFound = buildHtml({
   path: "/404",
