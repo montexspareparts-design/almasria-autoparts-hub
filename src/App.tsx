@@ -226,10 +226,15 @@ const App = () => (
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
                     <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
+                    <Route path="/parts-by-model/:model/:type" element={<ModelPartTypePage />} />
                     <Route path="/parts-by-model/:model" element={<PartsByModelPage />} />
                     <Route path="/parts-by-model" element={<PartsByModelPage />} />
                     <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
                     <Route path="/parts-by-type" element={<PartsByTypePage />} />
+                    <Route path="/branches/:slug" element={<BranchesPage />} />
+                    <Route path="/branches" element={<BranchesPage />} />
+                    <Route path="/product/:sku" element={<PublicProductPage />} />
+
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/auth-callback" element={<AuthCallbackRoute />} />
                     <Route path="/dealer-apply" element={<DealerApply />} />
