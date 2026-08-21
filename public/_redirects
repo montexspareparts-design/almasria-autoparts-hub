@@ -1,0 +1,33 @@
+# Legacy WordPress URLs -> new SPA routes (301 permanent)
+/home/                        /                              301!
+/home                         /                              301!
+/index.php                    /                              301!
+/shop/                        /products                      301!
+/shop                         /products                      301!
+/about-us/                    /about                         301!
+/about-us                     /about                         301!
+/contact-us/                  /contact                       301!
+/contact-us                   /contact                       301!
+/blog/*                       /guides/:splat                 301
+/product-category/*           /products                      301
+
+# Arabic legacy model URLs
+/تويوتا-هاي-اس/               /parts-by-model/hiace          301!
+/تويوتا-هايس/                 /parts-by-model/hiace          301!
+/تويوتا-كوستر/                /parts-by-model/coaster        301!
+/تويوتا-هايلوكس/              /parts-by-model/hilux          301!
+/تويوتا-لاند-كروزر/           /parts-by-model/land-cruiser   301!
+/تويوتا-كورولا/               /parts-by-model/corolla        301!
+/تويوتا-كامري/                /parts-by-model/camry          301!
+/تويوتا-ياريس/                /parts-by-model/yaris          301!
+/تويوتا-راف-فور/              /parts-by-model/rav4           301!
+/تويوتا-فورتشنر/              /parts-by-model/fortuner       301!
+/تويوتا-رش/                   /parts-by-model/rush           301!
+/تويوتا-روميون/               /parts-by-model/rumion         301!
+/قطع-غيار-تويوتا/             /products/toyota-genuine       301!
+/زيوت-تويوتا/                 /products/toyota-oils          301!
+/من-نحن/                      /about                         301!
+/اتصل-بنا/                    /contact                       301!
+
+# Dead links must answer with a real 404 (not 200)
+/*                            /404.html                      404
