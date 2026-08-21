@@ -7,12 +7,27 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROUTES, SITE } from "./seo-routes.mjs";
+import { ROUTES, SITE, ORG_SCHEMA, buildBreadcrumb, COMMON_LINKS } from "./seo-routes.mjs";
 import { LEGACY_REDIRECTS } from "./legacy-redirects.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
 const shellPath = join(dist, "index.html");
+
+const OG_IMAGE = `${SITE}/pwa-512x512.png`;
+
+const WEBSITE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "المصرية جروب",
+  url: SITE,
+  inLanguage: "ar-EG",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE}/products?search={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
 
 if (!existsSync(shellPath)) {
   console.error("[prerender] dist/index.html not found — run the build first.");
@@ -24,6 +39,8 @@ const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 function buildHtml(route) {
   const url = `${SITE}${route.path === "/" ? "/" : route.path}`;
+  const image = route.image || OG_IMAGE;
+  const schemas = [ORG_SCHEMA, WEBSITE_SCHEMA, ...(route.schema || [])];
   const head = `
     <title>${esc(route.title)}</title>
     <meta name="description" content="${esc(route.description)}" />
@@ -31,16 +48,19 @@ function buildHtml(route) {
     <link rel="alternate" hreflang="ar-EG" href="${url}" />
     <link rel="alternate" hreflang="x-default" href="${url}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="${route.ogType || "website"}" />
     <meta property="og:site_name" content="المصرية جروب" />
     <meta property="og:locale" content="ar_EG" />
     <meta property="og:url" content="${url}" />
     <meta property="og:title" content="${esc(route.title)}" />
     <meta property="og:description" content="${esc(route.description)}" />
+    <meta property="og:image" content="${esc(image)}" />
+    <meta property="og:image:alt" content="${esc(route.title)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${esc(route.title)}" />
     <meta name="twitter:description" content="${esc(route.description)}" />
-    ${(route.schema || [])
+    <meta name="twitter:image" content="${esc(image)}" />
+    ${schemas
       .map((s) => `<script type="application/ld+json">${JSON.stringify(s)}</script>`)
       .join("\n    ")}
   `;
@@ -51,8 +71,8 @@ function buildHtml(route) {
     .replace(/<title>[\s\S]*?<\/title>/i, "")
     .replace(/<meta\s+name="description"[^>]*>/gi, "")
     .replace(/<link\s+rel="canonical"[^>]*>/gi, "")
-    .replace(/<meta\s+property="og:(?:type|url|title|description|site_name|locale)"[^>]*>/gi, "")
-    .replace(/<meta\s+name="twitter:(?:card|title|description)"[^>]*>/gi, "")
+    .replace(/<meta\s+property="og:(?:type|url|title|description|site_name|locale|image)"[^>]*>/gi, "")
+    .replace(/<meta\s+name="twitter:(?:card|title|description|image)"[^>]*>/gi, "")
     .replace(/<\/head>/i, `${head}\n</head>`);
 
   const seoBody = `<div id="seo-prerender" data-prerender="1">${route.body}</div>`;
@@ -60,13 +80,118 @@ function buildHtml(route) {
   return html;
 }
 
+
+/* ── Individual product pages (fetched from the live catalog) ── */
+function readEnv() {
+  const out = {};
+  for (const f of [".env", ".env.local", ".env.production"]) {
+    const p = join(root, f);
+    if (!existsSync(p)) continue;
+    for (const line of readFileSync(p, "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*"?([^"\n\r]*)"?\s*$/);
+      if (m) out[m[1]] = m[2];
+    }
+  }
+  return { ...out, ...process.env };
+}
+
+const BRAND_LABEL = {
+  toyota_genuine: "تويوتا أصلي",
+  denso: "DENSO",
+  aisin: "AISIN",
+  mtx_aftermarket: "MTX",
+  fbk: "FBK",
+  kyb: "KYB",
+  tp: "TP",
+};
+
+async function fetchProducts() {
+  const env = readEnv();
+  const url = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
+  const key = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    console.warn("[prerender] no Supabase env — skipping product pages.");
+    return [];
+  }
+  try {
+    const res = await fetch(
+      `${url}/rest/v1/products?select=sku,part_number,name_ar,name_en,description_ar,brand,image_url,stock_quantity,erp_item_code,compatible_models&is_active=eq.true&order=sku.asc&limit=2000`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`[prerender] product fetch failed (${err.message}) — skipping product pages.`);
+    return [];
+  }
+}
+
+const products = (await fetchProducts()).filter((p) => p.sku && /^[A-Za-z0-9_-]+$/.test(String(p.sku)));
+
+const productRoutes = products.map((p) => {
+  const brand = BRAND_LABEL[p.brand] || "تويوتا";
+  const partNumber = p.part_number || "";
+  const title = `${p.name_ar}${partNumber ? ` — ${partNumber}` : ""} | المصرية جروب`.slice(0, 110);
+  const description =
+    `${p.name_ar} — ${brand}. كود الصنف ${p.erp_item_code || p.sku}${partNumber ? ` وبارت نمبر ${partNumber}` : ""}. متوفر لدى المصرية جروب مع توصيل لكل محافظات مصر.`.slice(
+      0,
+      300
+    );
+  return {
+    path: `/product/${p.sku}`,
+    title,
+    description,
+    ogType: "product",
+    image: p.image_url && /^https?:\/\//.test(p.image_url) ? p.image_url : undefined,
+    body: `<h1>${esc(p.name_ar)}</h1>
+      <ul>
+        <li>كود الصنف: ${esc(p.erp_item_code || p.sku)}</li>
+        ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
+        <li>العلامة: ${esc(brand)}</li>
+        <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "اطلب توفيره"}</li>
+      </ul>
+      <p>${esc(p.description_ar || `${p.name_ar} من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. للاستعلام عن السعر والتوفر تواصل معنا.`)}</p>
+      <p><a href="/products">تصفح كل الكتالوج</a> · <a href="/contact">اتصل بنا للاستعلام عن السعر</a></p>
+      ${COMMON_LINKS}`,
+    schema: [
+      {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: p.name_ar,
+        sku: String(p.erp_item_code || p.sku),
+        ...(partNumber ? { mpn: partNumber } : {}),
+        brand: { "@type": "Brand", name: brand },
+        ...(p.image_url && /^https?:\/\//.test(p.image_url) ? { image: p.image_url } : {}),
+        description: p.description_ar || p.name_ar,
+        url: `${SITE}/product/${p.sku}`,
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "EGP",
+          availability:
+            Number(p.stock_quantity) > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+          url: `${SITE}/product/${p.sku}`,
+          seller: { "@type": "Organization", name: "المصرية جروب" },
+        },
+      },
+      buildBreadcrumb([
+        { name: "الرئيسية", path: "/" },
+        { name: "الكتالوج", path: "/products" },
+        { name: p.name_ar, path: `/product/${p.sku}` },
+      ]),
+    ],
+  };
+});
+
+const ALL_ROUTES = [...ROUTES, ...productRoutes];
+
 let count = 0;
-for (const route of ROUTES) {
+for (const route of ALL_ROUTES) {
   const outDir = route.path === "/" ? dist : join(dist, route.path.replace(/^\//, ""));
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "index.html"), buildHtml(route), "utf8");
   count++;
 }
+
 
 // Legacy URL redirects as real static pages (hosting ignores _redirects).
 function buildRedirectHtml(newPath) {
@@ -113,12 +238,15 @@ writeFileSync(join(dist, "404.html"), notFound, "utf8");
 
 // Sitemap generated from the same source of truth.
 const today = new Date().toISOString().slice(0, 10);
-const priority = (p) => (p === "/" ? "1.0" : p.split("/").length <= 2 ? "0.9" : "0.8");
+const priority = (p) =>
+  p === "/" ? "1.0" : p.startsWith("/product/") ? "0.6" : p.split("/").length <= 2 ? "0.9" : "0.8";
+const encodeLoc = (p) =>
+  `${SITE}${p === "/" ? "/" : p}`.replace(/&/g, "&amp;");
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${ROUTES.map(
+${ALL_ROUTES.map(
   (r) => `  <url>
-    <loc>${SITE}${r.path === "/" ? "/" : r.path}</loc>
+    <loc>${encodeLoc(r.path)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority(r.path)}</priority>
@@ -129,4 +257,7 @@ ${ROUTES.map(
 writeFileSync(join(dist, "sitemap.xml"), sitemap, "utf8");
 writeFileSync(join(root, "public", "sitemap.xml"), sitemap, "utf8");
 
-console.log(`[prerender] wrote ${count} pages + ${redirectCount} legacy redirects + 404.html + sitemap.xml`);
+console.log(
+  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml`
+);
+

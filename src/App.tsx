@@ -56,6 +56,10 @@ const ClientSegmentPage = lazy(() => import("./pages/ClientSegmentPage"));
 const GenuinePartsPage = lazy(() => import("./pages/GenuinePartsPage"));
 const PartsByModelPage = lazy(() => import("./pages/PartsByModelPage"));
 const PartsByTypePage = lazy(() => import("./pages/PartsByTypePage"));
+const ModelPartTypePage = lazy(() => import("./pages/ModelPartTypePage"));
+const BranchesPage = lazy(() => import("./pages/BranchesPage"));
+const PublicProductPage = lazy(() => import("./pages/PublicProductPage"));
+
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
@@ -226,10 +230,15 @@ const App = () => (
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/what-sets-us-apart" element={<WhatSetsUsApartPage />} />
                     <Route path="/toyota-genuine-parts-egypt" element={<ToyotaPartsEgypt />} />
+                    <Route path="/parts-by-model/:model/:type" element={<ModelPartTypePage />} />
                     <Route path="/parts-by-model/:model" element={<PartsByModelPage />} />
                     <Route path="/parts-by-model" element={<PartsByModelPage />} />
                     <Route path="/parts-by-type/:type" element={<PartsByTypePage />} />
                     <Route path="/parts-by-type" element={<PartsByTypePage />} />
+                    <Route path="/branches/:slug" element={<BranchesPage />} />
+                    <Route path="/branches" element={<BranchesPage />} />
+                    <Route path="/product/:sku" element={<PublicProductPage />} />
+
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/auth-callback" element={<AuthCallbackRoute />} />
                     <Route path="/dealer-apply" element={<DealerApply />} />

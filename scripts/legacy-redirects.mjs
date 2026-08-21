@@ -15,6 +15,8 @@ export const LEGACY_REDIRECTS = {
   "/contact-us": "/contact",
   "/home": "/",
   "/home-2": "/",
+  "/products/genuine-toyota-parts": "/products/toyota-genuine",
+
 
   // Arabic legacy URLs
   "/تويوتا-هاي-اس": "/parts-by-model/hiace",
