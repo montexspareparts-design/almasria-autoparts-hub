@@ -1,0 +1,60 @@
+# ── Legacy WordPress URLs -> new routes (301 permanent) ──
+/index.php                    /                              301!
+/shop/                        /products                      301!
+/shop                         /products                      301!
+/about-us/                    /about                         301!
+/about-us                     /about                         301!
+/contact-us/                  /contact                       301!
+/contact-us                   /contact                       301!
+/product-category/*           /products                      301
+/blog/*                       /guides/:splat                 301
+
+# Arabic legacy model URLs
+/تويوتا-هاي-اس/               /parts-by-model/hiace          301!
+/تويوتا-هايس/                 /parts-by-model/hiace          301!
+/تويوتا-كوستر/                /parts-by-model/coaster        301!
+/تويوتا-هايلوكس/              /parts-by-model/hilux          301!
+/تويوتا-لاند-كروزر/           /parts-by-model/land-cruiser   301!
+/تويوتا-كورولا/               /parts-by-model/corolla        301!
+/تويوتا-كامري/                /parts-by-model/camry          301!
+/تويوتا-ياريس/                /parts-by-model/yaris          301!
+/تويوتا-راف-فور/              /parts-by-model/rav4           301!
+/تويوتا-فورتشنر/              /parts-by-model/fortuner       301!
+/تويوتا-رش/                   /parts-by-model/rush           301!
+/تويوتا-روميون/               /parts-by-model/rumion         301!
+/قطع-غيار-تويوتا/             /products/toyota-genuine       301!
+/زيوت-تويوتا/                 /products/toyota-oils          301!
+/من-نحن/                      /about                         301!
+/اتصل-بنا/                    /contact                       301!
+
+# ── Application (non-indexed) routes: serve the SPA shell with 200 ──
+/home                         /index.html                    200
+/home-2                       /index.html                    200
+/main-home                    /index.html                    200
+/auth                         /index.html                    200
+/auth-callback                /index.html                    200
+/reset-password               /index.html                    200
+/client-register              /index.html                    200
+/delete-account               /index.html                    200
+/my-profile                   /index.html                    200
+/cart                         /index.html                    200
+/checkout                     /index.html                    200
+/payment                      /index.html                    200
+/payment-callback             /index.html                    200
+/admin                        /index.html                    200
+/admin/*                      /index.html                    200
+/staff/*                      /index.html                    200
+/dealer                       /index.html                    200
+/dealer/*                     /index.html                    200
+/dealer-login                 /index.html                    200
+/dealer-register              /index.html                    200
+/dealer-apply                 /index.html                    200
+/dev/*                        /index.html                    200
+/products/*                   /index.html                    200
+/parts-by-model/*             /index.html                    200
+/parts-by-type/*              /index.html                    200
+/clients/*                    /index.html                    200
+/guides/*                     /index.html                    200
+
+# ── Anything else genuinely does not exist: real 404 status ──
+/*                            /404.html                      404
