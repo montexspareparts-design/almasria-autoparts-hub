@@ -30,6 +30,8 @@ import brandMtx from "@/assets/brand-mtx.webp";
 import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.webp";
+import brandKyb from "@/assets/brand-kyb.png";
+import brandTp from "@/assets/brand-tp.png";
 import oilBg from "@/assets/oil-hero-bg.webp";
 
 const brandConfig: Record<string, { title: string; subtitle: string; titleEn?: string; descriptionEn?: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {
@@ -75,6 +77,20 @@ const brandConfig: Record<string, { title: string; subtitle: string; titleEn?: s
     descriptionEn: "Genuine AISIN parts — one of the world's largest automotive parts manufacturers, certified Japanese quality.",
     badge: "وكيل معتمد", brandKey: "aisin", logo: brandAisin,
   },
+  "kyb": {
+    title: "KYB", subtitle: "مساعدين ومكونات تعليق يابانية",
+    titleEn: "KYB — Japanese Shock Absorbers",
+    description: "مساعدين KYB اليابانية الأصلية لكل موديلات تويوتا — ثبات أعلى على الطريق وعمر افتراضي أطول.",
+    descriptionEn: "Genuine KYB Japanese shock absorbers for all Toyota models — superior road stability and longer service life.",
+    badge: "جودة يابانية", brandKey: "kyb", logo: brandKyb, logoScale: 250,
+  },
+  "tp": {
+    title: "TP", subtitle: "فلاتر بجودة يابانية",
+    titleEn: "TP — Japanese Quality Filters",
+    description: "فلاتر TP لكل موديلات تويوتا: فلتر زيت، هواء، بنزين ومكيف — كفاءة ترشيح عالية وأسعار تنافسية.",
+    descriptionEn: "TP filters for all Toyota models — oil, air, fuel and cabin filters with high filtration efficiency.",
+    badge: "جودة يابانية", brandKey: "tp", logo: brandTp, logoScale: 250,
+  },
 };
 
 const allBrands = [
@@ -84,6 +100,8 @@ const allBrands = [
   { label: "DENSO", labelEn: "DENSO", image: brandDenso, to: "/products/denso", scale: "scale-125" },
   { label: "AISIN", labelEn: "AISIN", image: brandAisin, to: "/products/aisin", scale: "scale-125" },
   { label: "تيل فرامل", labelEn: "FBK Brake Pads", image: brandFbkBrakes, to: "/products/fbk-brakes", scale: "scale-150" },
+  { label: "KYB", labelEn: "KYB", image: brandKyb, to: "/products/kyb", scale: "scale-125" },
+  { label: "TP", labelEn: "TP", image: brandTp, to: "/products/tp", scale: "scale-125" },
 ];
 
 const ProductsPage = () => {
