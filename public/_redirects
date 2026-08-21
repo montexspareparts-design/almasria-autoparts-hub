@@ -50,11 +50,6 @@
 /dealer-register              /index.html                    200
 /dealer-apply                 /index.html                    200
 /dev/*                        /index.html                    200
-/products/*                   /index.html                    200
-/parts-by-model/*             /index.html                    200
-/parts-by-type/*              /index.html                    200
-/clients/*                    /index.html                    200
-/guides/*                     /index.html                    200
 
 # ── Anything else genuinely does not exist: real 404 status ──
 /*                            /404.html                      404

@@ -129,4 +129,4 @@ ${ROUTES.map(
 writeFileSync(join(dist, "sitemap.xml"), sitemap, "utf8");
 writeFileSync(join(root, "public", "sitemap.xml"), sitemap, "utf8");
 
-console.log(`[prerender] wrote ${count} pages + 404.html + sitemap.xml`);
+console.log(`[prerender] wrote ${count} pages + ${redirectCount} legacy redirects + 404.html + sitemap.xml`);
