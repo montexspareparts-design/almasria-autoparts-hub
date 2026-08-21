@@ -157,6 +157,19 @@ const models: ModelData[] = [
       { label: "كهرباء كامري", slug: "electrical" },
     ],
   },
+  {
+    name: "Rumion",
+    nameAr: "روميون",
+    slug: "rumion",
+    image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=600&q=80",
+    intro: "تويوتا روميون السيارة العائلية الاقتصادية الجديدة في السوق المصري. نوفر قطع الغيار الأصلية لتويوتا روميون: فلاتر، فرامل، زيوت، وكهرباء — بضمان الأصالة وأسعار محدثة وتوصيل لكل المحافظات.",
+    partTypes: [
+      { label: "فلاتر روميون", slug: "filters" },
+      { label: "فرامل روميون", slug: "brakes" },
+      { label: "زيوت روميون", slug: "oils" },
+      { label: "كهرباء روميون", slug: "electrical" },
+    ],
+  },
 ];
 
 /* ── Model Detail Page ── */
