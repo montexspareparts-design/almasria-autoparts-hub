@@ -56,6 +56,10 @@ const ClientSegmentPage = lazy(() => import("./pages/ClientSegmentPage"));
 const GenuinePartsPage = lazy(() => import("./pages/GenuinePartsPage"));
 const PartsByModelPage = lazy(() => import("./pages/PartsByModelPage"));
 const PartsByTypePage = lazy(() => import("./pages/PartsByTypePage"));
+const ModelPartTypePage = lazy(() => import("./pages/ModelPartTypePage"));
+const BranchesPage = lazy(() => import("./pages/BranchesPage"));
+const PublicProductPage = lazy(() => import("./pages/PublicProductPage"));
+
 const NotFound = lazy(() => import("./pages/NotFound"));
 const CatalogsPage = lazy(() => import("./pages/CatalogsPage"));
 const InstallApp = lazy(() => import("./pages/InstallApp"));
