@@ -89,14 +89,8 @@ const BRANDS = [
       "فلاتر TP بجودة يابانية لكل موديلات تويوتا: فلتر زيت، فلتر هواء، فلتر بنزين وفلتر مكيف — أسعار محدثة وتوصيل سريع.",
     h1: "فلاتر ومنتجات TP",
   },
-  {
-    slug: "genuine-toyota-parts",
-    title: "دليل قطع غيار تويوتا الأصلية في مصر | المصرية جروب",
-    description:
-      "كل ما تحتاج معرفته عن قطع غيار تويوتا الأصلية في مصر: الفرق عن المقلد، ضمان الجودة، والأسعار من موزع معتمد.",
-    h1: "قطع غيار تويوتا الأصلية — موزع معتمد",
-  },
 ];
+
 
 const GUIDES = [
   {
@@ -138,10 +132,32 @@ const GUIDES = [
 ];
 
 const BRANCHES = [
-  { name: "فرع أوسيم", address: "أوسيم، الجيزة، مصر", phone: "+201020412358" },
-  { name: "فرع التوفيقية", address: "التوفيقية، وسط البلد، القاهرة، مصر", phone: "+201034806288" },
-  { name: "فرع الأقصر", address: "الأقصر، مصر", phone: "+201020412358" },
+  {
+    slug: "osim",
+    name: "فرع أوسيم",
+    city: "الجيزة",
+    address: "أوسيم، الجيزة، مصر",
+    phone: "+201020412358",
+    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
+  },
+  {
+    slug: "tawfikia",
+    name: "فرع التوفيقية",
+    city: "القاهرة",
+    address: "التوفيقية، وسط البلد، القاهرة، مصر",
+    phone: "+201034806288",
+    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
+  },
+  {
+    slug: "luxor",
+    name: "فرع الأقصر",
+    city: "الأقصر",
+    address: "الأقصر، مصر",
+    phone: "+201020412358",
+    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
+  },
 ];
+
 
 const brandLink = (b) => `<li><a href="/products/${b.slug}">${b.h1}</a></li>`;
 const modelLink = (m) => `<li><a href="/parts-by-model/${m.slug}">قطع غيار تويوتا ${m.ar}</a></li>`;
@@ -389,11 +405,114 @@ export const ROUTES = [
       description: `برنامج المصرية جروب لـ${label}: أسعار خاصة، توفر مضمون، حساب أونلاين، وتوصيل مجدول لكل المحافظات.`,
       body: `<h1>حلول ${label}</h1>
         <p>برنامج المصرية جروب لـ${label} يشمل أسعار خاصة، حساب أونلاين لمتابعة الأرصدة والطلبات، وتوصيل مجدول.</p>${commonLinks}`,
+      schema: [
+        breadcrumb([
+          { name: "الرئيسية", path: "/" },
+          { name: label, path: `/clients/${seg}` },
+        ]),
+      ],
     };
   }),
+
+  /* ── Model × part-type cross pages (long-tail) ── */
+  ...MODELS.flatMap((m) =>
+    TYPES.map((t) => ({
+      path: `/parts-by-model/${m.slug}/${t.slug}`,
+      title: `${t.ar} تويوتا ${m.ar} الأصلية — أسعار وتوفر | المصرية جروب`,
+      description: `${t.ar} تويوتا ${m.ar} (${m.en}) الأصلية في مصر من موزع معتمد: توفر فوري، أسعار محدثة يوميًا، وتوصيل لكل المحافظات خلال 48 ساعة.`,
+      body: `<h1>${t.ar} تويوتا ${m.ar} (${m.en}) الأصلية</h1>
+        <p>المصرية جروب توفر ${t.ar} تويوتا ${m.ar} الأصلية بضمان الأصالة، مع أسعار محدثة يوميًا من نظام المخازن وتوصيل لكل محافظات مصر خلال 48 ساعة.</p>
+        <h2>أنواع أخرى لتويوتا ${m.ar}</h2>
+        <ul>${TYPES.filter((x) => x.slug !== t.slug)
+          .map((x) => `<li><a href="/parts-by-model/${m.slug}/${x.slug}">${x.ar} تويوتا ${m.ar}</a></li>`)
+          .join("")}</ul>
+        <h2>${t.ar} لموديلات أخرى</h2>
+        <ul>${MODELS.filter((x) => x.slug !== m.slug)
+          .map((x) => `<li><a href="/parts-by-model/${x.slug}/${t.slug}">${t.ar} تويوتا ${x.ar}</a></li>`)
+          .join("")}</ul>
+        <p><a href="/parts-by-model/${m.slug}">كل قطع غيار تويوتا ${m.ar}</a> · <a href="/parts-by-type/${t.slug}">كل ${t.ar} تويوتا</a></p>
+        ${commonLinks}`,
+      schema: [
+        breadcrumb([
+          { name: "الرئيسية", path: "/" },
+          { name: "حسب الموديل", path: "/parts-by-model" },
+          { name: `تويوتا ${m.ar}`, path: `/parts-by-model/${m.slug}` },
+          { name: t.ar, path: `/parts-by-model/${m.slug}/${t.slug}` },
+        ]),
+      ],
+    }))
+  ),
+
+  /* ── Branch (local SEO) pages ── */
+  {
+    path: "/branches",
+    title: "فروع المصرية جروب — عناوين وأرقام | قطع غيار تويوتا",
+    description:
+      "عناوين وأرقام فروع المصرية جروب لقطع غيار تويوتا: أوسيم (الجيزة)، التوفيقية (وسط البلد – القاهرة)، والأقصر. مواعيد العمل وطرق التواصل.",
+    body: `<h1>فروع المصرية جروب</h1>
+      <p>شبكة فروع المصرية جروب لقطع غيار وزيوت تويوتا الأصلية في مصر.</p>
+      <ul>${BRANCHES.map(
+        (b) =>
+          `<li><a href="/branches/${b.slug}"><strong>${b.name}</strong></a> — ${b.address} — هاتف: <a href="tel:${b.phone}">${b.phone}</a></li>`
+      ).join("")}</ul>${commonLinks}`,
+    schema: [orgSchema],
+  },
+  ...BRANCHES.map((b) => ({
+    path: `/branches/${b.slug}`,
+    title: `${b.name} — قطع غيار تويوتا في ${b.city} | المصرية جروب`,
+    description: `${b.name} للمصرية جروب: ${b.address}. قطع غيار وزيوت تويوتا الأصلية بأسعار محدثة — هاتف وواتساب ${b.phone}.`,
+    body: `<h1>${b.name} — قطع غيار تويوتا الأصلية في ${b.city}</h1>
+      <p>${b.name} من فروع المصرية جروب، موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر.</p>
+      <ul>
+        <li>العنوان: ${b.address}</li>
+        <li>هاتف / واتساب: <a href="tel:${b.phone}">${b.phone}</a></li>
+        <li>مواعيد العمل: ${b.hours}</li>
+        <li>البريد: <a href="mailto:info@almasriaautoparts.com">info@almasriaautoparts.com</a></li>
+      </ul>
+      <h2>فروع أخرى</h2>
+      <ul>${BRANCHES.filter((x) => x.slug !== b.slug)
+        .map((x) => `<li><a href="/branches/${x.slug}">${x.name} — ${x.address}</a></li>`)
+        .join("")}</ul>
+      ${commonLinks}`,
+    schema: [
+      {
+        "@context": "https://schema.org",
+        "@type": "AutoPartsStore",
+        name: `المصرية جروب — ${b.name}`,
+        url: `${SITE}/branches/${b.slug}`,
+        image: `${SITE}/pwa-512x512.png`,
+        telephone: b.phone,
+        email: "info@almasriaautoparts.com",
+        priceRange: "EGP",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: b.address,
+          addressLocality: b.city,
+          addressCountry: "EG",
+        },
+        openingHoursSpecification: {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+          opens: "09:00",
+          closes: "18:00",
+        },
+        parentOrganization: { "@type": "Organization", name: "المصرية جروب", url: SITE },
+      },
+      breadcrumb([
+        { name: "الرئيسية", path: "/" },
+        { name: "الفروع", path: "/branches" },
+        { name: b.name, path: `/branches/${b.slug}` },
+      ]),
+    ],
+  })),
 ];
 
 export const PRERENDER_MODELS = MODELS;
 export const PRERENDER_TYPES = TYPES;
 export const PRERENDER_BRANDS = BRANDS;
 export const PRERENDER_GUIDES = GUIDES;
+export const PRERENDER_BRANCHES = BRANCHES;
+export const ORG_SCHEMA = orgSchema;
+export const buildBreadcrumb = breadcrumb;
+export const COMMON_LINKS = commonLinks;
+
