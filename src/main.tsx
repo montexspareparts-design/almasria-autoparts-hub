@@ -28,6 +28,9 @@ safe("installGlobalErrorDiagnostics", installGlobalErrorDiagnostics);
 safe("installMobileErrorReporter", installMobileErrorReporter);
 safe("initHighContrastEarly", initHighContrastEarly);
 safe("registerDeepLinkListener", () => registerDeepLinkListener());
+safe("initAnalytics", () => {
+  if (!isNativePlatform()) initAnalytics();
+});
 
 
 const enforceCanonicalHost = () => {
