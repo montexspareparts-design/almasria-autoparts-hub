@@ -22,20 +22,23 @@ export function initAnalytics() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;
 
-  // ---- GA4 ----
+  // ---- GA4 ---- (the base tag lives in index.html; only add it if missing)
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag() {
-    // eslint-disable-next-line prefer-rest-params
-    window.dataLayer!.push(arguments);
-  } as unknown as (...args: unknown[]) => void;
-  window.gtag("js", new Date());
-  window.gtag("config", GA4_ID, { send_page_view: false });
+  if (!window.gtag) {
+    window.gtag = function gtag() {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer!.push(arguments);
+    } as unknown as (...args: unknown[]) => void;
+    window.gtag("js", new Date());
+    window.gtag("config", GA4_ID, { send_page_view: false });
+
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
+    document.head.appendChild(s);
+  }
   if (GOOGLE_ADS_ID) window.gtag("config", GOOGLE_ADS_ID);
 
-  const s = document.createElement("script");
-  s.async = true;
-  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
-  document.head.appendChild(s);
 
   // ---- Meta Pixel (only when an ID is configured) ----
   if (META_PIXEL_ID) {
