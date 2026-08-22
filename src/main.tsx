@@ -8,6 +8,7 @@ import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { disableNativeNotificationSurfaces, isNativePlatform, registerDeepLinkListener } from "@/lib/native";
 import { initNativeUiPreview, initNativeChrome } from "@/lib/nativeShell";
+import { initAnalytics } from "@/lib/analytics";
 
 /** Never let a single boot-time side effect block the React render. */
 const safe = (label: string, fn: () => unknown) => {
@@ -28,6 +29,9 @@ safe("installGlobalErrorDiagnostics", installGlobalErrorDiagnostics);
 safe("installMobileErrorReporter", installMobileErrorReporter);
 safe("initHighContrastEarly", initHighContrastEarly);
 safe("registerDeepLinkListener", () => registerDeepLinkListener());
+safe("initAnalytics", () => {
+  if (!isNativePlatform()) initAnalytics();
+});
 
 
 const enforceCanonicalHost = () => {

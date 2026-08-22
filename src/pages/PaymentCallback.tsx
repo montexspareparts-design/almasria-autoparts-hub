@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, XCircle, Loader2, ArrowRight, ShoppingBag, CreditCard, Package } from "lucide-react";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthorizedDistributorBadges from "@/components/AuthorizedDistributorBadges";
+import { trackPurchase } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { normalizePaymobOrderReference, NATIVE_SRC_VALUES } from "@/lib/payment-return";
@@ -16,6 +17,7 @@ const PaymentCallback = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [status, setStatus] = useState<"loading" | "success" | "failed" | "pending">("loading");
+  const purchaseSent = useRef(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [txnIdDisplay, setTxnIdDisplay] = useState<string | null>(null);
@@ -157,6 +159,13 @@ const PaymentCallback = () => {
       cancelled = true;
     };
   }, [success, pending, txnResponseCode, merchantOrderId, txnId, user, amountCents, provider]);
+
+  useEffect(() => {
+    if (status !== "success" || purchaseSent.current) return;
+    purchaseSent.current = true;
+    const value = Number(amountCents ?? 0) / 100;
+    trackPurchase(orderNumber || merchantOrderId || orderId || "unknown", Number.isFinite(value) ? value : 0);
+  }, [status, amountCents, orderNumber, merchantOrderId, orderId]);
 
   const handleReturnToApp = () => {
     // Deep link back into the native app if the user is on the public web

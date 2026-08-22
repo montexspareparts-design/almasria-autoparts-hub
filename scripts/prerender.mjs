@@ -9,6 +9,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROUTES, SITE, ORG_SCHEMA, buildBreadcrumb, COMMON_LINKS } from "./seo-routes.mjs";
 import { LEGACY_REDIRECTS } from "./legacy-redirects.mjs";
+import { buildFeeds } from "./product-feed.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -115,7 +116,7 @@ async function fetchProducts() {
   }
   try {
     const res = await fetch(
-      `${url}/rest/v1/products?select=sku,part_number,name_ar,name_en,description_ar,brand,image_url,stock_quantity,erp_item_code,compatible_models&is_active=eq.true&order=sku.asc&limit=2000`,
+      `${url}/rest/v1/products?select=sku,base_price,part_number,name_ar,name_en,description_ar,brand,image_url,stock_quantity,erp_item_code,compatible_models&is_active=eq.true&order=sku.asc&limit=2000`,
       { headers: { apikey: key, Authorization: `Bearer ${key}` } }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -148,6 +149,7 @@ const productRoutes = products.map((p) => {
         <li>كود الصنف: ${esc(p.erp_item_code || p.sku)}</li>
         ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
         <li>العلامة: ${esc(brand)}</li>
+        ${Number(p.base_price) > 0 ? `<li>السعر: ${Number(p.base_price).toFixed(2)} جنيه</li>` : ""}
         <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "اطلب توفيره"}</li>
       </ul>
       <p>${esc(p.description_ar || `${p.name_ar} من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. للاستعلام عن السعر والتوفر تواصل معنا.`)}</p>
@@ -167,6 +169,7 @@ const productRoutes = products.map((p) => {
         offers: {
           "@type": "Offer",
           priceCurrency: "EGP",
+          ...(Number(p.base_price) > 0 ? { price: Number(p.base_price).toFixed(2) } : {}),
           availability:
             Number(p.stock_quantity) > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
           url: `${SITE}/product/${p.sku}`,
@@ -257,7 +260,9 @@ ${ALL_ROUTES.map(
 writeFileSync(join(dist, "sitemap.xml"), sitemap, "utf8");
 writeFileSync(join(root, "public", "sitemap.xml"), sitemap, "utf8");
 
+const feedCount = await buildFeeds();
+
 console.log(
-  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml`
+  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml + feeds (${feedCount} items)`
 );
 
