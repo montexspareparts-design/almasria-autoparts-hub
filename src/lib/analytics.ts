@@ -108,3 +108,18 @@ export function trackLead(source: string) {
   window.gtag?.("event", "generate_lead", { source });
   window.fbq?.("track", "Lead");
 }
+
+export function trackClickWhatsApp(source: string) {
+  window.gtag?.("event", "click_whatsapp", { source });
+  window.fbq?.("track", "Contact", { source });
+}
+
+export function trackClickCall(phone: string) {
+  window.gtag?.("event", "click_call", { phone });
+  window.fbq?.("track", "Contact", { method: "call" });
+}
+
+export function trackLeadFormSubmit(formName: string, detail?: string) {
+  window.gtag?.("event", "generate_lead", { form: formName, detail });
+  window.fbq?.("track", "Lead", { form: formName });
+}
