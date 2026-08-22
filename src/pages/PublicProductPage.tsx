@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
+import { trackViewItem } from "@/lib/analytics";
 
 const SITE = "https://www.almasriaautoparts.com";
 
@@ -30,6 +31,7 @@ interface PublicProduct {
   brand: string | null;
   image_url: string | null;
   stock_quantity: number | null;
+  base_price: number | null;
 }
 
 const PublicProductPage = () => {
@@ -43,13 +45,21 @@ const PublicProductPage = () => {
       setLoading(true);
       const { data } = await supabase
         .from("products")
-        .select("id, sku, part_number, erp_item_code, name_ar, description_ar, brand, image_url, stock_quantity")
+        .select("id, sku, part_number, erp_item_code, name_ar, description_ar, brand, image_url, stock_quantity, base_price")
         .eq("sku", sku ?? "")
         .eq("is_active", true)
         .maybeSingle();
       if (!active) return;
       setProduct((data as PublicProduct) ?? null);
       setLoading(false);
+      if (data) {
+        trackViewItem({
+          id: String((data as PublicProduct).sku),
+          name: (data as PublicProduct).name_ar,
+          brand: (data as PublicProduct).brand ?? undefined,
+          price: Number((data as PublicProduct).base_price ?? 0),
+        });
+      }
     })();
     return () => {
       active = false;
@@ -83,6 +93,8 @@ const PublicProductPage = () => {
   const brand = BRAND_LABEL[product.brand ?? ""] ?? "تويوتا";
   const inStock = Number(product.stock_quantity ?? 0) > 0;
   const canonical = `${SITE}/product/${product.sku}`;
+  const price = Number(product.base_price ?? 0);
+  const hasPrice = price > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,6 +126,7 @@ const PublicProductPage = () => {
           offers: {
             "@type": "Offer",
             priceCurrency: "EGP",
+            ...(hasPrice ? { price: price.toFixed(2) } : {}),
             availability: inStock ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
             url: canonical,
             seller: { "@type": "Organization", name: "المصرية جروب" },
@@ -144,6 +157,16 @@ const PublicProductPage = () => {
           <div className="rounded-2xl border border-border bg-card p-6">
             <h1 className="text-2xl font-bold leading-relaxed text-foreground">{product.name_ar}</h1>
 
+            {hasPrice && (
+              <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+                <span className="text-xs text-muted-foreground">سعر البيع للأفراد</span>
+                <p className="text-2xl font-extrabold text-primary" dir="ltr">
+                  {price.toLocaleString("ar-EG", { maximumFractionDigits: 2 })} <span className="text-base">جنيه</span>
+                </p>
+                <span className="text-xs text-muted-foreground">شحن مجاني للطلبات من 3000 جنيه</span>
+              </div>
+            )}
+
             <dl className="mt-6 space-y-3 text-sm">
               <div className="flex justify-between gap-4 border-b border-border pb-2">
                 <dt className="text-muted-foreground">كود الصنف</dt>
@@ -173,7 +196,7 @@ const PublicProductPage = () => {
             )}
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild><Link to="/auth">سجّل لعرض السعر</Link></Button>
+              <Button asChild><Link to={`/products?search=${encodeURIComponent(product.sku)}`}>اطلب الآن</Link></Button>
               <Button asChild variant="outline"><Link to="/contact">اطلب عرض سعر</Link></Button>
             </div>
 
