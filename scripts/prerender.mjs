@@ -260,7 +260,9 @@ ${ALL_ROUTES.map(
 writeFileSync(join(dist, "sitemap.xml"), sitemap, "utf8");
 writeFileSync(join(root, "public", "sitemap.xml"), sitemap, "utf8");
 
+const feedCount = await buildFeeds();
+
 console.log(
-  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml`
+  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml + feeds (${feedCount} items)`
 );
 
