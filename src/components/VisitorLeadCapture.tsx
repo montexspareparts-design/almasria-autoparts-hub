@@ -124,16 +124,13 @@ const VisitorLeadCapture = () => {
       /* noop */
     }
 
-    const { error } = await supabase.from("visitor_leads").upsert(
-      {
-        phone: trimmed,
-        source: meta.source,
-        first_path: pathname,
-        referrer: typeof document !== "undefined" ? document.referrer : "",
-        session_key: session_key || null,
-      },
-      { onConflict: "phone", ignoreDuplicates: true },
-    );
+    const { error } = await supabase.rpc("submit_visitor_lead", {
+        _phone: trimmed,
+        _source: meta.source,
+        _first_path: pathname,
+        _referrer: typeof document !== "undefined" ? document.referrer : "",
+        _session_key: session_key || null,
+      });
 
     setSubmitting(false);
 
