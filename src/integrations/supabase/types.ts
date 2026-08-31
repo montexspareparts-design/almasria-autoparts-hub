@@ -4851,6 +4851,16 @@ export type Database = {
         }
       }
       send_morning_restock_summary: { Args: never; Returns: Json }
+      submit_visitor_lead: {
+        Args: {
+          _first_path?: string
+          _phone: string
+          _referrer?: string
+          _session_key?: string
+          _source?: string
+        }
+        Returns: undefined
+      }
       take_daily_stock_snapshot: { Args: never; Returns: Json }
       take_erp_intraday_baseline: {
         Args: never
