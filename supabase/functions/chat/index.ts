@@ -472,25 +472,60 @@ ${userInterests ? `## اهتمامات العميل:
       );
     }
 
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
+    // ── AI call: try NVIDIA (DeepSeek V4 Pro) first, fall back to the fast model ──
+    const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
+    const NVIDIA_MODEL = "deepseek-ai/deepseek-v4-pro-0813";
+    const NVIDIA_FIRST_BYTE_TIMEOUT_MS = 20000;
+
+    const callAI = async (payload: Record<string, unknown>): Promise<Response> => {
+      if (NVIDIA_API_KEY) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), NVIDIA_FIRST_BYTE_TIMEOUT_MS);
+        try {
+          const nv = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              Authorization: `Bearer ${NVIDIA_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...payload,
+              model: NVIDIA_MODEL,
+              temperature: 1,
+              top_p: 0.95,
+              max_tokens: 4096,
+              chat_template_kwargs: { thinking: false },
+            }),
+          });
+          clearTimeout(timer);
+          if (nv.ok) return nv;
+          console.error("NVIDIA error, falling back:", nv.status, await nv.text());
+        } catch (e) {
+          clearTimeout(timer);
+          console.error("NVIDIA unavailable, falling back:", String(e));
+        }
+      }
+
+      return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...messages,
-          ],
-          tools,
-          stream: true,
-        }),
-      }
-    );
+        body: JSON.stringify({ ...payload, model: "google/gemini-3-flash-preview" }),
+      });
+    };
+
+    const response = await callAI({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...messages,
+      ],
+      tools,
+      stream: true,
+    });
+
 
     if (!response.ok) {
       if (response.status === 429 || response.status === 402) {
@@ -556,14 +591,8 @@ ${userInterests ? `## اهتمامات العميل:
           { role: "assistant", content: null, tool_calls: [{ id: tc.id, type: "function", function: { name: tc.function.name, arguments: tc.function.arguments } }] },
           { role: "tool", tool_call_id: tc.id, content: JSON.stringify(toolResult) },
         ];
-        const followUpResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: followUpMessages, stream: true }),
-          }
-        );
+        const followUpResponse = await callAI({ messages: followUpMessages, stream: true });
+
         if (followUpResponse.ok) {
           return new Response(followUpResponse.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
         }
