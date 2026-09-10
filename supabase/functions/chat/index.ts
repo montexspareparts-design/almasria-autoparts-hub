@@ -591,14 +591,8 @@ ${userInterests ? `## اهتمامات العميل:
           { role: "assistant", content: null, tool_calls: [{ id: tc.id, type: "function", function: { name: tc.function.name, arguments: tc.function.arguments } }] },
           { role: "tool", tool_call_id: tc.id, content: JSON.stringify(toolResult) },
         ];
-        const followUpResponse = await fetch(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "google/gemini-3-flash-preview", messages: followUpMessages, stream: true }),
-          }
-        );
+        const followUpResponse = await callAI({ messages: followUpMessages, stream: true });
+
         if (followUpResponse.ok) {
           return new Response(followUpResponse.body, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
         }
