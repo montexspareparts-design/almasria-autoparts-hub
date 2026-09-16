@@ -1,0 +1,190 @@
+/* ─────────────────────────────────────────────────────────────
+   ALMASRIA Oils — ثيم مستقل "Garage Industrial Premium"
+   Scoped بالكامل على .oils-app — لا يؤثر على باقي الموقع.
+   ───────────────────────────────────────────────────────────── */
+
+.oils-app {
+  --oils-bg: 210 62% 9%;
+  --oils-surface: 209 52% 13%;
+  --oils-card: 208 48% 16%;
+  --oils-card-hi: 207 45% 20%;
+  --oils-accent: 37 91% 55%;
+  --oils-accent-soft: 37 91% 55% / 0.14;
+  --oils-accent-2: 22 95% 52%;
+  --oils-ink: 210 40% 96%;
+  --oils-muted: 211 18% 60%;
+  --oils-line: 210 30% 23%;
+  --oils-success: 152 68% 45%;
+  --oils-danger: 4 80% 58%;
+
+  min-height: 100dvh;
+  background:
+    radial-gradient(120% 60% at 50% -10%, hsl(208 60% 16%) 0%, hsl(var(--oils-bg)) 60%),
+    hsl(var(--oils-bg));
+  color: hsl(var(--oils-ink));
+  font-feature-settings: "tnum";
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+
+.oils-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.015em;
+}
+
+.oils-card {
+  background: linear-gradient(180deg, hsl(var(--oils-card) / 0.92), hsl(var(--oils-surface)));
+  border: 1px solid hsl(var(--oils-line));
+  border-radius: 18px;
+}
+
+.oils-card-hi {
+  background: linear-gradient(180deg, hsl(var(--oils-card-hi)), hsl(var(--oils-card)));
+  border: 1px solid hsl(var(--oils-line));
+  border-radius: 18px;
+}
+
+.oils-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--oils-line));
+  background: hsl(var(--oils-card));
+  color: hsl(var(--oils-muted));
+  font-size: 10.5px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+
+.oils-chip--accent {
+  border-color: hsl(var(--oils-accent) / 0.4);
+  background: hsl(var(--oils-accent-soft));
+  color: hsl(var(--oils-accent));
+}
+
+.oils-btn-primary {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, hsl(var(--oils-accent)), hsl(var(--oils-accent-2)));
+  color: hsl(210 62% 9%);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 13px 16px;
+  box-shadow: 0 10px 26px -10px hsl(var(--oils-accent) / 0.55);
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+.oils-btn-primary:active { transform: scale(0.97); }
+.oils-btn-primary:disabled { opacity: 0.45; filter: grayscale(0.4); }
+
+.oils-btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--oils-line));
+  background: hsl(var(--oils-card));
+  color: hsl(var(--oils-ink));
+  font-weight: 700;
+  font-size: 13px;
+  padding: 11px 16px;
+  transition: transform 0.12s ease;
+}
+.oils-btn-ghost:active { transform: scale(0.97); }
+
+.oils-input {
+  width: 100%;
+  border-radius: 13px;
+  border: 1px solid hsl(var(--oils-line));
+  background: hsl(var(--oils-surface));
+  color: hsl(var(--oils-ink));
+  font-size: 14px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.oils-input:focus {
+  border-color: hsl(var(--oils-accent) / 0.6);
+  box-shadow: 0 0 0 3px hsl(var(--oils-accent) / 0.15);
+}
+.oils-input::placeholder { color: hsl(var(--oils-muted) / 0.6); }
+
+.oils-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: hsl(var(--oils-muted));
+  margin-bottom: 6px;
+}
+
+.oils-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 800;
+  color: hsl(var(--oils-ink));
+}
+
+.oils-divider {
+  height: 1px;
+  background: hsl(var(--oils-line));
+  opacity: 0.7;
+}
+
+/* Bottom tab bar */
+.oils-tabbar {
+  position: fixed;
+  bottom: 0;
+  inset-inline: 0;
+  z-index: 50;
+  background: hsl(209 55% 11% / 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid hsl(var(--oils-line));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.oils-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: hsl(var(--oils-muted));
+  transition: color 0.15s ease;
+  position: relative;
+}
+.oils-tab--active { color: hsl(var(--oils-accent)); }
+.oils-tab--active::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 26px;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: hsl(var(--oils-accent));
+}
+
+/* Skeleton shimmer */
+.oils-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--oils-card));
+  border-radius: 14px;
+}
+.oils-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.06), transparent);
+  animation: oils-shimmer 1.4s infinite;
+}
+@keyframes oils-shimmer { 100% { transform: translateX(100%); } }
