@@ -95,7 +95,9 @@ Deno.serve(async (req) => {
         currency,
         merchantReferenceId: order.order_number,
         callbackUrl,
-        ...(return_url ? { returnUrl: return_url } : {}),
+        ...(return_url
+          ? { returnUrl: `${supabaseUrl}/functions/v1/geidea-return?redirect=${encodeURIComponent(return_url)}` }
+          : {}),
         paymentOperation: "Pay",
         timestamp,
         signature,
