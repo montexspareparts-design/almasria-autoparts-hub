@@ -233,7 +233,6 @@
 .oils-featured::after { border-color: hsl(var(--oils-accent) / .4); box-shadow: 0 0 0 22px hsl(var(--oils-accent) / .045); }
 .oils-featured-copy span { color: hsl(var(--oils-accent)); }
 .oils-featured-card button, .oil-add-button, .oils-circle-button--dark { color: hsl(var(--oils-accent)); }
-.oils-featured-more { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
 .oil-product-card { border: 1px solid hsl(var(--oils-line) / .8); box-shadow: 0 12px 25px hsl(var(--oils-ink) / .055); }
 .oil-product-visual { background: linear-gradient(145deg, hsl(var(--oils-card)) 0%, hsl(var(--oils-card-hi)) 100%); }
 .oil-sale-badge { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
@@ -441,51 +440,30 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: hsl(var(--oils-accent-deep));
-  background: linear-gradient(105deg, hsl(var(--oils-accent-mid)) 0%, hsl(var(--oils-warm)) 38%, hsl(var(--oils-accent)) 72%, hsl(var(--oils-warm)) 100%);
-  box-shadow:
-    0 14px 34px -8px hsl(var(--oils-accent) / .5),
-    0 2px 0 hsl(var(--oils-warm) / .6) inset,
-    0 -10px 20px hsl(var(--oils-accent-deep) / .12) inset;
-  border: 1px solid hsl(var(--oils-warm) / .55);
+  color: hsl(var(--oils-card));
+  background: hsl(var(--oils-ink));
+  box-shadow: 0 16px 32px -12px hsl(var(--oils-ink) / .4);
+  border: 1px solid hsl(var(--oils-ink) / .9);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: .2px;
-  overflow: hidden;
-  isolation: isolate;
   position: relative;
-  transition: transform .18s ease, box-shadow .25s ease;
+  transition: transform .18s ease;
 }
-.oils-featured-more:active { transform: scale(.975); box-shadow: 0 6px 18px -6px hsl(var(--oils-accent) / .45), 0 2px 0 hsl(var(--oils-warm) / .6) inset; }
-.oils-featured-more::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(115deg, transparent 32%, hsl(0 0% 100% / .42) 50%, transparent 68%);
-  transform: translateX(-130%);
-  animation: oils-more-shine 3.6s ease-in-out infinite;
-  pointer-events: none;
-}
-.oils-featured-more span { position: relative; z-index: 1; text-shadow: 0 1px 0 hsl(0 0% 100% / .25); }
+.oils-featured-more:active { transform: scale(.975); }
+.oils-featured-more span { position: relative; z-index: 1; }
 .oils-featured-more svg {
   position: relative;
   z-index: 1;
   width: 17px;
   height: 17px;
-  padding: 0;
-  color: hsl(var(--oils-warm));
-  background: hsl(var(--oils-accent-deep));
-  border-radius: 12px;
-  box-sizing: content-box;
   padding: 11px;
   margin-inline-start: auto;
   order: 2;
-  box-shadow: 0 6px 14px -4px hsl(var(--oils-accent-deep) / .55), 0 0 0 1px hsl(var(--oils-warm) / .22) inset;
-}
-@keyframes oils-more-shine {
-  0%, 55% { transform: translateX(-130%); }
-  85%, 100% { transform: translateX(130%); }
+  box-sizing: content-box;
+  color: hsl(var(--oils-warm));
+  background: hsl(var(--oils-card) / .08);
+  border-radius: 12px;
 }
 
 /* صور المنتجات — الأبيض يندمج بصريًا مع السطح بدل أن يظهر كمستطيل خلف الصورة */
