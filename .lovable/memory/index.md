@@ -1,1 +1,2 @@
 - [SEO Prerender Pipeline](mem://tech/seo/prerender-pipeline) — صفحات HTML ثابتة لكل مسار وقت الـbuild + _redirects 301 + sitemap تلقائي؛ أي صفحة عامة جديدة تتضاف في scripts/seo-routes.mjs
+- [Oils Bot زوجة](mem://features/oils/bot-name-zawga) — بوت تطبيق الزيوت اسمه «زوجة» (اتغير من «مرشد») بصياغة أنثوية — لا ترجع للاسم القديم
