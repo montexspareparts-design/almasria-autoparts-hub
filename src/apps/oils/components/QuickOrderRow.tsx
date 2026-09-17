@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import type { OilProduct } from "@/lib/oils/useOilsCatalog";
+import TransparentProductImage from "./TransparentProductImage";
 
 interface Props {
   product: OilProduct;
@@ -15,7 +16,7 @@ const fmt = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 
 const QuickOrderRow = ({ product, qty, unitPrice, onQtyChange, onRemove }: Props) => (
   <div className="oils-quick-row" dir="rtl">
     <div className="oils-quick-row-image">
-      {product.image_url ? <img src={product.image_url} alt="" /> : null}
+      {product.image_url ? <TransparentProductImage src={product.image_url} alt={product.name_ar} /> : null}
     </div>
     <div className="oils-quick-row-copy">
       <p>{product.name_ar}</p>
