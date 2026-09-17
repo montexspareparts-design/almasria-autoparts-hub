@@ -141,6 +141,19 @@ const OilsCart = () => {
         throw itemsError;
       }
 
+      if (couponCode.trim()) {
+        const { data: couponResult } = await supabase.rpc("apply_oils_coupon", {
+          _order_id: order.id,
+          _code: couponCode.trim(),
+        });
+        const result = (couponResult || {}) as { ok?: boolean; error?: string; discount?: number };
+        if (result.ok) {
+          toast({ title: "تم تطبيق كود الخصم", description: `وفّرت ${Number(result.discount || 0).toLocaleString("en-US")} ج.م` });
+        } else {
+          toast({ title: COUPON_ERRORS[result.error || ""] || "كود الخصم غير صالح", description: "الطلب اتجهز بدون خصم.", variant: "destructive" });
+        }
+      }
+
       localStorage.setItem("oils_fulfillment_method", fulfillmentMethod);
       if (fulfillmentMethod === "pickup") localStorage.setItem("oils_pickup_branch", pickupBranch);
       localStorage.setItem("oils_pending_payment_order", order.id);
