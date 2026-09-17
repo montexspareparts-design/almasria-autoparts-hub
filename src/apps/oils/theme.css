@@ -108,7 +108,7 @@
 .oils-detail-topbar { position: relative; z-index: 5; padding: 18px; display: flex; align-items: center; justify-content: space-between; }
 .oils-detail-brand { max-width: 190px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
 .oils-detail-visual { position: relative; height: 365px; display: grid; place-items: center; overflow: hidden; }
-.oils-detail-halo { position: absolute; width: 310px; height: 160px; border: 1px solid hsl(var(--oils-card)); border-radius: 50%; bottom: 46px; }
+.oils-detail-halo { position: absolute; top: 50%; left: 50%; translate: -50% -50%; width: min(320px, 80%); aspect-ratio: 1; border-radius: 50%; border: 2px solid hsl(var(--oils-accent) / .8); background: radial-gradient(circle at 50% 42%, hsl(var(--oils-accent) / .14), transparent 64%); box-shadow: 0 0 0 12px hsl(var(--oils-accent) / .05), 0 0 46px hsl(var(--oils-accent) / .22), inset 0 0 36px hsl(var(--oils-accent) / .1); }
 .oils-detail-image { position: relative; z-index: 2; width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 25px 18px hsl(var(--oils-ink) / .18)); }
 .oils-detail-placeholder { width: 180px; height: 180px; border-radius: 50%; display: grid; place-items: center; color: hsl(var(--oils-card)); background: hsl(var(--oils-accent-mid)); }
 .oils-detail-placeholder svg { width: 80px; height: 80px; }
@@ -239,7 +239,9 @@
 .oils-tabbar-inner { border: 1px solid hsl(var(--oils-accent) / .28); background: hsl(var(--oils-accent-deep)); }
 .oils-tab--active { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
 .oils-detail-visual { background: linear-gradient(180deg, hsl(var(--oils-card-hi)), hsl(var(--oils-bg))); }
-.oils-detail-halo { border-color: hsl(var(--oils-accent) / .6); box-shadow: 0 0 0 24px hsl(var(--oils-accent) / .06); }
+.oils-detail-halo::before { content: ""; position: absolute; inset: -15px; border-radius: 50%; border: 1px dashed hsl(var(--oils-accent) / .35); animation: oils-halo-spin 30s linear infinite; }
+.oils-detail-halo::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 3px solid transparent; border-top-color: hsl(var(--oils-accent)); border-left-color: hsl(var(--oils-accent) / .55); filter: drop-shadow(0 0 6px hsl(var(--oils-accent) / .7)); animation: oils-halo-spin 9s linear infinite; }
+@keyframes oils-halo-spin { to { rotate: 360deg; } }
 .oils-detail-cta { color: hsl(var(--oils-accent)); }
 .oils-home-quick { width: 100%; min-height: 46px; margin-bottom: 14px; padding: 0 16px; border: 1px solid hsl(var(--oils-line)); border-radius: 16px; display: flex; align-items: center; gap: 8px; color: hsl(var(--oils-ink)); background: hsl(var(--oils-card)); font-size: 11px; font-weight: 850; box-shadow: 0 9px 24px hsl(var(--oils-ink) / .05); }
 .oils-home-quick svg { width: 16px; color: hsl(var(--oils-accent)); }.oils-home-quick svg:last-child { margin-inline-start: auto; color: hsl(var(--oils-muted)); }
