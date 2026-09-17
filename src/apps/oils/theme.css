@@ -461,8 +461,8 @@
   margin-inline-start: auto;
   order: 2;
   box-sizing: content-box;
-  color: hsl(var(--oils-warm));
-  background: hsl(var(--oils-card) / .08);
+  color: hsl(var(--oils-card));
+  background: hsl(var(--oils-ink));
   border-radius: 12px;
 }
 
