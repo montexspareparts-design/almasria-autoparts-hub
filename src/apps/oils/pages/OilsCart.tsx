@@ -144,6 +144,7 @@ const OilsCart = () => {
       localStorage.setItem("oils_fulfillment_method", fulfillmentMethod);
       if (fulfillmentMethod === "pickup") localStorage.setItem("oils_pickup_branch", pickupBranch);
       localStorage.setItem("oils_pending_payment_order", order.id);
+      if (order.order_number) localStorage.setItem("oils_pending_payment_order_number", String(order.order_number));
       navigate(`/oils/payment/${order.id}`);
     } catch (error) {
       console.error("Oils order creation failed", error);
