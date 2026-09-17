@@ -13,12 +13,15 @@ const fmt = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 
 
 /** سطر طلب سريع — صنف + كمية + إجمالي السطر. */
 const QuickOrderRow = ({ product, qty, unitPrice, onQtyChange, onRemove }: Props) => (
-  <div className="oils-card !rounded-2xl p-3 flex items-center gap-3" dir="rtl">
-    <div className="flex-1 min-w-0">
-      <p className="text-[12px] font-bold truncate">{product.name_ar}</p>
-      <p className="oils-num text-[10.5px] mt-0.5" style={{ color: "hsl(var(--oils-muted))" }} dir="ltr">
+  <div className="oils-quick-row" dir="rtl">
+    <div className="oils-quick-row-image">
+      {product.image_url ? <img src={product.image_url} alt="" /> : null}
+    </div>
+    <div className="oils-quick-row-copy">
+      <p>{product.name_ar}</p>
+      <span className="oils-num" dir="ltr">
         {product.erp_item_code || product.sku} · {fmt(unitPrice)} ج
-      </p>
+      </span>
     </div>
     <input
       type="number"
@@ -26,13 +29,13 @@ const QuickOrderRow = ({ product, qty, unitPrice, onQtyChange, onRemove }: Props
       min={1}
       value={qty}
       onChange={(e) => onQtyChange(Math.max(1, Number(e.target.value) || 1))}
-      className="oils-input !w-[64px] !py-2 text-center oils-num"
+      className="oils-row-qty oils-num"
       aria-label="الكمية"
     />
-    <span className="oils-num text-[13px] font-extrabold w-[76px] text-left" style={{ color: "hsl(var(--oils-accent))" }} dir="ltr">
+    <strong className="oils-num oils-row-total" dir="ltr">
       {fmt(unitPrice * qty)}
-    </span>
-    <button type="button" onClick={onRemove} aria-label="حذف" className="p-1.5 rounded-lg" style={{ color: "hsl(var(--oils-danger))" }}>
+    </strong>
+    <button type="button" onClick={onRemove} aria-label="حذف" className="oils-row-remove">
       <X className="w-4 h-4" />
     </button>
   </div>

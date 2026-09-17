@@ -11,6 +11,7 @@ const OilsCatalog = lazy(() => import("./pages/OilsCatalog"));
 const OilsQuickOrder = lazy(() => import("./pages/OilsQuickOrder"));
 const OilsAccount = lazy(() => import("./pages/OilsAccount"));
 const OilsLogin = lazy(() => import("./pages/OilsLogin"));
+const OilsProductDetail = lazy(() => import("./pages/OilsProductDetail"));
 
 const TABS = [
   { path: "/oils", label: "الرئيسية", icon: Home, end: true },
@@ -32,7 +33,7 @@ const TabBar = () => {
 
   return (
     <nav className="oils-tabbar" aria-label="تنقل تطبيق الزيوت">
-      <div className="grid grid-cols-4">
+      <div className="oils-tabbar-inner">
         {TABS.map((tab) => {
           const active = tab.end ? location.pathname === tab.path : location.pathname.startsWith(tab.path);
           const Icon = tab.icon;
@@ -43,12 +44,11 @@ const TabBar = () => {
               className={`oils-tab ${active ? "oils-tab--active" : ""}`}
               onClick={() => { void haptic("light"); navigate(tab.path); }}
             >
-              <span className="relative">
+              <span className="oils-tab-icon">
                 <Icon className="w-5 h-5" />
                 {tab.path === "/oils/quick" && itemCount > 0 && (
                   <span
-                    className="absolute -top-1.5 -left-2 min-w-[15px] h-[15px] px-0.5 rounded-full grid place-items-center text-[8.5px] font-extrabold"
-                    style={{ background: "hsl(var(--oils-accent))", color: "hsl(210 62% 9%)" }}
+                    className="oils-cart-count"
                   >
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
@@ -111,6 +111,7 @@ const OilsApp = () => {
           <Route path="catalog" element={<OilsCatalog />} />
           <Route path="quick" element={<OilsQuickOrder />} />
           <Route path="account" element={<OilsAccount />} />
+          <Route path="product/:productId" element={<OilsProductDetail />} />
           <Route path="login" element={<Navigate to="/oils" replace />} />
           <Route path="*" element={<Navigate to="/oils" replace />} />
         </Routes>

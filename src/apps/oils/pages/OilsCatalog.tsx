@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Droplets, Search } from "lucide-react";
+import { Bell, SlidersHorizontal, Search } from "lucide-react";
 import { useOilsCatalog, type OilProduct } from "@/lib/oils/useOilsCatalog";
 import OilProductCard from "../components/OilProductCard";
 import { useDealerCart } from "@/hooks/useDealerCart";
@@ -39,38 +39,33 @@ const OilsCatalog = () => {
   }, [products, filter, query]);
 
   return (
-    <div className="px-4 pt-5 space-y-4" dir="rtl">
-      <h1 className="text-[18px] font-extrabold flex items-center gap-2">
-        <Droplets className="w-5 h-5" style={{ color: "hsl(var(--oils-accent))" }} />
-        كتالوج الزيوت
-        <span className="oils-chip oils-num">{filtered.length} صنف</span>
-      </h1>
+    <main className="oils-screen oils-catalog" dir="rtl">
+      <header className="oils-page-header">
+        <div><span className="oils-eyebrow">ALMASRIA WHOLESALE</span><h1>الكتالوج</h1></div>
+        <button type="button" className="oils-circle-button" aria-label="الإشعارات"><Bell /></button>
+      </header>
 
       {/* البحث */}
-      <div className="relative">
-        <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "hsl(var(--oils-muted))" }} />
+      <div className="oils-search-wrap">
+        <Search />
         <input
-          className="oils-input !pr-10"
+          className="oils-search"
           placeholder="ابحث بالاسم أو كود الصنف أو البارت نمبر…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="بحث في الزيوت"
         />
+        <SlidersHorizontal className="oils-search-filter" />
       </div>
 
       {/* الفلاتر */}
-      <div className="flex gap-2">
+      <div className="oils-filter-row">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             type="button"
             onClick={() => setFilter(f.key)}
-            className="oils-chip !text-[11.5px] !py-1.5 !px-3.5"
-            style={
-              filter === f.key
-                ? { borderColor: "hsl(var(--oils-accent) / 0.5)", background: "hsl(var(--oils-accent-soft))", color: "hsl(var(--oils-accent))" }
-                : undefined
-            }
+            className={`oils-filter-pill ${filter === f.key ? "is-active" : ""}`}
           >
             {f.label}
           </button>
@@ -78,9 +73,9 @@ const OilsCatalog = () => {
       </div>
 
       {loading ? (
-        <div className="space-y-3">{[0, 1, 2, 3].map((i) => <div key={i} className="oils-skeleton h-[130px]" />)}</div>
+        <div className="oils-product-grid">{[0, 1, 2, 3].map((i) => <div key={i} className="oils-skeleton h-[292px]" />)}</div>
       ) : (
-        <div className="space-y-3">
+        <div className="oils-product-grid">
           {filtered.map((p) => (
             <OilProductCard key={p.id} product={p} discounts={discountsFor(p)} canSeePrice={isDealer} onAdd={(prod, qty) => void addItem(prod.id, qty)} />
           ))}
@@ -91,7 +86,7 @@ const OilsCatalog = () => {
           )}
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

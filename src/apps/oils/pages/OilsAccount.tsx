@@ -16,17 +16,18 @@ const OilsAccount = () => {
   const { dealer, invoices, loyalty, creditLimit, invoicedTotal, loading, hasErpLink } = useCreditStatement();
 
   return (
-    <div className="px-4 pt-5 space-y-5" dir="rtl">
+    <main className="oils-screen oils-account" dir="rtl">
+      <header className="oils-page-header"><div><span className="oils-eyebrow">حساب موثوق وواضح</span><h1>حسابي</h1></div></header>
       {/* الهوية */}
-      <div className="oils-card-hi p-4 flex items-center gap-3">
-        <UserCircle2 className="w-11 h-11 shrink-0" style={{ color: "hsl(var(--oils-accent))" }} />
-        <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-extrabold truncate">{profile?.full_name || "شريكنا"}</p>
-          <p className="text-[11px] truncate" style={{ color: "hsl(var(--oils-muted))" }}>
+      <div className="oils-profile-card">
+        <div className="oils-profile-icon"><UserCircle2 /></div>
+        <div>
+          <h2>{profile?.full_name || "شريكنا"}</h2>
+          <p>
             {dealer?.erp_customer_name || profile?.email || ""}
           </p>
           {dealer?.erp_customer_code && (
-            <span className="oils-chip oils-num mt-1.5">كود العميل: {dealer.erp_customer_code}</span>
+            <span className="oils-account-code oils-num">كود العميل: {dealer.erp_customer_code}</span>
           )}
         </div>
       </div>
@@ -35,21 +36,21 @@ const OilsAccount = () => {
       <CreditMeter creditLimit={creditLimit} used={invoicedTotal} />
 
       {/* الولاء */}
-      <div className="oils-card p-4 flex items-center gap-3">
-        <Award className="w-5 h-5 shrink-0" style={{ color: "hsl(var(--oils-accent))" }} />
-        <div className="flex-1">
-          <p className="text-[12px] font-extrabold">نقاط الولاء</p>
-          <p className="oils-num text-[11px] mt-0.5" style={{ color: "hsl(var(--oils-muted))" }}>
+      <div className="oils-loyalty-card">
+        <Award />
+        <div>
+          <p>نقاط الولاء</p>
+          <strong className="oils-num">
             رصيدك: {fmt(Number(loyalty?.balance ?? 0))} نقطة · الإجمالي: {fmt(Number(loyalty?.lifetime_earned ?? 0))}
-          </p>
+          </strong>
         </div>
       </div>
 
       {/* الفواتير */}
       <section>
-        <div className="oils-section-title mb-3">
-          <span className="flex items-center gap-2">
-            <FileText className="w-4 h-4" style={{ color: "hsl(var(--oils-accent))" }} />
+        <div className="oils-section-title">
+          <span>
+            <FileText />
             آخر الفواتير
           </span>
         </div>
@@ -67,17 +68,17 @@ const OilsAccount = () => {
         ) : (
           <div className="space-y-2.5">
             {invoices.map((inv) => (
-              <div key={inv.id} className="oils-card !rounded-2xl p-3.5 flex items-center gap-3">
-                <Wallet className="w-4.5 h-4.5 shrink-0 w-5 h-5" style={{ color: "hsl(var(--oils-muted))" }} />
-                <div className="flex-1 min-w-0">
-                  <p className="oils-num text-[12.5px] font-bold" dir="ltr">{inv.invoice_number}</p>
-                  <p className="oils-num text-[10.5px] mt-0.5" style={{ color: "hsl(var(--oils-muted))" }} dir="ltr">
+              <div key={inv.id} className="oils-invoice-row">
+                <div className="oils-invoice-icon"><Wallet /></div>
+                <div>
+                  <p className="oils-num" dir="ltr">{inv.invoice_number}</p>
+                  <span className="oils-num" dir="ltr">
                     {inv.invoice_date} {inv.payment_method ? `· ${inv.payment_method}` : ""}
-                  </p>
+                  </span>
                 </div>
-                <span className="oils-num text-[13.5px] font-extrabold" style={{ color: "hsl(var(--oils-accent))" }} dir="ltr">
+                <strong className="oils-num" dir="ltr">
                   {fmt(Number(inv.total_amount))} ج
-                </span>
+                </strong>
               </div>
             ))}
           </div>
@@ -93,7 +94,7 @@ const OilsAccount = () => {
         <LogOut className="w-4 h-4" />
         تسجيل الخروج
       </button>
-    </div>
+    </main>
   );
 };
 

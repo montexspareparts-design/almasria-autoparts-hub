@@ -8,8 +8,8 @@ const TierPriceBadge = ({ product }: { product: OilProduct }) => {
   const saving = product.base_price - product.tierPrice;
   if (saving <= 0) return null;
   return (
-    <span className="oils-chip oils-chip--accent oils-num">
-      سعر الجملة — وفّرت {saving.toLocaleString("en-US", { maximumFractionDigits: 0 })} ج
+    <span className="oils-saving-badge oils-num">
+      وفّرت {saving.toLocaleString("en-US", { maximumFractionDigits: 0 })} ج
     </span>
   );
 };
