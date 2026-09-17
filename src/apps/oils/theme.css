@@ -432,7 +432,8 @@
 }
 .oils-featured-card > button:active { transform: scale(.95); box-shadow: 0 6px 14px hsl(var(--oils-ink) / .24); }
 .oils-featured-card > button svg { width: 19px; height: 19px; }
-.oils-featured-more {
+/* خصوصية أعلى للتغلب على .oils-app button { font: inherit } */
+.oils-app button.oils-featured-more {
   height: 54px;
   padding: 0 7px 0 18px;
   border-radius: 18px;
