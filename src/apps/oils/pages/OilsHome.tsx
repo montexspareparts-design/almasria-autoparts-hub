@@ -92,9 +92,15 @@ const OilsHome = () => {
                     <span>كود الصنف <b dir="ltr">{featured.erp_item_code || featured.sku}</b></span>
                     <span>بارت نمبر <b dir="ltr">{featured.part_number || "—"}</b></span>
                   </div>
-                  <strong className="oils-num">{featured.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong>
+                  <div className="oils-featured-priceline">
+                    <span className="oils-featured-pricelabel">سعرك</span>
+                    <strong className="oils-num">{featured.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong>
+                  </div>
                 </div>
-                <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}><ShoppingBag /></button>
+                <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}>
+                  <ShoppingBag />
+                  <span>أضف</span>
+                </button>
               </div>
               <button type="button" className="oils-featured-more" onClick={() => navigate("/oils/catalog")}><span>تصفّح كتالوج الزيوت</span><ChevronLeft /></button>
             </motion.section>
