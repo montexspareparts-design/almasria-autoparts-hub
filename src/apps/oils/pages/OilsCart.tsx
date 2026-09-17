@@ -177,6 +177,12 @@ const OilsCart = () => {
         <button type="button" className="oils-circle-button oils-cart-clear" aria-label="تفريغ السلة" onClick={() => void cart.clearCart()}><Trash2 /></button>
       </header>
 
+      <ol className="oils-cart-steps" aria-label="خطوات الطلب">
+        <li className="is-done"><i>1</i>المراجعة</li>
+        <li className="is-active"><i>2</i>الاستلام</li>
+        <li><i>3</i>الدفع</li>
+      </ol>
+
       <section className="oils-cart-items" aria-label="أصناف السلة">
         {items.map((item) => {
           const unitPrice = priceAtQty(item.oilProduct, item.quantity);
