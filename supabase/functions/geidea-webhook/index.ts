@@ -103,6 +103,20 @@ Deno.serve(async (req) => {
         console.error(`Geidea: failed to update order ${orderNumber}:`, updErr.message, updErr.details);
       } else {
         console.log(`Geidea: order ${orderNumber} confirmed and moved to processing`);
+        // Payment confirmation is the authoritative fulfillment boundary.
+        // Trigger warehouse preparation here so it works even if the customer
+        // closes the browser before reaching the result screen.
+        const notification = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-warehouse-order`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({ order_id: order.id }),
+        });
+        if (!notification.ok) {
+          console.error(`Geidea: warehouse notification failed for ${orderNumber}`);
+        }
       }
     }
   } else {

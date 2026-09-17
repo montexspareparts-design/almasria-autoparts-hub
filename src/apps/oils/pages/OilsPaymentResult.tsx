@@ -4,7 +4,6 @@ import { Check, Clock3, Loader2, RotateCcw, ShieldCheck, X } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
-import { pushOrderToERP } from "@/lib/erpSync";
 import { normalizePaymobOrderReference } from "@/lib/payment-return";
 
 type ResultState = "loading" | "pending" | "success" | "failed";
@@ -56,10 +55,6 @@ const OilsPaymentResult = () => {
     completed.current = true;
     void clearCart();
     localStorage.removeItem("oils_pending_payment_order");
-    void supabase.functions.invoke("notify-warehouse-order", { body: { order_id: orderId } });
-    void supabase.from("orders").select("erp_order_code").eq("id", orderId).maybeSingle().then(({ data }) => {
-      if (!data?.erp_order_code) void pushOrderToERP(orderId);
-    });
   }, [status, orderId, clearCart]);
 
   const retry = () => orderId ? navigate(`/oils/payment/${orderId}`) : navigate("/oils/cart");
