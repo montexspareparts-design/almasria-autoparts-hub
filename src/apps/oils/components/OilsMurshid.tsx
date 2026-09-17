@@ -98,7 +98,7 @@ const OilsMurshid = () => {
         });
 
         if (!res.ok || !res.body) {
-          let friendly = "المساعد مش متاح حاليًا، جرب تاني بعد شوية.";
+          let friendly = "زوجة مش متاحة حاليًا، جرب تاني بعد شوية.";
           try {
             const data = await res.json();
             if (data?.error) friendly = data.error;
@@ -125,7 +125,7 @@ const OilsMurshid = () => {
                 return next;
               });
             } else if (evt.type === "response.failed") {
-              throw new Error("المساعد وقف فجأة — جرب تاني.");
+              throw new Error("زوجة وقفت فجأة — جرب تاني.");
             }
           } catch (e) {
             if (e instanceof SyntaxError) return; // سطر ناقص — بيتكمل في الشنك القادم
