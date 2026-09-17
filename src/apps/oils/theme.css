@@ -253,6 +253,7 @@
 }
 
 /* طبقات الصفحة الرئيسية — تدفق ثابت يمنع تداخل الصورة والبيانات والأزرار */
+.oils-featured-shell { position: relative; overflow: hidden; border-radius: 29px; }
 .oils-featured {
   min-height: 0;
   padding: 26px 18px 18px;
@@ -260,6 +261,31 @@
   grid-template-rows: auto minmax(250px, 38dvh) auto auto;
   gap: 14px;
   isolation: isolate;
+}
+.oils-featured-progress {
+  position: absolute;
+  z-index: 5;
+  inset-inline: 46px;
+  bottom: 8px;
+  height: 3px;
+  display: flex;
+  direction: rtl;
+  gap: 3px;
+  pointer-events: auto;
+}
+.oils-featured-progress button {
+  min-width: 2px;
+  height: 3px;
+  flex: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: hsl(var(--oils-accent-deep) / .18);
+  transition: background-color .3s ease, transform .3s ease;
+}
+.oils-featured-progress button.is-active {
+  background: hsl(var(--oils-accent-deep) / .72);
+  transform: scaleY(1.7);
 }
 .oils-featured::after {
   z-index: -1;
