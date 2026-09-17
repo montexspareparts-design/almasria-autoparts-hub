@@ -76,6 +76,37 @@ const TransparentProductImage = ({ src, alt, className }: Props) => {
         }
 
         context.putImageData(frame, 0, 0);
+
+        // Trim the transparent studio margin so the product, not the source canvas,
+        // determines its visual size inside every card.
+        let minX = width;
+        let minY = height;
+        let maxX = -1;
+        let maxY = -1;
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            if (pixels[(y * width + x) * 4 + 3] <= 8) continue;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+
+        if (maxX >= minX && maxY >= minY) {
+          const contentWidth = maxX - minX + 1;
+          const contentHeight = maxY - minY + 1;
+          const padding = Math.max(4, Math.round(Math.max(contentWidth, contentHeight) * 0.035));
+          const cropX = Math.max(0, minX - padding);
+          const cropY = Math.max(0, minY - padding);
+          const cropWidth = Math.min(width - cropX, contentWidth + padding * 2);
+          const cropHeight = Math.min(height - cropY, contentHeight + padding * 2);
+          const cropped = context.getImageData(cropX, cropY, cropWidth, cropHeight);
+          canvas.width = cropWidth;
+          canvas.height = cropHeight;
+          const croppedContext = canvas.getContext("2d");
+          croppedContext?.putImageData(cropped, 0, 0);
+        }
       } catch {
         setFallback(true);
       }
