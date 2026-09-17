@@ -896,3 +896,98 @@
   border-color: hsl(var(--oils-accent) / .4) !important;
 }
 .oils-cat-pill svg { width: 12px; height: 12px; }
+
+/* ===== تحفيز المبيعات: شريط التقدم + الكراتين + كود الخصم ===== */
+.oils-cart-boost {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: hsl(var(--oils-card));
+  border: 1px solid hsl(var(--oils-ink) / 0.08);
+  box-shadow: 0 6px 18px hsl(var(--oils-ink) / 0.05);
+}
+.oils-cart-boost-bar {
+  height: 7px;
+  border-radius: 99px;
+  background: hsl(var(--oils-ink) / 0.08);
+  overflow: hidden;
+}
+.oils-cart-boost-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, hsl(44 62% 80%), hsl(42 50% 63%));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.oils-cart-boost p {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: hsl(var(--oils-ink));
+}
+.oils-cart-boost-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: hsl(var(--oils-muted));
+}
+.oils-cart-boost-hint svg { width: 13px; height: 13px; }
+
+.oils-cart-carton {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed hsl(var(--oils-ink) / 0.1);
+}
+.oils-cart-carton-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: hsl(var(--oils-muted));
+}
+.oils-cart-carton-info svg { width: 14px; height: 14px; }
+.oils-cart-carton-actions { display: flex; gap: 6px; }
+.oils-app button.oils-cart-carton-actions > button,
+.oils-cart-carton-actions button {
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: hsl(var(--oils-ink));
+  color: hsl(var(--oils-card));
+}
+
+.oils-coupon-row { display: flex; gap: 8px; align-items: center; }
+.oils-coupon-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--oils-ink) / 0.12);
+  background: hsl(var(--oils-card));
+  color: hsl(var(--oils-ink));
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.oils-coupon-clear {
+  padding: 0 14px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  background: hsl(var(--oils-ink) / 0.06);
+  color: hsl(var(--oils-ink));
+}
+.oils-coupon-hint {
+  margin: 6px 0 12px;
+  font-size: 11px;
+  color: hsl(var(--oils-muted));
+}

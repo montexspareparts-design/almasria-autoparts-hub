@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Truck, Zap } from "lucide-react";
+import { ArrowLeft, Boxes, Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, Zap } from "lucide-react";
+import { cartonLabel, unitsPerCarton } from "@/lib/oils/cartons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -18,6 +19,19 @@ const PICKUP_BRANCHES = [
 
 type FulfillmentMethod = "pickup" | "shipping";
 
+/** حد الشحن المجاني داخل القاهرة/الفيصل */
+const FREE_SHIPPING_THRESHOLD = 3000;
+
+const COUPON_ERRORS: Record<string, string> = {
+  invalid_code: "كود الخصم غير صحيح",
+  expired: "صلاحية الكود انتهت",
+  not_started: "الكود لسه مبدأش",
+  exhausted: "الكود خلص عدد استخداماته",
+  min_order: "قيمة الطلب أقل من الحد المطلوب للكود",
+  order_locked: "الطلب مش قابل لتطبيق كود خصم",
+  already_applied: "فيه كود خصم مطبّق بالفعل",
+};
+
 type RegisteredAddress = {
   governorate: string;
   detailedAddress: string;
@@ -27,12 +41,13 @@ const OilsCart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const cart = useDealerCart();
-  const { products, loading: catalogLoading, priceAtQty } = useOilsCatalog();
+  const { products, loading: catalogLoading, priceAtQty, discountsFor } = useOilsCatalog();
   const [fulfillmentMethod, setFulfillmentMethod] = useState<FulfillmentMethod>(() => localStorage.getItem("oils_fulfillment_method") === "shipping" ? "shipping" : "pickup");
   const [pickupBranch, setPickupBranch] = useState(() => localStorage.getItem("oils_pickup_branch") || "");
   const [registeredAddress, setRegisteredAddress] = useState<RegisteredAddress | null>(null);
   const [addressLoading, setAddressLoading] = useState(false);
   const [notes, setNotes] = useState("");
+  const [couponCode, setCouponCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
@@ -47,6 +62,24 @@ const OilsCart = () => {
     () => items.reduce((sum, item) => sum + priceAtQty(item.oilProduct, item.quantity) * item.quantity, 0),
     [items, priceAtQty],
   );
+  const freeShippingReached = total >= FREE_SHIPPING_THRESHOLD;
+  const totalCartons = useMemo(
+    () => items.reduce((sum, item) => sum + Math.floor(item.quantity / unitsPerCarton(item.oilProduct.name_ar, item.oilProduct.name_en)), 0),
+    [items],
+  );
+  const nextDiscountHint = useMemo(() => {
+    for (const item of items) {
+      const next = discountsFor(item.oilProduct)
+        .filter((discount) => discount.min_quantity > item.quantity)
+        .sort((a, b) => a.min_quantity - b.min_quantity)[0];
+      if (next) {
+        const needed = next.min_quantity - item.quantity;
+        const value = next.discount_type === "percent" ? `${next.discount_value}%` : `${next.discount_value} ج.م`;
+        return `زوّد ${needed} عبوة من «${item.oilProduct.name_ar}» وتاخد خصم ${value}`;
+      }
+    }
+    return null;
+  }, [items, discountsFor]);
 
   useEffect(() => {
     if (!user) {
@@ -141,6 +174,19 @@ const OilsCart = () => {
         throw itemsError;
       }
 
+      if (couponCode.trim()) {
+        const { data: couponResult } = await supabase.rpc("apply_oils_coupon", {
+          _order_id: order.id,
+          _code: couponCode.trim(),
+        });
+        const result = (couponResult || {}) as { ok?: boolean; error?: string; discount?: number };
+        if (result.ok) {
+          toast({ title: "تم تطبيق كود الخصم", description: `وفّرت ${Number(result.discount || 0).toLocaleString("en-US")} ج.م` });
+        } else {
+          toast({ title: COUPON_ERRORS[result.error || ""] || "كود الخصم غير صالح", description: "الطلب اتجهز بدون خصم.", variant: "destructive" });
+        }
+      }
+
       localStorage.setItem("oils_fulfillment_method", fulfillmentMethod);
       if (fulfillmentMethod === "pickup") localStorage.setItem("oils_pickup_branch", pickupBranch);
       localStorage.setItem("oils_pending_payment_order", order.id);
@@ -184,6 +230,16 @@ const OilsCart = () => {
         <li><i>3</i>الدفع</li>
       </ol>
 
+      <section className="oils-cart-boost" aria-live="polite">
+        <div className="oils-cart-boost-bar"><i style={{ width: `${Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)}%` }} /></div>
+        <p>
+          {freeShippingReached
+            ? "مبروك — طلبيتك وصلت حد الشحن المجاني 🎉"
+            : `ناقصك ${(FREE_SHIPPING_THRESHOLD - total).toLocaleString("en-US", { maximumFractionDigits: 0 })} ج.م للشحن المجاني`}
+        </p>
+        {nextDiscountHint ? <span className="oils-cart-boost-hint"><Sparkles /> {nextDiscountHint}</span> : null}
+      </section>
+
       <section className="oils-cart-items" aria-label="أصناف السلة">
         {items.map((item) => {
           const unitPrice = priceAtQty(item.oilProduct, item.quantity);
@@ -209,6 +265,19 @@ const OilsCart = () => {
                 </div>
                 <div className="oils-cart-line-total"><span>إجمالي الصنف</span><strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
               </div>
+              {(() => {
+                const perCarton = unitsPerCarton(item.oilProduct.name_ar, item.oilProduct.name_en);
+                const label = cartonLabel(item.quantity, perCarton);
+                return (
+                  <div className="oils-cart-carton">
+                    <span className="oils-cart-carton-info"><Boxes /> {label ? label : `الكرتونة = ${perCarton} عبوة`}</span>
+                    <div className="oils-cart-carton-actions">
+                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity - perCarton)}>− كرتونة</button>
+                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity + perCarton)}>+ كرتونة</button>
+                    </div>
+                  </div>
+                );
+              })()}
             </article>
           );
         })}
@@ -245,10 +314,27 @@ const OilsCart = () => {
         )}
         <label className="oils-label oils-label--icon" htmlFor="oils-notes"><MessageSquareText /> ملاحظات للمخزن <span>(اختياري)</span></label>
         <textarea id="oils-notes" className="oils-cart-notes" value={notes} maxLength={500} onChange={(event) => setNotes(event.target.value)} placeholder="أي تفاصيل مهمة للتجهيز…" />
+
+        <label className="oils-label oils-label--icon" htmlFor="oils-coupon"><Tag /> كود خصم <span>(اختياري)</span></label>
+        <div className="oils-coupon-row">
+          <input
+            id="oils-coupon"
+            className="oils-coupon-input"
+            dir="ltr"
+            value={couponCode}
+            maxLength={32}
+            placeholder="MASRIA10"
+            onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+          />
+          {couponCode ? <button type="button" className="oils-coupon-clear" onClick={() => setCouponCode("")}>مسح</button> : null}
+        </div>
+        <p className="oils-coupon-hint">الكود بيتفعّل ويتخصم تلقائيًا قبل صفحة الدفع.</p>
+
         <div className="oils-order-summary">
           <div className="oils-summary-heading"><span><ReceiptText /> ملخص الطلب</span><ShieldCheck /></div>
           <div><span>قيمة الأصناف</span><b className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</b></div>
-          <div><span>الشحن</span><b>{fulfillmentMethod === "shipping" ? "يُدفع لشركة الشحن" : "استلام من الفرع"}</b></div>
+          <div><span>عدد الكراتين</span><b className="oils-num">{totalCartons > 0 ? totalCartons : "—"}</b></div>
+          <div><span>الشحن</span><b>{fulfillmentMethod === "shipping" ? (freeShippingReached ? "مجاني ✅" : "يُدفع لشركة الشحن") : "استلام من الفرع"}</b></div>
           <div><span>الضريبة</span><b>لا توجد</b></div>
           <div className="oils-order-total"><span>الإجمالي</span><strong className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
         </div>
