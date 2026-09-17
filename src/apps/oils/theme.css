@@ -520,3 +520,60 @@
 .oils-murshid-composer button { width: 44px; height: 44px; flex: 0 0 auto; border: 0; border-radius: 50%; display: grid; place-items: center; color: hsl(var(--oils-card)); background: linear-gradient(150deg, hsl(var(--oils-accent)), hsl(var(--oils-accent) / .8)); box-shadow: 0 6px 16px hsl(var(--oils-accent) / .4); }
 .oils-murshid-composer button svg { width: 18px; height: 18px; stroke-width: 2; rotate: 180deg; }
 .oils-murshid-composer button:disabled { opacity: .45; box-shadow: none; }
+
+/* ===== طلب سريع — لوحة فاخرة ===== */
+.oils-quick .oils-page-intro { display: none; }
+.oils-qo-console { position: relative; margin-bottom: 18px; padding: 16px; border: 1px solid hsl(var(--oils-accent) / .28); border-radius: 26px; background: linear-gradient(165deg, hsl(0 0% 7%), hsl(0 0% 4%) 62%, hsl(353 60% 11%)); box-shadow: 0 22px 48px hsl(var(--oils-ink) / .3), inset 0 1px hsl(var(--oils-accent) / .22); overflow: hidden; }
+.oils-qo-console::before { content: ""; position: absolute; inset: -40% -30% auto auto; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, hsl(var(--oils-accent) / .18), transparent 68%); pointer-events: none; }
+.oils-qo-console-top { position: relative; display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.oils-qo-console-mark { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 10px 22px hsl(var(--oils-accent) / .3); }
+.oils-qo-console-mark svg { width: 19px; }
+.oils-qo-console-top small { display: block; color: hsl(var(--oils-accent) / .85); font-size: 8.5px; font-weight: 800; letter-spacing: .1em; }
+.oils-qo-console-top h2 { margin: 3px 0 0; color: hsl(var(--oils-card)); font-size: 13.5px; font-weight: 900; }
+.oils-qo-live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid hsl(var(--oils-accent) / .3); border-radius: 999px; color: hsl(var(--oils-card) / .8); font-size: 8.5px; font-weight: 800; }
+.oils-qo-live i { width: 6px; height: 6px; border-radius: 50%; background: hsl(140 62% 52%); box-shadow: 0 0 9px hsl(140 62% 52%); }
+.oils-qo-field { position: relative; display: flex; align-items: center; height: 56px; padding-inline: 44px 6px; border: 1px solid hsl(var(--oils-card) / .13); border-radius: 19px; background: hsl(var(--oils-card) / .07); }
+.oils-qo-field:focus-within { border-color: hsl(var(--oils-accent) / .55); box-shadow: 0 0 0 3px hsl(var(--oils-accent) / .13); }
+.oils-qo-field > svg { position: absolute; right: 15px; width: 18px; color: hsl(var(--oils-accent) / .9); }
+.oils-qo-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; color: hsl(var(--oils-card)); background: transparent; font-size: 13px; font-weight: 800; letter-spacing: .02em; }
+.oils-qo-input::placeholder { color: hsl(var(--oils-card) / .32); font-weight: 600; }
+.oils-qo-add { width: 44px; height: 44px; border: 0; border-radius: 15px; display: grid; place-items: center; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 8px 18px hsl(var(--oils-accent) / .33); }
+.oils-qo-add svg { width: 19px; stroke-width: 2.6; }
+.oils-qo-add:active { transform: scale(.94); }
+.oils-qo-suggestions { position: relative; margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.oils-qo-suggestions button { width: 100%; padding: 10px 12px; border: 1px solid hsl(var(--oils-card) / .1); border-radius: 15px; display: flex; align-items: center; gap: 9px; text-align: right; color: hsl(var(--oils-card)); background: hsl(var(--oils-card) / .06); }
+.oils-qo-suggestions button:active { background: hsl(var(--oils-accent) / .16); }
+.oils-qo-sg-code { color: hsl(var(--oils-accent)); font-size: 10px; font-weight: 900; }
+.oils-qo-sg-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: hsl(var(--oils-card) / .78); font-size: 10px; font-weight: 700; }
+.oils-qo-suggestions svg { width: 14px; color: hsl(var(--oils-accent) / .75); }
+.oils-qo-error { position: relative; margin: 10px 0 0; padding: 9px 12px; border-radius: 13px; color: hsl(0 85% 78%); background: hsl(var(--oils-danger) / .16); font-size: 10px; font-weight: 800; }
+.oils-qo-hints { position: relative; margin-top: 13px; padding-top: 12px; border-top: 1px solid hsl(var(--oils-card) / .09); display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.oils-qo-hints span { display: inline-flex; align-items: center; gap: 5px; color: hsl(var(--oils-card) / .55); font-size: 8.5px; font-weight: 700; }
+.oils-qo-hints svg { width: 12px; color: hsl(var(--oils-accent) / .8); }
+
+.oils-qo-list-head { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 10px; }
+.oils-qo-list-head h3 { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 900; }
+.oils-qo-list-head h3 svg { width: 14px; color: hsl(var(--oils-accent)); }
+.oils-qo-list-head span { color: hsl(var(--oils-muted)); font-size: 9px; font-weight: 800; }
+.oils-quick .oils-quick-row { border: 1px solid hsl(var(--oils-line) / .55); border-radius: 22px; box-shadow: 0 12px 28px hsl(var(--oils-ink) / .05); }
+
+.oils-qo-empty { margin-top: 4px; padding: 36px 22px; border: 1px dashed hsl(var(--oils-line)); border-radius: 26px; text-align: center; background: hsl(var(--oils-card) / .6); }
+.oils-qo-empty-mark { width: 54px; height: 54px; margin: 0 auto 13px; border-radius: 19px; display: grid; place-items: center; color: hsl(var(--oils-accent-deep)); background: linear-gradient(150deg, hsl(var(--oils-warm) / .45), hsl(var(--oils-accent) / .22)); }
+.oils-qo-empty-mark svg { width: 24px; }
+.oils-qo-empty h4 { margin: 0 0 6px; font-size: 13px; font-weight: 900; }
+.oils-qo-empty p { margin: 0; color: hsl(var(--oils-muted)); font-size: 10px; line-height: 1.7; }
+.oils-qo-empty-link { margin-top: 14px; padding: 9px 16px; border: 1px solid hsl(var(--oils-line)); border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; background: hsl(var(--oils-card)); font-size: 10px; font-weight: 850; }
+.oils-qo-empty-link svg { width: 13px; color: hsl(var(--oils-accent)); }
+
+.oils-qo-clear { margin: 12px auto 0; display: flex; align-items: center; gap: 6px; border: 0; background: none; color: hsl(var(--oils-danger)); font-size: 10px; font-weight: 800; }
+.oils-qo-clear svg { width: 13px; }
+
+.oils-qo-total { position: sticky; bottom: calc(102px + env(safe-area-inset-bottom, 0px)); z-index: 10; margin-top: 16px; padding: 14px; border: 1px solid hsl(var(--oils-accent) / .3); border-radius: 26px; display: flex; align-items: center; gap: 12px; background: linear-gradient(165deg, hsl(0 0% 7%), hsl(0 0% 4%)); box-shadow: 0 20px 44px hsl(var(--oils-ink) / .32); }
+.oils-qo-total-copy { flex: 1; min-width: 0; }
+.oils-qo-total-copy span { display: block; color: hsl(var(--oils-card) / .5); font-size: 8.5px; font-weight: 800; letter-spacing: .08em; }
+.oils-qo-total-copy strong { display: block; margin-top: 2px; color: hsl(var(--oils-card)); font-size: 23px; font-weight: 900; }
+.oils-qo-total-copy small { color: hsl(var(--oils-accent)); font-size: 10px; font-weight: 800; }
+.oils-qo-confirm { min-height: 50px; padding: 0 16px; border: 0; border-radius: 17px; display: inline-flex; align-items: center; gap: 8px; color: hsl(0 0% 6%); font-size: 11.5px; font-weight: 900; background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 12px 26px hsl(var(--oils-accent) / .32); }
+.oils-qo-confirm svg { width: 16px; stroke-width: 2.4; }
+.oils-qo-confirm:disabled { opacity: .5; box-shadow: none; }
+.oils-qo-confirm:active { transform: scale(.97); }
