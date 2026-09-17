@@ -577,3 +577,43 @@
 .oils-qo-confirm svg { width: 16px; stroke-width: 2.4; }
 .oils-qo-confirm:disabled { opacity: .5; box-shadow: none; }
 .oils-qo-confirm:active { transform: scale(.97); }
+
+/* ===== مركز الإشعارات ===== */
+.oils-notifs .oils-header-symbol { border: 1px solid hsl(var(--oils-line)); color: hsl(var(--oils-ink)); background: hsl(var(--oils-card)); }
+.oils-nt-hero { position: relative; margin-bottom: 14px; padding: 15px; border: 1px solid hsl(var(--oils-accent) / .28); border-radius: 26px; display: flex; align-items: center; gap: 12px; background: linear-gradient(165deg, hsl(0 0% 7%), hsl(0 0% 4%) 62%, hsl(353 60% 11%)); box-shadow: 0 22px 46px hsl(var(--oils-ink) / .28); overflow: hidden; }
+.oils-nt-hero::before { content: ""; position: absolute; inset: -60% -30% auto auto; width: 210px; height: 210px; border-radius: 50%; background: radial-gradient(circle, hsl(var(--oils-accent) / .18), transparent 70%); }
+.oils-nt-hero-mark { position: relative; width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 10px 22px hsl(var(--oils-accent) / .32); }
+.oils-nt-hero-mark svg { width: 21px; }
+.oils-nt-hero-copy { position: relative; flex: 1; min-width: 0; }
+.oils-nt-hero-copy small { display: block; color: hsl(var(--oils-card) / .5); font-size: 8.5px; font-weight: 800; letter-spacing: .07em; }
+.oils-nt-hero-copy strong { display: block; margin-top: 3px; color: hsl(var(--oils-card)); font-size: 16px; font-weight: 900; }
+.oils-nt-mark-all { position: relative; display: inline-flex; align-items: center; gap: 5px; padding: 9px 12px; border: 1px solid hsl(var(--oils-accent) / .38); border-radius: 999px; color: hsl(var(--oils-accent)); background: hsl(var(--oils-accent) / .1); font-size: 9.5px; font-weight: 850; }
+.oils-nt-mark-all svg { width: 13px; }
+.oils-nt-mark-all:disabled { opacity: .38; }
+
+.oils-nt-filters { display: flex; gap: 7px; margin-bottom: 13px; overflow-x: auto; scrollbar-width: none; }
+.oils-nt-filters::-webkit-scrollbar { display: none; }
+.oils-nt-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; border: 1px solid hsl(var(--oils-line)); border-radius: 999px; color: hsl(var(--oils-muted)); background: hsl(var(--oils-card)); font-size: 10px; font-weight: 850; }
+.oils-nt-chip.is-active { border-color: transparent; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 8px 18px hsl(var(--oils-accent) / .28); }
+.oils-nt-chip i { min-width: 16px; padding: 1px 4px; border-radius: 999px; color: hsl(var(--oils-card)); background: hsl(var(--oils-danger)); font-size: 8px; font-style: normal; font-weight: 900; }
+
+.oils-nt-list { display: grid; gap: 10px; }
+.oils-nt-skeleton { height: 86px; border-radius: 22px; background: linear-gradient(100deg, hsl(var(--oils-card)), hsl(var(--oils-card-hi)), hsl(var(--oils-card))); background-size: 220% 100%; animation: oils-nt-shimmer 1.4s infinite linear; }
+@keyframes oils-nt-shimmer { from { background-position: 180% 0; } to { background-position: -40% 0; } }
+
+.oils-nt-card { position: relative; padding: 14px; border: 1px solid hsl(var(--oils-line) / .6); border-radius: 22px; display: grid; grid-template-columns: 42px minmax(0,1fr); gap: 11px; background: hsl(var(--oils-card)); box-shadow: 0 12px 30px hsl(var(--oils-ink) / .05); overflow: hidden; }
+.oils-nt-card::after { content: ""; position: absolute; inset-inline-start: 0; inset-block: 0; width: 3px; background: hsl(var(--oils-line)); }
+.oils-nt-card.is-unread { border-color: hsl(var(--oils-accent) / .38); background: linear-gradient(180deg, hsl(var(--oils-warm) / .09), hsl(var(--oils-card)) 55%); }
+.oils-nt-card.is-unread::after { background: linear-gradient(180deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); }
+.oils-nt-icon { width: 42px; height: 42px; border-radius: 15px; display: grid; place-items: center; color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-card-hi)); }
+.oils-nt-icon svg { width: 18px; }
+.oils-nt-card.is-success .oils-nt-icon { color: hsl(var(--oils-success)); background: hsl(var(--oils-success) / .12); }
+.oils-nt-card.is-warning .oils-nt-icon { color: hsl(36 82% 42%); background: hsl(36 82% 42% / .13); }
+.oils-nt-card.is-order .oils-nt-icon { color: hsl(var(--oils-accent-mid)); background: hsl(var(--oils-accent-mid) / .1); }
+.oils-nt-card.is-offer .oils-nt-icon { color: hsl(var(--oils-accent-deep)); background: linear-gradient(150deg, hsl(var(--oils-warm) / .45), hsl(var(--oils-accent) / .22)); }
+.oils-nt-card.is-contact .oils-nt-icon { color: hsl(var(--oils-danger)); background: hsl(var(--oils-danger) / .1); }
+.oils-nt-body { min-width: 0; }
+.oils-nt-body h3 { margin: 1px 0 5px; font-size: 12px; font-weight: 900; line-height: 1.45; }
+.oils-nt-body p { margin: 0; color: hsl(var(--oils-muted)); font-size: 10.5px; line-height: 1.75; white-space: pre-line; }
+.oils-nt-body time { display: block; margin-top: 8px; color: hsl(var(--oils-muted) / .8); font-size: 8.5px; font-weight: 800; }
+.oils-nt-dot { position: absolute; top: 14px; inset-inline-end: 14px; width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--oils-danger)); box-shadow: 0 0 0 4px hsl(var(--oils-danger) / .13); }
