@@ -16,6 +16,10 @@ export const geideaApiBase = () =>
 export const geideaCheckoutScript = () =>
   "https://www.merchant.geidea.net/hpp/geideaCheckout.min.js";
 
+/** Hosted checkout avoids WebView/popup restrictions and is the most reliable cross-platform flow. */
+export const geideaHostedCheckoutUrl = (sessionId: string) =>
+  `https://www.merchant.geidea.net/hpp/checkout/?${encodeURIComponent(sessionId)}`;
+
 export const geideaCredentials = () => {
   const live = geideaEnv() === "live";
   const publicKey = live

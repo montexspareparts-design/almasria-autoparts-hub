@@ -6,6 +6,7 @@ import {
   geideaCheckoutScript,
   geideaCreateSessionSignature,
   geideaEnv,
+  geideaHostedCheckoutUrl,
   geideaTimestamp,
 } from "../_shared/geidea.ts";
 
@@ -123,6 +124,7 @@ Deno.serve(async (req) => {
     return json({
       session_id: raw.session.id,
       checkout_script: geideaCheckoutScript(),
+      checkout_url: geideaHostedCheckoutUrl(raw.session.id),
       environment: geideaEnv(),
       currency,
       order_number: order.order_number,
