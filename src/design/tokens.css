@@ -1,0 +1,252 @@
+/* ─────────────────────────────────────────────────────────────
+   Al Masria Design System — foundation tokens
+   Scoped entirely under .ds-root so nothing in the existing app
+   is affected. No component may hardcode a hex value.
+   ───────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+.ds-root {
+  /* Brand */
+  --brand-red: #c8102e;
+  --brand-red-hover: #a80d26;
+  --brand-red-soft: #fbe9ec;
+
+  /* Ink */
+  --ink-900: #0b0b0d;
+  --ink-700: #2a2b30;
+  --ink-500: #6b6e76;
+  --ink-300: #b8bac1;
+
+  /* Lines & surfaces */
+  --line-200: #e6e7ea;
+  --surface-0: #ffffff;
+  --surface-50: #f7f7f5;
+  --surface-100: #efefec;
+
+  /* Status */
+  --success: #1e8e5a;
+  --success-soft: #e6f4ec;
+  --warning: #b7791f;
+  --warning-soft: #fbf1df;
+  --danger: #c8102e;
+  --danger-soft: #fbe9ec;
+  --info: #2f5bea;
+  --info-soft: #e8eefd;
+
+  /* Shape */
+  --r-xl: 20px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  --r-full: 999px;
+
+  /* Elevation */
+  --shadow-1: 0 1px 2px rgba(11, 11, 13, 0.04), 0 2px 8px rgba(11, 11, 13, 0.04);
+  --shadow-2: 0 4px 16px rgba(11, 11, 13, 0.08);
+  --shadow-sheet: 0 -8px 32px rgba(11, 11, 13, 0.12);
+
+  /* Type */
+  --font-ui: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  font-family: var(--font-ui);
+  color: var(--ink-900);
+  background: var(--surface-50);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Type scale ───────────────────────────────────────────── */
+.ds-display { font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: 0; }
+.ds-h1 { font-size: 24px; line-height: 32px; font-weight: 700; }
+.ds-h2 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.ds-body { font-size: 16px; line-height: 24px; font-weight: 400; }
+.ds-body-strong { font-size: 16px; line-height: 24px; font-weight: 600; }
+.ds-caption { font-size: 13px; line-height: 18px; font-weight: 500; }
+.ds-micro { font-size: 11px; line-height: 16px; font-weight: 500; }
+
+.ds-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.ds-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+.ds-price-lg { font-size: 28px; line-height: 32px; font-weight: 700; }
+.ds-price-md { font-size: 20px; line-height: 24px; font-weight: 700; }
+.ds-price-sm { font-size: 16px; line-height: 20px; font-weight: 600; }
+
+/* ── Primitives ───────────────────────────────────────────── */
+.ds-card {
+  background: var(--surface-0);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  padding: 16px;
+}
+
+.ds-hairline { border: 1px solid var(--line-200); }
+
+.ds-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ink-900);
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  transition: background-color 160ms ease, opacity 160ms ease;
+  user-select: none;
+}
+.ds-btn--lg { min-height: 52px; font-size: 17px; }
+.ds-btn--block { width: 100%; }
+.ds-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+.ds-btn--primary { background: var(--ink-900); color: var(--surface-0); }
+.ds-btn--primary:active { background: var(--ink-700); }
+.ds-btn--accent { background: var(--brand-red); color: var(--surface-0); }
+.ds-btn--accent:active { background: var(--brand-red-hover); }
+.ds-btn--secondary { background: var(--surface-100); color: var(--ink-900); }
+.ds-btn--ghost { background: transparent; color: var(--ink-900); }
+.ds-btn--ghost:active { background: var(--surface-100); }
+.ds-btn--destructive { background: var(--danger-soft); color: var(--danger); }
+
+.ds-iconbtn {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  color: var(--ink-900);
+  background: transparent;
+}
+.ds-iconbtn:active { background: var(--surface-100); }
+
+/* ── Inputs ───────────────────────────────────────────────── */
+.ds-input {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--r-md);
+  background: var(--surface-0);
+  border: 1px solid var(--line-200);
+  padding-inline: 14px;
+  font-family: var(--font-ui);
+  font-size: 16px;
+  color: var(--ink-900);
+  outline: none;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+.ds-input::placeholder { color: var(--ink-300); }
+.ds-input:focus { border-color: var(--ink-900); box-shadow: 0 0 0 2px var(--ink-900); }
+.ds-input:disabled { background: var(--surface-100); color: var(--ink-300); }
+.ds-input--error { border-color: var(--danger); }
+
+/* ── Chips & badges ───────────────────────────────────────── */
+.ds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--r-sm);
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ds-chip--neutral { background: var(--surface-100); color: var(--ink-700); }
+.ds-chip--red { background: var(--brand-red-soft); color: var(--brand-red); }
+.ds-chip--success { background: var(--success-soft); color: var(--success); }
+.ds-chip--warning { background: var(--warning-soft); color: var(--warning); }
+.ds-chip--info { background: var(--info-soft); color: var(--info); }
+
+.ds-dot { width: 6px; height: 6px; border-radius: var(--r-full); background: currentColor; }
+
+/* ── Segmented control ────────────────────────────────────── */
+.ds-segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--surface-100);
+  border-radius: var(--r-md);
+  width: 100%;
+}
+.ds-segment {
+  flex: 1;
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-500);
+  position: relative;
+  transition: color 160ms ease;
+}
+.ds-segment--active { color: var(--ink-900); }
+
+/* ── Skeleton ─────────────────────────────────────────────── */
+.ds-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-100);
+}
+.ds-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+  animation: ds-shimmer 1.4s infinite;
+}
+@keyframes ds-shimmer { 100% { transform: translateX(100%); } }
+
+/* ── Bars ─────────────────────────────────────────────────── */
+.ds-tabbar {
+  position: sticky;
+  bottom: 0;
+  background: var(--ink-900);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ds-tabbar__item {
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--surface-0);
+  opacity: 0.55;
+  position: relative;
+  transition: opacity 160ms ease;
+}
+.ds-tabbar__item--active { opacity: 1; }
+
+.ds-sticky-total {
+  background: var(--surface-0);
+  border-top: 1px solid var(--line-200);
+  box-shadow: var(--shadow-sheet);
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.ds-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 8px;
+  transition: background-color 220ms ease, border-color 220ms ease;
+  border-bottom: 1px solid transparent;
+}
+.ds-header--solid {
+  background: var(--surface-0);
+  border-bottom-color: var(--line-200);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-root *, .ds-root *::after, .ds-root *::before {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
