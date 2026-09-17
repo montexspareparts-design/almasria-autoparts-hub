@@ -15,6 +15,13 @@
       "when": 1789684884539,
       "tag": "0001_apply_oils_coupon_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789684923731,
+      "tag": "0002_allow_coupon_total_update",
+      "breakpoints": true
     }
   ]
 }
