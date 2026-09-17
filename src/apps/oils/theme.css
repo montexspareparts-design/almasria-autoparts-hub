@@ -1,17 +1,18 @@
 .oils-app {
-  --oils-bg: 105 12% 91%;
-  --oils-surface: 60 20% 98%;
+  /* لوحة ألوان مستخرجة من لوجو المصرية: أحمر + ذهبي + أسود + أبيض */
+  --oils-bg: 36 16% 94%;
+  --oils-surface: 40 30% 98%;
   --oils-card: 0 0% 100%;
-  --oils-card-hi: 86 30% 94%;
-  --oils-accent: 91 44% 49%;
-  --oils-accent-deep: 124 35% 15%;
-  --oils-accent-mid: 95 34% 34%;
-  --oils-warm: 29 100% 63%;
-  --oils-ink: 0 0% 4%;
-  --oils-muted: 105 5% 43%;
-  --oils-line: 110 8% 84%;
-  --oils-success: 124 38% 34%;
-  --oils-danger: 4 72% 48%;
+  --oils-card-hi: 40 34% 95%;
+  --oils-accent: 41 88% 51%;
+  --oils-accent-deep: 0 0% 7%;
+  --oils-accent-mid: 353 82% 38%;
+  --oils-warm: 41 92% 56%;
+  --oils-ink: 0 0% 5%;
+  --oils-muted: 30 5% 42%;
+  --oils-line: 34 12% 86%;
+  --oils-success: 146 45% 30%;
+  --oils-danger: 353 78% 44%;
   min-height: 100dvh;
   color: hsl(var(--oils-ink));
   background: hsl(var(--oils-bg));
