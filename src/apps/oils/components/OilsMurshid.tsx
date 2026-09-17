@@ -15,7 +15,7 @@ const MAX_HISTORY = 14;
 
 const GREETING: ChatMessage = {
   role: "assistant",
-  content: "أهلًا بيك في المصرية للزيوت 👋\nأنا **زوجة** — هديرلك على الزيت المناسب، أعرفلك الأسعار، وأتابع معاك طلبك. اسألني براحتك.",
+  content: "أهلًا بيك في المصرية للزيوت 👋\nأنا **لزوجة** — خبيرة لزوجات تويوتا (0W-20، 5W-30…) — هقولك الزيت الصح لِعربيتك، أعرفلك الأسعار، وأتابع معاك طلبك. اسألني براحتك.",
 };
 
 const SUGGESTIONS = [
@@ -43,7 +43,7 @@ const loadMessages = (): ChatMessage[] => {
 };
 
 /**
- * "زوجة" — المساعدة الذكية لتطبيق المصرية للزيوت.
+ * "لزوجة" — المساعدة الذكية لتطبيق المصرية للزيوت.
  * محادثة واحدة محفوظة على الجهاز (localStorage) + بث مباشر من بوابة Lovable AI.
  */
 const OilsMurshid = () => {
@@ -98,7 +98,7 @@ const OilsMurshid = () => {
         });
 
         if (!res.ok || !res.body) {
-          let friendly = "زوجة مش متاحة حاليًا، جرب تاني بعد شوية.";
+          let friendly = "لزوجة مش متاحة حاليًا، جرب تاني بعد شوية.";
           try {
             const data = await res.json();
             if (data?.error) friendly = data.error;
@@ -125,7 +125,7 @@ const OilsMurshid = () => {
                 return next;
               });
             } else if (evt.type === "response.failed") {
-              throw new Error("زوجة وقفت فجأة — جرب تاني.");
+              throw new Error("لزوجة وقفت فجأة — جرب تاني.");
             }
           } catch (e) {
             if (e instanceof SyntaxError) return; // سطر ناقص — بيتكمل في الشنك القادم
@@ -193,7 +193,7 @@ const OilsMurshid = () => {
         <button
           type="button"
           className="oils-murshid-fab"
-          aria-label="افتح زوجة، المساعدة الذكية"
+          aria-label="افتح لزوجة، المساعدة الذكية"
           onClick={() => { void haptic("light"); setOpen(true); }}
         >
           <Bot />
@@ -202,12 +202,12 @@ const OilsMurshid = () => {
       )}
 
       {open && (
-        <section className="oils-murshid-panel" dir="rtl" aria-label="زوجة — المساعدة الذكية">
+        <section className="oils-murshid-panel" dir="rtl" aria-label="لزوجة — المساعدة الذكية">
           <header className="oils-murshid-head">
             <div className="oils-murshid-head-brand">
               <span className="oils-murshid-head-logo"><OilsBrandMark /></span>
               <span className="oils-murshid-head-titles">
-                <strong>زوجة</strong>
+                <strong>لزوجة</strong>
                 <small>مساعدتك الشخصية · متصلة</small>
               </span>
             </div>
@@ -228,7 +228,7 @@ const OilsMurshid = () => {
               </div>
             ))}
             {streaming && messages[messages.length - 1]?.content === "" && (
-              <div className="oils-murshid-typing" aria-label="زوجة بتكتب">
+              <div className="oils-murshid-typing" aria-label="لزوجة بتكتب">
                 <span /><span /><span />
               </div>
             )}
@@ -255,8 +255,8 @@ const OilsMurshid = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اسأل زوجة…"
-              aria-label="رسالتك لزوجة"
+              placeholder="اسأل لزوجة…"
+              aria-label="رسالتك للزوجة"
               disabled={streaming}
               enterKeyHint="send"
             />
