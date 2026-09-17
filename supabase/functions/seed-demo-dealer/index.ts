@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
   const payload = {
     user_id: userId,
-    tier: "wholesale",
+    tier: "wholesale_tier1",
     is_active: true,
     credit_limit: 50000,
     min_order_amount: 0,
