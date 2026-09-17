@@ -18,6 +18,7 @@ const OilsJoin = lazy(() => import("./pages/OilsJoin"));
 const OilsCart = lazy(() => import("./pages/OilsCart"));
 const OilsPayment = lazy(() => import("./pages/OilsPayment"));
 const OilsPaymentResult = lazy(() => import("./pages/OilsPaymentResult"));
+const OilsNotifications = lazy(() => import("./pages/OilsNotifications"));
 
 const TABS = [
   { path: "/oils", label: "الرئيسية", icon: Home, end: true },
@@ -128,6 +129,7 @@ const OilsApp = () => {
           <Route path="payment/:orderId" element={<OilsPayment />} />
           <Route path="payment-result" element={<OilsPaymentResult />} />
           <Route path="account" element={<OilsAccount />} />
+          <Route path="notifications" element={<OilsNotifications />} />
           <Route path="product/:productId" element={<OilsProductDetail />} />
           <Route path="login" element={<Navigate to="/oils" replace />} />
           <Route path="*" element={<Navigate to="/oils" replace />} />

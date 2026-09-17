@@ -44,7 +44,7 @@ const OilsCatalog = () => {
     <main className="oils-screen oils-catalog" dir="rtl">
       <header className="oils-page-header">
         <div><span className="oils-eyebrow">ALMASRIA WHOLESALE</span><h1>الكتالوج</h1></div>
-        <button type="button" className="oils-circle-button" aria-label="الإشعارات"><Bell /></button>
+        <button type="button" className="oils-circle-button" aria-label="الإشعارات" onClick={() => navigate("/oils/notifications")}><Bell /></button>
       </header>
 
       {/* البحث */}
