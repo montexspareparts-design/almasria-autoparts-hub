@@ -103,3 +103,6 @@ verify_jwt = false
 
 [functions.notify-warehouse-order]
 verify_jwt = false
+
+[functions.geidea-return]
+verify_jwt = false
