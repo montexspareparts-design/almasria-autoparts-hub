@@ -269,25 +269,26 @@
   z-index: 5;
   inset-inline: 52px;
   bottom: 9px;
-  height: 3px;
+  height: 4px;
   display: flex;
   direction: rtl;
-  gap: 3px;
+  gap: 4px;
   pointer-events: auto;
 }
 .oils-featured-progress button {
   min-width: 2px;
-  height: 3px;
+  height: 4px;
   flex: 1;
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: hsl(var(--oils-card) / .18);
-  transition: background-color .3s ease, transform .3s ease;
+  background: hsl(var(--oils-card) / .16);
+  transition: background-color .3s ease, box-shadow .3s ease, flex-grow .35s ease;
 }
 .oils-featured-progress button.is-active {
-  background: hsl(var(--oils-accent));
-  transform: scaleY(1.7);
+  flex-grow: 2.4;
+  background: linear-gradient(90deg, hsl(var(--oils-warm)), hsl(var(--oils-accent)));
+  box-shadow: 0 0 10px hsl(var(--oils-accent) / .75), 0 0 3px hsl(var(--oils-warm) / .9);
 }
 .oils-featured::after { display: none; }
 .oils-featured-product::before {
@@ -361,8 +362,60 @@
 .oils-featured-codes b { margin-inline-start: 3px; color: hsl(var(--oils-ink)); font-size: 8px; }
 .oils-featured-card button { width: 48px; height: 48px; border-radius: 15px; color: hsl(var(--oils-accent)); box-shadow: 0 10px 20px hsl(var(--oils-ink) / .18); }
 .oils-featured-card strong { font-size: 24px; line-height: 1; }
-.oils-featured-more { height: 50px; padding: 0 18px; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; color: hsl(var(--oils-accent-deep)); background: linear-gradient(100deg, hsl(var(--oils-accent) / .9), hsl(var(--oils-warm)), hsl(var(--oils-accent) / .9)); box-shadow: 0 10px 26px hsl(var(--oils-accent) / .22); font-size: 12px; font-weight: 900; }
-.oils-featured-more svg { width: 17px; }
+.oils-featured-more {
+  height: 54px;
+  padding: 0 7px 0 18px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: hsl(var(--oils-accent-deep));
+  background: linear-gradient(105deg, hsl(var(--oils-accent-mid)) 0%, hsl(var(--oils-warm)) 38%, hsl(var(--oils-accent)) 72%, hsl(var(--oils-warm)) 100%);
+  box-shadow:
+    0 14px 34px -8px hsl(var(--oils-accent) / .5),
+    0 2px 0 hsl(var(--oils-warm) / .6) inset,
+    0 -10px 20px hsl(var(--oils-accent-deep) / .12) inset;
+  border: 1px solid hsl(var(--oils-warm) / .55);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  overflow: hidden;
+  isolation: isolate;
+  position: relative;
+  transition: transform .18s ease, box-shadow .25s ease;
+}
+.oils-featured-more:active { transform: scale(.975); box-shadow: 0 6px 18px -6px hsl(var(--oils-accent) / .45), 0 2px 0 hsl(var(--oils-warm) / .6) inset; }
+.oils-featured-more::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(115deg, transparent 32%, hsl(0 0% 100% / .42) 50%, transparent 68%);
+  transform: translateX(-130%);
+  animation: oils-more-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.oils-featured-more span { position: relative; z-index: 1; text-shadow: 0 1px 0 hsl(0 0% 100% / .25); }
+.oils-featured-more svg {
+  position: relative;
+  z-index: 1;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  color: hsl(var(--oils-warm));
+  background: hsl(var(--oils-accent-deep));
+  border-radius: 12px;
+  box-sizing: content-box;
+  padding: 11px;
+  margin-inline-start: auto;
+  order: 2;
+  box-shadow: 0 6px 14px -4px hsl(var(--oils-accent-deep) / .55), 0 0 0 1px hsl(var(--oils-warm) / .22) inset;
+}
+@keyframes oils-more-shine {
+  0%, 55% { transform: translateX(-130%); }
+  85%, 100% { transform: translateX(130%); }
+}
 
 /* صور المنتجات — الأبيض يندمج بصريًا مع السطح بدل أن يظهر كمستطيل خلف الصورة */
 .oil-product-visual,
