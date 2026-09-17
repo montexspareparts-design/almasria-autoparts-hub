@@ -19,6 +19,19 @@ const PICKUP_BRANCHES = [
 
 type FulfillmentMethod = "pickup" | "shipping";
 
+/** حد الشحن المجاني داخل القاهرة/الفيصل */
+const FREE_SHIPPING_THRESHOLD = 3000;
+
+const COUPON_ERRORS: Record<string, string> = {
+  invalid_code: "كود الخصم غير صحيح",
+  expired: "صلاحية الكود انتهت",
+  not_started: "الكود لسه مبدأش",
+  exhausted: "الكود خلص عدد استخداماته",
+  min_order: "قيمة الطلب أقل من الحد المطلوب للكود",
+  order_locked: "الطلب مش قابل لتطبيق كود خصم",
+  already_applied: "فيه كود خصم مطبّق بالفعل",
+};
+
 type RegisteredAddress = {
   governorate: string;
   detailedAddress: string;
@@ -28,12 +41,13 @@ const OilsCart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const cart = useDealerCart();
-  const { products, loading: catalogLoading, priceAtQty } = useOilsCatalog();
+  const { products, loading: catalogLoading, priceAtQty, discountsFor } = useOilsCatalog();
   const [fulfillmentMethod, setFulfillmentMethod] = useState<FulfillmentMethod>(() => localStorage.getItem("oils_fulfillment_method") === "shipping" ? "shipping" : "pickup");
   const [pickupBranch, setPickupBranch] = useState(() => localStorage.getItem("oils_pickup_branch") || "");
   const [registeredAddress, setRegisteredAddress] = useState<RegisteredAddress | null>(null);
   const [addressLoading, setAddressLoading] = useState(false);
   const [notes, setNotes] = useState("");
+  const [couponCode, setCouponCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
@@ -48,6 +62,24 @@ const OilsCart = () => {
     () => items.reduce((sum, item) => sum + priceAtQty(item.oilProduct, item.quantity) * item.quantity, 0),
     [items, priceAtQty],
   );
+  const freeShippingReached = total >= FREE_SHIPPING_THRESHOLD;
+  const totalCartons = useMemo(
+    () => items.reduce((sum, item) => sum + Math.floor(item.quantity / unitsPerCarton(item.oilProduct.name_ar, item.oilProduct.name_en)), 0),
+    [items],
+  );
+  const nextDiscountHint = useMemo(() => {
+    for (const item of items) {
+      const next = discountsFor(item.oilProduct)
+        .filter((discount) => discount.min_quantity > item.quantity)
+        .sort((a, b) => a.min_quantity - b.min_quantity)[0];
+      if (next) {
+        const needed = next.min_quantity - item.quantity;
+        const value = next.discount_type === "percent" ? `${next.discount_value}%` : `${next.discount_value} ج.م`;
+        return `زوّد ${needed} عبوة من «${item.oilProduct.name_ar}» وتاخد خصم ${value}`;
+      }
+    }
+    return null;
+  }, [items, discountsFor]);
 
   useEffect(() => {
     if (!user) {
