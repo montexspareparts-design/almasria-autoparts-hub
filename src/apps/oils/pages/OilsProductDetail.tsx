@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
+import TransparentProductImage from "../components/TransparentProductImage";
 
 const fmt = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
@@ -56,7 +57,7 @@ const OilsProductDetail = () => {
       <motion.section className="oils-detail-visual" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
         <div className="oils-detail-halo" />
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name_ar} className="oils-detail-image" />
+          <TransparentProductImage src={product.image_url} alt={product.name_ar} className="oils-detail-image" />
         ) : (
           <div className="oils-detail-placeholder"><Droplets /></div>
         )}

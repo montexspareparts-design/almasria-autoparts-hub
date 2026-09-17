@@ -6,6 +6,7 @@ import type { OilProduct } from "@/lib/oils/useOilsCatalog";
 import type { QuantityDiscount } from "@/lib/oils/useOilsCatalog";
 import TierPriceBadge from "./TierPriceBadge";
 import { haptic } from "@/lib/haptics";
+import TransparentProductImage from "./TransparentProductImage";
 
 interface Props {
   product: OilProduct;
@@ -37,7 +38,7 @@ const OilProductCard = ({ product, discounts, canSeePrice, onAdd }: Props) => {
       <button type="button" className="oil-product-visual" onClick={() => navigate(`/oils/product/${product.id}`)} aria-label={`عرض ${product.name_ar}`}>
         {product.is_on_sale && <span className="oil-sale-badge">عرض</span>}
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name_ar} loading="lazy" />
+          <TransparentProductImage src={product.image_url} alt={product.name_ar} />
         ) : (
           <Package />
         )}

@@ -9,6 +9,7 @@ import OilProductCard from "../components/OilProductCard";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
 import OilsBrandMark from "../components/OilsBrandMark";
+import TransparentProductImage from "../components/TransparentProductImage";
 
 const OilsHome = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ const OilsHome = () => {
             <h2>زيوت موثوقة<br />لشغل يدوم</h2>
           </button>
           <button type="button" className="oils-featured-product" onClick={() => navigate(`/oils/product/${featured.id}`)}>
-            {featured.image_url ? <img src={featured.image_url} alt={featured.name_ar} /> : <Droplets />}
+            {featured.image_url ? <TransparentProductImage src={featured.image_url} alt={featured.name_ar} /> : <Droplets />}
           </button>
           <div className="oils-featured-card">
             <div><h3>{featured.name_ar}</h3><strong className="oils-num">{featured.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong></div>
