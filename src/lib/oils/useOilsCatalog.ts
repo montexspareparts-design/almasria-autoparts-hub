@@ -20,7 +20,7 @@ const NON_LUBRICANT_REGEX = /فلتر|حشوة|سيل|طبة|ساعة|جوان|�
 export const PINNED_OIL_PART_NUMBERS = ["08880-84132"];
 
 /** أصناف مستبعدة من تطبيق الزيوت فقط */
-const EXCLUDED_OIL_SKUS = new Set(["11364"]);
+const EXCLUDED_OIL_SKUS = new Set(["11364", "20295"]);
 
 const isOilProduct = (name_ar?: string | null, name_en?: string | null, part_number?: string | null) => {
   if (part_number && PINNED_OIL_PART_NUMBERS.includes(part_number.trim())) return true;
