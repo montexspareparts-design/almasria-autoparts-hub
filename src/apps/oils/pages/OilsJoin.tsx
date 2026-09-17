@@ -4,7 +4,7 @@ import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
-import oilsLogo from "@/assets/almasria-oils-logo.jpg";
+import OilsBrandMark from "../components/OilsBrandMark";
 
 /**
  * طلب انضمام تاجر زيوت — صفحة مستقلة تمامًا داخل تطبيق الزيوت.
@@ -103,12 +103,12 @@ const OilsJoin = () => {
         <button type="button" className="oils-join-back" aria-label="رجوع" onClick={() => (step === 0 ? navigate("/oils") : setStep(0))}>
           <ArrowRight />
         </button>
-        <img src={oilsLogo} alt="المصرية لزيوت تويوتا" className="w-10 h-10 rounded-xl object-contain bg-white" />
+        <OilsBrandMark className="oils-join-logo" showName />
       </div>
 
       <section className="oils-join-hero">
-        <span>ALMASRIA WHOLESALE</span>
-        <h1>انضم لشبكة تجار<br />زيوت المصرية</h1>
+        <span>ALMASRIA OILS PARTNERS</span>
+        <h1>شراكة أقوى<br />لنشاط ينمو بثقة</h1>
         <p>أسعار جملة مخصصة لنشاطك، مخزون لحظي من الفيصل، وطلب أسرع من التطبيق.</p>
       </section>
 

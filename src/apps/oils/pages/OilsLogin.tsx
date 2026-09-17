@@ -4,7 +4,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mapLoginError } from "@/lib/loginErrors";
 import { haptic } from "@/lib/haptics";
-import oilsLogo from "@/assets/almasria-oils-logo.jpg";
+import OilsBrandMark from "../components/OilsBrandMark";
 
 /**
  * دخول تطبيق جملة الزيوت — إيميل + باسورد (نفس حساب التاجر الموجود).
@@ -43,11 +43,9 @@ const OilsLogin = () => {
   return (
     <main className="oils-login" dir="rtl">
       <div className="oils-login-brand">
-        <div className="oils-login-mark">
-          <img src={oilsLogo} alt="المصرية — موزع معتمد لزيوت تويوتا الأصلية" className="oils-brand-logo" />
-        </div>
+        <OilsBrandMark className="oils-login-mark" showName />
         <span>ALMASRIA WHOLESALE</span>
-        <h1>كل احتياجات<br />شغلك في مكان واحد</h1>
+        <h1>قوة المحرك تبدأ<br /><em>من اختيار موثوق</em></h1>
         <p>أسعار جملة مخصصة، مخزون واضح، وطلب أسرع.</p>
       </div>
 
