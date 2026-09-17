@@ -184,6 +184,16 @@ const OilsCart = () => {
         <li><i>3</i>الدفع</li>
       </ol>
 
+      <section className="oils-cart-boost" aria-live="polite">
+        <div className="oils-cart-boost-bar"><i style={{ width: `${Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)}%` }} /></div>
+        <p>
+          {freeShippingReached
+            ? "مبروك — طلبيتك وصلت حد الشحن المجاني 🎉"
+            : `ناقصك ${(FREE_SHIPPING_THRESHOLD - total).toLocaleString("en-US", { maximumFractionDigits: 0 })} ج.م للشحن المجاني`}
+        </p>
+        {nextDiscountHint ? <span className="oils-cart-boost-hint"><Sparkles /> {nextDiscountHint}</span> : null}
+      </section>
+
       <section className="oils-cart-items" aria-label="أصناف السلة">
         {items.map((item) => {
           const unitPrice = priceAtQty(item.oilProduct, item.quantity);
