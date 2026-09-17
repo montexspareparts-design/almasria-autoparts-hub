@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Truck, Zap } from "lucide-react";
+import { ArrowLeft, Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Truck, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -245,7 +245,7 @@ const OilsCart = () => {
           <div className="oils-order-total"><span>الإجمالي</span><strong className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
         </div>
         <button type="button" className="oils-btn-primary oils-pay-button" disabled={submitting} onClick={() => void createOrderAndPay()}>
-          <ShieldCheck /> {submitting ? "جاري تجهيز الدفع…" : "المتابعة للدفع الآمن"} <ChevronLeft />
+          <ShieldCheck /> <span>{submitting ? "جاري تجهيز الدفع…" : "المتابعة للدفع الآمن"}</span> <span className="oils-pay-arrow"><ArrowLeft /></span>
         </button>
         <p className="oils-secure-note">لن تُفرغ السلة ولن يُؤكد الطلب إلا بعد نجاح الدفع.</p>
       </section>
