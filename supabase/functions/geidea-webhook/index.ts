@@ -117,6 +117,62 @@ Deno.serve(async (req) => {
         if (!notification.ok) {
           console.error(`Geidea: warehouse notification failed for ${orderNumber}`);
         }
+
+        const [{ data: fullOrder }, { data: profile }] = await Promise.all([
+          supabase
+            .from("orders")
+            .select("id, user_id, order_number, total_amount, payment_method, pickup_branch, shipping_address, shipping_governorate, notes, order_items(quantity, unit_price, total_price, products:product_id(name_ar, sku, erp_item_code))")
+            .eq("id", order.id)
+            .maybeSingle(),
+          supabase
+            .from("orders")
+            .select("user_id")
+            .eq("id", order.id)
+            .maybeSingle()
+            .then(async ({ data }) => data?.user_id
+              ? await supabase.from("profiles").select("full_name, phone").eq("user_id", data.user_id).maybeSingle()
+              : { data: null }),
+        ]);
+        if (fullOrder) {
+          const { data: dealer } = await supabase
+            .from("dealer_accounts")
+            .select("erp_customer_code, tier")
+            .eq("user_id", fullOrder.user_id)
+            .maybeSingle();
+          const erpResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/erp-sync-outbound`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              action: "push_order",
+              data: {
+                order_id: fullOrder.id,
+                order_number: fullOrder.order_number,
+                customer_name: profile?.full_name || "",
+                customer_phone: profile?.phone || "",
+                erp_customer_code: dealer?.erp_customer_code || "",
+                customer_tier: dealer?.tier || "retail",
+                shipping_address: fullOrder.shipping_address || "",
+                shipping_governorate: fullOrder.shipping_governorate || "",
+                pickup_branch: fullOrder.pickup_branch || "",
+                payment_method: fullOrder.payment_method || "geidea",
+                items: (fullOrder.order_items || []).map((item: any) => ({
+                  sku: item.products?.sku || "",
+                  erp_item_code: item.products?.erp_item_code || "",
+                  name_ar: item.products?.name_ar || "",
+                  quantity: item.quantity,
+                  unit_price: item.unit_price,
+                  total_price: item.total_price,
+                })),
+                total_amount: fullOrder.total_amount,
+                notes: fullOrder.notes || "",
+              },
+            }),
+          });
+          if (!erpResponse.ok) console.error(`Geidea: ERP push failed for ${orderNumber}`);
+        }
       }
     }
   } else {
