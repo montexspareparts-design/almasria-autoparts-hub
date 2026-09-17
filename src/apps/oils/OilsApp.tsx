@@ -4,6 +4,8 @@ import { Droplets, Home, LayoutGrid, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
+import { useOilsDeviceLock } from "@/lib/oils/useOilsDeviceLock";
+import OilsDeviceBlocked from "./components/OilsDeviceBlocked";
 import OilsIntro from "./components/OilsIntro";
 import OilsMurshid from "./components/OilsMurshid";
 import "./theme.css";
@@ -77,12 +79,21 @@ const TabBar = () => {
 const OilsApp = () => {
   const { user, dealerAccount, loading, postAuthState } = useAuth();
   const intro = <OilsIntro />;
+  const deviceLock = useOilsDeviceLock(user?.id);
 
-  if (loading || (user && postAuthState !== "READY")) {
+  if (loading || (user && postAuthState !== "READY") || (user && deviceLock.state === "checking")) {
     return (
       <div className="oils-app grid place-items-center">
         {intro}
         <Droplets className="w-10 h-10 animate-pulse" style={{ color: "hsl(var(--oils-accent))" }} />
+      </div>
+    );
+  }
+
+  if (user && deviceLock.state === "blocked") {
+    return (
+      <div className="oils-app">
+        <OilsDeviceBlocked boundLabel={deviceLock.boundLabel} />
       </div>
     );
   }

@@ -1735,6 +1735,30 @@ export type Database = {
         }
         Relationships: []
       }
+      oils_device_bindings: {
+        Row: {
+          bound_at: string
+          device_id: string
+          device_label: string | null
+          last_seen_at: string
+          user_id: string
+        }
+        Insert: {
+          bound_at?: string
+          device_id: string
+          device_label?: string | null
+          last_seen_at?: string
+          user_id: string
+        }
+        Update: {
+          bound_at?: string
+          device_id?: string
+          device_label?: string | null
+          last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           id: string

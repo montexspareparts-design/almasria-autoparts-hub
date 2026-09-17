@@ -672,3 +672,17 @@
 .oils-cart .oils-pay-button { position: relative; margin-top: 16px; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 16px 34px hsl(var(--oils-accent) / .3); }
 .oils-cart .oils-pay-arrow { background: hsl(0 0% 6% / .12); }
 .oils-cart .oils-secure-note { position: relative; color: hsl(var(--oils-card) / .45); }
+
+/* ===== منع الدخول من جهاز آخر ===== */
+.oils-device-block { min-height: 100dvh; display: grid; place-items: center; padding: 24px 18px; }
+.oils-device-block-card { width: 100%; max-width: 380px; padding: 26px 20px; text-align: center; border: 1px solid hsl(var(--oils-accent) / .3); border-radius: 30px; background: linear-gradient(170deg, hsl(0 0% 7%), hsl(0 0% 4%) 60%, hsl(353 60% 11%)); box-shadow: 0 26px 56px hsl(var(--oils-ink) / .3); color: hsl(var(--oils-card)); }
+.oils-device-block-mark { width: 62px; height: 62px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 22px; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 14px 30px hsl(var(--oils-accent) / .3); }
+.oils-device-block-mark svg { width: 28px; height: 28px; }
+.oils-device-block-card small { display: block; color: hsl(var(--oils-accent)); font-size: 10px; font-weight: 900; letter-spacing: .06em; }
+.oils-device-block-card h1 { margin: 6px 0 10px; font-size: 19px; font-weight: 900; }
+.oils-device-block-card p { color: hsl(var(--oils-card) / .62); font-size: 12px; line-height: 1.9; }
+.oils-device-block-note { margin: 14px 0 18px; padding: 11px 12px; display: flex; align-items: center; gap: 8px; justify-content: center; border: 1px dashed hsl(var(--oils-accent) / .32); border-radius: 16px; color: hsl(var(--oils-card) / .78); font-size: 11px; font-weight: 800; }
+.oils-device-block-note svg { width: 15px; height: 15px; color: hsl(var(--oils-accent)); }
+.oils-device-block-wa { width: 100%; justify-content: center; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 16px 34px hsl(var(--oils-accent) / .3); }
+.oils-device-block-out { margin-top: 12px; width: 100%; padding: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid hsl(var(--oils-card) / .14); border-radius: 16px; background: transparent; color: hsl(var(--oils-card) / .6); font-size: 11.5px; font-weight: 800; }
+.oils-device-block-out svg { width: 15px; height: 15px; }
