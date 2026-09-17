@@ -4407,6 +4407,10 @@ export type Database = {
           products_updated: number
         }[]
       }
+      apply_oils_coupon: {
+        Args: { _code: string; _order_id: string }
+        Returns: Json
+      }
       bulk_import_products: { Args: { _items: Json }; Returns: Json }
       bulk_sync_names: { Args: { _items: Json }; Returns: Json }
       bulk_sync_stock: { Args: { _items: Json }; Returns: Json }

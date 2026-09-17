@@ -8,6 +8,13 @@
       "when": 1789680855112,
       "tag": "0000_create_oils_device_bindings",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789684884539,
+      "tag": "0001_apply_oils_coupon_rpc",
+      "breakpoints": true
     }
   ]
 }
