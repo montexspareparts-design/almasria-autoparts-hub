@@ -26,8 +26,10 @@ const SUGGESTIONS = [
 ];
 
 /** تحويل **النص العريض** في رد البوت لعنصر <strong> بدل عرض النجوم */
-const renderInline = (text: string): ReactNode =>
-  text.split(/\*\*(.+?)\*\*/g).map((chunk, i) => (i % 2 === 1 ? <strong key={i}>{chunk}</strong> : <Fragment key={i}>{chunk}</Fragment>));
+const renderInline = (text: string, hideTrailingStars = false): ReactNode => {
+  const clean = hideTrailingStars ? text.replace(/\*\*$/, "") : text;
+  return clean.split(/\*\*(.+?)\*\*/g).map((chunk, i) => (i % 2 === 1 ? <strong key={i}>{chunk}</strong> : <Fragment key={i}>{chunk}</Fragment>));
+};
 
 const loadMessages = (): ChatMessage[] => {
   try {
