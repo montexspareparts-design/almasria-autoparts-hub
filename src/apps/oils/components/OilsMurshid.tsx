@@ -160,7 +160,7 @@ const OilsMurshid = () => {
             const next = [...prev];
             next[next.length - 1] = {
               role: "assistant",
-              content: "معرفش أوصل لرد دلوقتي — جرب تاني أو كلمنا واتساب 01156332243.",
+              content: "معرفش أوصل لرد دلوقتي — جرب تاني أو كلمنا واتساب 01039313427 (إدارة الزيت).",
             };
             return next;
           });

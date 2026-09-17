@@ -10,8 +10,9 @@ const META_PHONE_ID = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// أ. عبدالحميد - مسؤول المخازن
+// أ. عبدالحميد - مسؤول المخازن | 01039313427 - إدارة الزيت (تطبيق الزيوت)
 const WAREHOUSE_PHONE = "201156332243";
+const OILS_MANAGEMENT_PHONE = "201039313427";
 
 function formatEgyptianPhone(phone: string): string {
   let cleaned = String(phone).replace(/[\s\-()+]/g, "");
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
     const { data: order, error } = await supabase
       .from("orders")
       .select(
-        "id, order_number, total_amount, shipping_cost, payment_method, status, pickup_branch, shipping_governorate, shipping_address, notes, user_id, created_at, order_items(quantity, unit_price, products:product_id(name_ar, sku, erp_item_code))",
+        "id, order_number, total_amount, shipping_cost, payment_method, status, pickup_branch, shipping_governorate, shipping_address, notes, user_id, source, created_at, order_items(quantity, unit_price, products:product_id(name_ar, sku, erp_item_code))",
       )
       .eq("id", orderId)
       .maybeSingle();
@@ -123,11 +124,15 @@ Deno.serve(async (req) => {
       (order.notes ? `\n📝 ملاحظات: ${order.notes}\n` : "") +
       `\n⚡ برجاء تجهيز الطلب.`;
 
-    const result = await sendWhatsApp(WAREHOUSE_PHONE, message);
+    const isOilsOrder = (order as any).source === "oils";
+    const recipientPhone = isOilsOrder ? OILS_MANAGEMENT_PHONE : WAREHOUSE_PHONE;
+    const recipientName = isOilsOrder ? "إدارة الزيت - تطبيق الزيوت" : "أ. عبدالحميد - المخازن";
+
+    const result = await sendWhatsApp(recipientPhone, message);
 
     await supabase.from("whatsapp_send_logs").insert({
-      phone: WAREHOUSE_PHONE,
-      recipient_name: "أ. عبدالحميد - المخازن",
+      phone: recipientPhone,
+      recipient_name: recipientName,
       template: "warehouse_new_paid_order",
       message_preview: message.slice(0, 500),
       status: result.success ? "sent" : "failed",
@@ -135,7 +140,7 @@ Deno.serve(async (req) => {
       provider_response: (result.data ?? {}) as any,
     });
 
-    return new Response(JSON.stringify({ success: result.success, order: order.order_number }), {
+    return new Response(JSON.stringify({ success: result.success, order: order.order_number, recipient: recipientName }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

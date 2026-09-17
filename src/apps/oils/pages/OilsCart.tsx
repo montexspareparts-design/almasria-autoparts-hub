@@ -118,6 +118,7 @@ const OilsCart = () => {
           shipping_governorate: fulfillmentMethod === "shipping" ? registeredAddress?.governorate : null,
           notes: notes.trim() || null,
           shipping_cost: 0,
+          source: "oils",
         })
         .select("id, order_number")
         .single();
