@@ -596,7 +596,7 @@
 @keyframes oils-intro-drop { 0% { opacity: 0; transform: translateY(0) scale(.6); } 25% { opacity: 1; } 70% { opacity: 1; transform: translateY(44vh) scale(1); } 100% { opacity: 0; transform: translateY(46vh) scale(2.6); } }
 @media (prefers-reduced-motion: reduce) { .oils-intro *, .oils-intro { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 
-/* ── زوجة — المساعدة الذكية ── */
+/* ── لزوجة — المساعدة الذكية ── */
 .oils-murshid-fab { position: fixed; z-index: 60; bottom: calc(106px + env(safe-area-inset-bottom, 0px)); inset-inline-end: 16px; width: 56px; height: 56px; border: 1px solid hsl(var(--oils-accent) / .5); border-radius: 50%; display: grid; place-items: center; color: hsl(var(--oils-card)); background: linear-gradient(150deg, hsl(var(--oils-ink)), #2a2a2a); box-shadow: 0 14px 30px hsl(var(--oils-accent-deep) / .35), inset 0 1px 0 hsl(var(--oils-accent) / .3); }
 .oils-murshid-fab svg { width: 25px; height: 25px; stroke-width: 1.7; color: hsl(var(--oils-warm)); }
 .oils-murshid-fab-dot { position: absolute; top: 5px; inset-inline-end: 6px; width: 9px; height: 9px; border-radius: 50%; background: hsl(var(--oils-accent)); box-shadow: 0 0 0 2.5px hsl(var(--oils-card)), 0 0 10px hsl(var(--oils-accent)); }
