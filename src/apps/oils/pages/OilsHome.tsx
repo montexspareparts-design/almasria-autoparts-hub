@@ -8,7 +8,7 @@ import { useReorder } from "@/lib/oils/useReorder";
 import OilProductCard from "../components/OilProductCard";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
-import oilsLogo from "@/assets/almasria-oils-logo.jpg";
+import OilsBrandMark from "../components/OilsBrandMark";
 
 const OilsHome = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const OilsHome = () => {
     <main className="oils-screen oils-home" dir="rtl">
       <header className="oils-page-header oils-home-header">
         <div className="oils-user-heading">
-          <div className="oils-logo-mark"><img src={oilsLogo} alt="المصرية" className="oils-brand-logo" /></div>
+          <OilsBrandMark className="oils-logo-mark" />
           <div>
             <span className="oils-eyebrow">أهلًا بك</span>
             <h1>
