@@ -28,7 +28,8 @@ const OilsLogin = () => {
         password,
       });
       if (err) {
-        setError(mapLoginError(err.message));
+        const mapped = mapLoginError(err);
+        setError(mapped.description ? `${mapped.title} ${mapped.description}` : mapped.title);
         return;
       }
       void haptic("medium");
