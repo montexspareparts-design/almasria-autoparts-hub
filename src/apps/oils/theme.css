@@ -1,16 +1,16 @@
 .oils-app {
-  /* لوحة ألوان مستخرجة من لوجو المصرية: أحمر + ذهبي + أسود + أبيض */
-  --oils-bg: 36 16% 94%;
-  --oils-surface: 40 30% 98%;
-  --oils-card: 0 0% 100%;
-  --oils-card-hi: 40 34% 95%;
-  --oils-accent: 41 88% 51%;
-  --oils-accent-deep: 0 0% 7%;
-  --oils-accent-mid: 353 82% 38%;
-  --oils-warm: 41 92% 56%;
-  --oils-ink: 0 0% 5%;
-  --oils-muted: 30 5% 42%;
-  --oils-line: 34 12% 86%;
+  /* Premium Automotive Luxury — obsidian, royal gold, ivory, restrained burgundy */
+  --oils-bg: 42 27% 95%;
+  --oils-surface: 40 22% 98%;
+  --oils-card: 40 30% 99%;
+  --oils-card-hi: 40 18% 93%;
+  --oils-accent: 42 56% 51%;
+  --oils-accent-deep: 0 0% 4%;
+  --oils-accent-mid: 353 79% 31%;
+  --oils-warm: 45 72% 71%;
+  --oils-ink: 0 0% 4%;
+  --oils-muted: 30 5% 39%;
+  --oils-line: 38 13% 84%;
   --oils-success: 146 45% 30%;
   --oils-danger: 353 78% 44%;
   min-height: 100dvh;
@@ -18,6 +18,7 @@
   background: hsl(var(--oils-bg));
   font-feature-settings: "tnum";
   padding-bottom: calc(94px + env(safe-area-inset-bottom, 0px));
+  font-family: "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 .oils-app button, .oils-app input { font: inherit; }
@@ -141,10 +142,18 @@
 .oils-tabbar { position: fixed; z-index: 50; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); inset-inline: 14px; display: flex; justify-content: center; pointer-events: none; }.oils-tabbar-inner { width: min(100%, 480px); height: 66px; padding: 7px; border-radius: 999px; display: grid; grid-template-columns: repeat(4,1fr); background: hsl(var(--oils-ink)); box-shadow: 0 16px 38px hsl(var(--oils-ink) / .2); pointer-events: auto; }.oils-tab { position: relative; border: 0; border-radius: 999px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: hsl(var(--oils-card) / .55); background: transparent; font-size: 8px; font-weight: 800; }.oils-tab--active { color: hsl(var(--oils-ink)); background: hsl(var(--oils-card)); }.oils-tab-icon { position: relative; }.oils-tab-icon svg { width: 18px; height: 18px; stroke-width: 1.8; }.oils-cart-count { position: absolute; top: -7px; left: -10px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; display: grid; place-items: center; color: hsl(var(--oils-card)); background: hsl(var(--oils-danger)); font-size: 7px; }
 .oils-card, .oils-card-hi { border-radius: 20px; background: hsl(var(--oils-card)); }.oils-divider { height: 1px; background: hsl(var(--oils-line)); }.oils-skeleton { position: relative; overflow: hidden; border-radius: 22px; background: hsl(var(--oils-card-hi)); }.oils-skeleton::after { content: ""; position: absolute; inset: 0; translate: -100% 0; background: linear-gradient(90deg, transparent, hsl(var(--oils-card) / .7), transparent); animation: oils-shimmer 1.4s infinite; }@keyframes oils-shimmer { to { translate: 100% 0; } }
 
-/* لوجو المصرية */
-.oils-brand-logo { width: 100%; height: 100%; object-fit: contain; border-radius: inherit; background: hsl(var(--oils-card)); }
-.oils-logo-mark { overflow: hidden; background: hsl(var(--oils-card)); box-shadow: 0 8px 20px hsl(var(--oils-ink) / .12); }
-.oils-login-mark { overflow: hidden; padding: 0; }
+/* الهوية التنفيذية الأصلية للمصرية للزيوت */
+.oils-brand-lockup { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.oils-brand-emblem { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 10px 18px hsl(var(--oils-ink) / .24)); }
+.oils-emblem-frame { fill: hsl(var(--oils-accent)); }
+.oils-emblem-core { fill: hsl(var(--oils-accent-deep)); stroke: hsl(var(--oils-warm) / .45); stroke-width: 1; }
+.oils-emblem-road { fill: hsl(var(--oils-card)); opacity: .96; }
+.oils-emblem-redline { fill: hsl(var(--oils-accent-mid)); }
+.oils-emblem-drop { fill: hsl(var(--oils-accent)); stroke: hsl(var(--oils-warm)); stroke-width: 2; stroke-linecap: round; }
+.oils-brand-wordmark { display: grid; text-align: right; line-height: 1; }
+.oils-brand-wordmark strong { color: hsl(var(--oils-card)); font-size: 20px; font-weight: 900; }
+.oils-brand-wordmark span { margin-top: 4px; color: hsl(var(--oils-accent)); font-size: 9px; font-weight: 800; }
+.oils-logo-mark { width: 43px; height: 43px; padding: 7px; overflow: visible; border-radius: 13px; background: hsl(var(--oils-accent-deep)); box-shadow: 0 8px 20px hsl(var(--oils-ink) / .16); }
 
 /* صفحة طلب الانضمام — مستقلة تمامًا داخل تطبيق الزيوت */
 .oils-join { width: min(100%, 560px); min-height: 100dvh; margin-inline: auto; background: hsl(var(--oils-bg)); padding: calc(18px + env(safe-area-inset-top,0px)) 18px calc(30px + env(safe-area-inset-bottom,0px)); }
@@ -181,3 +190,64 @@
   .oils-login { background: radial-gradient(circle at 50% 24%, hsl(var(--oils-accent-mid)), hsl(var(--oils-accent-deep)) 66%); }
 }
 @media (prefers-reduced-motion: reduce) { .oils-app *, .oils-app *::before, .oils-app *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* ── Premium automotive direction ───────────────────────── */
+.oils-login {
+  background:
+    linear-gradient(180deg, hsl(var(--oils-accent-mid) / .62) 0%, transparent 42%),
+    hsl(var(--oils-accent-deep));
+}
+.oils-login-brand { min-height: 48dvh; padding: calc(54px + env(safe-area-inset-top, 0px)) 28px 30px; }
+.oils-login-mark { width: auto; height: 86px; margin: 0 auto 17px; background: transparent; box-shadow: none; }
+.oils-login-mark .oils-brand-emblem { width: 78px; }
+.oils-login-mark .oils-brand-wordmark strong { font-size: 22px; }
+.oils-login-mark .oils-brand-wordmark span { font-size: 10px; }
+.oils-login-brand > span { color: hsl(var(--oils-accent)); letter-spacing: .16em; }
+.oils-login-brand h1 { margin-top: 15px; font-size: 32px; line-height: 1.18; }
+.oils-login-brand h1 em { color: hsl(var(--oils-accent)); font-style: normal; }
+.oils-login-brand p { font-size: 11.5px; }
+.oils-login-sheet { padding: 30px 24px 24px; border-radius: 36px 36px 0 0; background: hsl(var(--oils-bg)); box-shadow: 0 -16px 45px hsl(var(--oils-ink) / .32); }
+.oils-login-sheet h2 { position: relative; margin-bottom: 24px; font-size: 22px; }
+.oils-login-sheet h2::after { content: ""; position: absolute; left: 0; top: 50%; width: 42px; height: 3px; border-radius: 999px; background: hsl(var(--oils-accent)); }
+.oils-input { height: 52px; border: 1px solid hsl(var(--oils-line)); border-radius: 16px; background: hsl(var(--oils-card)); transition: border-color .18s ease, box-shadow .18s ease; }
+.oils-input:focus { border-color: hsl(var(--oils-accent)); box-shadow: 0 0 0 3px hsl(var(--oils-accent) / .15); }
+.oils-btn-primary { min-height: 52px; border-radius: 16px; box-shadow: 0 12px 26px hsl(var(--oils-ink) / .14); }
+.oils-btn-primary svg { color: hsl(var(--oils-accent)); }
+.oils-join-row button { color: hsl(var(--oils-accent)); }
+
+.oils-join { padding: 0 18px calc(30px + env(safe-area-inset-bottom,0px)); background: hsl(var(--oils-bg)); }
+.oils-join-top { min-height: 76px; margin: 0; padding-top: env(safe-area-inset-top,0px); justify-content: space-between; }
+.oils-join-back { color: hsl(var(--oils-card)); background: hsl(var(--oils-accent-deep)); }
+.oils-join-logo { height: 48px; flex-direction: row-reverse; }
+.oils-join-logo .oils-brand-emblem { width: 44px; }
+.oils-join-logo .oils-brand-wordmark strong { color: hsl(var(--oils-ink)); font-size: 16px; }
+.oils-join-logo .oils-brand-wordmark span { font-size: 8px; }
+.oils-join-hero { min-height: 222px; padding: 30px 24px; display: flex; flex-direction: column; justify-content: end; border-radius: 28px; background: linear-gradient(145deg, hsl(var(--oils-accent-mid)) 0%, hsl(var(--oils-accent-deep)) 67%); box-shadow: 0 24px 45px hsl(var(--oils-ink) / .2); overflow: hidden; position: relative; }
+.oils-join-hero::after { content: ""; position: absolute; width: 185px; height: 185px; left: -42px; top: -64px; border-radius: 50%; border: 1px solid hsl(var(--oils-accent) / .34); box-shadow: 0 0 0 18px hsl(var(--oils-accent) / .05), 0 0 0 42px hsl(var(--oils-accent) / .035); }
+.oils-join-hero span, .oils-join-hero h1, .oils-join-hero p { position: relative; z-index: 1; }
+.oils-join-hero h1 { font-size: 28px; line-height: 1.22; }
+.oils-join-card { padding: 22px 18px; border-radius: 24px; border: 1px solid hsl(var(--oils-line) / .8); box-shadow: 0 15px 32px hsl(var(--oils-ink) / .06); }
+.oils-join-card h2 { font-size: 18px; }
+.oils-join-steps { margin: 20px 5px 14px; }
+.oils-join-steps i { height: 3px; }
+.oils-join-chip { border: 1px solid hsl(var(--oils-line)); background: hsl(var(--oils-card)); }
+.oils-join-chip.is-on { color: hsl(var(--oils-accent-deep)); border-color: hsl(var(--oils-accent)); background: hsl(var(--oils-accent)); }
+
+.oils-featured { background: linear-gradient(150deg, hsl(var(--oils-accent-mid)) 0%, hsl(var(--oils-accent-deep)) 68%); }
+.oils-featured::after { border-color: hsl(var(--oils-accent) / .4); box-shadow: 0 0 0 22px hsl(var(--oils-accent) / .045); }
+.oils-featured-copy span { color: hsl(var(--oils-accent)); }
+.oils-featured-card button, .oil-add-button, .oils-circle-button--dark { color: hsl(var(--oils-accent)); }
+.oils-featured-more { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
+.oil-product-card { border: 1px solid hsl(var(--oils-line) / .8); box-shadow: 0 12px 25px hsl(var(--oils-ink) / .055); }
+.oil-product-visual { background: linear-gradient(145deg, hsl(var(--oils-card)) 0%, hsl(var(--oils-card-hi)) 100%); }
+.oil-sale-badge { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
+.oils-tabbar-inner { border: 1px solid hsl(var(--oils-accent) / .28); background: hsl(var(--oils-accent-deep)); }
+.oils-tab--active { color: hsl(var(--oils-accent-deep)); background: hsl(var(--oils-accent)); }
+.oils-detail-visual { background: linear-gradient(180deg, hsl(var(--oils-card-hi)), hsl(var(--oils-bg))); }
+.oils-detail-halo { border-color: hsl(var(--oils-accent) / .6); box-shadow: 0 0 0 24px hsl(var(--oils-accent) / .06); }
+.oils-detail-cta { color: hsl(var(--oils-accent)); }
+
+@media (min-width: 700px) {
+  .oils-app { background: linear-gradient(135deg, hsl(var(--oils-accent-deep)), hsl(var(--oils-accent-mid)) 58%, hsl(var(--oils-accent) / .75)); }
+  .oils-login { background: linear-gradient(180deg, hsl(var(--oils-accent-mid) / .62), hsl(var(--oils-accent-deep)) 48%); }
+}
