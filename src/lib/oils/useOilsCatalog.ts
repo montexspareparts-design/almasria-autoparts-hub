@@ -19,6 +19,9 @@ const NON_LUBRICANT_REGEX = /فلتر|حشوة|سيل|طبة|ساعة|جوان|�
 /** أصناف تُعرض دائمًا في تطبيق الزيوت (بارت نمبر من الفيصل) */
 export const PINNED_OIL_PART_NUMBERS = ["08880-84132"];
 
+/** أصناف مستبعدة من تطبيق الزيوت فقط */
+const EXCLUDED_OIL_SKUS = new Set(["11364"]);
+
 const isOilProduct = (name_ar?: string | null, name_en?: string | null, part_number?: string | null) => {
   if (part_number && PINNED_OIL_PART_NUMBERS.includes(part_number.trim())) return true;
   const ar = name_ar || "";
@@ -62,7 +65,9 @@ const fetchOilProducts = async (): Promise<Omit<OilProduct, "tierPrice" | "price
     .eq("is_active", true)
     .order("name_ar");
   if (error) throw error;
-  return (data || []).filter((p) => isOilProduct(p.name_ar, p.name_en, p.part_number));
+  return (data || []).filter(
+    (p) => !EXCLUDED_OIL_SKUS.has(p.sku) && isOilProduct(p.name_ar, p.name_en, p.part_number),
+  );
 };
 
 export const useOilsCatalog = () => {
