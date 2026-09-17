@@ -1,12 +1,16 @@
 # Roadmap — تطبيق جملة الزيوت (/oils)
 
-- [ ] فحص الملفات الموجودة (App routes, AuthContext, dealer cart, pricing, garage)
-- [ ] ثيم الزيوت الجديد (scoped `.oils-app`)
-- [ ] OilsApp + راوتر + bottom tabs + mount في App.tsx على /oils
-- [ ] OilsLogin (دخول تاجر + طلب انضمام)
-- [ ] useOilsCatalog (زيوت فقط + شرائح الأسعار)
-- [ ] OilsHome (عروض + مقترحات + إعادة طلب)
-- [ ] OilsCatalog + OilProductCard + TierPriceBadge
-- [ ] OilsQuickOrder + QuickOrderRow
-- [ ] OilsAccount + CreditMeter + كشف حساب
-- [ ] build + تحقق
+- [x] theme.css — هوية Garage Industrial Premium (كحلي #0B1B2B + أصفر #F5A623) scoped على .oils-app
+- [x] useOilsCatalog — زيوت فقط + أسعار الشرائح + خصومات الكمية
+- [x] useReorder — إعادة آخر طلبية بضغطة
+- [x] useCreditStatement — ائتمان + فواتير الفيصل + نقاط الولاء
+- [x] المكونات: OilProductCard / TierPriceBadge / QuickOrderRow / CreditMeter
+- [x] الصفحات: OilsLogin / OilsHome / OilsCatalog / OilsQuickOrder / OilsAccount
+- [x] OilsApp — راوتر داخلي + bottom tabs + gating (زائر→دخول، غير تاجر→قيد المراجعة)
+- [x] مسار /oils/* في App.tsx
+- [x] اختبار بصري: صفحة الدخول تعمل بدون أخطاء
+
+## لاحقًا (اختياري)
+- [ ] باركود سكانر في الطلب السريع (يحتاج مكتبة كاميرا)
+- [ ] تصدير كشف الحساب PDF
+- [ ] ربط إشعارات العروض بالتطبيق

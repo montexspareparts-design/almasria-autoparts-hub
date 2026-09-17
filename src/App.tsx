@@ -44,6 +44,7 @@ const BadgeContrastQA = lazy(() => import("./pages/admin/BadgeContrastQA"));
 const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const DealerProductPage = lazy(() => import("./pages/DealerProductPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const OilsApp = lazy(() => import("./apps/oils/OilsApp"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 
@@ -247,6 +248,7 @@ const App = () => (
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />
                     <Route path="/dealer/product/:productId" element={<DealerProductPage />} />
+                    <Route path="/oils/*" element={<OilsApp />} />
                     <Route path="/client-register" element={<ClientRegister />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/dealer-login" element={<DealerLogin />} />
