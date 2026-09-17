@@ -125,20 +125,25 @@ Deno.serve(async (req) => {
       `\n⚡ برجاء تجهيز الطلب.`;
 
     const isOilsOrder = (order as any).source === "oils";
-    const recipientPhone = isOilsOrder ? OILS_MANAGEMENT_PHONE : WAREHOUSE_PHONE;
-    const recipientName = isOilsOrder ? "إدارة الزيت - تطبيق الزيوت" : "أ. عبدالحميد - المخازن";
+    const recipients = isOilsOrder
+      ? OILS_MANAGEMENT_PHONES.map((phone) => ({ phone, name: "إدارة الزيت - تطبيق الزيوت" }))
+      : [{ phone: WAREHOUSE_PHONE, name: "أ. عبدالحميد - المخازن" }];
 
-    const result = await sendWhatsApp(recipientPhone, message);
+    const results: { phone: string; success: boolean }[] = [];
+    for (const recipient of recipients) {
+      const result = await sendWhatsApp(recipient.phone, message);
+      results.push({ phone: recipient.phone, success: result.success });
 
-    await supabase.from("whatsapp_send_logs").insert({
-      phone: recipientPhone,
-      recipient_name: recipientName,
-      template: "warehouse_new_paid_order",
-      message_preview: message.slice(0, 500),
-      status: result.success ? "sent" : "failed",
-      error_message: result.success ? null : JSON.stringify(result.data ?? {}),
-      provider_response: (result.data ?? {}) as any,
-    });
+      await supabase.from("whatsapp_send_logs").insert({
+        phone: recipient.phone,
+        recipient_name: recipient.name,
+        template: "warehouse_new_paid_order",
+        message_preview: message.slice(0, 500),
+        status: result.success ? "sent" : "failed",
+        error_message: result.success ? null : JSON.stringify(result.data ?? {}),
+        provider_response: (result.data ?? {}) as any,
+      });
+    }
 
     return new Response(JSON.stringify({ success: result.success, order: order.order_number, recipient: recipientName }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
