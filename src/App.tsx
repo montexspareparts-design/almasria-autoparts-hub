@@ -44,6 +44,7 @@ const BadgeContrastQA = lazy(() => import("./pages/admin/BadgeContrastQA"));
 const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const DealerProductPage = lazy(() => import("./pages/DealerProductPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const OilsApp = lazy(() => import("./apps/oils/OilsApp"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 
