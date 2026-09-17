@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Zap } from "lucide-react";
+import { Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Truck, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -16,12 +16,22 @@ const PICKUP_BRANCHES = [
   { value: "tawfiqia", label: "فرع التوفيقية" },
 ] as const;
 
+type FulfillmentMethod = "pickup" | "shipping";
+
+type RegisteredAddress = {
+  governorate: string;
+  detailedAddress: string;
+};
+
 const OilsCart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const cart = useDealerCart();
   const { products, loading: catalogLoading, priceAtQty } = useOilsCatalog();
+  const [fulfillmentMethod, setFulfillmentMethod] = useState<FulfillmentMethod>(() => localStorage.getItem("oils_fulfillment_method") === "shipping" ? "shipping" : "pickup");
   const [pickupBranch, setPickupBranch] = useState(() => localStorage.getItem("oils_pickup_branch") || "");
+  const [registeredAddress, setRegisteredAddress] = useState<RegisteredAddress | null>(null);
+  const [addressLoading, setAddressLoading] = useState(false);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,6 +47,35 @@ const OilsCart = () => {
     () => items.reduce((sum, item) => sum + priceAtQty(item.oilProduct, item.quantity) * item.quantity, 0),
     [items, priceAtQty],
   );
+
+  useEffect(() => {
+    if (!user) {
+      setRegisteredAddress(null);
+      return;
+    }
+
+    let active = true;
+    setAddressLoading(true);
+    void supabase
+      .from("dealer_applications")
+      .select("governorate, detailed_address")
+      .eq("user_id", user.id)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        const governorate = data?.governorate?.trim();
+        const detailedAddress = data?.detailed_address?.trim();
+        setRegisteredAddress(governorate && detailedAddress ? { governorate, detailedAddress } : null);
+        setAddressLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const changeQuantity = async (productId: string, requested: number) => {
     const item = items.find((entry) => entry.product_id === productId);
@@ -55,8 +94,12 @@ const OilsCart = () => {
 
   const createOrderAndPay = async () => {
     if (!user || items.length === 0 || submitting) return;
-    if (!pickupBranch) {
+    if (fulfillmentMethod === "pickup" && !pickupBranch) {
       toast({ title: "اختر فرع الاستلام أولًا", variant: "destructive" });
+      return;
+    }
+    if (fulfillmentMethod === "shipping" && !registeredAddress) {
+      toast({ title: "العنوان المسجل غير متاح", description: "يرجى استكمال عنوان حسابك قبل اختيار الشحن.", variant: "destructive" });
       return;
     }
     setSubmitting(true);
@@ -70,7 +113,9 @@ const OilsCart = () => {
           total_amount: total,
           status: "awaiting_payment",
           payment_method: "geidea",
-          pickup_branch: pickupBranch,
+          pickup_branch: fulfillmentMethod === "pickup" ? pickupBranch : null,
+          shipping_address: fulfillmentMethod === "shipping" ? registeredAddress?.detailedAddress : null,
+          shipping_governorate: fulfillmentMethod === "shipping" ? registeredAddress?.governorate : null,
           notes: notes.trim() || null,
           shipping_cost: 0,
         })
@@ -95,7 +140,8 @@ const OilsCart = () => {
         throw itemsError;
       }
 
-      localStorage.setItem("oils_pickup_branch", pickupBranch);
+      localStorage.setItem("oils_fulfillment_method", fulfillmentMethod);
+      if (fulfillmentMethod === "pickup") localStorage.setItem("oils_pickup_branch", pickupBranch);
       localStorage.setItem("oils_pending_payment_order", order.id);
       navigate(`/oils/payment/${order.id}`);
     } catch (error) {
@@ -162,17 +208,39 @@ const OilsCart = () => {
 
       <section className="oils-checkout-panel">
         <div className="oils-checkout-title"><span><PackageCheck /></span><div><small>الخطوة الأخيرة</small><h2>الاستلام والدفع</h2></div></div>
-        <label className="oils-label oils-label--icon" htmlFor="oils-branch"><MapPin /> فرع الاستلام</label>
-        <div className="oils-branch-options" id="oils-branch">
-          {PICKUP_BRANCHES.map((branch) => (
-            <button key={branch.value} type="button" className={pickupBranch === branch.value ? "is-active" : ""} onClick={() => setPickupBranch(branch.value)}>{branch.label}</button>
-          ))}
+        <label className="oils-label oils-label--icon"><MapPin /> طريقة استلام الطلب</label>
+        <div className="oils-fulfillment-options" role="radiogroup" aria-label="طريقة استلام الطلب">
+          <button type="button" role="radio" aria-checked={fulfillmentMethod === "pickup"} className={fulfillmentMethod === "pickup" ? "is-active" : ""} onClick={() => setFulfillmentMethod("pickup")}>
+            <span><Building2 /></span><b>استلام من الفرع</b><small>تختار الفرع الأنسب لك</small>
+          </button>
+          <button type="button" role="radio" aria-checked={fulfillmentMethod === "shipping"} className={fulfillmentMethod === "shipping" ? "is-active" : ""} onClick={() => setFulfillmentMethod("shipping")}>
+            <span><Truck /></span><b>شحن إلى عنواني</b><small>تدفع الشحن للشركة عند الاستلام</small>
+          </button>
         </div>
+        {fulfillmentMethod === "pickup" ? (
+          <div className="oils-fulfillment-detail">
+            <label className="oils-label oils-label--icon" htmlFor="oils-branch"><Building2 /> اختر فرع الاستلام</label>
+            <div className="oils-branch-options" id="oils-branch">
+              {PICKUP_BRANCHES.map((branch) => (
+                <button key={branch.value} type="button" className={pickupBranch === branch.value ? "is-active" : ""} onClick={() => setPickupBranch(branch.value)}>{branch.label}</button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="oils-shipping-address" aria-live="polite">
+            <span><MapPin /></span>
+            <div>
+              <small>العنوان المسجل</small>
+              {addressLoading ? <p>جاري تحميل العنوان…</p> : registeredAddress ? <><b>{registeredAddress.governorate}</b><p>{registeredAddress.detailedAddress}</p></> : <p className="is-missing">لا يوجد عنوان مسجل مكتمل في حسابك.</p>}
+            </div>
+          </div>
+        )}
         <label className="oils-label oils-label--icon" htmlFor="oils-notes"><MessageSquareText /> ملاحظات للمخزن <span>(اختياري)</span></label>
         <textarea id="oils-notes" className="oils-cart-notes" value={notes} maxLength={500} onChange={(event) => setNotes(event.target.value)} placeholder="أي تفاصيل مهمة للتجهيز…" />
         <div className="oils-order-summary">
           <div className="oils-summary-heading"><span><ReceiptText /> ملخص الطلب</span><ShieldCheck /></div>
           <div><span>قيمة الأصناف</span><b className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</b></div>
+          <div><span>الشحن</span><b>{fulfillmentMethod === "shipping" ? "يُدفع لشركة الشحن" : "استلام من الفرع"}</b></div>
           <div><span>الضريبة</span><b>لا توجد</b></div>
           <div className="oils-order-total"><span>الإجمالي</span><strong className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
         </div>
