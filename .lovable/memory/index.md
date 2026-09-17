@@ -1,2 +1,3 @@
 - [SEO Prerender Pipeline](mem://tech/seo/prerender-pipeline) — صفحات HTML ثابتة لكل مسار وقت الـbuild + _redirects 301 + sitemap تلقائي؛ أي صفحة عامة جديدة تتضاف في scripts/seo-routes.mjs
 - [Oils Bot جركن](mem://features/oils/bot-name-jerrycan) — بوت تطبيق الزيوت اسمه «جركن» (من جراكن الزيت) — سيستم توريدات زيوت تويوتا — لا ترجع للأسماء القديمة (مرشد/زوجة/لزوجة)
+- [Oils Sales Boosters](mem://features/oils/sales-boosters) — شحن مجاني ≥3000، بيع بالكرتونة، أكواد خصم عبر apply_oils_coupon، تلميح خصم الكمية، إعادة آخر طلب
