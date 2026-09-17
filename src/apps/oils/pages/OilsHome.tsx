@@ -59,7 +59,7 @@ const OilsHome = () => {
             </h1>
           </div>
         </div>
-        <button type="button" aria-label="الإشعارات" className="oils-circle-button" onClick={() => navigate("/oils/account")}>
+        <button type="button" aria-label="الإشعارات" className="oils-circle-button" onClick={() => navigate("/oils/notifications")}>
           <Bell />
         </button>
       </header>
