@@ -4,6 +4,8 @@ import { Droplets, Home, LayoutGrid, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
+import { useOilsDeviceLock } from "@/lib/oils/useOilsDeviceLock";
+import OilsDeviceBlocked from "./components/OilsDeviceBlocked";
 import OilsIntro from "./components/OilsIntro";
 import OilsMurshid from "./components/OilsMurshid";
 import "./theme.css";
