@@ -40,29 +40,22 @@ const OilsLogin = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col justify-center px-5 py-10" dir="rtl">
-      {/* الشعار */}
-      <div className="flex flex-col items-center mb-8">
-        <div
-          className="w-[72px] h-[72px] rounded-[22px] grid place-items-center mb-4"
-          style={{
-            background: "linear-gradient(135deg, hsl(var(--oils-accent)), hsl(var(--oils-accent-2)))",
-            boxShadow: "0 18px 40px -12px hsl(var(--oils-accent) / 0.5)",
-          }}
-        >
-          <Droplets className="w-9 h-9" style={{ color: "hsl(210 62% 9%)" }} />
+    <main className="oils-login" dir="rtl">
+      <div className="oils-login-brand">
+        <div className="oils-login-mark">
+          <Droplets />
         </div>
-        <h1 className="text-[20px] font-extrabold">المصرية لجملة الزيوت</h1>
-        <p className="text-[12px] mt-1.5" style={{ color: "hsl(var(--oils-muted))" }}>
-          تطبيق الجملة لمحلات ومراكز تغيير الزيوت والموزعين
-        </p>
+        <span>ALMASRIA WHOLESALE</span>
+        <h1>كل احتياجات<br />شغلك في مكان واحد</h1>
+        <p>أسعار جملة مخصصة، مخزون واضح، وطلب أسرع.</p>
       </div>
 
-      <form onSubmit={handleLogin} className="oils-card p-5 space-y-4">
+      <form onSubmit={handleLogin} className="oils-login-sheet">
+        <h2>دخول حساب الجملة</h2>
         <div>
           <label className="oils-label" htmlFor="oils-email">البريد الإلكتروني</label>
           <div className="relative">
-            <Mail className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "hsl(var(--oils-muted))" }} />
+            <Mail className="oils-field-icon" />
             <input
               id="oils-email"
               type="email"
@@ -80,7 +73,7 @@ const OilsLogin = () => {
         <div>
           <label className="oils-label" htmlFor="oils-password">كلمة المرور</label>
           <div className="relative">
-            <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "hsl(var(--oils-muted))" }} />
+            <Lock className="oils-field-icon" />
             <input
               id="oils-password"
               type={showPassword ? "text" : "password"}
@@ -95,8 +88,7 @@ const OilsLogin = () => {
             <button
               type="button"
               aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: "hsl(var(--oils-muted))" }}
+              className="oils-password-toggle"
               onClick={() => setShowPassword((s) => !s)}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -105,27 +97,21 @@ const OilsLogin = () => {
         </div>
 
         {error && (
-          <p className="text-[12px] font-bold text-center" style={{ color: "hsl(var(--oils-danger))" }}>{error}</p>
+          <p className="oils-form-error">{error}</p>
         )}
 
         <button type="submit" className="oils-btn-primary" disabled={loading}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
           دخول حساب الجملة
         </button>
+        <div className="oils-join-row">
+          <span>لسه مش تاجر معانا؟</span>
+          <button type="button" onClick={() => navigate("/dealer-apply")}>قدّم طلب انضمام</button>
+        </div>
       </form>
 
-      <div className="mt-5 text-center space-y-3">
-        <p className="text-[12px]" style={{ color: "hsl(var(--oils-muted))" }}>
-          لسه مش تاجر معانا؟
-        </p>
-        <button type="button" className="oils-btn-ghost w-full" onClick={() => navigate("/dealer-apply")}>
-          قدّم طلب انضمام كتاجر جملة
-        </button>
-        <p className="text-[10.5px] leading-relaxed" style={{ color: "hsl(var(--oils-muted))" }}>
-          يتم مراجعة الطلب خلال 48 ساعة وتفعيل أسعار الجملة الخاصة بك.
-        </p>
-      </div>
-    </div>
+      <p className="oils-login-trust"><ShieldCheck /> بياناتك وأسعارك التجارية محمية</p>
+    </main>
   );
 };
 
