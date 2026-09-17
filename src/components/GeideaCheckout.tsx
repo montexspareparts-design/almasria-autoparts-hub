@@ -20,6 +20,7 @@ interface GeideaCheckoutProps {
   currency?: string;
   returnUrl?: string;
   onStarted?: () => void;
+  callbackPath?: string;
 }
 
 const loadScript = (src: string) =>
@@ -36,7 +37,7 @@ const loadScript = (src: string) =>
     document.head.appendChild(script);
   });
 
-const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: GeideaCheckoutProps) => {
+const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted, callbackPath = "/payment-callback" }: GeideaCheckoutProps) => {
   const [loading, setLoading] = useState(false);
   const pollRef = useRef<number | null>(null);
 
@@ -72,7 +73,7 @@ const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: Gei
       }
 
       const goToCallback = () => {
-        window.location.href = `/payment-callback?provider=geidea&merchant_order_id=${encodeURIComponent(
+        window.location.href = `${callbackPath}?provider=geidea&merchant_order_id=${encodeURIComponent(
           data.order_number,
         )}`;
       };
@@ -127,7 +128,7 @@ const GeideaCheckout = ({ orderId, currency = "EGP", returnUrl, onStarted }: Gei
     } finally {
       setLoading(false);
     }
-  }, [orderId, currency, returnUrl, onStarted]);
+  }, [orderId, currency, returnUrl, onStarted, callbackPath]);
 
 
   return (

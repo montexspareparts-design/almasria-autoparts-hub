@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Bell, SlidersHorizontal, Search } from "lucide-react";
+import { Bell, SlidersHorizontal, Search, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useOilsCatalog, type OilProduct } from "@/lib/oils/useOilsCatalog";
 import OilProductCard from "../components/OilProductCard";
 import { useDealerCart } from "@/hooks/useDealerCart";
@@ -15,6 +16,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 
 const OilsCatalog = () => {
   const { products, loading, discountsFor, isDealer } = useOilsCatalog();
+  const navigate = useNavigate();
   const { addItem } = useDealerCart();
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState("");
@@ -70,6 +72,7 @@ const OilsCatalog = () => {
             {f.label}
           </button>
         ))}
+        <button type="button" className="oils-filter-pill oils-quick-pill" onClick={() => navigate("/oils/quick")}><Zap /> طلب سريع</button>
       </div>
 
       {loading ? (

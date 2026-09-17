@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ChevronLeft, Droplets, Repeat2, ShoppingBag, Sparkles } from "lucide-react";
+import { Bell, ChevronLeft, Droplets, Repeat2, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -63,6 +63,8 @@ const OilsHome = () => {
           <Bell />
         </button>
       </header>
+
+      <button type="button" className="oils-home-quick" onClick={() => navigate("/oils/quick")}><Zap /> طلب سريع بكود الصنف <ChevronLeft /></button>
 
       {featured ? (
         <section className="oils-featured-shell">
