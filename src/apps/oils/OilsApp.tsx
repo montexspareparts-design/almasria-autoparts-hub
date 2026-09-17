@@ -4,6 +4,7 @@ import { Droplets, Home, LayoutGrid, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
+import OilsIntro from "./components/OilsIntro";
 import "./theme.css";
 
 const OilsHome = lazy(() => import("./pages/OilsHome"));
@@ -73,10 +74,12 @@ const TabBar = () => {
  */
 const OilsApp = () => {
   const { user, dealerAccount, loading, postAuthState } = useAuth();
+  const intro = <OilsIntro />;
 
   if (loading || (user && postAuthState !== "READY")) {
     return (
       <div className="oils-app grid place-items-center">
+        {intro}
         <Droplets className="w-10 h-10 animate-pulse" style={{ color: "hsl(var(--oils-accent))" }} />
       </div>
     );
@@ -85,6 +88,7 @@ const OilsApp = () => {
   if (!user) {
     return (
       <div className="oils-app">
+        {intro}
         <Suspense fallback={<Fallback />}>
           <Routes>
             <Route path="join" element={<OilsJoin />} />
@@ -99,6 +103,7 @@ const OilsApp = () => {
   if (!dealerAccount?.is_active) {
     return (
       <div className="oils-app grid place-items-center px-6" dir="rtl">
+        {intro}
         <div className="oils-card p-6 text-center max-w-sm">
           <Droplets className="w-10 h-10 mx-auto mb-3" style={{ color: "hsl(var(--oils-accent))" }} />
           <h2 className="text-[16px] font-extrabold mb-2">حسابك قيد المراجعة</h2>
@@ -112,6 +117,7 @@ const OilsApp = () => {
 
   return (
     <div className="oils-app">
+      {intro}
       <Suspense fallback={<Fallback />}>
         <Routes>
           <Route index element={<OilsHome />} />
