@@ -45,6 +45,7 @@ const DealerLogin = lazy(() => import("./pages/DealerLogin"));
 const DealerProductPage = lazy(() => import("./pages/DealerProductPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const OilsApp = lazy(() => import("./apps/oils/OilsApp"));
+const DesignSystemPage = lazy(() => import("./design/showcase/DesignSystemPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 
@@ -175,6 +176,7 @@ const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: 
   if (isDistractionFreeRoute(pathname)) return null;
   // تطبيق جملة الزيوت قسم مستقل — لا تظهر فيه أي عناصر عائمة خاصة بالموقع
   if (pathname === "/oils" || pathname.startsWith("/oils/")) return null;
+  if (pathname === "/design-system") return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
@@ -251,6 +253,7 @@ const App = () => (
                     <Route path="/dealer" element={<DealerDashboard />} />
                     <Route path="/dealer/product/:productId" element={<DealerProductPage />} />
                     <Route path="/oils/*" element={<OilsApp />} />
+                    <Route path="/design-system" element={<DesignSystemPage />} />
                     <Route path="/client-register" element={<ClientRegister />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/dealer-login" element={<DealerLogin />} />
