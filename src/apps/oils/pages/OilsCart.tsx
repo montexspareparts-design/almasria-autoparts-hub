@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Minus, Plus, ShoppingBag, Trash2, Zap } from "lucide-react";
+import { ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Trash2, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -126,7 +126,7 @@ const OilsCart = () => {
   return (
     <main className="oils-screen oils-cart" dir="rtl">
       <header className="oils-page-header">
-        <div><span className="oils-eyebrow">مراجعة الطلبية</span><h1>السلة</h1></div>
+        <div><span className="oils-eyebrow">مراجعة الطلبية</span><h1>السلة</h1><p className="oils-cart-count-label">{items.length} {items.length === 1 ? "صنف" : "أصناف"} جاهزة للمراجعة</p></div>
         <button type="button" className="oils-circle-button oils-cart-clear" aria-label="تفريغ السلة" onClick={() => void cart.clearCart()}><Trash2 /></button>
       </header>
 
@@ -153,7 +153,7 @@ const OilsCart = () => {
                   <b className="oils-num">{item.quantity}</b>
                   <button type="button" aria-label="زيادة الكمية" onClick={() => void changeQuantity(item.product_id, item.quantity + 1)}><Plus /></button>
                 </div>
-                <strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong>
+                <div className="oils-cart-line-total"><span>إجمالي الصنف</span><strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
               </div>
             </article>
           );
@@ -161,22 +161,23 @@ const OilsCart = () => {
       </section>
 
       <section className="oils-checkout-panel">
-        <h2>الاستلام والدفع</h2>
-        <label className="oils-label" htmlFor="oils-branch">فرع الاستلام</label>
+        <div className="oils-checkout-title"><span><PackageCheck /></span><div><small>الخطوة الأخيرة</small><h2>الاستلام والدفع</h2></div></div>
+        <label className="oils-label oils-label--icon" htmlFor="oils-branch"><MapPin /> فرع الاستلام</label>
         <div className="oils-branch-options" id="oils-branch">
           {PICKUP_BRANCHES.map((branch) => (
             <button key={branch.value} type="button" className={pickupBranch === branch.value ? "is-active" : ""} onClick={() => setPickupBranch(branch.value)}>{branch.label}</button>
           ))}
         </div>
-        <label className="oils-label" htmlFor="oils-notes">ملاحظات للمخزن (اختياري)</label>
+        <label className="oils-label oils-label--icon" htmlFor="oils-notes"><MessageSquareText /> ملاحظات للمخزن <span>(اختياري)</span></label>
         <textarea id="oils-notes" className="oils-cart-notes" value={notes} maxLength={500} onChange={(event) => setNotes(event.target.value)} placeholder="أي تفاصيل مهمة للتجهيز…" />
         <div className="oils-order-summary">
+          <div className="oils-summary-heading"><span><ReceiptText /> ملخص الطلب</span><ShieldCheck /></div>
           <div><span>قيمة الأصناف</span><b className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</b></div>
           <div><span>الضريبة</span><b>لا توجد</b></div>
           <div className="oils-order-total"><span>الإجمالي</span><strong className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
         </div>
         <button type="button" className="oils-btn-primary oils-pay-button" disabled={submitting} onClick={() => void createOrderAndPay()}>
-          {submitting ? "جاري تجهيز الدفع…" : "المتابعة للدفع الآمن"} <ChevronLeft />
+          <ShieldCheck /> {submitting ? "جاري تجهيز الدفع…" : "المتابعة للدفع الآمن"} <ChevronLeft />
         </button>
         <p className="oils-secure-note">لن تُفرغ السلة ولن يُؤكد الطلب إلا بعد نجاح الدفع.</p>
       </section>
