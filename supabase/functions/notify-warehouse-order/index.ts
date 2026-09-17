@@ -145,7 +145,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ success: result.success, order: order.order_number, recipient: recipientName }), {
+    return new Response(JSON.stringify({ success: results.some((r) => r.success), order: order.order_number, recipients: results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
