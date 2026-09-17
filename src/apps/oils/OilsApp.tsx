@@ -79,8 +79,9 @@ const TabBar = () => {
 const OilsApp = () => {
   const { user, dealerAccount, loading, postAuthState } = useAuth();
   const intro = <OilsIntro />;
+  const deviceLock = useOilsDeviceLock(user?.id);
 
-  if (loading || (user && postAuthState !== "READY")) {
+  if (loading || (user && postAuthState !== "READY") || (user && deviceLock.state === "checking")) {
     return (
       <div className="oils-app grid place-items-center">
         {intro}
