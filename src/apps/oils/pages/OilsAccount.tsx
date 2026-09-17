@@ -12,7 +12,7 @@ const fmt = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 
  */
 const OilsAccount = () => {
   const navigate = useNavigate();
-  const { profile, dealerAccount } = useAuth();
+  const { profile } = useAuth();
   const { dealer, invoices, loyalty, creditLimit, invoicedTotal, loading, hasErpLink } = useCreditStatement();
 
   return (
