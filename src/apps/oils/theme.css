@@ -289,12 +289,18 @@
   background: hsl(var(--oils-accent));
   transform: scaleY(1.7);
 }
-.oils-featured::after {
+.oils-featured::after { display: none; }
+.oils-featured-product::before {
+  content: "";
+  position: absolute;
   z-index: -1;
-  width: 276px;
-  height: 276px;
-  inset: 171px auto auto 50%;
-  border-color: hsl(var(--oils-accent) / .32);
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: min(276px, 86%);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid hsl(var(--oils-accent) / .32);
   box-shadow: 0 0 0 28px hsl(var(--oils-accent) / .035), 0 0 90px hsl(var(--oils-accent-mid) / .3);
   pointer-events: none;
 }
