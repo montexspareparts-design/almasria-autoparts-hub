@@ -24,16 +24,19 @@ const deviceLabel = () => {
 
 export type DeviceLockState = "checking" | "allowed" | "blocked";
 
+/** حسابات معفاة من ربط الجهاز (حساب تجريبي/اختباري). */
+const EXEMPT_EMAILS = new Set(["demo.oils@almasriaautoparts.com"]);
+
 /**
  * ربط حساب تاجر الزيوت بأول جهاز يسجّل الدخول منه.
  * أي جهاز آخر يُمنع ويُحوَّل لواتساب إدارة الزيت.
  */
-export const useOilsDeviceLock = (userId: string | undefined) => {
+export const useOilsDeviceLock = (userId: string | undefined, email?: string | null) => {
   const [state, setState] = useState<DeviceLockState>("checking");
   const [boundLabel, setBoundLabel] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || (email && EXEMPT_EMAILS.has(email.toLowerCase()))) {
       setState("allowed");
       return;
     }
