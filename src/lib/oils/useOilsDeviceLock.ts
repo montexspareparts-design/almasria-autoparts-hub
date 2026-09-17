@@ -95,7 +95,7 @@ export const useOilsDeviceLock = (userId: string | undefined, email?: string | n
     setState("checking");
     void run();
     return () => { active = false; };
-  }, [userId]);
+  }, [userId, email]);
 
   return { state, boundLabel };
 };
