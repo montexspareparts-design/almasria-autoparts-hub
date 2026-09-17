@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Droplets, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mapLoginError } from "@/lib/loginErrors";
 import { haptic } from "@/lib/haptics";
+import oilsLogo from "@/assets/almasria-oils-logo.jpg";
 
 /**
  * دخول تطبيق جملة الزيوت — إيميل + باسورد (نفس حساب التاجر الموجود).
@@ -43,7 +44,7 @@ const OilsLogin = () => {
     <main className="oils-login" dir="rtl">
       <div className="oils-login-brand">
         <div className="oils-login-mark">
-          <Droplets />
+          <img src={oilsLogo} alt="المصرية — موزع معتمد لزيوت تويوتا الأصلية" className="oils-brand-logo" />
         </div>
         <span>ALMASRIA WHOLESALE</span>
         <h1>كل احتياجات<br />شغلك في مكان واحد</h1>
@@ -106,7 +107,7 @@ const OilsLogin = () => {
         </button>
         <div className="oils-join-row">
           <span>لسه مش تاجر معانا؟</span>
-          <button type="button" onClick={() => navigate("/dealer-apply")}>قدّم طلب انضمام</button>
+          <button type="button" onClick={() => navigate("/oils/join")}>قدّم طلب انضمام</button>
         </div>
       </form>
 

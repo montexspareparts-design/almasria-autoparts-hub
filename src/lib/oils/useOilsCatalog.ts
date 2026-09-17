@@ -9,7 +9,23 @@ import { useAuth } from "@/contexts/AuthContext";
  *  - خصومات الكمية النشطة من quantity_discounts
  */
 
-const OIL_NAME_REGEX = /زيت|زيوت/;
+/**
+ * الزيوت السائلة فقط (محرك/فتيس/كرونة/باكم/باور/كلاتش مروحة).
+ * تُستبعد قطع الغيار المرتبطة بالزيت: الفلاتر، الحشوات، الأويل سيل، الطبات، الساعات، الجوانات، الطلمبات.
+ */
+const OIL_LUBRICANT_REGEX = /^\s*زيت\s/;
+const NON_LUBRICANT_REGEX = /فلتر|حشوة|سيل|طبة|ساعة|جوان|طلمبة|غطاء|خرطوم|مبين/;
+
+/** أصناف تُعرض دائمًا في تطبيق الزيوت (بارت نمبر من الفيصل) */
+export const PINNED_OIL_PART_NUMBERS = ["08880-84132"];
+
+const isOilProduct = (name_ar?: string | null, name_en?: string | null, part_number?: string | null) => {
+  if (part_number && PINNED_OIL_PART_NUMBERS.includes(part_number.trim())) return true;
+  const ar = name_ar || "";
+  if (NON_LUBRICANT_REGEX.test(ar)) return false;
+  if (OIL_LUBRICANT_REGEX.test(ar)) return true;
+  return /\boil\b/i.test(name_en || "") && !/filter|seal|pump|gasket/i.test(name_en || "");
+};
 
 export interface OilProduct {
   id: string;
@@ -46,7 +62,7 @@ const fetchOilProducts = async (): Promise<Omit<OilProduct, "tierPrice" | "price
     .eq("is_active", true)
     .order("name_ar");
   if (error) throw error;
-  return (data || []).filter((p) => OIL_NAME_REGEX.test(p.name_ar || "") || OIL_NAME_REGEX.test(p.name_en || ""));
+  return (data || []).filter((p) => isOilProduct(p.name_ar, p.name_en, p.part_number));
 };
 
 export const useOilsCatalog = () => {

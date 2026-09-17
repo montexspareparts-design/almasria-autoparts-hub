@@ -12,6 +12,7 @@ const OilsQuickOrder = lazy(() => import("./pages/OilsQuickOrder"));
 const OilsAccount = lazy(() => import("./pages/OilsAccount"));
 const OilsLogin = lazy(() => import("./pages/OilsLogin"));
 const OilsProductDetail = lazy(() => import("./pages/OilsProductDetail"));
+const OilsJoin = lazy(() => import("./pages/OilsJoin"));
 
 const TABS = [
   { path: "/oils", label: "الرئيسية", icon: Home, end: true },
@@ -82,7 +83,10 @@ const OilsApp = () => {
     return (
       <div className="oils-app">
         <Suspense fallback={<Fallback />}>
-          <OilsLogin />
+          <Routes>
+            <Route path="join" element={<OilsJoin />} />
+            <Route path="*" element={<OilsLogin />} />
+          </Routes>
         </Suspense>
       </div>
     );
