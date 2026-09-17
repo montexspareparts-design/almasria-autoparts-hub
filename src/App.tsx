@@ -248,6 +248,7 @@ const App = () => (
                     <Route path="/dealer-register" element={<DealerRegister />} />
                     <Route path="/dealer" element={<DealerDashboard />} />
                     <Route path="/dealer/product/:productId" element={<DealerProductPage />} />
+                    <Route path="/oils/*" element={<OilsApp />} />
                     <Route path="/client-register" element={<ClientRegister />} />
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/dealer-login" element={<DealerLogin />} />
