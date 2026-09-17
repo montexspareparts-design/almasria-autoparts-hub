@@ -202,10 +202,10 @@ ${discountLines ? `## خصومات الكمية النشطة:\n${discountLines}`
       console.error("AI gateway error:", gatewayRes.status, errText.slice(0, 500));
       const friendly =
         gatewayRes.status === 402
-          ? "رصيد المساعد الذكي خلص مؤقتًا — جرب تاني بعد شوية."
+          ? "رصيد المساعدة الذكية خلص مؤقتًا — جرب تاني بعد شوية."
           : gatewayRes.status === 429
-            ? "ضغط عالي على المساعد حاليًا — استنى لحظة وجرب تاني."
-            : "المساعد مش متاح حاليًا، جرب تاني بعد شوية أو كلمنا واتساب 01039313427 (إدارة الزيت).";
+            ? "ضغط عالي على المساعدة حاليًا — استنى لحظة وجرب تاني."
+            : "المساعدة مش متاحة حاليًا، جرب تاني بعد شوية أو كلمنا واتساب 01039313427 (إدارة الزيت).";
       return new Response(JSON.stringify({ error: friendly }), {
         status: gatewayRes.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
