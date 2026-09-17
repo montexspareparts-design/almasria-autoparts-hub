@@ -1858,6 +1858,7 @@ export type Database = {
           shipping_company: string | null
           shipping_cost: number
           shipping_governorate: string | null
+          source: string
           status: string
           total_amount: number
           tracking_number: string | null
@@ -1886,6 +1887,7 @@ export type Database = {
           shipping_company?: string | null
           shipping_cost?: number
           shipping_governorate?: string | null
+          source?: string
           status?: string
           total_amount?: number
           tracking_number?: string | null
@@ -1914,6 +1916,7 @@ export type Database = {
           shipping_company?: string | null
           shipping_cost?: number
           shipping_governorate?: string | null
+          source?: string
           status?: string
           total_amount?: number
           tracking_number?: string | null
