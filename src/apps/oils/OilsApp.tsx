@@ -90,6 +90,14 @@ const OilsApp = () => {
     );
   }
 
+  if (user && deviceLock.state === "blocked") {
+    return (
+      <div className="oils-app">
+        <OilsDeviceBlocked boundLabel={deviceLock.boundLabel} />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="oils-app">
