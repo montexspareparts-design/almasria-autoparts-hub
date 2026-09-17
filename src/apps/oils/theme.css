@@ -444,9 +444,10 @@
   background: linear-gradient(135deg, hsl(44 62% 80%) 0%, hsl(43 58% 70%) 58%, hsl(42 50% 63%) 100%);
   box-shadow: 0 16px 32px -14px hsl(42 55% 45% / .45), inset 0 1px hsl(46 80% 92% / .8);
   border: 1px solid hsl(43 55% 58% / .35);
-  font-size: 13px;
+  font-family: "Noto Kufi Arabic", "Cairo", sans-serif;
+  font-size: 13.5px;
   font-weight: 900;
-  letter-spacing: .2px;
+  letter-spacing: .4px;
   position: relative;
   transition: transform .18s ease;
 }
