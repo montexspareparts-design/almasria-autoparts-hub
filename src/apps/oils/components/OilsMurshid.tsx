@@ -224,7 +224,7 @@ const OilsMurshid = () => {
           <div className="oils-murshid-body" ref={bodyRef}>
             {messages.map((msg, i) => (
               <div key={i} className={`oils-murshid-msg oils-murshid-msg--${msg.role}`}>
-                {renderInline(msg.content)}
+                {renderInline(msg.content, streaming && i === messages.length - 1)}
               </div>
             ))}
             {streaming && messages[messages.length - 1]?.content === "" && (
