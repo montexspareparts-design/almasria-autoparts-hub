@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ChevronLeft, Droplet, Droplets, Repeat2, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { Bell, ChevronLeft, Droplets, Repeat2, ShieldCheck, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -98,7 +98,7 @@ const OilsHome = () => {
                   </div>
                 </div>
                 <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}>
-                  <Droplet fill="currentColor" strokeWidth={1.25} />
+                  <ShoppingBag strokeWidth={1.9} />
                   <span>أضف</span>
                 </button>
               </div>
