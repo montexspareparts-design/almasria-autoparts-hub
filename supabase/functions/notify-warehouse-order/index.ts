@@ -10,9 +10,9 @@ const META_PHONE_ID = Deno.env.get("META_WHATSAPP_PHONE_NUMBER_ID");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// أ. عبدالحميد - مسؤول المخازن | 01039313427 - إدارة الزيت (تطبيق الزيوت)
+// أ. عبدالحميد - مسؤول المخازن | إدارة الزيت (تطبيق الزيوت)
 const WAREHOUSE_PHONE = "201156332243";
-const OILS_MANAGEMENT_PHONE = "201039313427";
+const OILS_MANAGEMENT_PHONES = ["201039313427", "201050321224", "201020412358"];
 
 function formatEgyptianPhone(phone: string): string {
   let cleaned = String(phone).replace(/[\s\-()+]/g, "");
