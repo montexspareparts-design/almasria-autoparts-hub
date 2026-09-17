@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import type { OilProduct } from "@/lib/oils/useOilsCatalog";
 import type { QuantityDiscount } from "@/lib/oils/useOilsCatalog";
-import TierPriceBadge from "./TierPriceBadge";
 import { haptic } from "@/lib/haptics";
 import TransparentProductImage from "./TransparentProductImage";
 
@@ -57,11 +56,6 @@ const OilProductCard = ({ product, discounts, canSeePrice, onAdd }: Props) => {
               <span className="oils-num">
                 {fmt(product.price)} <span className="text-[10px] font-bold">ج.م</span>
               </span>
-              {product.tierPrice && (
-                <span className="oils-num oil-old-price">
-                  {fmt(product.base_price)}
-                </span>
-              )}
             </div>
           ) : (
             <span className="text-[11px] font-bold" style={{ color: "hsl(var(--oils-muted))" }}>سجّل دخولك لرؤية سعر الجملة</span>
@@ -89,7 +83,6 @@ const OilProductCard = ({ product, discounts, canSeePrice, onAdd }: Props) => {
 
         <div className="oil-product-actions">
           <div className="oil-product-badges">
-            <TierPriceBadge product={product} />
             {nextDiscount && canSeePrice && (
               <span className="oils-chip oils-num">
                 خصم عند {nextDiscount.min_quantity}+ قطعة
