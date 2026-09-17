@@ -17,7 +17,7 @@ const OIL_LUBRICANT_REGEX = /^\s*زيت\s/;
 const NON_LUBRICANT_REGEX = /فلتر|حشوة|سيل|طبة|ساعة|جوان|طلمبة|غطاء|خرطوم|مبين/;
 
 /** أصناف تُعرض دائمًا في تطبيق الزيوت (بارت نمبر من الفيصل) */
-export const PINNED_OIL_PART_NUMBERS = ["08880-84132"];
+export const PINNED_OIL_PART_NUMBERS = ["08880-84132", "08889-80500", "08889-80602"];
 
 /** أصناف مستبعدة من تطبيق الزيوت فقط */
 const EXCLUDED_OIL_SKUS = new Set(["11364", "20295"]);
