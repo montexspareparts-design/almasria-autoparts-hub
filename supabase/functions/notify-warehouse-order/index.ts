@@ -124,11 +124,15 @@ Deno.serve(async (req) => {
       (order.notes ? `\n📝 ملاحظات: ${order.notes}\n` : "") +
       `\n⚡ برجاء تجهيز الطلب.`;
 
-    const result = await sendWhatsApp(WAREHOUSE_PHONE, message);
+    const isOilsOrder = (order as any).source === "oils";
+    const recipientPhone = isOilsOrder ? OILS_MANAGEMENT_PHONE : WAREHOUSE_PHONE;
+    const recipientName = isOilsOrder ? "إدارة الزيت - تطبيق الزيوت" : "أ. عبدالحميد - المخازن";
+
+    const result = await sendWhatsApp(recipientPhone, message);
 
     await supabase.from("whatsapp_send_logs").insert({
-      phone: WAREHOUSE_PHONE,
-      recipient_name: "أ. عبدالحميد - المخازن",
+      phone: recipientPhone,
+      recipient_name: recipientName,
       template: "warehouse_new_paid_order",
       message_preview: message.slice(0, 500),
       status: result.success ? "sent" : "failed",
@@ -136,7 +140,7 @@ Deno.serve(async (req) => {
       provider_response: (result.data ?? {}) as any,
     });
 
-    return new Response(JSON.stringify({ success: result.success, order: order.order_number }), {
+    return new Response(JSON.stringify({ success: result.success, order: order.order_number, recipient: recipientName }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
