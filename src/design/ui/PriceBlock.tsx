@@ -36,7 +36,7 @@ export const PriceBlock = ({
       </span>
       <span className="ds-caption" style={{ color: "var(--ink-500)" }}>
         {currency}
-philosophy      </span>
+      </span>
       {listPrice !== undefined && listPrice > finalPrice && (
         <span
           className="ds-caption ds-num"
