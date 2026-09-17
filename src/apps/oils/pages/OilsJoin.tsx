@@ -4,7 +4,7 @@ import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
-import logoAsset from "@/assets/almasria-oils-logo.jpg.asset.json";
+import oilsLogo from "@/assets/almasria-oils-logo.jpg";
 
 /**
  * طلب انضمام تاجر زيوت — صفحة مستقلة تمامًا داخل تطبيق الزيوت.
@@ -103,7 +103,7 @@ const OilsJoin = () => {
         <button type="button" className="oils-join-back" aria-label="رجوع" onClick={() => (step === 0 ? navigate("/oils") : setStep(0))}>
           <ArrowRight />
         </button>
-        <img src={logoAsset.url} alt="المصرية لزيوت تويوتا" className="w-10 h-10 rounded-xl object-contain bg-white" />
+        <img src={oilsLogo} alt="المصرية لزيوت تويوتا" className="w-10 h-10 rounded-xl object-contain bg-white" />
       </div>
 
       <section className="oils-join-hero">

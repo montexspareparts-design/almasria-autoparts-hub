@@ -4,7 +4,7 @@ import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { mapLoginError } from "@/lib/loginErrors";
 import { haptic } from "@/lib/haptics";
-import logoAsset from "@/assets/almasria-oils-logo.jpg.asset.json";
+import oilsLogo from "@/assets/almasria-oils-logo.jpg";
 
 /**
  * دخول تطبيق جملة الزيوت — إيميل + باسورد (نفس حساب التاجر الموجود).
@@ -44,7 +44,7 @@ const OilsLogin = () => {
     <main className="oils-login" dir="rtl">
       <div className="oils-login-brand">
         <div className="oils-login-mark">
-          <img src={logoAsset.url} alt="المصرية — موزع معتمد لزيوت تويوتا الأصلية" className="oils-brand-logo" />
+          <img src={oilsLogo} alt="المصرية — موزع معتمد لزيوت تويوتا الأصلية" className="oils-brand-logo" />
         </div>
         <span>ALMASRIA WHOLESALE</span>
         <h1>كل احتياجات<br />شغلك في مكان واحد</h1>
