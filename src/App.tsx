@@ -173,6 +173,8 @@ const DeferredWhenAuthStable = ({ delay, children }: { delay: number; children: 
   const { pathname } = useLocation();
   if (isNativeShell()) return null;
   if (isDistractionFreeRoute(pathname)) return null;
+  // تطبيق جملة الزيوت قسم مستقل — لا تظهر فيه أي عناصر عائمة خاصة بالموقع
+  if (pathname === "/oils" || pathname.startsWith("/oils/")) return null;
   if (loading || postAuthState === "AUTHENTICATED_LOADING" || postAuthState === "INITIALIZING") return null;
   return <DeferredComponent delay={delay}>{children}</DeferredComponent>;
 };
