@@ -441,9 +441,9 @@
   justify-content: space-between;
   gap: 12px;
   color: hsl(var(--oils-ink));
-  background: hsl(var(--oils-card));
-  box-shadow: 0 16px 32px -14px hsl(var(--oils-ink) / .28);
-  border: 1px solid hsl(var(--oils-ink) / .12);
+  background: linear-gradient(135deg, hsl(44 62% 80%) 0%, hsl(43 58% 70%) 58%, hsl(42 50% 63%) 100%);
+  box-shadow: 0 16px 32px -14px hsl(42 55% 45% / .45), inset 0 1px hsl(46 80% 92% / .8);
+  border: 1px solid hsl(43 55% 58% / .35);
   font-size: 13px;
   font-weight: 900;
   letter-spacing: .2px;
@@ -461,7 +461,7 @@
   margin-inline-start: auto;
   order: 2;
   box-sizing: content-box;
-  color: hsl(var(--oils-card));
+  color: hsl(44 65% 78%);
   background: hsl(var(--oils-ink));
   border-radius: 12px;
 }
