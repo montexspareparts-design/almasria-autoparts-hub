@@ -65,7 +65,7 @@ const OilsQuickOrder = () => {
       await fetchCart();
       void haptic("heavy");
       setRows([]);
-      navigate("/dealer?tab=cart");
+      navigate("/oils/cart");
     } finally {
       setAdding(false);
     }

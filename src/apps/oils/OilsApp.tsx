@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Droplets, Home, LayoutGrid, User, Zap } from "lucide-react";
+import { Droplets, Home, LayoutGrid, ShoppingBag, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
@@ -13,11 +13,14 @@ const OilsAccount = lazy(() => import("./pages/OilsAccount"));
 const OilsLogin = lazy(() => import("./pages/OilsLogin"));
 const OilsProductDetail = lazy(() => import("./pages/OilsProductDetail"));
 const OilsJoin = lazy(() => import("./pages/OilsJoin"));
+const OilsCart = lazy(() => import("./pages/OilsCart"));
+const OilsPayment = lazy(() => import("./pages/OilsPayment"));
+const OilsPaymentResult = lazy(() => import("./pages/OilsPaymentResult"));
 
 const TABS = [
   { path: "/oils", label: "الرئيسية", icon: Home, end: true },
   { path: "/oils/catalog", label: "الكتالوج", icon: LayoutGrid, end: false },
-  { path: "/oils/quick", label: "طلب سريع", icon: Zap, end: false },
+  { path: "/oils/cart", label: "السلة", icon: ShoppingBag, end: false },
   { path: "/oils/account", label: "حسابي", icon: User, end: false },
 ];
 
@@ -47,7 +50,7 @@ const TabBar = () => {
             >
               <span className="oils-tab-icon">
                 <Icon className="w-5 h-5" />
-                {tab.path === "/oils/quick" && itemCount > 0 && (
+                {tab.path === "/oils/cart" && itemCount > 0 && (
                   <span
                     className="oils-cart-count"
                   >
@@ -114,6 +117,9 @@ const OilsApp = () => {
           <Route index element={<OilsHome />} />
           <Route path="catalog" element={<OilsCatalog />} />
           <Route path="quick" element={<OilsQuickOrder />} />
+          <Route path="cart" element={<OilsCart />} />
+          <Route path="payment/:orderId" element={<OilsPayment />} />
+          <Route path="payment-result" element={<OilsPaymentResult />} />
           <Route path="account" element={<OilsAccount />} />
           <Route path="product/:productId" element={<OilsProductDetail />} />
           <Route path="login" element={<Navigate to="/oils" replace />} />
