@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Bot, RotateCcw, SendHorizonal, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
