@@ -13,7 +13,7 @@ const fmt = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 
 const OilsAccount = () => {
   const navigate = useNavigate();
   const { profile, dealerAccount } = useAuth();
-  const { invoices, loyalty, creditLimit, invoicedTotal, loading, hasErpLink } = useCreditStatement();
+  const { dealer, invoices, loyalty, creditLimit, invoicedTotal, loading, hasErpLink } = useCreditStatement();
 
   return (
     <div className="px-4 pt-5 space-y-5" dir="rtl">
@@ -23,10 +23,10 @@ const OilsAccount = () => {
         <div className="flex-1 min-w-0">
           <p className="text-[15px] font-extrabold truncate">{profile?.full_name || "شريكنا"}</p>
           <p className="text-[11px] truncate" style={{ color: "hsl(var(--oils-muted))" }}>
-            {dealerAccount?.erp_customer_name || profile?.email || ""}
+            {dealer?.erp_customer_name || profile?.email || ""}
           </p>
-          {dealerAccount?.erp_customer_code && (
-            <span className="oils-chip oils-num mt-1.5">كود العميل: {dealerAccount.erp_customer_code}</span>
+          {dealer?.erp_customer_code && (
+            <span className="oils-chip oils-num mt-1.5">كود العميل: {dealer.erp_customer_code}</span>
           )}
         </div>
       </div>
