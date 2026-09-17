@@ -15,7 +15,7 @@ const MAX_HISTORY = 14;
 
 const GREETING: ChatMessage = {
   role: "assistant",
-  content: "أهلًا بيك في المصرية للزيوت 👋\nأنا **مرشد** — هساعدك تلاقي الزيت المناسب، أعرفلك الأسعار، وأتابع معاك طلبك. اسألني براحتك.",
+  content: "أهلًا بيك في المصرية للزيوت 👋\nأنا **زوجة** — هديرلك على الزيت المناسب، أعرفلك الأسعار، وأتابع معاك طلبك. اسألني براحتك.",
 };
 
 const SUGGESTIONS = [
@@ -43,7 +43,7 @@ const loadMessages = (): ChatMessage[] => {
 };
 
 /**
- * "مرشد" — المساعد الذكي لتطبيق المصرية للزيوت.
+ * "زوجة" — المساعدة الذكية لتطبيق المصرية للزيوت.
  * محادثة واحدة محفوظة على الجهاز (localStorage) + بث مباشر من بوابة Lovable AI.
  */
 const OilsMurshid = () => {
@@ -98,7 +98,7 @@ const OilsMurshid = () => {
         });
 
         if (!res.ok || !res.body) {
-          let friendly = "المساعد مش متاح حاليًا، جرب تاني بعد شوية.";
+          let friendly = "زوجة مش متاحة حاليًا، جرب تاني بعد شوية.";
           try {
             const data = await res.json();
             if (data?.error) friendly = data.error;
@@ -125,7 +125,7 @@ const OilsMurshid = () => {
                 return next;
               });
             } else if (evt.type === "response.failed") {
-              throw new Error("المساعد وقف فجأة — جرب تاني.");
+              throw new Error("زوجة وقفت فجأة — جرب تاني.");
             }
           } catch (e) {
             if (e instanceof SyntaxError) return; // سطر ناقص — بيتكمل في الشنك القادم
@@ -193,7 +193,7 @@ const OilsMurshid = () => {
         <button
           type="button"
           className="oils-murshid-fab"
-          aria-label="افتح مرشد، المساعد الذكي"
+          aria-label="افتح زوجة، المساعدة الذكية"
           onClick={() => { void haptic("light"); setOpen(true); }}
         >
           <Bot />
@@ -202,13 +202,13 @@ const OilsMurshid = () => {
       )}
 
       {open && (
-        <section className="oils-murshid-panel" dir="rtl" aria-label="مرشد — المساعد الذكي">
+        <section className="oils-murshid-panel" dir="rtl" aria-label="زوجة — المساعدة الذكية">
           <header className="oils-murshid-head">
             <div className="oils-murshid-head-brand">
               <span className="oils-murshid-head-logo"><OilsBrandMark /></span>
               <span className="oils-murshid-head-titles">
-                <strong>مرشد</strong>
-                <small>مساعد المصرية الذكي · متصل</small>
+                <strong>زوجة</strong>
+                <small>مساعدتك الشخصية · متصلة</small>
               </span>
             </div>
             <div className="oils-murshid-head-actions">
@@ -228,7 +228,7 @@ const OilsMurshid = () => {
               </div>
             ))}
             {streaming && messages[messages.length - 1]?.content === "" && (
-              <div className="oils-murshid-typing" aria-label="مرشد بيكتب">
+              <div className="oils-murshid-typing" aria-label="زوجة بتكتب">
                 <span /><span /><span />
               </div>
             )}
@@ -255,8 +255,8 @@ const OilsMurshid = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اكتب سؤالك لمرشد…"
-              aria-label="رسالتك لمرشد"
+              placeholder="اسأل زوجة…"
+              aria-label="رسالتك لزوجة"
               disabled={streaming}
               enterKeyHint="send"
             />
