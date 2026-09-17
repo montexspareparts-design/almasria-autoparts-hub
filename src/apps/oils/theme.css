@@ -739,3 +739,108 @@
 .oils-device-block-wa { width: 100%; justify-content: center; color: hsl(0 0% 6%); background: linear-gradient(150deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 16px 34px hsl(var(--oils-accent) / .3); }
 .oils-device-block-out { margin-top: 12px; width: 100%; padding: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid hsl(var(--oils-card) / .14); border-radius: 16px; background: transparent; color: hsl(var(--oils-card) / .6); font-size: 11.5px; font-weight: 800; }
 .oils-device-block-out svg { width: 15px; height: 15px; }
+
+/* ===== لوحة تصنيفات الكتالوج ===== */
+.oils-search-filter-btn {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: hsl(var(--oils-muted));
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.oils-search-filter-btn svg { width: 18px; height: 18px; }
+.oils-search-filter-btn.is-active {
+  background: linear-gradient(120deg, hsl(var(--oils-accent-deep)), hsl(350 60% 16%));
+  color: hsl(var(--oils-warm));
+  box-shadow: 0 6px 16px -4px hsl(var(--oils-accent-deep) / .5), 0 0 0 1px hsl(var(--oils-accent) / .3) inset;
+}
+.oils-filter-dot {
+  position: absolute;
+  top: 7px;
+  inset-inline-end: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: hsl(var(--oils-accent));
+  box-shadow: 0 0 6px hsl(var(--oils-accent));
+}
+.oils-cats-panel { overflow: hidden; margin: 2px 0 4px; }
+.oils-cats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  background: linear-gradient(160deg, hsl(var(--oils-accent-deep)), hsl(350 55% 13%));
+  border-radius: 20px 20px 0 0;
+  color: hsl(var(--oils-card));
+}
+.oils-cats-head span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 900; color: hsl(var(--oils-warm)); }
+.oils-cats-head span svg { width: 16px; height: 16px; }
+.oils-cats-head button {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 1px solid hsl(var(--oils-card) / .18); border-radius: 10px;
+  background: hsl(var(--oils-card) / .08); color: hsl(var(--oils-card)); cursor: pointer;
+}
+.oils-cats-head button svg { width: 14px; height: 14px; }
+.oils-cats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  padding: 12px;
+  background: hsl(var(--oils-card));
+  border: 1px solid hsl(var(--oils-accent) / .18);
+  border-top: 0;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 18px 34px -18px hsl(var(--oils-accent-deep) / .35);
+}
+.oils-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 13px 6px 11px;
+  border: 1px solid hsl(var(--oils-accent-deep) / .1);
+  border-radius: 16px;
+  background: linear-gradient(170deg, hsl(var(--oils-card)), hsl(var(--oils-accent) / .05));
+  cursor: pointer;
+  text-align: center;
+  transition: transform .16s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.oils-cat-card:active { transform: scale(.96); }
+.oils-cat-card.is-active {
+  border-color: hsl(var(--oils-accent) / .65);
+  box-shadow: 0 8px 20px -8px hsl(var(--oils-accent) / .5), 0 0 0 1px hsl(var(--oils-accent) / .25) inset;
+  background: linear-gradient(170deg, hsl(var(--oils-warm) / .35), hsl(var(--oils-card)));
+}
+.oils-cat-icon {
+  width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(140deg, hsl(var(--oils-accent-deep)), hsl(350 55% 15%));
+  color: hsl(var(--oils-warm));
+  box-shadow: 0 5px 12px -4px hsl(var(--oils-accent-deep) / .5);
+}
+.oils-cat-icon svg { width: 18px; height: 18px; }
+.oils-cat-card.is-active .oils-cat-icon { background: linear-gradient(140deg, hsl(var(--oils-accent-mid)), hsl(var(--oils-accent))); color: hsl(var(--oils-accent-deep)); }
+.oils-cat-card b { font-size: 11.5px; font-weight: 900; color: hsl(var(--oils-accent-deep)); }
+.oils-cat-card small { font-size: 9.5px; line-height: 1.4; color: hsl(var(--oils-muted)); }
+.oils-cat-card em {
+  font-style: normal; font-size: 9.5px; font-weight: 800;
+  padding: 2px 9px; border-radius: 999px;
+  background: hsl(var(--oils-accent) / .14); color: hsl(var(--oils-accent-deep));
+}
+.oils-cat-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: hsl(var(--oils-accent-deep)) !important;
+  color: hsl(var(--oils-warm)) !important;
+  border-color: hsl(var(--oils-accent) / .4) !important;
+}
+.oils-cat-pill svg { width: 12px; height: 12px; }
