@@ -209,6 +209,19 @@ const OilsCart = () => {
                 </div>
                 <div className="oils-cart-line-total"><span>إجمالي الصنف</span><strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
               </div>
+              {(() => {
+                const perCarton = unitsPerCarton(item.oilProduct.name_ar, item.oilProduct.name_en);
+                const label = cartonLabel(item.quantity, perCarton);
+                return (
+                  <div className="oils-cart-carton">
+                    <span className="oils-cart-carton-info"><Boxes /> {label ? label : `الكرتونة = ${perCarton} عبوة`}</span>
+                    <div className="oils-cart-carton-actions">
+                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity - perCarton)}>− كرتونة</button>
+                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity + perCarton)}>+ كرتونة</button>
+                    </div>
+                  </div>
+                );
+              })()}
             </article>
           );
         })}
