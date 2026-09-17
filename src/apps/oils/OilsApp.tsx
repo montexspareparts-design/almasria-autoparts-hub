@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
 import OilsIntro from "./components/OilsIntro";
+import OilsMurshid from "./components/OilsMurshid";
 import "./theme.css";
 
 const OilsHome = lazy(() => import("./pages/OilsHome"));
@@ -132,6 +133,7 @@ const OilsApp = () => {
           <Route path="*" element={<Navigate to="/oils" replace />} />
         </Routes>
       </Suspense>
+      <OilsMurshid />
       <TabBar />
     </div>
   );
