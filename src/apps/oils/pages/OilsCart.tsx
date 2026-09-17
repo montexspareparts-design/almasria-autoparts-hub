@@ -245,10 +245,27 @@ const OilsCart = () => {
         )}
         <label className="oils-label oils-label--icon" htmlFor="oils-notes"><MessageSquareText /> ملاحظات للمخزن <span>(اختياري)</span></label>
         <textarea id="oils-notes" className="oils-cart-notes" value={notes} maxLength={500} onChange={(event) => setNotes(event.target.value)} placeholder="أي تفاصيل مهمة للتجهيز…" />
+
+        <label className="oils-label oils-label--icon" htmlFor="oils-coupon"><Tag /> كود خصم <span>(اختياري)</span></label>
+        <div className="oils-coupon-row">
+          <input
+            id="oils-coupon"
+            className="oils-coupon-input"
+            dir="ltr"
+            value={couponCode}
+            maxLength={32}
+            placeholder="MASRIA10"
+            onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+          />
+          {couponCode ? <button type="button" className="oils-coupon-clear" onClick={() => setCouponCode("")}>مسح</button> : null}
+        </div>
+        <p className="oils-coupon-hint">الكود بيتفعّل ويتخصم تلقائيًا قبل صفحة الدفع.</p>
+
         <div className="oils-order-summary">
           <div className="oils-summary-heading"><span><ReceiptText /> ملخص الطلب</span><ShieldCheck /></div>
           <div><span>قيمة الأصناف</span><b className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</b></div>
-          <div><span>الشحن</span><b>{fulfillmentMethod === "shipping" ? "يُدفع لشركة الشحن" : "استلام من الفرع"}</b></div>
+          <div><span>عدد الكراتين</span><b className="oils-num">{totalCartons > 0 ? totalCartons : "—"}</b></div>
+          <div><span>الشحن</span><b>{fulfillmentMethod === "shipping" ? (freeShippingReached ? "مجاني ✅" : "يُدفع لشركة الشحن") : "استلام من الفرع"}</b></div>
           <div><span>الضريبة</span><b>لا توجد</b></div>
           <div className="oils-order-total"><span>الإجمالي</span><strong className="oils-num">{total.toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
         </div>
