@@ -79,7 +79,7 @@ const TabBar = () => {
 const OilsApp = () => {
   const { user, dealerAccount, loading, postAuthState } = useAuth();
   const intro = <OilsIntro />;
-  const deviceLock = useOilsDeviceLock(user?.id);
+  const deviceLock = useOilsDeviceLock(user?.id, user?.email);
 
   if (loading || (user && postAuthState !== "READY") || (user && deviceLock.state === "checking")) {
     return (
