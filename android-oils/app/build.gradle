@@ -12,6 +12,14 @@ def hasCompleteReleaseSigning = keystorePropertiesFile.exists() && requiredSigni
     keystoreProperties[it]?.toString()?.trim()
 }
 
+// Always rebuild and inject the standalone oils web app before Android packages it.
+// This prevents Gradle/Android Studio from silently reusing stale main-app assets.
+def prepareOilsWeb = tasks.register('prepareOilsWeb', Exec) {
+    workingDir rootProject.projectDir.parentFile
+    def npmCommand = System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm'
+    commandLine npmCommand, 'run', 'oils:prepare'
+}
+
 android {
     namespace = "com.almasria.oils"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -49,6 +57,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+tasks.named('preBuild').configure {
+    dependsOn prepareOilsWeb
 }
 
 // لا تسمح أبداً بإنتاج نسخة Release غير موقعة ورفعها بالخطأ إلى Google Play.

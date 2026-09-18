@@ -7,9 +7,9 @@
 ```
 git pull
 npm install
-npm run build
-node scripts/sync-oils.mjs
 ```
+
+لا تشغّل بناء الويب أو المزامنة يدويًا؛ بناء Android يشغلهما تلقائيًا الآن لمنع تجميع نسخة قديمة.
 
 ثم تأكد أن ملف التوقيع موجود:
 - `android-oils\app\almasria-upload.jks`  (نفس ملف توقيع التطبيق الرئيسي)
@@ -36,8 +36,7 @@ set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot" && set "
 1. `git pull` ثم `npm install`
 2. انسخ `almasria-upload.jks` إلى `android-oils\app\`
 3. أنشئ `android-oils\keystore.properties` بالقيم أعلاه (نفس باسوردات المفتاح الرئيسي)
-4. `npm run build` → `node scripts/sync-oils.mjs`
-5. `cd android-oils` → `gradlew.bat bundleRelease`
+4. `cd android-oils` → `gradlew.bat bundleRelease` — التجهيز والمزامنة يعملان تلقائيًا
 
 ## ملاحظات
 
