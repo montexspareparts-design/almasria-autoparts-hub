@@ -18,6 +18,9 @@ const config: CapacitorConfig = {
   appId: 'com.almasria.oils',
   appName: 'المصرية زيوت جملة',
   webDir: 'dist',
+  server: {
+    appStartPath: '/oils',
+  },
   ios: {
     backgroundColor: OILS_WHITE,
     contentInset: 'never',

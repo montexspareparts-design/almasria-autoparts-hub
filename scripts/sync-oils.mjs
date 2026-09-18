@@ -30,6 +30,11 @@ const config = {
   appId: "com.almasria.oils",
   appName: "المصرية زيوت جملة",
   webDir: "dist",
+  // Native-level routing: Android opens the oils app directly instead of
+  // relying on JavaScript to redirect from the main storefront after launch.
+  server: {
+    appStartPath: "/oils",
+  },
   ios: {
     backgroundColor: "#FFFFFF",
     contentInset: "never",
@@ -66,7 +71,7 @@ const config = {
 };
 
 writeFileSync(resolve(assetsDir, "capacitor.config.json"), JSON.stringify(config, null, "\t") + "\n");
-console.log("✔ المصرية زيوت جملة: dist copied to android-oils + capacitor.config.json written");
+console.log("✔ المصرية زيوت جملة: dist copied + native start path fixed to /oils");
 
 // --- Ensure the cordova plugins shim exists (it is git-ignored, so regenerate it) ---
 import { mkdirSync } from "node:fs";
