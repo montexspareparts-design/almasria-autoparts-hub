@@ -16,15 +16,36 @@ if (!existsSync(dist)) {
 rmSync(assets, { recursive: true, force: true });
 cpSync(dist, assets, { recursive: true });
 
-// علّامة مضمونة داخل حزمة الزيوت: التطبيق يفتح /oils فورًا مهما حصل
+// The normal web build prerenders the main storefront into dist/index.html.
+// A standalone oils build must ship a neutral SPA shell; otherwise Android can
+// visibly (or permanently, after a JS error) show the old storefront first.
 const indexPath = resolve(assets, "index.html");
-const html = readFileSync(indexPath, "utf8");
+let html = readFileSync(indexPath, "utf8");
+
+html = html.replace(
+  /\s*<div id="root"><div id="seo-prerender"[\s\S]*?<\/nav><\/div><\/div>/i,
+  '\n    <div id="root"></div>'
+);
+
+html = html.replace(
+  /\s*<div id="splash-screen">[\s\S]*?<div class="splash-ring"><\/div>\s*<\/div>/i,
+  ""
+);
+
+const oilsBootScript = `<script>
+window.__OILS_APP__=true;
+(function(){
+  if(!location.pathname.startsWith('/oils')){
+    history.replaceState(history.state,'','/oils'+location.search+location.hash);
+  }
+})();
+</script>`;
+
 if (!html.includes("__OILS_APP__")) {
-  writeFileSync(
-    indexPath,
-    html.replace(/<head[^>]*>/i, (m) => `${m}\n<script>window.__OILS_APP__=true;</script>`)
-  );
+  html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${oilsBootScript}`);
 }
+
+writeFileSync(indexPath, html);
 
 const config = {
   appId: "com.almasria.oils",
@@ -71,7 +92,26 @@ const config = {
 };
 
 writeFileSync(resolve(assetsDir, "capacitor.config.json"), JSON.stringify(config, null, "\t") + "\n");
-console.log("✔ المصرية زيوت جملة: dist copied + native start path fixed to /oils");
+
+// Refuse to produce an Android bundle if the old storefront leaked back into
+// the standalone shell or either independent /oils boot guard is absent.
+const preparedHtml = readFileSync(indexPath, "utf8");
+const preparedConfig = JSON.parse(readFileSync(resolve(assetsDir, "capacitor.config.json"), "utf8"));
+const oilsShellIsValid =
+  preparedHtml.includes("window.__OILS_APP__=true") &&
+  preparedHtml.includes("history.replaceState(history.state,'','/oils'") &&
+  preparedHtml.includes('<div id="root"></div>') &&
+  !preparedHtml.includes('id="seo-prerender"') &&
+  !preparedHtml.includes('id="splash-screen"') &&
+  preparedConfig?.appId === "com.almasria.oils" &&
+  preparedConfig?.server?.appStartPath === "/oils";
+
+if (!oilsShellIsValid) {
+  console.error("Oils Android shell validation failed; refusing to package the main storefront.");
+  process.exit(1);
+}
+
+console.log("✔ المصرية زيوت جملة: clean shell verified + /oils boot enforced");
 
 // --- Ensure the cordova plugins shim exists (it is git-ignored, so regenerate it) ---
 import { mkdirSync } from "node:fs";

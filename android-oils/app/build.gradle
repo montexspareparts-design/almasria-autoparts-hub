@@ -20,6 +20,28 @@ def prepareOilsWeb = tasks.register('prepareOilsWeb', Exec) {
     commandLine npmCommand, 'run', 'oils:prepare'
 }
 
+def verifyOilsWeb = tasks.register('verifyOilsWeb') {
+    dependsOn prepareOilsWeb
+    doLast {
+        def oilsIndex = file('src/main/assets/public/index.html')
+        def oilsConfig = file('src/main/assets/capacitor.config.json')
+        if (!oilsIndex.exists() || !oilsConfig.exists()) {
+            throw new GradleException('Standalone oils web assets are missing.')
+        }
+
+        def indexText = oilsIndex.getText('UTF-8')
+        def configText = oilsConfig.getText('UTF-8')
+        if (!indexText.contains('window.__OILS_APP__=true') ||
+            !indexText.contains("history.replaceState(history.state,'','/oils'") ||
+            indexText.contains('id="seo-prerender"') ||
+            indexText.contains('id="splash-screen"') ||
+            !configText.contains('"appId": "com.almasria.oils"') ||
+            !configText.contains('"appStartPath": "/oils"')) {
+            throw new GradleException('Oils shell validation failed: refusing to package the main storefront.')
+        }
+    }
+}
+
 android {
     namespace = "com.almasria.oils"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -29,8 +51,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
         // أول نسخة من تطبيق «المصرية زيوت جملة» = 1 (versionName 1.0.0)
-        versionCode 3
-        versionName "1.0.2"
+        versionCode 4
+        versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -60,7 +82,7 @@ android {
 }
 
 tasks.named('preBuild').configure {
-    dependsOn prepareOilsWeb
+    dependsOn verifyOilsWeb
 }
 
 // لا تسمح أبداً بإنتاج نسخة Release غير موقعة ورفعها بالخطأ إلى Google Play.

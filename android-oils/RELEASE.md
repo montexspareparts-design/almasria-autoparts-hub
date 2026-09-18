@@ -25,11 +25,18 @@ npm install
 
 ```
 cd android-oils
-set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot" && set "JAVA_OPTS=" && set "GRADLE_OPTS=" && call gradlew.bat bundleRelease
+set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot"
+"%JAVA_HOME%\bin\java.exe" -classpath gradle\wrapper\gradle-wrapper.jar org.gradle.wrapper.GradleWrapperMain bundleRelease
 ```
 
 الملف الناتج:
 `android-oils\app\build\outputs\bundle\release\app-release.aab`
+
+الإصدار الحالي الصحيح بعد إصلاح بداية تطبيق الزيوت:
+- Version name: `1.0.3`
+- Version code: `4`
+
+عملية البناء تتوقف تلقائيًا ولا تُنتج ملفًا إذا وجدت شاشة التطبيق الرئيسي داخل نسخة الزيوت.
 
 ## أول بناء (Setup)
 
