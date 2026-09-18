@@ -140,6 +140,8 @@ const applyOilsVariantBootRoute = async () => {
       App.getInfo(),
       new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 2000)),
     ]);
+    // Deep-link scheme must match THIS native app id (main vs standalone جركن)
+    setAppUrlScheme(info?.id);
     if (
       info?.id === "com.almasria.oils" &&
       !window.location.pathname.startsWith("/oils")
