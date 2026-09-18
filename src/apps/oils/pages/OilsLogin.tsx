@@ -22,13 +22,15 @@ const OilsLogin = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) return;
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+    if (!cleanEmail || !cleanPassword) return;
     setLoading(true);
     setError(null);
     try {
       const { error: err } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+        email: cleanEmail,
+        password: cleanPassword,
       });
       if (err) {
         const mapped = mapLoginError(err);
@@ -92,7 +94,7 @@ const OilsLogin = () => {
               className="oils-input !pr-10 text-left"
               placeholder="name@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               required
             />
           </div>
@@ -110,7 +112,7 @@ const OilsLogin = () => {
               className="oils-input !pr-10 !pl-10 text-left"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value.replace(/^\s+/, ""))}
               required
             />
             <button
