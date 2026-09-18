@@ -1,6 +1,6 @@
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
-import { APP_URL_SCHEME, isNativePlatform, openExternal } from "@/lib/native";
+import { getAppUrlScheme, isNativePlatform, openExternal } from "@/lib/native";
 
 const OAUTH_RETURN_TO_KEY = "almasria_oauth_return_to";
 
@@ -67,7 +67,7 @@ export const startGoogleOAuth = async (redirectUri: string) => {
   setOAuthReturnTo(redirectUri);
 
   if (isNativePlatform()) {
-    const nativeRedirect = `${APP_URL_SCHEME}://auth-callback`;
+    const nativeRedirect = `${getAppUrlScheme()}://auth-callback`;
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

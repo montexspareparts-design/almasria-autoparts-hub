@@ -24,9 +24,15 @@ import { Share } from "@capacitor/share";
 // reachable from outside the app (Paymob, password reset emails, etc.).
 export const CANONICAL_WEB_ORIGIN = "https://almasriaautoparts.com";
 
-// Custom URL scheme registered in Info.plist. Deep-links use this scheme
-// to hand control back to the native app after external flows.
-export const APP_URL_SCHEME = "com.almasria.autoparts";
+// Custom URL scheme. Deep-links use this scheme to hand control back to the
+// native app after external flows (Google sign-in, payment, reset password).
+// Defaults to the main app; the standalone "جركن" variant overrides it at
+// boot from the native app id (com.almasria.oils).
+let appUrlScheme = "com.almasria.autoparts";
+export const getAppUrlScheme = () => appUrlScheme;
+export const setAppUrlScheme = (nativeAppId: string | undefined | null) => {
+  if (nativeAppId) appUrlScheme = nativeAppId;
+};
 
 type CapacitorWindow = Window & {
   Capacitor?: {
@@ -68,7 +74,7 @@ const isLikelyNativeWebView = (): boolean => {
   if (typeof window === "undefined") return false;
 
   const protocol = window.location?.protocol ?? "";
-  if (protocol === "capacitor:" || protocol === "ionic:" || protocol === `${APP_URL_SCHEME}:`) return true;
+  if (protocol === "capacitor:" || protocol === "ionic:" || protocol === `${getAppUrlScheme()}:`) return true;
 
   const ua = window.navigator?.userAgent?.toLowerCase() ?? "";
   const isIosWebView = /iphone|ipad|ipod/.test(ua) && /applewebkit/.test(ua) && !/safari/.test(ua);
@@ -139,7 +145,7 @@ export const buildAppDeepLink = (
     if (value) search.set(key, value);
   });
   const qs = search.toString();
-  return `${APP_URL_SCHEME}://${host}${qs ? `?${qs}` : ""}`;
+  return `${getAppUrlScheme()}://${host}${qs ? `?${qs}` : ""}`;
 };
 
 /**
@@ -473,7 +479,7 @@ const handleNativeDeepLinkUrl = async (raw: string, navigate?: NativeNavigate) =
 
   // Only accept our own custom scheme, or universal-link https from
   // the canonical domain.
-  const isCustomScheme = parsed.protocol === `${APP_URL_SCHEME}:`;
+  const isCustomScheme = parsed.protocol === `${getAppUrlScheme()}:`;
   const isCanonicalHttps =
     parsed.protocol === "https:" &&
     (parsed.hostname === "almasriaautoparts.com" ||
