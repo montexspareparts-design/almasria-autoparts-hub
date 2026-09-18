@@ -99,6 +99,9 @@ const DealerRtlAuditor = import.meta.env.DEV
 const queryClient = new QueryClient();
 
 const isNativeShell = () => isNativeShellFn();
+const isStandaloneOilsApp = () =>
+  typeof window !== "undefined" &&
+  (window as Window & { __OILS_APP__?: boolean }).__OILS_APP__ === true;
 
 /** Branded dark loader — never flash a white screen inside the native shell. */
 const PageLoader = () => (
@@ -224,7 +227,7 @@ const App = () => (
                <Suspense fallback={<PageLoader />}>
                   <AnimatedRoutes>
                   <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <Index />} />
                     <Route path="/home" element={<Navigate to="/" replace />} />
                     <Route path="/home-2" element={<Navigate to="/" replace />} />
                     <Route path="/main-home" element={<Navigate to="/" replace />} />
@@ -294,16 +297,16 @@ const App = () => (
                     <Route path="/admin/whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
                     <Route path="/admin/badge-qa" element={<BadgeContrastQA />} />
                     <Route path="/admin/staff-activity" element={<AdminStaffActivityPage />} />
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <NotFound />} />
                   </Routes>
                   </AnimatedRoutes>
                </Suspense>
-               {isNativeShell() && (
+               {isNativeShell() && !isStandaloneOilsApp() && (
                  <Suspense fallback={null}>
                    <NativeTabBar />
                  </Suspense>
                )}
-               {isNativeShell() && (
+               {isNativeShell() && !isStandaloneOilsApp() && (
                  <Suspense fallback={null}>
                    <NativeLaunchGate />
                  </Suspense>

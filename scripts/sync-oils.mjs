@@ -106,12 +106,18 @@ const oilsShellIsValid =
   preparedConfig?.appId === "com.almasria.oils" &&
   preparedConfig?.server?.appStartPath === "/oils";
 
-if (!oilsShellIsValid) {
-  console.error("Oils Android shell validation failed; refusing to package the main storefront.");
+const appSource = readFileSync(resolve(root, "src/App.tsx"), "utf8");
+const oilsUiIsolationIsValid =
+  appSource.includes("isNativeShell() && !isStandaloneOilsApp()") &&
+  appSource.includes('isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <Index />') &&
+  appSource.includes('isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <NotFound />');
+
+if (!oilsShellIsValid || !oilsUiIsolationIsValid) {
+  console.error("Oils Android isolation validation failed; refusing to package any main-app launch UI.");
   process.exit(1);
 }
 
-console.log("✔ المصرية زيوت جملة: clean shell verified + /oils boot enforced");
+console.log("✔ المصرية زيوت جملة: clean shell + isolated oils UI + /oils boot enforced");
 
 // --- Ensure the cordova plugins shim exists (it is git-ignored, so regenerate it) ---
 import { mkdirSync } from "node:fs";

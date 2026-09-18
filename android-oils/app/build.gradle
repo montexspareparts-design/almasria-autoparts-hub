@@ -31,13 +31,15 @@ def verifyOilsWeb = tasks.register('verifyOilsWeb') {
 
         def indexText = oilsIndex.getText('UTF-8')
         def configText = oilsConfig.getText('UTF-8')
+        def appSourceText = rootProject.file('../src/App.tsx').getText('UTF-8')
         if (!indexText.contains('window.__OILS_APP__=true') ||
             !indexText.contains("history.replaceState(history.state,'','/oils'") ||
             indexText.contains('id="seo-prerender"') ||
             indexText.contains('id="splash-screen"') ||
             !configText.contains('"appId": "com.almasria.oils"') ||
-            !configText.contains('"appStartPath": "/oils"')) {
-            throw new GradleException('Oils shell validation failed: refusing to package the main storefront.')
+            !configText.contains('"appStartPath": "/oils"') ||
+            !appSourceText.contains('isNativeShell() && !isStandaloneOilsApp()')) {
+            throw new GradleException('Oils isolation validation failed: refusing to package any main-app launch UI.')
         }
     }
 }
@@ -51,8 +53,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
         // أول نسخة من تطبيق «المصرية زيوت جملة» = 1 (versionName 1.0.0)
-        versionCode 4
-        versionName "1.0.3"
+        versionCode 5
+        versionName "1.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
