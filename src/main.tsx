@@ -111,10 +111,7 @@ const registerServiceWorkerUpdateChecks = () => {
   return () => {};
 };
 
-if (!enforceCanonicalHost()) {
-  const disposeLazyImportRecovery = setupLazyImportRecovery();
-  const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
-
+const bootReactApp = () => {
   createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <App />
@@ -129,6 +126,36 @@ if (!enforceCanonicalHost()) {
     // Fallback if load event doesn't fire
     setTimeout(removeSplash, 2000);
   }
+};
+
+/**
+ * تطبيق «جركن» المستقل (com.almasria.oils) يُبنى من نفس الكود.
+ * لما يشتغل جوه غلافه الأصلي، بنوجّه مباشرة إلى /oils بدل الصفحة الرئيسية.
+ */
+const applyOilsVariantBootRoute = async () => {
+  if (!isNativePlatform()) return;
+  try {
+    const { App } = await import("@capacitor/app");
+    const info = await Promise.race([
+      App.getInfo(),
+      new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 2000)),
+    ]);
+    if (
+      info?.id === "com.almasria.oils" &&
+      !window.location.pathname.startsWith("/oils")
+    ) {
+      window.history.replaceState({}, "", "/oils");
+    }
+  } catch {
+    /* ignore — default boot route */
+  }
+};
+
+if (!enforceCanonicalHost()) {
+  const disposeLazyImportRecovery = setupLazyImportRecovery();
+  const disposeServiceWorkerListeners = registerServiceWorkerUpdateChecks();
+
+  void applyOilsVariantBootRoute().then(bootReactApp);
 
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {

@@ -1,0 +1,106 @@
+apply plugin: 'com.android.application'
+
+// توقيع إصدار «جركن»: نفس ملف المفتاح almasria-upload.jks المستخدم للتطبيق الرئيسي
+// بيانات المفتاح في android-oils/keystore.properties (غير مرفوع على Git)
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+def requiredSigningProperties = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+def hasCompleteReleaseSigning = keystorePropertiesFile.exists() && requiredSigningProperties.every {
+    keystoreProperties[it]?.toString()?.trim()
+}
+
+android {
+    namespace = "com.almasria.oils"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.almasria.oils"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
+        // أول نسخة من تطبيق «جركن» = 1 (versionName 1.0.0)
+        versionCode 1
+        versionName "1.0.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            if (hasCompleteReleaseSigning) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (hasCompleteReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// لا تسمح أبداً بإنتاج نسخة Release غير موقعة ورفعها بالخطأ إلى Google Play.
+gradle.taskGraph.whenReady { graph ->
+    def requestsRelease = graph.allTasks.any { task ->
+        task.path == ':app:bundleRelease' || task.path == ':app:assembleRelease'
+    }
+
+    if (requestsRelease) {
+        if (!keystorePropertiesFile.exists()) {
+            throw new GradleException('Release signing is missing: create android-oils/keystore.properties before building.')
+        }
+
+        def missingProperties = requiredSigningProperties.findAll {
+            !keystoreProperties[it]?.toString()?.trim()
+        }
+        if (!missingProperties.isEmpty()) {
+            throw new GradleException('Release signing configuration is incomplete. Missing: ' + missingProperties.join(', '))
+        }
+
+        def configuredStoreFile = file(keystoreProperties['storeFile'])
+        if (!configuredStoreFile.exists()) {
+            throw new GradleException('Release keystore file was not found at the configured storeFile path.')
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
