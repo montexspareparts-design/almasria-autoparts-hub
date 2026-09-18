@@ -58,6 +58,7 @@ const StaffAccountSettings = lazy(() => import("@/components/admin/StaffAccountS
 // AdminNewOrderAlert is now mounted globally in App.tsx
 const AdminSupportRequestAlert = lazy(() => import("@/components/admin/AdminSupportRequestAlert"));
 const AdminNotificationPhones = lazy(() => import("@/components/AdminNotificationPhones"));
+const StaffPushEnableBanner = lazy(() => import("@/components/admin/StaffPushEnableBanner"));
 const ViewAsEmployeeDialog = lazy(() => import("@/components/admin/ViewAsEmployeeDialog"));
 const AdminWhatsAppDeliveryStatus = lazy(() => import("@/components/admin/AdminWhatsAppDeliveryStatus"));
 const AdminClientAccountAttempts = lazy(() => import("@/components/admin/AdminClientAccountAttempts"));
@@ -1125,6 +1126,11 @@ const AdminDashboard = () => {
           </div>
         </div>
       </header>
+
+      <Suspense fallback={null}>
+        <StaffPushEnableBanner />
+      </Suspense>
+
 
       {/* Lazy-mount the picker dialog only when the admin opens it */}
       {isRealAdmin && viewAsOpen && (
