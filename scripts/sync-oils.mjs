@@ -108,6 +108,7 @@ const oilsShellIsValid =
 
 const appSource = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const oilsUiIsolationIsValid =
+  appSource.includes("isStandaloneOilsApp() ? <StandaloneOilsRoot /> : <MainAppRoot />") &&
   appSource.includes("isNativeShell() && !isStandaloneOilsApp()") &&
   appSource.includes('isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <Index />') &&
   appSource.includes('isStandaloneOilsApp() ? <Navigate to="/oils" replace /> : <NotFound />');

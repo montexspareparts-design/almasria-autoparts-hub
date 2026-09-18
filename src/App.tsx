@@ -190,7 +190,36 @@ const AuthCallbackRoute = () => {
   return <PageLoader />;
 };
 
-const App = () => (
+const StandaloneOilsRoot = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <LanguageProvider>
+            <AuthProvider>
+              <CartProvider>
+                <GarageProvider>
+                  <PermissionRequestProvider>
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/oils/*" element={<OilsApp />} />
+                        <Route path="*" element={<Navigate to="/oils" replace />} />
+                      </Routes>
+                    </Suspense>
+                  </PermissionRequestProvider>
+                </GarageProvider>
+              </CartProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
+);
+
+const MainAppRoot = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -322,5 +351,7 @@ const App = () => (
     </QueryClientProvider>
   </HelmetProvider>
 );
+
+const App = () => isStandaloneOilsApp() ? <StandaloneOilsRoot /> : <MainAppRoot />;
 
 export default App;

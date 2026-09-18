@@ -38,6 +38,7 @@ def verifyOilsWeb = tasks.register('verifyOilsWeb') {
             indexText.contains('id="splash-screen"') ||
             !configText.contains('"appId": "com.almasria.oils"') ||
             !configText.contains('"appStartPath": "/oils"') ||
+            !appSourceText.contains('isStandaloneOilsApp() ? <StandaloneOilsRoot /> : <MainAppRoot />') ||
             !appSourceText.contains('isNativeShell() && !isStandaloneOilsApp()')) {
             throw new GradleException('Oils isolation validation failed: refusing to package any main-app launch UI.')
         }
