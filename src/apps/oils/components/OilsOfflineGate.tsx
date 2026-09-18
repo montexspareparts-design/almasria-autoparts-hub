@@ -2,17 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { WifiOff } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
 /** فحص حقيقي للاتصال — navigator.onLine قد يكون صحيحًا دون إنترنت فعلي (واي فاي بلا نت). */
 const ping = async (): Promise<boolean> => {
   if (typeof navigator !== "undefined" && !navigator.onLine) return false;
-  if (!SUPABASE_URL) return true;
+  if (!SUPABASE_URL || !SUPABASE_KEY) return true;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
-      method: "HEAD",
+      method: "GET",
       cache: "no-store",
+      headers: { apikey: SUPABASE_KEY },
       signal: controller.signal,
     });
     clearTimeout(timer);
