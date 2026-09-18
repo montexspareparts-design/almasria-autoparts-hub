@@ -118,6 +118,27 @@ Deno.serve(async (req) => {
           console.error(`Geidea: warehouse notification failed for ${orderNumber}`);
         }
 
+        // Device push for all staff — independent of WhatsApp/Meta availability.
+        try {
+          const isOils = String((order as any).source ?? "") === "oils";
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-staff-push`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              title: isOils ? "🛢️ طلب زيوت مدفوع" : "✅ طلب مدفوع جديد",
+              message: `طلب ${orderNumber} • ${Number(order.total_amount).toLocaleString("ar-EG")} ج.م — برجاء التجهيز`,
+              url: "/admin?section=orders",
+              tag: `paid-order-${order.id}`,
+            }),
+          });
+        } catch (pushErr) {
+          console.error(`Geidea: staff push failed for ${orderNumber}:`, String(pushErr));
+        }
+
+
         const [{ data: fullOrder }, { data: profile }] = await Promise.all([
           supabase
             .from("orders")
