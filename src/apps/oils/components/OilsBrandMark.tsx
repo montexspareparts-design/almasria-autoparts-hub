@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/oils/almasria-oils-wholesale-logo.jpg.asset.json";
+import logo from "@/assets/oils/almasria-oils-wholesale-transparent.png";
 
 interface OilsBrandMarkProps {
   className?: string;
@@ -7,7 +7,7 @@ interface OilsBrandMarkProps {
 
 const OilsBrandMark = ({ className = "" }: OilsBrandMarkProps) => (
   <div className={`oils-brand-lockup ${className}`} aria-label="المصرية زيوت جملة">
-    <img className="oils-brand-logo" src={logoAsset.url} alt="المصرية زيوت جملة — موزع معتمد لزيوت تويوتا الأصلية" loading="eager" decoding="async" />
+    <img className="oils-brand-logo" src={logo} alt="المصرية زيوت جملة — موزع معتمد لزيوت تويوتا الأصلية" loading="eager" decoding="async" />
   </div>
 );
 

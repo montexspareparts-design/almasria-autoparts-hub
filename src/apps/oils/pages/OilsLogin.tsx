@@ -50,7 +50,7 @@ const OilsLogin = () => {
       </div>
 
       <form onSubmit={handleLogin} className="oils-login-sheet">
-        <h2>دخول حساب الجملة</h2>
+        <h2>دخول المصرية زيوت جملة</h2>
         <div>
           <label className="oils-label" htmlFor="oils-email">البريد الإلكتروني</label>
           <div className="relative">
@@ -101,7 +101,7 @@ const OilsLogin = () => {
 
         <button type="submit" className="oils-btn-primary" disabled={loading}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-          دخول حساب الجملة
+          دخول المصرية زيوت جملة
         </button>
         <div className="oils-join-row">
           <span>لسه مش تاجر معانا؟</span>

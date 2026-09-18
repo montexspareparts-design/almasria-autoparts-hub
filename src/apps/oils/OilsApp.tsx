@@ -121,7 +121,7 @@ const OilsApp = () => {
           <Droplets className="w-10 h-10 mx-auto mb-3" style={{ color: "hsl(var(--oils-accent))" }} />
           <h2 className="text-[16px] font-extrabold mb-2">حسابك قيد المراجعة</h2>
           <p className="text-[12px] leading-relaxed" style={{ color: "hsl(var(--oils-muted))" }}>
-            تطبيق جملة الزيوت مخصص للتجار المعتمدين. سيتم تفعيل حسابك خلال 48 ساعة، أو تواصل معنا للاستعجال.
+            تطبيق المصرية زيوت جملة مخصص للتجار المعتمدين. سيتم تفعيل حسابك خلال 48 ساعة، أو تواصل معنا للاستعجال.
           </p>
         </div>
       </div>
