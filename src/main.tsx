@@ -6,7 +6,7 @@ import { installMobileErrorReporter } from "@/lib/mobileErrorReport";
 import { installGlobalErrorDiagnostics } from "@/lib/runtimeDiagnostics";
 import { initHighContrastEarly } from "@/hooks/useHighContrast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { disableNativeNotificationSurfaces, isNativePlatform, registerDeepLinkListener } from "@/lib/native";
+import { disableNativeNotificationSurfaces, isNativePlatform, registerDeepLinkListener, setAppUrlScheme } from "@/lib/native";
 import { initNativeUiPreview, initNativeChrome } from "@/lib/nativeShell";
 import { initAnalytics } from "@/lib/analytics";
 
