@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-// توقيع إصدار «جركن»: نفس ملف المفتاح almasria-upload.jks المستخدم للتطبيق الرئيسي
+// توقيع إصدار «المصرية زيوت جملة»: نفس ملف المفتاح almasria-upload.jks المستخدم للتطبيق الرئيسي
 // بيانات المفتاح في android-oils/keystore.properties (غير مرفوع على Git)
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
@@ -20,7 +20,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // ⚠️ مهم: لازم تزوّد versionCode بمقدار 1 قبل كل رفع لـ Google Play.
-        // أول نسخة من تطبيق «جركن» = 1 (versionName 1.0.0)
+        // أول نسخة من تطبيق «المصرية زيوت جملة» = 1 (versionName 1.0.0)
         versionCode 1
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

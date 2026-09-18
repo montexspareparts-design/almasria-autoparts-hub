@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import logoAsset from "@/assets/oils/almasria-oils-logo.png.asset.json";
+import logoAsset from "@/assets/oils/almasria-oils-wholesale-logo.jpg.asset.json";
 
 const INTRO_KEY = "oils_intro_shown_v1";
 
@@ -24,11 +24,11 @@ const OilsIntro = () => {
       <div className="oils-intro-rings" aria-hidden="true"><span /><span /><span /></div>
       <div className="oils-intro-stage">
         <div className="oils-intro-logo">
-          <img src={logoAsset.url} alt="المصرية للزيوت" />
+          <img src={logoAsset.url} alt="المصرية زيوت جملة" />
           <span className="oils-intro-sheen" aria-hidden="true" />
         </div>
         <div className="oils-intro-copy">
-          <strong>المصرية للزيوت</strong>
+          <strong>المصرية زيوت جملة</strong>
           <span>موزع معتمد لزيوت تويوتا الأصلية</span>
         </div>
         <div className="oils-intro-rule" aria-hidden="true"><i /></div>

@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 /**
- * Capacitor configuration for the STANDALONE oils app (تطبيق «جركن»).
+ * Capacitor configuration for the STANDALONE oils app (تطبيق «المصرية زيوت جملة»).
  *
  * This is a SEPARATE app published next to the main parts app:
  *   - Main app : com.almasria.autoparts  (android/ — capacitor.config.ts)
@@ -16,7 +16,7 @@ const OILS_CARBON = '#0A0A0C';
 
 const config: CapacitorConfig = {
   appId: 'com.almasria.oils',
-  appName: 'جركن',
+  appName: 'المصرية زيوت جملة',
   webDir: 'dist',
   ios: {
     backgroundColor: OILS_WHITE,
