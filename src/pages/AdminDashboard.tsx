@@ -1127,6 +1127,11 @@ const AdminDashboard = () => {
         </div>
       </header>
 
+      <Suspense fallback={null}>
+        <StaffPushEnableBanner />
+      </Suspense>
+
+
       {/* Lazy-mount the picker dialog only when the admin opens it */}
       {isRealAdmin && viewAsOpen && (
         <Suspense fallback={null}>
