@@ -8,6 +8,7 @@ import { useOilsDeviceLock } from "@/lib/oils/useOilsDeviceLock";
 import OilsDeviceBlocked from "./components/OilsDeviceBlocked";
 import OilsIntro from "./components/OilsIntro";
 import OilsMurshid from "./components/OilsMurshid";
+import OilsOfflineGate from "./components/OilsOfflineGate";
 import "./theme.css";
 
 const OilsHome = lazy(() => import("./pages/OilsHome"));
