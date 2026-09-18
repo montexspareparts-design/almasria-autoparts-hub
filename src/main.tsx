@@ -134,6 +134,13 @@ const bootReactApp = () => {
  */
 const applyOilsVariantBootRoute = async () => {
   if (!isNativePlatform()) return;
+  // علّامة مزروعة في حزمة الزيوت (sync-oils.mjs) — توجيه فوري بدون انتظار getInfo
+  if ((window as unknown as { __OILS_APP__?: boolean }).__OILS_APP__) {
+    if (!window.location.pathname.startsWith("/oils")) {
+      window.history.replaceState({}, "", "/oils");
+    }
+    return;
+  }
   try {
     const { App } = await import("@capacitor/app");
     const info = await Promise.race([

@@ -1,6 +1,6 @@
 // Copies the built web app into the standalone "المصرية زيوت جملة" Android project.
 // Usage: node scripts/sync-oils.mjs   (run AFTER `npm run build`)
-import { cpSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { cpSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -15,6 +15,16 @@ if (!existsSync(dist)) {
 
 rmSync(assets, { recursive: true, force: true });
 cpSync(dist, assets, { recursive: true });
+
+// علّامة مضمونة داخل حزمة الزيوت: التطبيق يفتح /oils فورًا مهما حصل
+const indexPath = resolve(assets, "index.html");
+const html = readFileSync(indexPath, "utf8");
+if (!html.includes("__OILS_APP__")) {
+  writeFileSync(
+    indexPath,
+    html.replace(/<head[^>]*>/i, (m) => `${m}\n<script>window.__OILS_APP__=true;</script>`)
+  );
+}
 
 const config = {
   appId: "com.almasria.oils",
