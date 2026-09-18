@@ -1,4 +1,4 @@
-// Copies the built web app into the standalone "جركن" Android project.
+// Copies the built web app into the standalone "المصرية زيوت جملة" Android project.
 // Usage: node scripts/sync-oils.mjs   (run AFTER `npm run build`)
 import { cpSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -18,7 +18,7 @@ cpSync(dist, assets, { recursive: true });
 
 const config = {
   appId: "com.almasria.oils",
-  appName: "جركن",
+  appName: "المصرية زيوت جملة",
   webDir: "dist",
   ios: {
     backgroundColor: "#FFFFFF",
@@ -56,4 +56,4 @@ const config = {
 };
 
 writeFileSync(resolve(assetsDir, "capacitor.config.json"), JSON.stringify(config, null, "\t") + "\n");
-console.log("✔ جركن: dist copied to android-oils + capacitor.config.json written");
+console.log("✔ المصرية زيوت جملة: dist copied to android-oils + capacitor.config.json written");
