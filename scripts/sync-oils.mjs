@@ -57,3 +57,85 @@ const config = {
 
 writeFileSync(resolve(assetsDir, "capacitor.config.json"), JSON.stringify(config, null, "\t") + "\n");
 console.log("✔ المصرية زيوت جملة: dist copied to android-oils + capacitor.config.json written");
+
+// --- Ensure the cordova plugins shim exists (it is git-ignored, so regenerate it) ---
+import { mkdirSync } from "node:fs";
+const cordovaDir = resolve(root, "android-oils/capacitor-cordova-android-plugins");
+mkdirSync(resolve(cordovaDir, "src/main/java"), { recursive: true });
+mkdirSync(resolve(cordovaDir, "src/main/res"), { recursive: true });
+
+writeFileSync(resolve(cordovaDir, "cordova.variables.gradle"), `// GENERATED FILE
+ext {
+  cdvMinSdkVersion = project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+  cdvPluginPostBuildExtras = []
+  cordovaConfig = [:]
+}
+`);
+
+writeFileSync(resolve(cordovaDir, "build.gradle"), `ext {
+    androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.7.1'
+    cordovaAndroidVersion = project.hasProperty('cordovaAndroidVersion') ? rootProject.ext.cordovaAndroidVersion : '14.0.1'
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    namespace = "capacitor.cordova.android.plugins"
+    compileSdk = project.hasProperty('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 36
+    defaultConfig {
+        minSdkVersion project.hasProperty('minSdkVersion') ? rootProject.ext.minSdkVersion : 24
+        targetSdkVersion project.hasProperty('targetSdkVersion') ? rootProject.ext.targetSdkVersion : 36
+        versionCode 1
+        versionName "1.0"
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    flatDir{
+        dirs 'src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'src/main/libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:\$androidxAppCompatVersion"
+    implementation "org.apache.cordova:framework:\$cordovaAndroidVersion"
+}
+
+apply from: "cordova.variables.gradle"
+
+for (def func : cdvPluginPostBuildExtras) {
+    func()
+}
+`);
+
+writeFileSync(resolve(cordovaDir, "src/main/AndroidManifest.xml"), `<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:amazon="http://schemas.amazon.com/apk/res/android">
+<application  >
+
+</application>
+
+</manifest>
+`);
+
+console.log("✔ capacitor-cordova-android-plugins regenerated");
