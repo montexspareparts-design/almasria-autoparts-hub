@@ -21,6 +21,22 @@
   font-family: "Cairo", "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
+/* Standalone Android app: hide every scrollbar like a native app */
+html.oils-standalone,
+html.oils-standalone body,
+html.oils-standalone * {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+html.oils-standalone::-webkit-scrollbar,
+html.oils-standalone body::-webkit-scrollbar,
+html.oils-standalone *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
 .oils-app button, .oils-app input { font: inherit; }
 .oils-app button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .oils-num { font-variant-numeric: tabular-nums; }

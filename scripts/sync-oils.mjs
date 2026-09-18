@@ -34,6 +34,7 @@ html = html.replace(
 
 const oilsBootScript = `<script>
 window.__OILS_APP__=true;
+document.documentElement.classList.add('oils-standalone');
 (function(){
   if(!location.pathname.startsWith('/oils')){
     history.replaceState(history.state,'','/oils'+location.search+location.hash);
