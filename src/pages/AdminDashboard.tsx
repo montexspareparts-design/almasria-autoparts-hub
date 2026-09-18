@@ -1021,9 +1021,6 @@ const AdminDashboard = () => {
       <Suspense fallback={null}>
         <AdminSupportRequestAlert />
       </Suspense>
-      <Suspense fallback={null}>
-        <StaffPushEnableBanner />
-      </Suspense>
       {/* Header */}
       <header className="bg-gradient-to-l from-secondary via-secondary to-[hsl(var(--secondary)/0.95)] backdrop-blur-xl border-b border-border/20 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between h-14 px-4 lg:px-5">
