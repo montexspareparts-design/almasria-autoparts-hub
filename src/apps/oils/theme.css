@@ -1,3 +1,62 @@
+/* حاجز انقطاع الاتصال */
+.oils-offline {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: hsl(var(--oils-bg) / 0.97);
+  backdrop-filter: blur(6px);
+}
+.oils-offline-card {
+  width: 100%;
+  max-width: 320px;
+  padding: 28px 22px;
+  border-radius: 26px;
+  text-align: center;
+  background: hsl(var(--oils-card));
+  box-shadow: 0 24px 60px hsl(var(--oils-accent-deep) / 0.12);
+}
+.oils-offline-icon {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: hsl(var(--oils-card));
+  background: hsl(var(--oils-danger));
+  animation: oils-offline-pulse 1.8s ease-in-out infinite;
+}
+@keyframes oils-offline-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.oils-offline-card h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: hsl(var(--oils-ink));
+}
+.oils-offline-card p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: hsl(var(--oils-muted));
+  margin-bottom: 18px;
+}
+.oils-offline-card button {
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  color: hsl(var(--oils-card));
+  background: hsl(var(--oils-ink));
+}
+.oils-offline-card button:disabled { opacity: 0.6; }
+
 .oils-app {
   /* Premium Automotive Luxury — obsidian, royal gold, ivory, restrained burgundy */
   --oils-bg: 42 27% 95%;
