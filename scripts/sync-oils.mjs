@@ -115,7 +115,8 @@ const oilsShellIsValid =
   !preparedHtml.includes('id="seo-prerender"') &&
   !preparedHtml.includes('id="splash-screen"') &&
   preparedConfig?.appId === "com.almasria.oils" &&
-  preparedConfig?.server?.appStartPath === "/oils";
+  preparedConfig?.server?.appStartPath === "/oils" &&
+  preparedConfig?.server?.url === "https://almasriaautoparts.com/oils";
 
 const appSource = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const oilsUiIsolationIsValid =
