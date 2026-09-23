@@ -19,7 +19,16 @@ const config: CapacitorConfig = {
   appName: 'المصرية زيوت جملة',
   webDir: 'dist',
   server: {
+    // تحديثات فورية: الواجهة تُحمَّل من السيرفر مباشرة.
+    url: 'https://almasriaautoparts.com/oils',
     appStartPath: '/oils',
+    cleartext: false,
+    androidScheme: 'https',
+    allowNavigation: [
+      'almasriaautoparts.com',
+      'www.almasriaautoparts.com',
+      'almasria-autoparts-hub.lovable.app',
+    ],
   },
   ios: {
     backgroundColor: OILS_WHITE,
