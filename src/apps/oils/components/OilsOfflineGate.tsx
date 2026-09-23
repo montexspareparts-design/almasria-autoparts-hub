@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { WifiOff } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-/** فحص حقيقي للاتصال — navigator.onLine قد يكون صحيحًا دون إنترنت فعلي (واي فاي بلا نت). */
+/**
+ * فحص اتصال متسامح: لو المتصفح/الويب فيو قايل إن فيه شبكة، نعتبره متصلًا.
+ * الفحص الشبكي مجرد تأكيد إضافي، وفشله وحده لا يكفي لإظهار الشاشة.
+ */
 const ping = async (): Promise<boolean> => {
-  if (typeof navigator !== "undefined" && !navigator.onLine) return false;
   if (!SUPABASE_URL || !SUPABASE_KEY) return true;
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
+    const timer = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, {
       method: "GET",
       cache: "no-store",
@@ -18,35 +20,52 @@ const ping = async (): Promise<boolean> => {
       signal: controller.signal,
     });
     clearTimeout(timer);
-    return res.ok;
+    return res.ok || res.status < 500;
   } catch {
     return false;
   }
 };
 
-/**
- * حاجز انقطاع الاتصال — يظهر شاشة كاملة عند فقدان الإنترنت
- * ويتحقق فعليًا من الرجوع قبل إخفاء نفسه (مهم أثناء الدفع).
- */
+/** لا تظهر الشاشة إلا بعد فشل متتالٍ مؤكد + المتصفح نفسه مش شايف شبكة. */
+const FAILS_BEFORE_BLOCK = 3;
+
 const OilsOfflineGate = () => {
   const [offline, setOffline] = useState(false);
   const [checking, setChecking] = useState(false);
+  const fails = useRef(0);
 
   const verify = useCallback(async () => {
     setChecking(true);
+    const browserOnline = typeof navigator === "undefined" || navigator.onLine !== false;
     const ok = await ping();
-    setOffline(!ok);
+
+    if (ok) {
+      fails.current = 0;
+      setOffline(false);
+    } else if (!browserOnline) {
+      // الجهاز نفسه مش متصل → نعرض فورًا
+      setOffline(true);
+    } else {
+      fails.current += 1;
+      setOffline(fails.current >= FAILS_BEFORE_BLOCK);
+    }
     setChecking(false);
   }, []);
 
   useEffect(() => {
     void verify();
-    const goOffline = () => setOffline(true);
-    const goOnline = () => void verify();
+    const goOffline = () => {
+      // حدث offline من الويب فيو غير موثوق بمفرده — نتحقق فعليًا
+      void verify();
+    };
+    const goOnline = () => {
+      fails.current = 0;
+      setOffline(false);
+      void verify();
+    };
     window.addEventListener("offline", goOffline);
     window.addEventListener("online", goOnline);
-    // فحص دوري خفيف كخط أمان لو الأحداث لم تُطلق داخل الويب فيو
-    const interval = setInterval(() => void verify(), 15000);
+    const interval = setInterval(() => void verify(), 20000);
     return () => {
       window.removeEventListener("offline", goOffline);
       window.removeEventListener("online", goOnline);
@@ -66,7 +85,15 @@ const OilsOfflineGate = () => {
         <p>
           تأكد من اتصالك بالشبكة أو بيانات الموبايل — التطبيق هيكمل تلقائيًا أول ما يرجع الاتصال.
         </p>
-        <button type="button" onClick={() => void verify()} disabled={checking}>
+        <button
+          type="button"
+          onClick={() => {
+            fails.current = 0;
+            setOffline(false);
+            void verify();
+          }}
+          disabled={checking}
+        >
           {checking ? "جاري التحقق..." : "إعادة المحاولة"}
         </button>
       </div>
