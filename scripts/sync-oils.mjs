@@ -55,7 +55,17 @@ const config = {
   // Native-level routing: Android opens the oils app directly instead of
   // relying on JavaScript to redirect from the main storefront after launch.
   server: {
+    // التحديثات الفورية: التطبيق يحمّل الواجهة من السيرفر مباشرة،
+    // فأي إصلاح يظهر للعميل فورًا من غير رفع نسخة جديدة على Play.
+    url: "https://almasriaautoparts.com/oils",
     appStartPath: "/oils",
+    cleartext: false,
+    androidScheme: "https",
+    allowNavigation: [
+      "almasriaautoparts.com",
+      "www.almasriaautoparts.com",
+      "almasria-autoparts-hub.lovable.app",
+    ],
   },
   ios: {
     backgroundColor: "#FFFFFF",
@@ -105,7 +115,8 @@ const oilsShellIsValid =
   !preparedHtml.includes('id="seo-prerender"') &&
   !preparedHtml.includes('id="splash-screen"') &&
   preparedConfig?.appId === "com.almasria.oils" &&
-  preparedConfig?.server?.appStartPath === "/oils";
+  preparedConfig?.server?.appStartPath === "/oils" &&
+  preparedConfig?.server?.url === "https://almasriaautoparts.com/oils";
 
 const appSource = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const oilsUiIsolationIsValid =
