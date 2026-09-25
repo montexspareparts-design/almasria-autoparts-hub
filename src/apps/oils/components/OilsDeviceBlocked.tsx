@@ -1,6 +1,7 @@
 import { LogOut, ShieldAlert, Smartphone } from "lucide-react";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { openWhatsApp } from "@/lib/native";
 
 const OILS_WA = "201039313427";
 
@@ -21,7 +22,7 @@ const OilsDeviceBlocked = ({ boundLabel }: Props) => {
           {boundLabel ? ` (${boundLabel})` : ""}.
         </p>
         <div className="oils-device-block-note"><Smartphone /> لتغيير الجهاز، تواصل مع إدارة الزيت على واتساب.</div>
-        <a className="oils-btn-primary oils-device-block-wa" href={waLink} target="_blank" rel="noreferrer">
+        <a className="oils-btn-primary oils-device-block-wa" href={waLink} target="_blank" rel="noreferrer" onClick={(e) => { e.preventDefault(); void openWhatsApp(waLink); }}>
           <MessageCircle /> <span>واتساب إدارة الزيت</span>
         </a>
         <button type="button" className="oils-device-block-out" onClick={() => void supabase.auth.signOut()}>

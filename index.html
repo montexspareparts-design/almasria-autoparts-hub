@@ -1,6 +1,24 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
   <head>
+    <script>
+      // تطبيق «المصرية زيوت جملة» (com.almasria.oils) يحمّل الموقع مباشرة —
+      // نتعرّف عليه من علامة الـ User-Agent ونعزله فورًا عن واجهة الموقع.
+      (function () {
+        try {
+          if (/AlmasriaOilsApp/.test(navigator.userAgent || '')) {
+            window.__OILS_APP__ = true;
+            document.documentElement.classList.add('oils-standalone');
+            var s = document.createElement('style');
+            s.textContent = 'html.oils-standalone #splash-screen,html.oils-standalone #seo-prerender{display:none!important}';
+            document.head.appendChild(s);
+            if (location.pathname.indexOf('/oils') !== 0) {
+              history.replaceState(history.state, '', '/oils' + location.search + location.hash);
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7R5BERCHRM"></script>
     <script>

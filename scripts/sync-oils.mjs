@@ -52,19 +52,21 @@ const config = {
   appId: "com.almasria.oils",
   appName: "المصرية زيوت جملة",
   webDir: "dist",
+  // علامة ثابتة يتعرّف بها الموقع على تطبيق الزيوت (index.html)
+  appendUserAgent: "AlmasriaOilsApp",
   // Native-level routing: Android opens the oils app directly instead of
   // relying on JavaScript to redirect from the main storefront after launch.
   server: {
     // التحديثات الفورية: التطبيق يحمّل الواجهة من السيرفر مباشرة،
     // فأي إصلاح يظهر للعميل فورًا من غير رفع نسخة جديدة على Play.
-    url: "https://almasriaautoparts.com/oils",
+    url: "https://www.almasriaautoparts.com/oils",
     appStartPath: "/oils",
     cleartext: false,
     androidScheme: "https",
     allowNavigation: [
-      "almasriaautoparts.com",
-      "www.almasriaautoparts.com",
-      "almasria-autoparts-hub.lovable.app",
+      // الدفع (جيديا + صفحات تحقق البنوك 3DS) لازم يفضل جوه التطبيق
+      // عشان العميل يرجع لصفحة النتيجة وهو مسجّل دخول.
+      "*",
     ],
   },
   ios: {
@@ -116,7 +118,8 @@ const oilsShellIsValid =
   !preparedHtml.includes('id="splash-screen"') &&
   preparedConfig?.appId === "com.almasria.oils" &&
   preparedConfig?.server?.appStartPath === "/oils" &&
-  preparedConfig?.server?.url === "https://almasriaautoparts.com/oils";
+  preparedConfig?.server?.url === "https://www.almasriaautoparts.com/oils" &&
+  preparedConfig?.appendUserAgent === "AlmasriaOilsApp";
 
 const appSource = readFileSync(resolve(root, "src/App.tsx"), "utf8");
 const oilsUiIsolationIsValid =
