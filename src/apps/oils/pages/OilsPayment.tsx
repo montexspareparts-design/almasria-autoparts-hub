@@ -22,7 +22,7 @@ const OilsPayment = () => {
   useEffect(() => {
     let active = true;
     const load = async () => {
-      if (!orderId || !user) return;
+      if (!orderId || !user) { setLoading(false); return; }
       const { data } = await supabase.from("orders").select("id, order_number, total_amount, status").eq("id", orderId).eq("user_id", user.id).maybeSingle();
       if (active) {
         setOrder(data as PaymentOrder | null);
@@ -34,6 +34,19 @@ const OilsPayment = () => {
   }, [orderId, user]);
 
   if (loading) return <main className="oils-screen oils-payment-loading"><Loader2 /></main>;
+  // طلب مدفوع بالفعل → لا نعرض زر الدفع مرة ثانية (منع الدفع المكرر)
+  if (order && ["processing", "shipped", "delivered", "paid"].includes(String(order.status).toLowerCase())) {
+    return (
+      <main className="oils-screen oils-cart-empty" dir="rtl">
+        <h1>الطلب مدفوع بالفعل ✅</h1>
+        <p>رقم الطلب {order.order_number}</p>
+        <button type="button" className="oils-btn-primary" onClick={() => navigate("/oils/account")}>متابعة الطلب من حسابي</button>
+      </main>
+    );
+  }
+  if (order && String(order.status).toLowerCase() === "cancelled") {
+    return <main className="oils-screen oils-cart-empty" dir="rtl"><h1>الطلب ده اتلغى</h1><p>ارجع للسلة واعمل طلب جديد.</p><button type="button" className="oils-btn-primary" onClick={() => navigate("/oils/cart")}>العودة للسلة</button></main>;
+  }
   if (!order) {
     return <main className="oils-screen oils-cart-empty" dir="rtl"><h1>الطلب غير متاح</h1><button type="button" className="oils-btn-primary" onClick={() => navigate("/oils/cart")}>العودة للسلة</button></main>;
   }
