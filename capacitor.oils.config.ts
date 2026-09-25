@@ -18,9 +18,11 @@ const config: CapacitorConfig = {
   appId: 'com.almasria.oils',
   appName: 'المصرية زيوت جملة',
   webDir: 'dist',
+  // علامة ثابتة يتعرّف بها الموقع على تطبيق الزيوت (index.html)
+  appendUserAgent: 'AlmasriaOilsApp',
   server: {
     // تحديثات فورية: الواجهة تُحمَّل من السيرفر مباشرة.
-    url: 'https://almasriaautoparts.com/oils',
+    url: 'https://www.almasriaautoparts.com/oils',
     appStartPath: '/oils',
     cleartext: false,
     androidScheme: 'https',
