@@ -4,7 +4,6 @@ import { ArrowRight, BadgeCheck, CreditCard, Loader2, Lock, Receipt, ShieldCheck
 import GeideaCheckout from "@/components/GeideaCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { CANONICAL_WEB_ORIGIN } from "@/lib/native";
 
 interface PaymentOrder {
   id: string;
@@ -41,7 +40,7 @@ const OilsPayment = () => {
 
   // بوابة الدفع لازم ترجّع المستخدم على الدومين العام دائمًا — روابط المعاينة
   // بتفتح صفحة بيضاء لما جيديا تفتحها في متصفح خارجي.
-  const base = CANONICAL_WEB_ORIGIN;
+  const base = "https://www.almasriaautoparts.com";
   const returnUrl = `${base}/oils/payment-result?provider=geidea&merchant_order_id=${encodeURIComponent(order.order_number)}`;
 
   return (

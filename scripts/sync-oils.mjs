@@ -64,9 +64,9 @@ const config = {
     cleartext: false,
     androidScheme: "https",
     allowNavigation: [
-      "almasriaautoparts.com",
-      "www.almasriaautoparts.com",
-      "almasria-autoparts-hub.lovable.app",
+      // الدفع (جيديا + صفحات تحقق البنوك 3DS) لازم يفضل جوه التطبيق
+      // عشان العميل يرجع لصفحة النتيجة وهو مسجّل دخول.
+      "*",
     ],
   },
   ios: {
