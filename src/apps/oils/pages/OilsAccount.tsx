@@ -3,6 +3,7 @@ import { Award, FileText, LogOut, UserCircle2, Wallet } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreditStatement } from "@/lib/oils/useCreditStatement";
 import CreditMeter from "../components/CreditMeter";
+import OilsMyOrders from "../components/OilsMyOrders";
 import { supabase } from "@/integrations/supabase/client";
 
 const fmt = (v: number) => v.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -45,6 +46,8 @@ const OilsAccount = () => {
           </strong>
         </div>
       </div>
+
+      <OilsMyOrders />
 
       {/* الفواتير */}
       <section>
@@ -89,7 +92,7 @@ const OilsAccount = () => {
       <button
         type="button"
         className="oils-btn-ghost w-full"
-        onClick={async () => { await supabase.auth.signOut(); navigate("/oils/login", { replace: true }); }}
+        onClick={async () => { await supabase.auth.signOut(); navigate("/oils", { replace: true }); }}
       >
         <LogOut className="w-4 h-4" />
         تسجيل الخروج
