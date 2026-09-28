@@ -16,6 +16,8 @@ const OilsProductDetail = () => {
   const { addItem } = useDealerCart();
   const product = products.find((item) => item.id === productId);
   const [qty, setQty] = useState(1);
+  const minQty = Math.max(1, product?.min_order_qty || 1);
+  const maxQty = Math.max(minQty, product?.stock_quantity || minQty);
   const [added, setAdded] = useState(false);
   const discounts = useMemo(() => (product ? discountsFor(product) : []), [discountsFor, product]);
 
@@ -36,7 +38,7 @@ const OilsProductDetail = () => {
 
   const handleAdd = async () => {
     if (outOfStock) return;
-    await addItem(product.id, qty);
+    await addItem(product.id, Math.min(maxQty, Math.max(minQty, qty)));
     void haptic("medium");
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
@@ -49,7 +51,7 @@ const OilsProductDetail = () => {
           <ArrowRight />
         </button>
         <span className="oils-detail-brand">{product.brand || "ALMASRIA OILS"}</span>
-        <button type="button" className="oils-circle-button oils-circle-button--dark" aria-label="السلة" onClick={() => navigate("/dealer?tab=cart")}>
+        <button type="button" className="oils-circle-button oils-circle-button--dark" aria-label="السلة" onClick={() => navigate("/oils/cart")}>
           <ShoppingBag />
         </button>
       </header>
@@ -86,9 +88,9 @@ const OilsProductDetail = () => {
             <strong className="oils-num">{fmt(unitPrice)}</strong><span>ج.م / قطعة</span>
           </div>
           <div className="oils-qty-control">
-            <button type="button" aria-label="زيادة الكمية" onClick={() => setQty((value) => value + 1)}><Plus /></button>
+            <button type="button" aria-label="زيادة الكمية" onClick={() => setQty((value) => Math.min(maxQty, Math.max(minQty, value + 1)))}><Plus /></button>
             <b className="oils-num">{qty}</b>
-            <button type="button" aria-label="تقليل الكمية" onClick={() => setQty((value) => Math.max(1, value - 1))}><Minus /></button>
+            <button type="button" aria-label="تقليل الكمية" onClick={() => setQty((value) => Math.max(minQty, value - 1))}><Minus /></button>
           </div>
         </div>
 

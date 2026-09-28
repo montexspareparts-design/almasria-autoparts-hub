@@ -6,7 +6,10 @@
       // نتعرّف عليه من علامة الـ User-Agent ونعزله فورًا عن واجهة الموقع.
       (function () {
         try {
-          if (/AlmasriaOilsApp/.test(navigator.userAgent || '')) {
+          var cap = window.Capacitor;
+          var nativeOnSite = !!(cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform()) &&
+            /(^|\.)almasriaautoparts\.com$/.test(location.hostname);
+          if (/AlmasriaOilsApp/.test(navigator.userAgent || '') || nativeOnSite) {
             window.__OILS_APP__ = true;
             document.documentElement.classList.add('oils-standalone');
             var s = document.createElement('style');

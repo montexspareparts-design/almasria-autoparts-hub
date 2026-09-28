@@ -66,7 +66,7 @@ const OilProductCard = ({ product, discounts, canSeePrice, onAdd }: Props) => {
             <button
               type="button"
               aria-label="تقليل"
-              onClick={() => { void haptic("light"); setQty((q) => Math.max(1, q - 1)); }}
+              onClick={() => { void haptic("light"); setQty((q) => Math.max(Math.max(1, product.min_order_qty || 1), q - 1)); }}
             >
               <Minus className="w-3.5 h-3.5" />
             </button>
@@ -74,7 +74,7 @@ const OilProductCard = ({ product, discounts, canSeePrice, onAdd }: Props) => {
             <button
               type="button"
               aria-label="زيادة"
-              onClick={() => { void haptic("light"); setQty((q) => q + 1); }}
+              onClick={() => { void haptic("light"); setQty((q) => Math.min(Math.max(1, product.stock_quantity), q + 1)); }}
             >
               <Plus className="w-3.5 h-3.5" />
             </button>

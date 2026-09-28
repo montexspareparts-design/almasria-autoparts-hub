@@ -33,8 +33,8 @@ set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot"
 `android-oils\app\build\outputs\bundle\release\app-release.aab`
 
 الإصدار الحالي الصحيح بعد إصلاح بداية تطبيق الزيوت:
-- Version name: `1.0.4`
-- Version code: `5`
+- Version name: `1.0.8`
+- Version code: `9`
 
 عملية البناء تتوقف تلقائيًا ولا تُنتج ملفًا إذا وجدت شاشة التطبيق الرئيسي أو طبقة اختيار «جملة/قطاعي» داخل نسخة الزيوت.
 
