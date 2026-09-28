@@ -59,11 +59,16 @@ export interface QuantityDiscount {
 }
 
 const fetchOilProducts = async (): Promise<Omit<OilProduct, "tierPrice" | "price">[]> => {
+  // فلترة من السيرفر: جدول المنتجات أكبر من حد الـ 1000 صف الافتراضي،
+  // فالفلترة على الجهاز وحدها كانت ممكن تُسقط أصناف زيوت من الكتالوج.
+  const pinned = PINNED_OIL_PART_NUMBERS.map((p) => `"${p}"`).join(",");
   const { data, error } = await supabase
     .from("products")
     .select("id, name_ar, name_en, sku, erp_item_code, part_number, image_url, base_price, sale_price, stock_quantity, brand, min_order_qty, is_on_sale")
     .eq("is_active", true)
-    .order("name_ar");
+    .or(`name_ar.ilike.*زيت*,name_en.ilike.*oil*,part_number.in.(${pinned})`)
+    .order("name_ar")
+    .limit(2000);
   if (error) throw error;
   return (data || []).filter(
     (p) => !EXCLUDED_OIL_SKUS.has(p.sku) && isOilProduct(p.name_ar, p.name_en, p.part_number),
