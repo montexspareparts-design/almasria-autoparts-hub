@@ -86,13 +86,17 @@ export const useOilsCatalog = () => {
   });
 
   const tierPricesQuery = useQuery({
-    queryKey: ["oils-tier-prices", tier],
-    enabled: !!user && !!tier,
+    queryKey: ["oils-tier-prices", tier, productsQuery.data?.length ?? 0],
+    enabled: !!user && !!tier && !!productsQuery.data?.length,
     queryFn: async () => {
+      // نجيب أسعار أصناف الزيوت بس (جدول الأسعار أكبر من حد الـ 1000 صف)
+      const ids = (productsQuery.data || []).map((p) => p.id);
       const { data } = await supabase
         .from("product_tier_prices")
         .select("product_id, price, discount_price, min_qty_for_discount")
-        .eq("tier", tier as any);
+        .eq("tier", tier as any)
+        .in("product_id", ids)
+        .limit(2000);
       return data || [];
     },
     staleTime: 60_000,
