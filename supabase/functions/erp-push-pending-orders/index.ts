@@ -44,6 +44,10 @@ Deno.serve(async (req) => {
     const results: any[] = [];
 
     for (const order of orders || []) {
+      // Never push unpaid or empty orders — Faisal rejects them ("يوجد خطأ ما")
+      if (order.status === "awaiting_payment") continue;
+      if (!order.order_items || order.order_items.length === 0) continue;
+
       // Skip if a successful push already exists for this order
       const { data: prior } = await supabase
         .from("erp_sync_logs")
