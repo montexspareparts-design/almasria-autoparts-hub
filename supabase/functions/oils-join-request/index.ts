@@ -103,7 +103,16 @@ Deno.serve(async (req) => {
         );
       }
       console.error("createUser failed:", createErr.message);
-      return json({ error: "تعذّر إنشاء الحساب، حاول تاني." }, 500);
+      if (msg.includes("weak") || msg.includes("pwned") || msg.includes("easy to guess") || (createErr as { code?: string }).code === "weak_password") {
+        return json(
+          { error: "كلمة المرور دي ضعيفة ومعروفة — اختار كلمة أقوى فيها حروف وأرقام ومش متكررة (مثال: Masria#2026oil)." },
+          422,
+        );
+      }
+      if (msg.includes("password")) {
+        return json({ error: "كلمة المرور مش مقبولة — استخدم 8 حروف على الأقل فيها حروف وأرقام." }, 422);
+      }
+      return json({ error: "تعذّر إنشاء الحساب، حاول تاني أو كلّمنا على 01034806288." }, 500);
     }
     userId = created.user?.id ?? null;
     if (!userId) return json({ error: "تعذّر إنشاء الحساب، حاول تاني." }, 500);
