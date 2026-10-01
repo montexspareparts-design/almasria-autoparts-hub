@@ -38,7 +38,7 @@ export const BRANCHES = [
     name: "فرع أوسيم",
     city: "الجيزة",
     address: "أوسيم، الجيزة، مصر",
-    phone: "+201020412358",
+    phone: "+201153961008",
     hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
   },
   {
@@ -46,7 +46,7 @@ export const BRANCHES = [
     name: "فرع التوفيقية",
     city: "القاهرة",
     address: "التوفيقية، وسط البلد، القاهرة، مصر",
-    phone: "+201034806288",
+    phone: "+201032104861",
     hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
   },
   {
@@ -54,7 +54,7 @@ export const BRANCHES = [
     name: "فرع الأقصر",
     city: "الأقصر",
     address: "الأقصر، مصر",
-    phone: "+201020412358",
+    phone: "+201016177204",
     hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
   },
 ];
@@ -62,8 +62,8 @@ export const BRANCHES = [
 export const BUSINESS = {
   name: "المصرية جروب — Al Masria Auto Parts",
   shortName: "المصرية جروب",
-  phone: "+201020412358",
-  whatsapp: "201020412358",
+  phone: "+201032104861",
+  whatsapp: "201034806288",
   email: "info@almasriaautoparts.com",
 };
 
