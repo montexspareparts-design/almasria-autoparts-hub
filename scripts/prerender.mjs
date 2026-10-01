@@ -136,10 +136,15 @@ const productRoutes = products.map((p) => {
   const partNumber = p.part_number || "";
   const typeAr = TYPES.find((t) => t.slug === matchType(p.name_ar))?.ar;
   const fits = matchModels(p.name_ar).map((slug) => MODELS.find((m) => m.slug === slug));
-  const title = `${p.name_ar} — ${brand}${partNumber ? ` — ${partNumber}` : ""}`.slice(0, 110);
+  // Part-number-first titles: shoppers search by part number (e.g. 90915-YZZN2).
+  const pnCompact = partNumber.replace(/[\s-]/g, "");
+  const priceTxt = Number(p.base_price) > 0 ? ` بسعر ${Number(p.base_price).toFixed(0)} ج.م` : "";
+  const title = (partNumber
+    ? `${partNumber} ${p.name_ar} ${brand} أصلي${priceTxt} | المصرية`
+    : `${p.name_ar} ${brand} أصلي${priceTxt} | المصرية`).slice(0, 110);
   const waText = encodeURIComponent(`عايز أطلب: ${p.name_ar}\nكود الصنف: ${p.erp_item_code || p.sku}\n${SITE}/product/${p.sku}`);
   const description =
-    `${p.name_ar} — ${brand}. كود الصنف ${p.erp_item_code || p.sku}${partNumber ? ` وبارت نمبر ${partNumber}` : ""}. متوفر لدى المصرية جروب مع توصيل لكل محافظات مصر.`.slice(
+    `${partNumber ? `${partNumber} (${pnCompact}) ` : ""}${p.name_ar} — ${brand} أصلي${priceTxt}. ${Number(p.stock_quantity) > 0 ? "متوفر الآن" : "اطلبه"} من المصرية جروب، موزع معتمد تويوتا — شحن لكل محافظات مصر ومجاني فوق 3000 ج.م.`.slice(
       0,
       300
     );
@@ -153,7 +158,7 @@ const productRoutes = products.map((p) => {
     body: `<h1>${esc(p.name_ar)}</h1>
       <ul>
         <li>كود الصنف: ${esc(p.erp_item_code || p.sku)}</li>
-        ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
+        ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}${pnCompact !== partNumber ? ` (${esc(pnCompact)})` : ""}</li>` : ""}
         <li>العلامة: ${esc(brand)}</li>
         ${Number(p.base_price) > 0 ? `<li>السعر: ${Number(p.base_price).toFixed(2)} جنيه</li>` : ""}
         <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "غير متوفر حاليًا"}</li>
