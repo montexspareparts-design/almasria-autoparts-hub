@@ -62,6 +62,7 @@ const ModelPartTypePage = () => {
         descriptionAr={`${type.ar} تويوتا ${model.ar} (${model.en}) الأصلية في مصر من موزع معتمد: توفر فوري، أسعار محدثة يوميًا، وتوصيل لكل المحافظات خلال 48 ساعة.`}
         descriptionEn={`Genuine Toyota ${model.en} ${type.en} in Egypt from an authorized distributor — daily updated pricing and 48h nationwide delivery.`}
         canonical={canonical}
+        noindex={isEmpty}
         breadcrumbs={[
           { ar: "الرئيسية", en: "Home", url: `${SITE}/` },
           { ar: "حسب الموديل", en: "By Model", url: `${SITE}/parts-by-model` },
@@ -113,6 +114,58 @@ const ModelPartTypePage = () => {
             <li className="flex items-center gap-2"><Truck className="h-4 w-4 text-primary" /> توصيل لكل المحافظات خلال 48 ساعة</li>
           </ul>
         </header>
+
+        <section className="mt-10">
+          <h2 className="mb-4 text-xl font-semibold text-foreground">
+            {products === null ? "جارٍ تحميل المنتجات…" : `منتجات متاحة (${products.length} صنف)`}
+          </h2>
+          {isEmpty && (
+            <p className="text-muted-foreground">
+              مفيش أصناف معروضة حاليًا لـ{type.ar} {model.ar}. ابعتلنا بارت نمبر القطعة أو رقم الشاسيه ونوفرهالك.
+            </p>
+          )}
+          {products && products.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((p) => {
+                const price = Number(p.base_price ?? 0);
+                const inStock = Number(p.stock_quantity ?? 0) > 0;
+                return (
+                  <Link
+                    key={p.sku}
+                    to={`/product/${p.sku}`}
+                    className="flex gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary"
+                  >
+                    <img
+                      src={p.image_url || "/placeholder.svg"}
+                      alt={p.name_ar}
+                      loading="lazy"
+                      className="h-16 w-16 flex-shrink-0 rounded-lg bg-background object-contain"
+                    />
+                    <div className="min-w-0 text-sm">
+                      <p className="line-clamp-2 font-semibold text-foreground">{p.name_ar}</p>
+                      <p className="text-xs text-muted-foreground">
+                        كود {p.erp_item_code || p.sku}
+                        {p.part_number ? ` · ${p.part_number}` : ""}
+                      </p>
+                      <p className={`mt-1 text-xs font-semibold ${inStock ? "text-primary" : "text-muted-foreground"}`}>
+                        {price > 0 ? `${price.toLocaleString("ar-EG")} جنيه · ` : ""}
+                        {inStock ? "متوفر" : "غير متوفر حاليًا"}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-10 rounded-2xl border border-border bg-card p-6">
+          <h2 className="mb-2 text-lg font-semibold text-foreground">إزاي أتأكد إن القطعة مناسبة لعربيتي؟</h2>
+          <p className="leading-8 text-muted-foreground">
+            ابعت رقم الشاسيه (VIN) أو صورة رخصة العربية على واتساب، أو قارن بارت نمبر القطعة القديمة بالبارت نمبر المكتوب
+            في صفحة المنتج. فريقنا بيأكد التوافق قبل الشحن.
+          </p>
+        </section>
 
         <section className="mt-10">
           <h2 className="mb-4 text-xl font-semibold text-foreground">أنواع أخرى لتويوتا {model.ar}</h2>
