@@ -42,8 +42,8 @@ const SITE_URL = "https://www.almasriaautoparts.com";
  * page URLs with single-product metadata.
  */
 export const buildProductCanonical = (product: ProductLike): string | null => {
-  if (!product.id) return null;
-  return `${SITE_URL}/dealer/product/${product.id}`;
+  if (!product.sku || !/^[A-Za-z0-9_-]+$/.test(String(product.sku))) return null;
+  return `${SITE_URL}/product/${product.sku}`;
 };
 
 const BRAND_LABEL_AR: Record<string, string> = {

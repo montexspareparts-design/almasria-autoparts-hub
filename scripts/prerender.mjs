@@ -47,7 +47,6 @@ function buildHtml(route) {
     <meta name="description" content="${esc(route.description)}" />
     <link rel="canonical" href="${url}" />
     <link rel="alternate" hreflang="ar-EG" href="${url}" />
-    <link rel="alternate" hreflang="x-default" href="${url}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta property="og:type" content="${route.ogType || "website"}" />
     <meta property="og:site_name" content="المصرية جروب" />
@@ -111,20 +110,22 @@ async function fetchProducts() {
   const url = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
   const key = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) {
-    console.warn("[prerender] no Supabase env — skipping product pages.");
-    return [];
+    throw new Error("[prerender] missing Supabase env — refusing to publish a site without product pages.");
   }
-  try {
+  const all = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
     const res = await fetch(
-      `${url}/rest/v1/products?select=sku,base_price,part_number,name_ar,name_en,description_ar,brand,image_url,stock_quantity,erp_item_code,compatible_models&is_active=eq.true&order=sku.asc&limit=2000`,
-      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+      `${url}/rest/v1/products?select=sku,base_price,part_number,name_ar,name_en,description_ar,brand,image_url,stock_quantity,erp_item_code,compatible_models,updated_at&is_active=eq.true&order=sku.asc`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + PAGE - 1}`, "Range-Unit": "items" } }
     );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.warn(`[prerender] product fetch failed (${err.message}) — skipping product pages.`);
-    return [];
+    if (!res.ok) throw new Error(`[prerender] product fetch failed: HTTP ${res.status} — build stopped to keep the last good release.`);
+    const batch = await res.json();
+    all.push(...batch);
+    if (batch.length < PAGE) break;
   }
+  if (all.length === 0) throw new Error("[prerender] product fetch returned 0 products — build stopped.");
+  return all;
 }
 
 const products = (await fetchProducts()).filter((p) => p.sku && /^[A-Za-z0-9_-]+$/.test(String(p.sku)));
@@ -140,6 +141,7 @@ const productRoutes = products.map((p) => {
     );
   return {
     path: `/product/${p.sku}`,
+    lastmod: p.updated_at ? String(p.updated_at).slice(0, 10) : undefined,
     title,
     description,
     ogType: "product",
@@ -171,7 +173,7 @@ const productRoutes = products.map((p) => {
           priceCurrency: "EGP",
           ...(Number(p.base_price) > 0 ? { price: Number(p.base_price).toFixed(2) } : {}),
           availability:
-            Number(p.stock_quantity) > 0 ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+            Number(p.stock_quantity) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
           url: `${SITE}/product/${p.sku}`,
           seller: { "@type": "Organization", name: "المصرية جروب" },
         },
@@ -240,7 +242,6 @@ const notFound = buildHtml({
 writeFileSync(join(dist, "404.html"), notFound, "utf8");
 
 // Sitemap generated from the same source of truth.
-const today = new Date().toISOString().slice(0, 10);
 const priority = (p) =>
   p === "/" ? "1.0" : p.startsWith("/product/") ? "0.6" : p.split("/").length <= 2 ? "0.9" : "0.8";
 const encodeLoc = (p) =>
@@ -250,8 +251,7 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 ${ALL_ROUTES.map(
   (r) => `  <url>
     <loc>${encodeLoc(r.path)}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
+${r.lastmod ? `    <lastmod>${r.lastmod}</lastmod>\n` : ""}    <changefreq>weekly</changefreq>
     <priority>${priority(r.path)}</priority>
   </url>`
 ).join("\n")}
