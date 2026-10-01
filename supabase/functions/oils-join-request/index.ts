@@ -49,6 +49,22 @@ Deno.serve(async (req) => {
     if (!governorate) errors.governorate = "المحافظة مطلوبة";
     if (detailed_address.length < 5) errors.detailed_address = "العنوان التفصيلي مطلوب";
     if (b.agreed_terms !== true) errors.agreed_terms = "الموافقة على الشروط مطلوبة";
+
+    // مستندات النشاط (صورة كارت المحل / بطاقة ضريبية / سجل تجاري / فاتورة)
+    const DOC_KINDS = ["shop_card", "tax_card", "commercial_register", "invoice"];
+    const rawDocs = Array.isArray(b.documents) ? b.documents.slice(0, 4) : [];
+    const docs: { kind: string; bytes: Uint8Array; ext: string; type: string }[] = [];
+    for (const d of rawDocs) {
+      const kind = DOC_KINDS.includes(d?.kind) ? d.kind : null;
+      const m = typeof d?.data_url === "string" ? d.data_url.match(/^data:(image\/(jpeg|png|webp)|application\/pdf);base64,(.+)$/) : null;
+      if (!kind || !m) continue;
+      const bin = atob(m[3]);
+      if (bin.length > 5 * 1024 * 1024) continue;
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      docs.push({ kind, bytes, type: m[1], ext: m[1] === "application/pdf" ? "pdf" : (m[2] === "png" ? "png" : m[2] === "webp" ? "webp" : "jpg") });
+    }
+    if (docs.length === 0) errors.documents = "ارفع صورة مستند واحد على الأقل (كارت المحل أو البطاقة الضريبية أو السجل التجاري أو فاتورة)";
     if (Object.keys(errors).length) return json({ error: "بيانات ناقصة", fields: errors }, 400);
 
     const admin = createClient(
@@ -92,7 +108,22 @@ Deno.serve(async (req) => {
     userId = created.user?.id ?? null;
     if (!userId) return json({ error: "تعذّر إنشاء الحساب، حاول تاني." }, 500);
 
+    const docPaths: Record<string, string> = {};
+    const extraDocs: string[] = [];
+    for (const d of docs) {
+      const path = `${userId}/oils-${d.kind}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${d.ext}`;
+      const { error: upErr } = await admin.storage.from("dealer-documents").upload(path, d.bytes, { contentType: d.type });
+      if (upErr) { console.error("doc upload failed:", upErr.message); continue; }
+      if (d.kind === "commercial_register" && !docPaths.cr) docPaths.cr = path;
+      else if (d.kind === "tax_card" && !docPaths.tax) docPaths.tax = path;
+      else extraDocs.push(path);
+    }
+
     const { error: insErr } = await admin.from("dealer_applications").insert({
+      source: "oils_app",
+      commercial_register_doc: docPaths.cr ?? null,
+      tax_card_doc: docPaths.tax ?? null,
+      additional_docs: extraDocs,
       user_id: userId,
       business_name,
       legal_name,
