@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, Check, Droplets, Minus, Package, Plus, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,6 +18,7 @@ const OilsProductDetail = () => {
   const [qty, setQty] = useState(1);
   const minQty = Math.max(1, product?.min_order_qty || 1);
   const maxQty = Math.max(minQty, product?.stock_quantity || minQty);
+  useEffect(() => { setQty((v) => Math.min(maxQty, Math.max(minQty, v))); }, [minQty, maxQty]);
   const [added, setAdded] = useState(false);
   const discounts = useMemo(() => (product ? discountsFor(product) : []), [discountsFor, product]);
 
