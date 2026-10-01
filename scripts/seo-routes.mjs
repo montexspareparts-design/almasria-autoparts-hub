@@ -118,6 +118,12 @@ const brandLink = (b) => `<li><a href="/products/${b.slug}">${b.h1}</a></li>`;
 const modelLink = (m) => `<li><a href="/parts-by-model/${m.slug}">قطع غيار تويوتا ${m.ar}</a></li>`;
 const typeLink = (t) => `<li><a href="/parts-by-type/${t.slug}">${t.ar} تويوتا</a></li>`;
 
+export const FIT_ANSWER = `
+  <section aria-label="إجابة سريعة">
+    <h2>إزاي أتأكد إن القطعة مناسبة لعربيتي؟</h2>
+    <p>ابعت رقم الشاسيه (VIN) أو صورة رخصة العربية على واتساب المصرية جروب، أو قارن بارت نمبر القطعة القديمة بالبارت نمبر المكتوب في صفحة المنتج. لو الرقمين متطابقين أو الموديل والسنة والموتور مكتوبين في اسم الصنف، تبقى القطعة مناسبة. فريقنا بيأكد التوافق قبل الشحن.</p>
+  </section>`;
+
 const commonLinks = `
   <nav aria-label="روابط الموقع">
     <ul>
@@ -259,6 +265,7 @@ export const ROUTES = [
     body: `<h1>قطع غيار تويوتا حسب النوع</h1><ul>${TYPES.map(typeLink).join("")}</ul>${commonLinks}`,
   },
   ...MODELS.map((m) => ({
+    seoModel: m.slug,
     path: `/parts-by-model/${m.slug}`,
     title: `قطع غيار تويوتا ${m.ar} الأصلية — أسعار وتوفر | المصرية جروب`,
     description: `قطع غيار تويوتا ${m.ar} (${m.en}) الأصلية في مصر: فلاتر، فرامل، عفشة، كهرباء، محرك وزيوت. موزع معتمد، أسعار محدثة وتوصيل لكل المحافظات.`,
@@ -277,6 +284,7 @@ export const ROUTES = [
     ],
   })),
   ...TYPES.map((t) => ({
+    seoType: t.slug,
     path: `/parts-by-type/${t.slug}`,
     title: `${t.ar} تويوتا الأصلية — أسعار وتوفر | المصرية جروب`,
     description: `${t.ar} تويوتا الأصلية لكل الموديلات في مصر. موزع معتمد، أسعار محدثة، وتوصيل سريع لكل المحافظات.`,
@@ -349,6 +357,8 @@ export const ROUTES = [
   /* ── Model × part-type cross pages (long-tail) ── */
   ...MODELS.flatMap((m) =>
     TYPES.map((t) => ({
+      seoModel: m.slug,
+      seoType: t.slug,
       path: `/parts-by-model/${m.slug}/${t.slug}`,
       title: `${t.ar} تويوتا ${m.ar} الأصلية — أسعار وتوفر | المصرية جروب`,
       description: `${t.ar} تويوتا ${m.ar} (${m.en}) الأصلية في مصر من موزع معتمد: توفر فوري، أسعار محدثة يوميًا، وتوصيل لكل المحافظات خلال 48 ساعة.`,
@@ -407,29 +417,7 @@ export const ROUTES = [
         .join("")}</ul>
       ${commonLinks}`,
     schema: [
-      {
-        "@context": "https://schema.org",
-        "@type": "AutoPartsStore",
-        name: `المصرية جروب — ${b.name}`,
-        url: `${SITE}/branches/${b.slug}`,
-        image: `${SITE}/pwa-512x512.png`,
-        telephone: b.phone,
-        email: "info@almasriaautoparts.com",
-        priceRange: "EGP",
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: b.address,
-          addressLocality: b.city,
-          addressCountry: "EG",
-        },
-        openingHoursSpecification: {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-          opens: "09:00",
-          closes: "18:00",
-        },
-        parentOrganization: { "@type": "Organization", name: "المصرية جروب", url: SITE },
-      },
+      branchSchema(b),
       breadcrumb([
         { name: "الرئيسية", path: "/" },
         { name: "الفروع", path: "/branches" },
