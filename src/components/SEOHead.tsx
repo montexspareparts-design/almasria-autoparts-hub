@@ -1,3 +1,4 @@
+import { useIsNotFound } from "@/lib/notFoundSignal";
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -157,6 +158,7 @@ const ROUTE_DEFAULTS: Record<
 export const SEOHead = (props: SEOHeadProps = {}) => {
   const { isAr } = useLanguage();
   const { pathname } = useLocation();
+  const isNotFound = useIsNotFound();
 
   const path = pathname || "/";
   // Strip trailing slash (except root), query string, and hash so the
@@ -202,7 +204,7 @@ export const SEOHead = (props: SEOHeadProps = {}) => {
         <title>{title}</title>
         <meta name="description" content={description} />
         {keywords && <meta name="keywords" content={keywords} />}
-        {props.noindex ? (
+        {props.noindex || isNotFound ? (
           <meta name="robots" content="noindex, nofollow" />
         ) : (
           <meta
@@ -212,9 +214,9 @@ export const SEOHead = (props: SEOHeadProps = {}) => {
         )}
 
         {/* Canonical + hreflang */}
-        <link rel="canonical" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="ar-EG" href={canonicalUrl} />
-        <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
+        {!isNotFound && <link rel="canonical" href={canonicalUrl} />}
+        {!isNotFound && <link rel="alternate" hrefLang="ar-EG" href={canonicalUrl} />}
+        {!isNotFound && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
 
         {/* Open Graph */}
         <meta property="og:type" content={ogType} />

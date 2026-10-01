@@ -1,9 +1,12 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { markNotFound } from "@/lib/notFoundSignal";
 
 const NotFound = () => {
   const location = useLocation();
+
+  useEffect(() => markNotFound(), []);
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
