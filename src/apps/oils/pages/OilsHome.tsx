@@ -31,13 +31,25 @@ const OilsHome = () => {
   }, [products]);
   const featured = featuredProducts[featuredIndex] || featuredProducts[0] || products[0];
 
+  const [paused, setPaused] = useState(false);
+
+  // Preload all showcase images so a slide never appears empty
   useEffect(() => {
-    if (featuredProducts.length < 2 || reduceMotion) return;
-    const timer = window.setInterval(() => {
+    featuredProducts.slice(0, 20).forEach((p) => {
+      if (!p.image_url) return;
+      const img = new Image();
+      img.decoding = "async";
+      img.src = p.image_url;
+    });
+  }, [featuredProducts]);
+
+  useEffect(() => {
+    if (featuredProducts.length < 2 || reduceMotion || paused) return;
+    const timer = window.setTimeout(() => {
       setFeaturedIndex((current) => (current + 1) % featuredProducts.length);
-    }, 4500);
-    return () => window.clearInterval(timer);
-  }, [featuredProducts.length, reduceMotion]);
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [featuredProducts.length, reduceMotion, paused, featuredIndex]);
 
   useEffect(() => {
     if (featuredIndex >= featuredProducts.length) setFeaturedIndex(0);
@@ -67,26 +79,53 @@ const OilsHome = () => {
       <button type="button" className="oils-home-quick" onClick={() => navigate("/oils/quick")}><Zap /> طلب سريع بكود الصنف <ChevronLeft /></button>
 
       {featured ? (
-        <section className="oils-featured-shell">
-          <AnimatePresence initial={false} mode="popLayout">
-            <motion.section
-              key={featured.id}
-              className="oils-featured"
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 90, scale: 0.985 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -90, scale: 0.985 }}
-              transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <button type="button" className="oils-featured-copy" onClick={() => navigate(`/oils/product/${featured.id}`)}>
-                <span><Sparkles /> اختيار التجار المعتمد</span>
-                <h2>أداء أصلي.<br /><em>ثقة في كل دورة.</em></h2>
-              </button>
-              <button type="button" className="oils-featured-product" onClick={() => navigate(`/oils/product/${featured.id}`)}>
-                {featured.image_url ? <TransparentProductImage src={featured.image_url} alt={featured.name_ar} /> : <Droplets />}
-                <span className="oils-featured-seal"><ShieldCheck /> أصلي</span>
-              </button>
-              <div className="oils-featured-card">
-                <div className="oils-featured-card-copy">
+        <section
+          className="oils-featured-shell"
+          onPointerDown={() => setPaused(true)}
+          onPointerUp={() => setPaused(false)}
+          onPointerCancel={() => setPaused(false)}
+        >
+          <motion.section
+            className="oils-featured"
+            drag={featuredProducts.length > 1 ? "x" : false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.12}
+            dragMomentum={false}
+            onDragEnd={(_, info) => {
+              const n = featuredProducts.length;
+              if (Math.abs(info.offset.x) < 50) return;
+              setFeaturedIndex((c) => (info.offset.x > 0 ? (c + 1) % n : (c - 1 + n) % n));
+            }}
+          >
+            <button type="button" className="oils-featured-copy" onClick={() => navigate(`/oils/product/${featured.id}`)}>
+              <span><Sparkles /> اختيار التجار المعتمد</span>
+              <h2>أداء أصلي.<br /><em>ثقة في كل دورة.</em></h2>
+            </button>
+            <button type="button" className="oils-featured-product" onClick={() => navigate(`/oils/product/${featured.id}`)}>
+              <AnimatePresence initial={false} mode="wait">
+                <motion.div
+                  key={featured.id}
+                  className="oils-featured-media"
+                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03, y: -6 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {featured.image_url ? <TransparentProductImage src={featured.image_url} alt={featured.name_ar} /> : <Droplets />}
+                </motion.div>
+              </AnimatePresence>
+              <span className="oils-featured-seal"><ShieldCheck /> أصلي</span>
+            </button>
+            <div className="oils-featured-card">
+              <AnimatePresence initial={false} mode="wait">
+                <motion.div
+                  key={featured.id}
+                  className="oils-featured-card-copy"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.24, ease: "easeOut" }}
+                >
                   <h3>{featured.name_ar}</h3>
                   <div className="oils-featured-codes">
                     <span>كود الصنف <b dir="ltr">{featured.erp_item_code || featured.sku}</b></span>
@@ -96,15 +135,15 @@ const OilsHome = () => {
                     <span className="oils-featured-pricelabel">سعرك</span>
                     <strong className="oils-num">{featured.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong>
                   </div>
-                </div>
-                <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}>
-                  <ShoppingBag strokeWidth={1.9} />
-                  <span>أضف</span>
-                </button>
-              </div>
-              <button type="button" className="oils-featured-more" onClick={() => navigate("/oils/catalog")}><span>تصفّح كتالوج الزيوت</span><ChevronLeft /></button>
-            </motion.section>
-          </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+              <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}>
+                <ShoppingBag strokeWidth={1.9} />
+                <span>أضف</span>
+              </button>
+            </div>
+            <button type="button" className="oils-featured-more" onClick={() => navigate("/oils/catalog")}><span>تصفّح كتالوج الزيوت</span><ChevronLeft /></button>
+          </motion.section>
           <div className="oils-featured-progress" aria-label={`الصنف ${featuredIndex + 1} من ${featuredProducts.length}`}>
             {featuredProducts.map((product, index) => (
               <button
