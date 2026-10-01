@@ -23,6 +23,12 @@ type FulfillmentMethod = "pickup" | "shipping";
 const FREE_SHIPPING_THRESHOLD = 3000;
 const DEFAULT_MAX_ORDER_PERCENTAGE = 50;
 
+const orderLimit = (stock: number, safetyStock: number, maxOrderCap: number | null, percentage: number) => {
+  const available = Math.max(0, stock - safetyStock);
+  const percentageCap = Math.max(1, Math.floor((available * percentage) / 100));
+  return maxOrderCap ? Math.min(percentageCap, maxOrderCap) : percentageCap;
+};
+
 const COUPON_ERRORS: Record<string, string> = {
   invalid_code: "كود الخصم غير صحيح",
   expired: "صلاحية الكود انتهت",
@@ -52,6 +58,7 @@ const OilsCart = () => {
   const [submitting, setSubmitting] = useState(false);
   const [maxOrderPercentage, setMaxOrderPercentage] = useState(DEFAULT_MAX_ORDER_PERCENTAGE);
   const [stockRulesReady, setStockRulesReady] = useState(false);
+  const [updatingProductId, setUpdatingProductId] = useState<string | null>(null);
   const submissionLock = useRef(false);
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
@@ -85,9 +92,7 @@ const OilsCart = () => {
     return null;
   }, [items, discountsFor]);
   const quantityCorrections = useMemo(() => items.flatMap((item) => {
-    const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
-    const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
-    const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
+    const cap = orderLimit(item.product.stock_quantity, item.product.safety_stock, item.product.max_order_cap, maxOrderPercentage);
     return item.quantity > cap ? [{ productId: item.product_id, quantity: cap }] : [];
   }), [items, maxOrderPercentage]);
 
@@ -150,19 +155,44 @@ const OilsCart = () => {
   }, [stockRulesReady, cart.loading, quantityCorrections, user?.id, cart.fetchCart]);
 
   const changeQuantity = async (productId: string, requested: number) => {
+    if (updatingProductId) return;
     const item = items.find((entry) => entry.product_id === productId);
     if (!item) return;
-    const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
-    const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
-    const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
-    const minimum = Math.max(1, item.product.min_order_qty || 1);
-    const quantity = Math.max(minimum, Math.min(requested, cap));
-    if (cap <= 0) {
-      toast({ title: "الصنف غير متاح حاليًا", variant: "destructive" });
-      return;
+
+    setUpdatingProductId(productId);
+    try {
+      const { data: freshProduct, error } = await supabase
+        .from("products")
+        .select("stock_quantity, safety_stock, max_order_cap, min_order_qty")
+        .eq("id", productId)
+        .single();
+      if (error || !freshProduct) throw error || new Error("STOCK_REFRESH_FAILED");
+
+      const available = Math.max(0, freshProduct.stock_quantity - freshProduct.safety_stock);
+      if (available <= 0) {
+        toast({ title: "الصنف غير متاح حاليًا", variant: "destructive" });
+        return;
+      }
+
+      const cap = orderLimit(freshProduct.stock_quantity, freshProduct.safety_stock, freshProduct.max_order_cap, maxOrderPercentage);
+      const minimum = Math.max(1, freshProduct.min_order_qty || 1);
+      if (requested > cap) {
+        toast({
+          title: `الحد المتاح للطلب ${cap} عبوة`,
+          description: `رصيد فيصل الحالي ${freshProduct.stock_quantity} عبوة، والحد المسموح ${maxOrderPercentage}٪ من الرصيد.`,
+        });
+        return;
+      }
+
+      const quantity = Math.max(minimum, requested);
+      await cart.updateQuantity(productId, quantity);
+      void haptic("light");
+    } catch (error) {
+      console.error("Oils cart quantity update failed", error);
+      toast({ title: "تعذر تحديث الكمية", description: "حاول مرة تانية.", variant: "destructive" });
+    } finally {
+      setUpdatingProductId(null);
     }
-    await cart.updateQuantity(productId, quantity);
-    void haptic("light");
   };
 
   const createOrderAndPay = async () => {
@@ -289,6 +319,8 @@ const OilsCart = () => {
       <section className="oils-cart-items" aria-label="أصناف السلة">
         {items.map((item) => {
           const unitPrice = priceAtQty(item.oilProduct, item.quantity);
+          const currentLimit = orderLimit(item.product.stock_quantity, item.product.safety_stock, item.product.max_order_cap, maxOrderPercentage);
+          const isUpdatingQuantity = updatingProductId === item.product_id;
           return (
             <article className="oils-cart-item" key={item.id}>
               <div className="oils-cart-item-image">
@@ -305,9 +337,9 @@ const OilsCart = () => {
               <button type="button" className="oils-cart-remove" aria-label={`حذف ${item.oilProduct.name_ar}`} onClick={() => void cart.removeItem(item.product_id)}><Trash2 /></button>
               <div className="oils-cart-item-footer">
                 <div className="oils-cart-stepper">
-                  <button type="button" aria-label="تقليل الكمية" onClick={() => void changeQuantity(item.product_id, item.quantity - 1)}><Minus /></button>
-                  <b className="oils-num">{item.quantity}</b>
-                  <button type="button" aria-label="زيادة الكمية" onClick={() => void changeQuantity(item.product_id, item.quantity + 1)}><Plus /></button>
+                  <button type="button" aria-label="تقليل الكمية" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity - 1)}><Minus /></button>
+                  <b className="oils-num">{isUpdatingQuantity ? "…" : item.quantity}</b>
+                  <button type="button" aria-label="زيادة الكمية" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity + 1)}><Plus /></button>
                 </div>
                 <div className="oils-cart-line-total"><span>إجمالي الصنف</span><strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
               </div>
@@ -317,9 +349,10 @@ const OilsCart = () => {
                 return (
                   <div className="oils-cart-carton">
                     <span className="oils-cart-carton-info"><Boxes /> {label ? label : `الكرتونة = ${perCarton} عبوة`}</span>
+                    <small className="oils-cart-stock-limit">الحد المتاح: {currentLimit} عبوة</small>
                     <div className="oils-cart-carton-actions">
-                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity - perCarton)}>− كرتونة</button>
-                      <button type="button" onClick={() => void changeQuantity(item.product_id, item.quantity + perCarton)}>+ كرتونة</button>
+                      <button type="button" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity - perCarton)}>− كرتونة</button>
+                      <button type="button" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity + perCarton)}>+ كرتونة</button>
                     </div>
                   </div>
                 );
