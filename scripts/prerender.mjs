@@ -158,7 +158,7 @@ const productRoutes = products.map((p) => {
     body: `<h1>${esc(p.name_ar)}</h1>
       <ul>
         <li>كود الصنف: ${esc(p.erp_item_code || p.sku)}</li>
-        ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
+        ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}${pnCompact !== partNumber ? ` (${esc(pnCompact)})` : ""}</li>` : ""}
         <li>العلامة: ${esc(brand)}</li>
         ${Number(p.base_price) > 0 ? `<li>السعر: ${Number(p.base_price).toFixed(2)} جنيه</li>` : ""}
         <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "غير متوفر حاليًا"}</li>
