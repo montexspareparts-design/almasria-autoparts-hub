@@ -233,6 +233,7 @@ const OilsJoin = () => {
           <div className="oils-join-field">
             <label className="oils-label" htmlFor="j-pass">كلمة المرور</label>
             <input id="j-pass" className="oils-input text-left" dir="ltr" type="password" autoComplete="new-password" value={form.password} onChange={(e) => set("password", e.target.value)} placeholder="8 أحرف على الأقل" />
+            <p className="text-[10px] mt-1" style={{ color: "hsl(var(--oils-muted))" }}>استخدم حروف وأرقام ورمز — تجنّب الكلمات المشهورة زي 12345678 أو password.</p>
           </div>
 
           <div className="oils-join-grid">
