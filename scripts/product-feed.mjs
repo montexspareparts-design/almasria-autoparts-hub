@@ -92,7 +92,7 @@ export async function buildFeeds() {
     <g:title>${esc(title)}</g:title>
     <g:description>${esc(desc)}</g:description>
     <g:link>${esc(link)}</g:link>
-    <g:image_link>${esc(p.image_url)}</g:image_link>
+    <g:image_link>${esc(/\.avif(\?|$)/i.test(p.image_url || "") ? p.image_url.replace(/\?.*$/, "").replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?width=1200&quality=85" : p.image_url)}</g:image_link>
     <g:availability>${availability}</g:availability>
     <g:price>${Number(p.base_price).toFixed(2)} EGP</g:price>
     <g:condition>new</g:condition>
