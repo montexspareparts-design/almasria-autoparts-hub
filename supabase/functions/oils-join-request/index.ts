@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       docs.push({ kind, bytes, type: m[1], ext: m[1] === "application/pdf" ? "pdf" : (m[2] === "png" ? "png" : m[2] === "webp" ? "webp" : "jpg") });
     }
     if (docs.length === 0) errors.documents = "ارفع صورة مستند واحد على الأقل (كارت المحل أو البطاقة الضريبية أو السجل التجاري أو فاتورة)";
-    if (Object.keys(errors).length) return json({ error: "بيانات ناقصة", fields: errors }, 400);
+    if (Object.keys(errors).length) return json({ error: Object.values(errors)[0] || "بيانات ناقصة", fields: errors }, 400);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
