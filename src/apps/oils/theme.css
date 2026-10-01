@@ -1132,3 +1132,8 @@ html.oils-standalone *::-webkit-scrollbar {
 .oils-app .oils-showcase-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 999px; background: hsl(var(--oils-card) / .28); transition: width .35s ease, background-color .35s ease; }
 .oils-app .oils-showcase-dots button.is-active { width: 20px; background: linear-gradient(90deg, hsl(var(--oils-warm)), hsl(var(--oils-accent))); box-shadow: 0 0 8px hsl(var(--oils-accent) / .7); }
 @media (max-height: 760px) { .oils-app button.oils-showcase-media { height: 210px; } }
+.oils-qty-input { display: inline-flex; align-items: center; gap: 3px; }
+.oils-qty-input input { width: 46px; height: 30px; border: 1px solid hsl(var(--oils-line) / .6); border-radius: 10px; text-align: center; font-size: 13px; font-weight: 850; color: hsl(var(--oils-ink)); background: hsl(var(--oils-card)); outline: none; -webkit-appearance: none; }
+.oils-qty-input input:focus { border-color: hsl(var(--oils-accent)); box-shadow: 0 0 0 3px hsl(var(--oils-accent) / .18); }
+.oils-qty-cartons input { width: 40px; }
+.oils-qty-cartons span { font-size: 9px; font-weight: 800; color: hsl(var(--oils-muted)); }
