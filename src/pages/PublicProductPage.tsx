@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ChevronLeft, PackageCheck, PackageX, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,10 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { supabase } from "@/integrations/supabase/client";
 import { trackViewItem } from "@/lib/analytics";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
+import { MODELS, TYPES, BUSINESS, matchModels, matchType } from "@/data/seoShared.js";
 
 const SITE = "https://www.almasriaautoparts.com";
 
@@ -36,6 +40,9 @@ interface PublicProduct {
 
 const PublicProductPage = () => {
   const { sku } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addItem } = useCart();
   const [product, setProduct] = useState<PublicProduct | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -95,11 +102,39 @@ const PublicProductPage = () => {
   const canonical = `${SITE}/product/${product.sku}`;
   const price = Number(product.base_price ?? 0);
   const hasPrice = price > 0;
+  const typeAr = TYPES.find((t) => t.slug === matchType(product.name_ar))?.ar;
+  const fits = matchModels(product.name_ar)
+    .map((slug: string) => MODELS.find((m) => m.slug === slug))
+    .filter(Boolean) as { slug: string; ar: string; en: string }[];
+  const waHref = `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(
+    `عايز أطلب: ${product.name_ar}\nكود الصنف: ${product.erp_item_code || product.sku}${product.part_number ? `\nبارت نمبر: ${product.part_number}` : ""}\n${canonical}`,
+  )}`;
+  const seoTitle = `${product.name_ar} — ${brand}${product.part_number ? ` — ${product.part_number}` : ""}`;
+
+  const orderNow = () => {
+    if (!user) {
+      navigate(`/auth?redirect=${encodeURIComponent(`/product/${product.sku}`)}`);
+      return;
+    }
+    addItem({
+      id: product.id,
+      name_ar: product.name_ar,
+      sku: product.sku,
+      image_url: product.image_url,
+      unit_price: price,
+      quantity: 1,
+      stock_quantity: Number(product.stock_quantity ?? 0),
+      min_order_qty: 1,
+      brand: product.brand ?? "",
+    });
+    toast.success("تمت الإضافة للسلة", { description: product.name_ar });
+    navigate("/cart");
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        titleAr={`${product.name_ar}${product.part_number ? ` — ${product.part_number}` : ""}`}
+        titleAr={seoTitle}
         titleEn={`${product.name_ar} — Al Masria Group`}
         descriptionAr={`${product.name_ar} — ${brand}. كود الصنف ${product.erp_item_code || product.sku}${product.part_number ? ` وبارت نمبر ${product.part_number}` : ""}. متوفر لدى المصرية جروب مع توصيل لكل محافظات مصر.`}
         descriptionEn={`${product.name_ar} (${brand}) — part ${product.part_number || product.sku} available at Al Masria Group, Egypt.`}
@@ -186,7 +221,7 @@ const PublicProductPage = () => {
                 <dt className="text-muted-foreground">الحالة</dt>
                 <dd className={`flex items-center gap-2 font-semibold ${inStock ? "text-primary" : "text-muted-foreground"}`}>
                   {inStock ? <PackageCheck className="h-4 w-4" /> : <PackageX className="h-4 w-4" />}
-                  {inStock ? "متوفر" : "اطلب توفيره"}
+                  {inStock ? "متوفر" : "غير متوفر حاليًا"}
                 </dd>
               </div>
             </dl>
@@ -195,10 +230,34 @@ const PublicProductPage = () => {
               <p className="mt-6 leading-8 text-muted-foreground">{product.description_ar}</p>
             )}
 
+            {typeAr && <p className="mt-4 text-sm text-muted-foreground">نوع القطعة: <span className="font-semibold text-foreground">{typeAr}</span></p>}
+
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild><Link to={`/products?search=${encodeURIComponent(product.sku)}`}>اطلب الآن</Link></Button>
-              <Button asChild variant="outline"><Link to="/contact">اطلب عرض سعر</Link></Button>
+              {inStock && hasPrice ? (
+                <Button onClick={orderNow}>اطلب الآن</Button>
+              ) : null}
+              <Button asChild variant={inStock && hasPrice ? "outline" : "default"}>
+                <a href={waHref} target="_blank" rel="noopener noreferrer">اطلب على واتساب</a>
+              </Button>
             </div>
+
+            {fits.length > 0 && (
+              <div className="mt-6">
+                <h2 className="mb-2 text-base font-semibold text-foreground">السيارات المتوافقة</h2>
+                <table className="w-full text-sm">
+                  <tbody>
+                    {fits.map((m) => (
+                      <tr key={m.slug} className="border-b border-border">
+                        <td className="py-2 text-foreground">تويوتا {m.ar} ({m.en})</td>
+                        <td className="py-2 text-left">
+                          <Link to={`/parts-by-model/${m.slug}`} className="text-primary hover:underline">قطع غيار {m.ar}</Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> موزع معتمد — قطع أصلية بضمان الأصالة</li>
