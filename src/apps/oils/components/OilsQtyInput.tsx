@@ -21,6 +21,7 @@ export default function OilsQtyInput({ value, disabled, onCommit, ariaLabel, cla
       setDraft(String(value));
       return;
     }
+    setDraft(String(value));
     onCommit(next);
   };
 
