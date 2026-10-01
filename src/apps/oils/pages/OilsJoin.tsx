@@ -106,9 +106,16 @@ const OilsJoin = () => {
           documents: Object.entries(docs).map(([kind, d]) => ({ kind, data_url: d!.url })),
         },
       });
-      const payload = (data ?? {}) as { success?: boolean; error?: string };
+      let payload = (data ?? {}) as { success?: boolean; error?: string; errors?: Record<string, string> };
+      if (fnErr) {
+        try {
+          const ctx = (fnErr as { context?: Response }).context;
+          if (ctx && typeof ctx.json === "function") payload = await ctx.json();
+        } catch { /* keep default */ }
+      }
       if (fnErr || !payload.success) {
-        setError(payload.error || "تعذّر إرسال الطلب، حاول تاني أو كلّمنا على 01034806288");
+        const firstFieldErr = payload.errors ? Object.values(payload.errors)[0] : undefined;
+        setError(payload.error || firstFieldErr || "تعذّر إرسال الطلب، حاول تاني أو كلّمنا على 01034806288");
         return;
       }
       void haptic("medium");
