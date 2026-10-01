@@ -4,6 +4,8 @@ import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck
 import { supabase } from "@/integrations/supabase/client";
 import { mapLoginError } from "@/lib/loginErrors";
 import { haptic } from "@/lib/haptics";
+import { isPhoneLike } from "@/lib/phoneAuth";
+import { buildLoginEmailCandidates, signInWithPossibleEmails } from "@/lib/loginCredentials";
 import OilsBrandMark from "../components/OilsBrandMark";
 
 /**
@@ -28,10 +30,10 @@ const OilsLogin = () => {
     setLoading(true);
     setError(null);
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password: cleanPassword,
-      });
+      const { error: err } = await signInWithPossibleEmails(
+        buildLoginEmailCandidates(cleanEmail, isPhoneLike(cleanEmail)),
+        cleanPassword,
+      );
       if (err) {
         const mapped = mapLoginError(err);
         setError(mapped.description ? `${mapped.title} ${mapped.description}` : mapped.title);
@@ -83,16 +85,16 @@ const OilsLogin = () => {
         ) : (
           <>
         <div>
-          <label className="oils-label" htmlFor="oils-email">البريد الإلكتروني</label>
+          <label className="oils-label" htmlFor="oils-email">{forgotMode ? "البريد الإلكتروني" : "البريد الإلكتروني أو رقم الموبايل"}</label>
           <div className="relative">
             <Mail className="oils-field-icon" />
             <input
               id="oils-email"
-              type="email"
+              type={forgotMode ? "email" : "text"}
               dir="ltr"
-              autoComplete="email"
+              autoComplete="username"
               className="oils-input !pr-10 text-left"
-              placeholder="name@example.com"
+              placeholder={forgotMode ? "name@example.com" : "name@example.com أو 01XXXXXXXXX"}
               value={email}
               onChange={(e) => setEmail(e.target.value.trim())}
               required
