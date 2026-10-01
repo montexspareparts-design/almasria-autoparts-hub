@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Boxes, Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, Zap } from "lucide-react";
 import { cartonLabel, unitsPerCarton } from "@/lib/oils/cartons";
+import OilsQtyInput from "@/apps/oils/components/OilsQtyInput";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
@@ -176,15 +177,17 @@ const OilsCart = () => {
 
       const cap = orderLimit(freshProduct.stock_quantity, freshProduct.safety_stock, freshProduct.max_order_cap, maxOrderPercentage);
       const minimum = Math.max(1, freshProduct.min_order_qty || 1);
+      let target = requested;
       if (requested > cap) {
         toast({
           title: `الحد المتاح للطلب ${cap} عبوة`,
-          description: `رصيد فيصل الحالي ${freshProduct.stock_quantity} عبوة، والحد المسموح ${maxOrderPercentage}٪ من الرصيد.`,
+          description: `رصيد فيصل الحالي ${freshProduct.stock_quantity} عبوة، والحد المسموح ${maxOrderPercentage}٪ من الرصيد. اتضبطت الكمية على ${cap}.`,
         });
-        return;
+        target = cap;
       }
 
-      const quantity = Math.max(minimum, requested);
+      const quantity = Math.max(minimum, target);
+      if (quantity === item.quantity) return;
       await cart.updateQuantity(productId, quantity);
       void haptic("light");
     } catch (error) {
@@ -338,7 +341,7 @@ const OilsCart = () => {
               <div className="oils-cart-item-footer">
                 <div className="oils-cart-stepper">
                   <button type="button" aria-label="تقليل الكمية" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity - 1)}><Minus /></button>
-                  <b className="oils-num">{isUpdatingQuantity ? "…" : item.quantity}</b>
+                  <OilsQtyInput className="oils-num" ariaLabel="اكتب عدد العبوات" value={item.quantity} disabled={isUpdatingQuantity} onCommit={(v) => void changeQuantity(item.product_id, v)} />
                   <button type="button" aria-label="زيادة الكمية" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity + 1)}><Plus /></button>
                 </div>
                 <div className="oils-cart-line-total"><span>إجمالي الصنف</span><strong className="oils-num">{(unitPrice * item.quantity).toLocaleString("en-US", { maximumFractionDigits: 2 })} ج.م</strong></div>
@@ -352,6 +355,7 @@ const OilsCart = () => {
                     <small className="oils-cart-stock-limit">الحد المتاح: {currentLimit} عبوة</small>
                     <div className="oils-cart-carton-actions">
                       <button type="button" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity - perCarton)}>− كرتونة</button>
+                      <OilsQtyInput className="oils-qty-cartons" ariaLabel="اكتب عدد الكراتين" suffix="كرتونة" value={Math.floor(item.quantity / perCarton)} disabled={isUpdatingQuantity} onCommit={(v) => void changeQuantity(item.product_id, v * perCarton)} />
                       <button type="button" disabled={isUpdatingQuantity} onClick={() => void changeQuantity(item.product_id, item.quantity + perCarton)}>+ كرتونة</button>
                     </div>
                   </div>
