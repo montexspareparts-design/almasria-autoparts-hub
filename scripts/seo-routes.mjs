@@ -6,31 +6,12 @@
  * page without executing any JavaScript.
  */
 
-export const SITE = "https://www.almasriaautoparts.com";
+import { SITE, MODELS, TYPES, BRANCHES, orgSchema as buildOrgSchema, branchSchema } from "../src/data/seoShared.js";
+import { GUIDE_CONTENT } from "./guides-content.mjs";
 
-const MODELS = [
-  { slug: "hiace", ar: "هايس", en: "Hiace" },
-  { slug: "coaster", ar: "كوستر", en: "Coaster" },
-  { slug: "hilux", ar: "هايلوكس", en: "Hilux" },
-  { slug: "land-cruiser", ar: "لاند كروزر", en: "Land Cruiser" },
-  { slug: "yaris", ar: "ياريس", en: "Yaris" },
-  { slug: "rav4", ar: "راف فور", en: "RAV4" },
-  { slug: "fortuner", ar: "فورتشنر", en: "Fortuner" },
-  { slug: "rush", ar: "رش", en: "Rush" },
-  { slug: "corolla", ar: "كورولا", en: "Corolla" },
-  { slug: "camry", ar: "كامري", en: "Camry" },
-  { slug: "rumion", ar: "روميون", en: "Rumion" },
-];
+export { SITE };
 
-const TYPES = [
-  { slug: "filters", ar: "فلاتر", en: "Filters" },
-  { slug: "oils", ar: "زيوت وسوائل", en: "Oils & Fluids" },
-  { slug: "brakes", ar: "فرامل", en: "Brakes" },
-  { slug: "suspension", ar: "عفشة وتعليق", en: "Suspension" },
-  { slug: "electrical", ar: "كهرباء", en: "Electrical" },
-  { slug: "engine", ar: "قطع محرك", en: "Engine" },
-  { slug: "cooling", ar: "تبريد", en: "Cooling" },
-];
+
 
 const BRANDS = [
   {
@@ -131,37 +112,17 @@ const GUIDES = [
   },
 ];
 
-const BRANCHES = [
-  {
-    slug: "osim",
-    name: "فرع أوسيم",
-    city: "الجيزة",
-    address: "أوسيم، الجيزة، مصر",
-    phone: "+201020412358",
-    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
-  },
-  {
-    slug: "tawfikia",
-    name: "فرع التوفيقية",
-    city: "القاهرة",
-    address: "التوفيقية، وسط البلد، القاهرة، مصر",
-    phone: "+201034806288",
-    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
-  },
-  {
-    slug: "luxor",
-    name: "فرع الأقصر",
-    city: "الأقصر",
-    address: "الأقصر، مصر",
-    phone: "+201020412358",
-    hours: "السبت – الخميس، 9 صباحًا – 6 مساءً",
-  },
-];
 
 
 const brandLink = (b) => `<li><a href="/products/${b.slug}">${b.h1}</a></li>`;
 const modelLink = (m) => `<li><a href="/parts-by-model/${m.slug}">قطع غيار تويوتا ${m.ar}</a></li>`;
 const typeLink = (t) => `<li><a href="/parts-by-type/${t.slug}">${t.ar} تويوتا</a></li>`;
+
+export const FIT_ANSWER = `
+  <section aria-label="إجابة سريعة">
+    <h2>إزاي أتأكد إن القطعة مناسبة لعربيتي؟</h2>
+    <p>ابعت رقم الشاسيه (VIN) أو صورة رخصة العربية على واتساب المصرية جروب، أو قارن بارت نمبر القطعة القديمة بالبارت نمبر المكتوب في صفحة المنتج. لو الرقمين متطابقين أو الموديل والسنة والموتور مكتوبين في اسم الصنف، تبقى القطعة مناسبة. فريقنا بيأكد التوافق قبل الشحن.</p>
+  </section>`;
 
 const commonLinks = `
   <nav aria-label="روابط الموقع">
@@ -175,31 +136,7 @@ const commonLinks = `
     </ul>
   </nav>`;
 
-const orgSchema = {
-  "@context": "https://schema.org",
-  "@type": "AutoPartsStore",
-  name: "المصرية جروب — Al Masria Auto Parts",
-  url: SITE,
-  logo: `${SITE}/pwa-512x512.png`,
-  telephone: "+201020412358",
-  email: "info@almasriaautoparts.com",
-  priceRange: "EGP",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "أوسيم",
-    addressLocality: "الجيزة",
-    addressCountry: "EG",
-  },
-  areaServed: "EG",
-  sameAs: ["https://wa.me/201020412358"],
-  department: BRANCHES.map((b) => ({
-    "@type": "LocalBusiness",
-    name: `المصرية جروب — ${b.name}`,
-    telephone: b.phone,
-    priceRange: "EGP",
-    address: { "@type": "PostalAddress", streetAddress: b.address, addressCountry: "EG" },
-  })),
-};
+const orgSchema = buildOrgSchema();
 
 const breadcrumb = (items) => ({
   "@context": "https://schema.org",
@@ -328,13 +265,14 @@ export const ROUTES = [
     body: `<h1>قطع غيار تويوتا حسب النوع</h1><ul>${TYPES.map(typeLink).join("")}</ul>${commonLinks}`,
   },
   ...MODELS.map((m) => ({
+    seoModel: m.slug,
     path: `/parts-by-model/${m.slug}`,
     title: `قطع غيار تويوتا ${m.ar} الأصلية — أسعار وتوفر | المصرية جروب`,
     description: `قطع غيار تويوتا ${m.ar} (${m.en}) الأصلية في مصر: فلاتر، فرامل، عفشة، كهرباء، محرك وزيوت. موزع معتمد، أسعار محدثة وتوصيل لكل المحافظات.`,
     body: `<h1>قطع غيار تويوتا ${m.ar} (${m.en}) الأصلية</h1>
       <p>المصرية جروب توفر كل قطع غيار تويوتا ${m.ar} الأصلية بضمان الأصالة وأسعار محدثة يوميًا، مع توصيل لكل محافظات مصر خلال 48 ساعة.</p>
       <h2>أنواع القطع المتاحة لتويوتا ${m.ar}</h2>
-      <ul>${TYPES.map((t) => `<li><a href="/parts-by-type/${t.slug}">${t.ar} تويوتا ${m.ar}</a></li>`).join("")}</ul>
+      <ul>${TYPES.map((t) => `<li><a href="/parts-by-model/${m.slug}/${t.slug}">${t.ar} تويوتا ${m.ar}</a></li>`).join("")}</ul>
       <h2>موديلات أخرى</h2><ul>${MODELS.filter((x) => x.slug !== m.slug).map(modelLink).join("")}</ul>
       ${commonLinks}`,
     schema: [
@@ -346,13 +284,14 @@ export const ROUTES = [
     ],
   })),
   ...TYPES.map((t) => ({
+    seoType: t.slug,
     path: `/parts-by-type/${t.slug}`,
     title: `${t.ar} تويوتا الأصلية — أسعار وتوفر | المصرية جروب`,
     description: `${t.ar} تويوتا الأصلية لكل الموديلات في مصر. موزع معتمد، أسعار محدثة، وتوصيل سريع لكل المحافظات.`,
     body: `<h1>${t.ar} تويوتا الأصلية (${t.en})</h1>
       <p>تشكيلة كاملة من ${t.ar} تويوتا الأصلية لكل الموديلات، بضمان الأصالة وأسعار محدثة.</p>
       <h2>حسب الموديل</h2>
-      <ul>${MODELS.map((m) => `<li><a href="/parts-by-model/${m.slug}">${t.ar} تويوتا ${m.ar}</a></li>`).join("")}</ul>
+      <ul>${MODELS.map((m) => `<li><a href="/parts-by-model/${m.slug}/${t.slug}">${t.ar} تويوتا ${m.ar}</a></li>`).join("")}</ul>
       ${commonLinks}`,
     schema: [
       breadcrumb([
@@ -382,8 +321,9 @@ export const ROUTES = [
     path: `/guides/${g.slug}`,
     title: `${g.title} | المصرية جروب`,
     description: g.description,
-    body: `<h1>${g.title}</h1><p>${g.description}</p>
-      <p>دليل من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر.</p>${commonLinks}`,
+    body: `<article><h1>${g.title}</h1><p>${g.description}</p>
+      ${GUIDE_CONTENT[g.slug] || ""}
+      <p>دليل من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر.</p></article>${commonLinks}`,
     schema: [
       {
         "@context": "https://schema.org",
@@ -417,6 +357,8 @@ export const ROUTES = [
   /* ── Model × part-type cross pages (long-tail) ── */
   ...MODELS.flatMap((m) =>
     TYPES.map((t) => ({
+      seoModel: m.slug,
+      seoType: t.slug,
       path: `/parts-by-model/${m.slug}/${t.slug}`,
       title: `${t.ar} تويوتا ${m.ar} الأصلية — أسعار وتوفر | المصرية جروب`,
       description: `${t.ar} تويوتا ${m.ar} (${m.en}) الأصلية في مصر من موزع معتمد: توفر فوري، أسعار محدثة يوميًا، وتوصيل لكل المحافظات خلال 48 ساعة.`,
@@ -475,29 +417,7 @@ export const ROUTES = [
         .join("")}</ul>
       ${commonLinks}`,
     schema: [
-      {
-        "@context": "https://schema.org",
-        "@type": "AutoPartsStore",
-        name: `المصرية جروب — ${b.name}`,
-        url: `${SITE}/branches/${b.slug}`,
-        image: `${SITE}/pwa-512x512.png`,
-        telephone: b.phone,
-        email: "info@almasriaautoparts.com",
-        priceRange: "EGP",
-        address: {
-          "@type": "PostalAddress",
-          streetAddress: b.address,
-          addressLocality: b.city,
-          addressCountry: "EG",
-        },
-        openingHoursSpecification: {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-          opens: "09:00",
-          closes: "18:00",
-        },
-        parentOrganization: { "@type": "Organization", name: "المصرية جروب", url: SITE },
-      },
+      branchSchema(b),
       breadcrumb([
         { name: "الرئيسية", path: "/" },
         { name: "الفروع", path: "/branches" },

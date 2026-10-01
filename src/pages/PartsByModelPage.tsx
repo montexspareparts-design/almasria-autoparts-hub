@@ -231,7 +231,7 @@ const ModelDetailView = ({ model }: { model: ModelData }) => (
               transition={{ delay: i * 0.08 }}
             >
               <Link
-                to={`/parts-by-type/${pt.slug}`}
+                to={`/parts-by-model/${model.slug}/${pt.slug}`}
                 className="block bg-card border border-border rounded-xl p-5 text-center hover:border-primary/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
               >
                 <Wrench className="w-8 h-8 text-primary mx-auto mb-3" />

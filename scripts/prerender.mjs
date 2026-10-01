@@ -7,7 +7,8 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROUTES, SITE, ORG_SCHEMA, buildBreadcrumb, COMMON_LINKS } from "./seo-routes.mjs";
+import { ROUTES, SITE, ORG_SCHEMA, buildBreadcrumb, COMMON_LINKS, FIT_ANSWER } from "./seo-routes.mjs";
+import { MODELS, TYPES, BUSINESS, matchModels, matchType } from "../src/data/seoShared.js";
 import { LEGACY_REDIRECTS } from "./legacy-redirects.mjs";
 import { buildFeeds } from "./product-feed.mjs";
 
@@ -47,7 +48,7 @@ function buildHtml(route) {
     <meta name="description" content="${esc(route.description)}" />
     <link rel="canonical" href="${url}" />
     <link rel="alternate" hreflang="ar-EG" href="${url}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="${route.noindex ? "noindex, follow" : "index, follow, max-image-preview:large"}" />
     <meta property="og:type" content="${route.ogType || "website"}" />
     <meta property="og:site_name" content="المصرية جروب" />
     <meta property="og:locale" content="ar_EG" />
@@ -133,7 +134,10 @@ const products = (await fetchProducts()).filter((p) => p.sku && /^[A-Za-z0-9_-]+
 const productRoutes = products.map((p) => {
   const brand = BRAND_LABEL[p.brand] || "تويوتا";
   const partNumber = p.part_number || "";
-  const title = `${p.name_ar}${partNumber ? ` — ${partNumber}` : ""} | المصرية جروب`.slice(0, 110);
+  const typeAr = TYPES.find((t) => t.slug === matchType(p.name_ar))?.ar;
+  const fits = matchModels(p.name_ar).map((slug) => MODELS.find((m) => m.slug === slug));
+  const title = `${p.name_ar} — ${brand}${partNumber ? ` — ${partNumber}` : ""}`.slice(0, 110);
+  const waText = encodeURIComponent(`عايز أطلب: ${p.name_ar}\nكود الصنف: ${p.erp_item_code || p.sku}\n${SITE}/product/${p.sku}`);
   const description =
     `${p.name_ar} — ${brand}. كود الصنف ${p.erp_item_code || p.sku}${partNumber ? ` وبارت نمبر ${partNumber}` : ""}. متوفر لدى المصرية جروب مع توصيل لكل محافظات مصر.`.slice(
       0,
@@ -152,10 +156,13 @@ const productRoutes = products.map((p) => {
         ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
         <li>العلامة: ${esc(brand)}</li>
         ${Number(p.base_price) > 0 ? `<li>السعر: ${Number(p.base_price).toFixed(2)} جنيه</li>` : ""}
-        <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "اطلب توفيره"}</li>
+        <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "غير متوفر حاليًا"}</li>
       </ul>
       <p>${esc(p.description_ar || `${p.name_ar} من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. للاستعلام عن السعر والتوفر تواصل معنا.`)}</p>
-      <p><a href="/products">تصفح كل الكتالوج</a> · <a href="/contact">اتصل بنا للاستعلام عن السعر</a></p>
+      ${typeAr ? `<p>نوع القطعة: ${esc(typeAr)}</p>` : ""}
+      ${fits.length ? `<h2>السيارات المتوافقة</h2><table><tr><th>الموديل</th><th>الصفحة</th></tr>${fits.map((m) => `<tr><td>تويوتا ${m.ar} (${m.en})</td><td><a href="/parts-by-model/${m.slug}">قطع غيار ${m.ar}</a></td></tr>`).join("")}</table>` : ""}
+      <p><a href="https://wa.me/${BUSINESS.whatsapp}?text=${waText}">اطلب القطعة على واتساب</a> · <a href="/products">تصفح كل الكتالوج</a></p>
+      ${FIT_ANSWER}
       ${COMMON_LINKS}`,
     schema: [
       {
@@ -187,7 +194,37 @@ const productRoutes = products.map((p) => {
   };
 });
 
-const ALL_ROUTES = [...ROUTES, ...productRoutes];
+const productCard = (p) => {
+  const price = Number(p.base_price) > 0 ? `${Number(p.base_price).toFixed(2)} جنيه` : "السعر عند الطلب";
+  return `<li><a href="/product/${p.sku}">${esc(p.name_ar)}</a> — كود ${esc(p.erp_item_code || p.sku)}${p.part_number ? ` — بارت نمبر ${esc(p.part_number)}` : ""} — ${price} — ${Number(p.stock_quantity) > 0 ? "متوفر" : "غير متوفر حاليًا"}</li>`;
+};
+const classified = products.map((p) => ({ p, models: matchModels(p.name_ar), type: matchType(p.name_ar) }));
+let emptyCross = 0;
+const categoryRoutes = ROUTES.map((r) => {
+  if (!r.seoModel && !r.seoType) return r;
+  const list = classified
+    .filter((c) => (!r.seoModel || c.models.includes(r.seoModel)) && (!r.seoType || c.type === r.seoType))
+    .map((c) => c.p)
+    .sort((a, b) => (Number(b.stock_quantity) > 0) - (Number(a.stock_quantity) > 0));
+  const isCross = r.seoModel && r.seoType;
+  if (isCross && list.length === 0) {
+    emptyCross++;
+    return { ...r, noindex: true, noSitemap: true };
+  }
+  if (list.length === 0) return { ...r, body: r.body.replace(COMMON_LINKS, `${FIT_ANSWER}${COMMON_LINKS}`) };
+  const shown = list.slice(0, 40);
+  const block = `<section><h2>منتجات متاحة (${list.length} صنف)</h2><ul>${shown.map(productCard).join("")}</ul></section>${FIT_ANSWER}`;
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: r.title,
+    numberOfItems: list.length,
+    itemListElement: shown.map((p, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/product/${p.sku}`, name: p.name_ar })),
+  };
+  return { ...r, body: r.body.replace(COMMON_LINKS, `${block}${COMMON_LINKS}`), schema: [...(r.schema || []), itemList] };
+});
+
+const ALL_ROUTES = [...categoryRoutes, ...productRoutes];
 
 let count = 0;
 for (const route of ALL_ROUTES) {
@@ -248,7 +285,7 @@ const encodeLoc = (p) =>
   `${SITE}${p === "/" ? "/" : p}`.replace(/&/g, "&amp;");
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${ALL_ROUTES.map(
+${ALL_ROUTES.filter((r) => !r.noSitemap).map(
   (r) => `  <url>
     <loc>${encodeLoc(r.path)}</loc>
 ${r.lastmod ? `    <lastmod>${r.lastmod}</lastmod>\n` : ""}    <changefreq>weekly</changefreq>
@@ -263,6 +300,6 @@ writeFileSync(join(root, "public", "sitemap.xml"), sitemap, "utf8");
 const feedCount = await buildFeeds();
 
 console.log(
-  `[prerender] wrote ${count} pages (${productRoutes.length} products) + ${redirectCount} legacy redirects + 404.html + sitemap.xml + feeds (${feedCount} items)`
+  `[prerender] wrote ${count} pages (${productRoutes.length} products, ${emptyCross} empty model×type pages noindexed) + ${redirectCount} legacy redirects + 404.html + sitemap.xml + feeds (${feedCount} items)`
 );
 

@@ -171,7 +171,10 @@ const ProductCard = memo(({
             </bdi>
           </div>
           <h3 className="font-bold text-card-foreground text-[11px] sm:text-sm leading-snug sm:leading-relaxed line-clamp-2 group-hover:text-primary transition-colors duration-300 text-right">
-            {product.name_ar}
+            {/* Crawlable link to the public product page; normal clicks keep opening the quick-view dialog. */}
+            <Link to={`/product/${product.sku}`} onClick={(e) => e.preventDefault()} className="text-inherit">
+              {product.name_ar}
+            </Link>
           </h3>
           {coverage && (
             <span
