@@ -758,6 +758,7 @@ export type Database = {
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          source: string
           status: Database["public"]["Enums"]["application_status"]
           tax_card_doc: string | null
           tax_card_no: string
@@ -790,6 +791,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["application_status"]
           tax_card_doc?: string | null
           tax_card_no: string
@@ -822,6 +824,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["application_status"]
           tax_card_doc?: string | null
           tax_card_no?: string
