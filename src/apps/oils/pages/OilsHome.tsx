@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ChevronLeft, Droplets, Repeat2, ShieldCheck, ShoppingBag, Sparkles, Zap } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Bell, ChevronLeft, Repeat2, ShieldCheck, ShoppingBag, Sparkles, Zap } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOilsCatalog } from "@/lib/oils/useOilsCatalog";
 import { useReorder } from "@/lib/oils/useReorder";
@@ -9,7 +9,7 @@ import OilProductCard from "../components/OilProductCard";
 import { useDealerCart } from "@/hooks/useDealerCart";
 import { haptic } from "@/lib/haptics";
 import OilsBrandMark from "../components/OilsBrandMark";
-import TransparentProductImage from "../components/TransparentProductImage";
+import { resolveAssetUrl } from "../components/TransparentProductImage";
 
 const OilsHome = () => {
   const navigate = useNavigate();
@@ -26,34 +26,56 @@ const OilsHome = () => {
     [products],
   );
   const featuredProducts = useMemo(() => {
-    const available = products.filter((product) => product.stock_quantity > 0);
-    return [...available.filter((product) => product.is_on_sale), ...available.filter((product) => !product.is_on_sale)];
+    const available = products.filter((product) => product.stock_quantity > 0 && product.image_url);
+    return [...available.filter((product) => product.is_on_sale), ...available.filter((product) => !product.is_on_sale)].slice(0, 8);
   }, [products]);
-  const featured = featuredProducts[featuredIndex] || featuredProducts[0] || products[0];
-
+  const total = featuredProducts.length;
+  // شريط متصل: الأصناف + نسخة من الأول في الآخر علشان اللفّ يبقى سلس من غير رجوع
+  const slides = useMemo(() => (total > 1 ? [...featuredProducts, featuredProducts[0]] : featuredProducts), [featuredProducts, total]);
   const [paused, setPaused] = useState(false);
+  const [instant, setInstant] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const activeDot = total ? featuredIndex % total : 0;
 
-  // Preload all showcase images so a slide never appears empty
-  useEffect(() => {
-    featuredProducts.slice(0, 20).forEach((p) => {
-      if (!p.image_url) return;
-      const img = new Image();
-      img.decoding = "async";
-      img.src = p.image_url;
-    });
-  }, [featuredProducts]);
+  const goTo = useCallback((next: number) => {
+    if (total < 2) return;
+    setInstant(false);
+    setFeaturedIndex(next);
+  }, [total]);
 
   useEffect(() => {
-    if (featuredProducts.length < 2 || reduceMotion || paused) return;
-    const timer = window.setTimeout(() => {
-      setFeaturedIndex((current) => (current + 1) % featuredProducts.length);
-    }, 5000);
+    if (total < 2 || reduceMotion || paused) return;
+    const timer = window.setTimeout(() => goTo(featuredIndex + 1), 4500);
     return () => window.clearTimeout(timer);
-  }, [featuredProducts.length, reduceMotion, paused, featuredIndex]);
+  }, [total, reduceMotion, paused, featuredIndex, goTo]);
 
   useEffect(() => {
-    if (featuredIndex >= featuredProducts.length) setFeaturedIndex(0);
-  }, [featuredIndex, featuredProducts.length]);
+    if (featuredIndex > total) { setInstant(true); setFeaturedIndex(0); }
+  }, [featuredIndex, total]);
+
+  useEffect(() => {
+    if (!instant) return;
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setInstant(false)));
+    return () => cancelAnimationFrame(id);
+  }, [instant]);
+
+  const onTrackTransitionEnd = () => {
+    if (featuredIndex === total && total > 1) { setInstant(true); setFeaturedIndex(0); }
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; setPaused(true); };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartX.current;
+    touchStartX.current = null;
+    setPaused(false);
+    if (start == null || total < 2) return;
+    const dx = e.changedTouches[0].clientX - start;
+    if (Math.abs(dx) < 40) return;
+    // RTL: السحب لليمين = الصنف التالي
+    if (dx > 0) goTo(featuredIndex >= total ? 1 : featuredIndex + 1);
+    else if (featuredIndex === 0) { setInstant(true); setFeaturedIndex(total); requestAnimationFrame(() => requestAnimationFrame(() => goTo(total - 1))); }
+    else goTo(featuredIndex - 1);
+  };
 
   const handleAdd = async (product: (typeof products)[number], qty: number) => {
     await addItem(product.id, qty);
@@ -78,85 +100,74 @@ const OilsHome = () => {
 
       <button type="button" className="oils-home-quick" onClick={() => navigate("/oils/quick")}><Zap /> طلب سريع بكود الصنف <ChevronLeft /></button>
 
-      {featured ? (
-        <section
-          className="oils-featured-shell"
-          onPointerDown={() => setPaused(true)}
-          onPointerUp={() => setPaused(false)}
-          onPointerCancel={() => setPaused(false)}
-        >
-          <motion.section
-            className="oils-featured"
-            drag={featuredProducts.length > 1 ? "x" : false}
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.12}
-            dragMomentum={false}
-            onDragEnd={(_, info) => {
-              const n = featuredProducts.length;
-              if (Math.abs(info.offset.x) < 50) return;
-              setFeaturedIndex((c) => (info.offset.x > 0 ? (c + 1) % n : (c - 1 + n) % n));
-            }}
-          >
-            <button type="button" className="oils-featured-copy" onClick={() => navigate(`/oils/product/${featured.id}`)}>
+      {total > 0 ? (
+        <section className="oils-featured-shell">
+          <div className="oils-featured oils-showcase">
+            <div className="oils-featured-copy">
               <span><Sparkles /> اختيار التجار المعتمد</span>
               <h2>أداء أصلي.<br /><em>ثقة في كل دورة.</em></h2>
-            </button>
-            <button type="button" className="oils-featured-product" onClick={() => navigate(`/oils/product/${featured.id}`)}>
-              <AnimatePresence initial={false} mode="wait">
-                <motion.div
-                  key={featured.id}
-                  className="oils-featured-media"
-                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.03, y: -6 }}
-                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  {featured.image_url ? <TransparentProductImage src={featured.image_url} alt={featured.name_ar} /> : <Droplets />}
-                </motion.div>
-              </AnimatePresence>
-              <span className="oils-featured-seal"><ShieldCheck /> أصلي</span>
-            </button>
-            <div className="oils-featured-card">
-              <AnimatePresence initial={false} mode="wait">
-                <motion.div
-                  key={featured.id}
-                  className="oils-featured-card-copy"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.24, ease: "easeOut" }}
-                >
-                  <h3>{featured.name_ar}</h3>
-                  <div className="oils-featured-codes">
-                    <span>كود الصنف <b dir="ltr">{featured.erp_item_code || featured.sku}</b></span>
-                    <span>بارت نمبر <b dir="ltr">{featured.part_number || "—"}</b></span>
-                  </div>
-                  <div className="oils-featured-priceline">
-                    <span className="oils-featured-pricelabel">سعرك</span>
-                    <strong className="oils-num">{featured.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-              <button type="button" aria-label="أضف للسلة" onClick={() => void handleAdd(featured, 1)}>
-                <ShoppingBag strokeWidth={1.9} />
-                <span>أضف</span>
-              </button>
             </div>
+
+            <div
+              className="oils-showcase-viewport"
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+              onTouchCancel={() => setPaused(false)}
+            >
+              <div
+                className="oils-showcase-track"
+                style={{
+                  transform: `translate3d(${featuredIndex * 100}%, 0, 0)`,
+                  transition: instant || reduceMotion ? "none" : "transform 650ms cubic-bezier(0.22, 1, 0.36, 1)",
+                }}
+                onTransitionEnd={onTrackTransitionEnd}
+              >
+                {slides.map((p, i) => (
+                  <article key={`${p.id}-${i}`} className="oils-showcase-slide" aria-hidden={i !== featuredIndex}>
+                    <button type="button" className="oils-showcase-media" onClick={() => navigate(`/oils/product/${p.id}`)}>
+                      <img src={resolveAssetUrl(p.image_url!)} alt={p.name_ar} loading="eager" decoding="async" draggable={false} />
+                      <span className="oils-featured-seal"><ShieldCheck /> أصلي</span>
+                    </button>
+                    <div className="oils-showcase-card">
+                      <button type="button" className="oils-showcase-info" onClick={() => navigate(`/oils/product/${p.id}`)}>
+                        <h3>{p.name_ar}</h3>
+                        <div className="oils-featured-codes">
+                          <span>كود الصنف <b dir="ltr">{p.erp_item_code || p.sku}</b></span>
+                          <span>بارت نمبر <b dir="ltr">{p.part_number || "—"}</b></span>
+                        </div>
+                        <div className="oils-featured-priceline">
+                          <span className="oils-featured-pricelabel">سعرك</span>
+                          <strong className="oils-num">{p.price.toLocaleString("en-US", { maximumFractionDigits: 0 })} <small>ج.م</small></strong>
+                        </div>
+                      </button>
+                      <button type="button" className="oils-showcase-add" aria-label="أضف للسلة" onClick={() => { void haptic("light"); void handleAdd(p, Math.max(1, p.min_order_qty || 1)); }}>
+                        <ShoppingBag strokeWidth={1.9} />
+                        <span>أضف</span>
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
             <button type="button" className="oils-featured-more" onClick={() => navigate("/oils/catalog")}><span>تصفّح كتالوج الزيوت</span><ChevronLeft /></button>
-          </motion.section>
-          <div className="oils-featured-progress" aria-label={`الصنف ${featuredIndex + 1} من ${featuredProducts.length}`}>
-            {featuredProducts.map((product, index) => (
-              <button
-                key={product.id}
-                type="button"
-                aria-label={`عرض الصنف ${index + 1}`}
-                className={index === featuredIndex ? "is-active" : ""}
-                onClick={() => setFeaturedIndex(index)}
-              />
-            ))}
+
+            {total > 1 && (
+              <div className="oils-showcase-dots" aria-label={`الصنف ${activeDot + 1} من ${total}`}>
+                {featuredProducts.map((product, index) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    aria-label={`عرض الصنف ${index + 1}`}
+                    className={index === activeDot ? "is-active" : ""}
+                    onClick={() => goTo(index)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
-      ) : <div className="oils-skeleton oils-featured" />}
+      ) : <div className="oils-skeleton oils-featured" style={{ height: 520 }} />}
 
       {/* إعادة طلب */}
       {lastOrder && lastOrderItems.length > 0 && (
