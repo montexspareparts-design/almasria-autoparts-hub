@@ -14,7 +14,7 @@ export const MODELS = [
   { slug: "land-cruiser", ar: "لاند كروزر", en: "Land Cruiser", match: /لاند\s*كروزر|برادو|land\s*cruiser|prado/i },
   { slug: "yaris", ar: "ياريس", en: "Yaris", match: /ياريس|yaris/i },
   { slug: "rav4", ar: "راف فور", en: "RAV4", match: /راف\s*فور|راف\s*4|rav\s*4/i },
-  { slug: "fortuner", ar: "فورتشنر", en: "Fortuner", match: /فورتشن|fortuner/i },
+  { slug: "fortuner", ar: "فورتشنر", en: "Fortuner", match: /فورتش|fortuner/i },
   { slug: "rush", ar: "رش", en: "Rush", match: /(^|\s)(رش|راش)(\s|$)|rush/i },
   { slug: "corolla", ar: "كورولا", en: "Corolla", match: /كورولا|corolla/i },
   { slug: "camry", ar: "كامري", en: "Camry", match: /كامري|camry/i },
