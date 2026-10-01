@@ -7,6 +7,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Google review links per branch. Replace `url` with the official
+// "Ask for reviews" link from each Google Business Profile when available.
+const REVIEW_BRANCHES = [
+  { match: /اوسيم|أوسيم|osim/i, name: "فرع أوسيم", url: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("المصرية قطع غيار تويوتا فرع اوسيم") },
+  { match: /توفيقي|tawfik/i, name: "فرع التوفيقية", url: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("المصرية قطع غيار تويوتا التوفيقية") },
+  { match: /اقصر|أقصر|luxor/i, name: "فرع الأقصر", url: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("المصرية قطع غيار تويوتا الاقصر") },
+];
+function pickReviewBranch(pickup?: string | null) {
+  return REVIEW_BRANCHES.find((b) => pickup && b.match.test(pickup)) ?? REVIEW_BRANCHES[0];
+}
+
+
 const STATUS_MESSAGES: Record<string, (orderNum: string, extra?: any) => string> = {
   shipped: (orderNum, extra) => {
     let msg = `🚚 تم شحن طلبك #${orderNum}`;
@@ -16,8 +28,14 @@ const STATUS_MESSAGES: Record<string, (orderNum: string, extra?: any) => string>
     msg += `\n\nشكراً لتعاملك مع المصرية جروب 🚗`;
     return msg;
   },
-  delivered: (orderNum) =>
-    `🎉 تم تسليم طلبك #${orderNum} بنجاح!\n\nشكراً لتعاملك مع المصرية جروب 🚗\nنتمنى لك تجربة ممتازة!`,
+  delivered: (orderNum, extra) => {
+    const b = pickReviewBranch(extra?.pickup_branch);
+    return (
+      `🎉 تم تسليم طلبك #${orderNum} بنجاح!\n\nشكراً لتعاملك مع المصرية جروب 🚗\n\n` +
+      `⭐ رأيك يفرق معانا جدًا! ممكن تقيّم ${b.name} على جوجل في أقل من دقيقة؟\n${b.url}\n\n` +
+      `كل تقييم بيساعد عملاء تانيين يوصلوا لقطع تويوتا الأصلية 🙏`
+    );
+  },
   confirmed: (orderNum) =>
     `✅ تمت الموافقة على طلبك #${orderNum}\nيرجى استكمال الدفع لبدء التجهيز.\n\nالمصرية جروب 🚗`,
   processing: (orderNum) =>
@@ -77,10 +95,11 @@ Deno.serve(async (req) => {
     // Fetch order details if missing
     let shippingCompany: string | null = null;
     let trackingNumber: string | null = null;
-    if (!orderNumber || !userId || newStatus === "shipped") {
+    let pickupBranch: string | null = null;
+    if (!orderNumber || !userId || newStatus === "shipped" || newStatus === "delivered") {
       const { data: order } = await supabase
         .from("orders")
-        .select("order_number, user_id, shipping_company, tracking_number")
+        .select("order_number, user_id, shipping_company, tracking_number, pickup_branch")
         .eq("id", orderId)
         .single();
       if (!order) {
@@ -93,6 +112,7 @@ Deno.serve(async (req) => {
       userId = order.user_id;
       shippingCompany = order.shipping_company;
       trackingNumber = order.tracking_number;
+      pickupBranch = (order as any).pickup_branch ?? null;
     }
 
     // Get customer phone
@@ -108,7 +128,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const message = msgBuilder(orderNumber!, { shipping_company: shippingCompany, tracking_number: trackingNumber });
+    const message = msgBuilder(orderNumber!, { shipping_company: shippingCompany, tracking_number: trackingNumber, pickup_branch: pickupBranch });
     const customerResult = await sendWhatsAppText(profile.phone, message);
     if (!customerResult.ok) {
       console.error(
