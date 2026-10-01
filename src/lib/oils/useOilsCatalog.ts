@@ -94,7 +94,7 @@ export const useOilsCatalog = () => {
       const { data } = await supabase
         .from("product_tier_prices")
         .select("product_id, price, discount_price, min_qty_for_discount")
-        .eq("tier", tier as any)
+        .eq("tier", tier as "retail" | "corporate" | "wholesale_tier1" | "wholesale_tier2")
         .in("product_id", ids)
         .limit(2000);
       return data || [];
@@ -139,7 +139,7 @@ export const useOilsCatalog = () => {
 
   /** سعر الوحدة عند كمية معيّنة بعد خصم الكمية */
   const priceAtQty = (product: OilProduct, qty: number): number => {
-    let price = product.price;
+    const price = product.price;
     const applicable = discountsFor(product).filter((d) => qty >= d.min_quantity);
     if (applicable.length === 0) return price;
     const best = applicable[applicable.length - 1];
