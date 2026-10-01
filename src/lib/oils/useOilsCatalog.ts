@@ -94,7 +94,7 @@ export const useOilsCatalog = () => {
       const { data } = await supabase
         .from("product_tier_prices")
         .select("product_id, price, discount_price, min_qty_for_discount")
-        .eq("tier", tier as NonNullable<typeof tier>)
+        .eq("tier", tier as "retail" | "corporate" | "wholesale_tier1" | "wholesale_tier2")
         .in("product_id", ids)
         .limit(2000);
       return data || [];
