@@ -29,6 +29,13 @@
       "when": 1790862272388,
       "tag": "0003_oils_partner_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790866825188,
+      "tag": "0004_allow_cleanup_of_unpaid_oils_orders",
+      "breakpoints": true
     }
   ]
 }

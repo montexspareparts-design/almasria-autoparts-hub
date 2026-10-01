@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Boxes, Building2, ChevronLeft, MapPin, MessageSquareText, Minus, PackageCheck, Plus, ReceiptText, ShieldCheck, ShoppingBag, Sparkles, Tag, Trash2, Truck, Zap } from "lucide-react";
 import { cartonLabel, unitsPerCarton } from "@/lib/oils/cartons";
@@ -21,6 +21,7 @@ type FulfillmentMethod = "pickup" | "shipping";
 
 /** حد الشحن المجاني داخل القاهرة/الفيصل */
 const FREE_SHIPPING_THRESHOLD = 3000;
+const DEFAULT_MAX_ORDER_PERCENTAGE = 50;
 
 const COUPON_ERRORS: Record<string, string> = {
   invalid_code: "كود الخصم غير صحيح",
@@ -49,6 +50,9 @@ const OilsCart = () => {
   const [notes, setNotes] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [maxOrderPercentage, setMaxOrderPercentage] = useState(DEFAULT_MAX_ORDER_PERCENTAGE);
+  const [stockRulesReady, setStockRulesReady] = useState(false);
+  const submissionLock = useRef(false);
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
   const items = useMemo(
@@ -80,6 +84,12 @@ const OilsCart = () => {
     }
     return null;
   }, [items, discountsFor]);
+  const quantityCorrections = useMemo(() => items.flatMap((item) => {
+    const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
+    const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
+    const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
+    return item.quantity > cap ? [{ productId: item.product_id, quantity: cap }] : [];
+  }), [items, maxOrderPercentage]);
 
   useEffect(() => {
     if (!user) {
@@ -110,11 +120,41 @@ const OilsCart = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    let active = true;
+    void supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "max_order_percentage")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        const parsed = Number(data?.value);
+        setMaxOrderPercentage(Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_ORDER_PERCENTAGE);
+        setStockRulesReady(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!stockRulesReady || cart.loading || items.length === 0) return;
+    if (quantityCorrections.length === 0) return;
+    void Promise.all(
+      quantityCorrections.map(({ productId, quantity }) =>
+        supabase.from("dealer_cart_items").update({ quantity, updated_at: new Date().toISOString() }).eq("user_id", user?.id || "").eq("product_id", productId),
+      ),
+    ).then(() => {
+      toast({ title: "تم ضبط الكمية حسب الرصيد المتاح", description: "تقدر تكمل الدفع دلوقتي." });
+      return cart.fetchCart();
+    });
+  }, [stockRulesReady, cart.loading, quantityCorrections, user?.id, cart.fetchCart]);
+
   const changeQuantity = async (productId: string, requested: number) => {
     const item = items.find((entry) => entry.product_id === productId);
     if (!item) return;
     const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
-    const cap = item.product.max_order_cap ? Math.min(available, item.product.max_order_cap) : available;
+    const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
+    const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
     const minimum = Math.max(1, item.product.min_order_qty || 1);
     const quantity = Math.max(minimum, Math.min(requested, cap));
     if (cap <= 0) {
@@ -126,7 +166,11 @@ const OilsCart = () => {
   };
 
   const createOrderAndPay = async () => {
-    if (!user || items.length === 0 || submitting) return;
+    if (!user || items.length === 0 || submitting || submissionLock.current) return;
+    if (!stockRulesReady || quantityCorrections.length > 0) {
+      toast({ title: "جاري ضبط الكمية حسب الرصيد", description: "انتظر لحظة واضغط متابعة مرة تانية." });
+      return;
+    }
     if (fulfillmentMethod === "pickup" && !pickupBranch) {
       toast({ title: "اختر فرع الاستلام أولًا", variant: "destructive" });
       return;
@@ -135,6 +179,7 @@ const OilsCart = () => {
       toast({ title: "العنوان المسجل غير متاح", description: "يرجى استكمال عنوان حسابك قبل اختيار الشحن.", variant: "destructive" });
       return;
     }
+    submissionLock.current = true;
     setSubmitting(true);
     try {
       const orderNumber = await generateOrderNumber();
@@ -171,7 +216,7 @@ const OilsCart = () => {
       );
       if (itemsError) {
         await supabase.from("orders").delete().eq("id", order.id).eq("user_id", user.id);
-        throw itemsError;
+        throw new Error(itemsError.message || "ORDER_ITEMS_CREATE_FAILED");
       }
 
       if (couponCode.trim()) {
@@ -196,11 +241,12 @@ const OilsCart = () => {
       console.error("Oils order creation failed", error);
       toast({ title: "تعذر تجهيز الطلب", description: "لم يتم خصم أي مبلغ. حاول مرة أخرى.", variant: "destructive" });
     } finally {
+      submissionLock.current = false;
       setSubmitting(false);
     }
   };
 
-  if (cart.loading || catalogLoading) {
+  if (cart.loading || catalogLoading || !stockRulesReady) {
     return <main className="oils-screen oils-cart-loading" aria-label="جاري تحميل السلة"><ShoppingBag /></main>;
   }
 
