@@ -30,10 +30,23 @@ const OilsLogin = () => {
     setLoading(true);
     setError(null);
     try {
-      const { error: err } = await signInWithPossibleEmails(
+      let { error: err } = await signInWithPossibleEmails(
         buildLoginEmailCandidates(cleanEmail, isPhoneLike(cleanEmail)),
         cleanPassword,
       );
+      // الحساب ممكن يكون متسجل بإيميل والعميل كاتب موبايله — نخلي السيرفر يحدد الحساب
+      if (err && isPhoneLike(cleanEmail) && /invalid login credentials/i.test(err.message)) {
+        const { data, error: fnErr } = await supabase.functions.invoke("oils-phone-login", {
+          body: { phone: cleanEmail, password: cleanPassword },
+        });
+        if (!fnErr && data?.access_token && data?.refresh_token) {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+          });
+          err = setErr ?? null;
+        }
+      }
       if (err) {
         const mapped = mapLoginError(err);
         setError(mapped.description ? `${mapped.title} ${mapped.description}` : mapped.title);
