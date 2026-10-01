@@ -127,7 +127,7 @@ const PublicProductPage = () => {
             "@type": "Offer",
             priceCurrency: "EGP",
             ...(hasPrice ? { price: price.toFixed(2) } : {}),
-            availability: inStock ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+            availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
             url: canonical,
             seller: { "@type": "Organization", name: "المصرية جروب" },
           },

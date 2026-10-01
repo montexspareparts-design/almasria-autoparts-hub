@@ -11,6 +11,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SITE } from "./seo-routes.mjs";
 
+// Free shipping threshold — must match the product page + checkout.
+const FREE_SHIPPING_MIN = 3000;
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
 
@@ -55,17 +58,16 @@ export async function buildFeeds() {
     return 0;
   }
 
-  let rows = [];
-  try {
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
     const res = await fetch(
-      `${url}/rest/v1/products?select=sku,part_number,erp_item_code,name_ar,description_ar,brand,image_url,stock_quantity,base_price&is_active=eq.true&order=sku.asc&limit=3000`,
-      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+      `${url}/rest/v1/products?select=sku,part_number,erp_item_code,name_ar,description_ar,brand,image_url,stock_quantity,base_price&is_active=eq.true&order=sku.asc`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}`, Range: `${from}-${from + 999}`, "Range-Unit": "items" } }
     );
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    rows = await res.json();
-  } catch (err) {
-    console.warn(`[feeds] fetch failed (${err.message}) — skipping product feeds.`);
-    return 0;
+    if (!res.ok) throw new Error(`[feeds] fetch failed: HTTP ${res.status}`);
+    const batch = await res.json();
+    rows.push(...batch);
+    if (batch.length < 1000) break;
   }
 
   const items = rows.filter(
@@ -82,7 +84,7 @@ export async function buildFeeds() {
     .map((p) => {
       const brand = BRAND_LABEL[p.brand] || "Toyota";
       const link = `${SITE}/product/${p.sku}`;
-      const availability = Number(p.stock_quantity) > 0 ? "in_stock" : "backorder";
+      const availability = Number(p.stock_quantity) > 0 ? "in_stock" : "out_of_stock";
       const title = `${p.name_ar}${p.part_number ? ` ${p.part_number}` : ""}`.slice(0, 150);
       const desc = (p.description_ar || `${p.name_ar} — ${brand}. قطع غيار تويوتا من المصرية جروب.`).slice(0, 4000);
       return `  <item>
@@ -99,7 +101,7 @@ export async function buildFeeds() {
     <g:identifier_exists>${p.part_number ? "yes" : "no"}</g:identifier_exists>
     <g:google_product_category>913</g:google_product_category>
     <g:product_type>قطع غيار سيارات &gt; ${esc(brand)}</g:product_type>
-    <g:shipping><g:country>EG</g:country><g:service>Standard</g:service><g:price>0 EGP</g:price></g:shipping>
+    ${Number(p.base_price) >= FREE_SHIPPING_MIN ? `<g:shipping><g:country>EG</g:country><g:service>Standard</g:service><g:price>0 EGP</g:price></g:shipping>` : ""}
   </item>`;
     })
     .join("\n");

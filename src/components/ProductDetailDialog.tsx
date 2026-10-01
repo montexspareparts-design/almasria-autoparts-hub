@@ -9,9 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import SEOHead from "@/components/SEOHead";
-import { ProductSchema } from "@/components/SEOSchemaMarkup";
-import { buildProductSEO, buildProductCanonical } from "@/lib/productSeo";
 import ProductFitmentSection from "@/components/ProductFitmentSection";
 
 interface ProductDetailDialogProps {
@@ -132,47 +129,12 @@ const ProductDetailDialog = ({
     fbk: "تيل فرامل FBK",
   };
 
-  // Bilingual SEO meta + Product JSON-LD — only emitted while the dialog
-  // is open so it doesn't pollute SEO of the underlying listing page.
-  //
-  // Canonical / indexing strategy:
-  //   • The dialog is a MODAL — it lives at the listing-page URL
-  //     (e.g. /products?... or /products/:brand). Letting <SEOHead> derive
-  //     canonical from `pathname` would tell Google "this listing IS this
-  //     product", which is wrong and dilutes both pages.
-  //   • So we point canonical at the dedicated product page when one
-  //     exists (`/dealer/product/:id`), and we mark the modal `noindex`
-  //     so crawlers consolidate on that real URL instead of the modal-
-  //     on-listing combo.
-  const seo = buildProductSEO(product);
-  const productCanonical = buildProductCanonical(product);
+  // The dialog deliberately emits no SEO tags: opening it must never change
+  // the listing page's canonical/robots. Each product's public identity is
+  // its own page at /product/:sku.
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      {open && (
-        <>
-          <SEOHead
-            titleAr={seo.titleAr}
-            titleEn={seo.titleEn}
-            descriptionAr={seo.descriptionAr}
-            descriptionEn={seo.descriptionEn}
-            keywordsAr={seo.keywordsAr}
-            keywordsEn={seo.keywordsEn}
-            ogType="product"
-            image={product.image_url || undefined}
-            canonical={productCanonical || undefined}
-            noindex
-          />
-          <ProductSchema
-            name={product.name_ar || product.name_en || product.sku}
-            sku={product.sku}
-            description={product.description_ar || product.description_en || undefined}
-            image={product.image_url || undefined}
-            brand={seo.schemaBrand}
-            availability={(product.stock_quantity ?? 0) > 0}
-          />
-        </>
-      )}
       <DialogContent className="max-w-2xl max-h-[90vh] sm:max-h-[90vh] p-0 gap-0 overflow-hidden w-[95vw] sm:w-full rounded-2xl sm:rounded-lg" dir="rtl">
         <DialogHeader className="sr-only">
           <DialogTitle>{product.name_ar}</DialogTitle>
