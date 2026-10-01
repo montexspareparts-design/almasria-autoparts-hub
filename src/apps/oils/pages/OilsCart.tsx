@@ -84,6 +84,12 @@ const OilsCart = () => {
     }
     return null;
   }, [items, discountsFor]);
+  const quantityCorrections = useMemo(() => items.flatMap((item) => {
+    const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
+    const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
+    const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
+    return item.quantity > cap ? [{ productId: item.product_id, quantity: cap }] : [];
+  }), [items, maxOrderPercentage]);
 
   useEffect(() => {
     if (!user) {
@@ -132,22 +138,16 @@ const OilsCart = () => {
 
   useEffect(() => {
     if (!stockRulesReady || cart.loading || items.length === 0) return;
-    const corrections = items.flatMap((item) => {
-      const available = Math.max(0, item.product.stock_quantity - item.product.safety_stock);
-      const percentageCap = Math.max(1, Math.floor((available * maxOrderPercentage) / 100));
-      const cap = item.product.max_order_cap ? Math.min(percentageCap, item.product.max_order_cap) : percentageCap;
-      return item.quantity > cap ? [{ productId: item.product_id, quantity: cap }] : [];
-    });
-    if (corrections.length === 0) return;
+    if (quantityCorrections.length === 0) return;
     void Promise.all(
-      corrections.map(({ productId, quantity }) =>
+      quantityCorrections.map(({ productId, quantity }) =>
         supabase.from("dealer_cart_items").update({ quantity, updated_at: new Date().toISOString() }).eq("user_id", user?.id || "").eq("product_id", productId),
       ),
     ).then(() => {
       toast({ title: "تم ضبط الكمية حسب الرصيد المتاح", description: "تقدر تكمل الدفع دلوقتي." });
       return cart.fetchCart();
     });
-  }, [stockRulesReady, cart.loading, items, maxOrderPercentage, user?.id, cart.fetchCart]);
+  }, [stockRulesReady, cart.loading, quantityCorrections, user?.id, cart.fetchCart]);
 
   const changeQuantity = async (productId: string, requested: number) => {
     const item = items.find((entry) => entry.product_id === productId);
@@ -167,6 +167,10 @@ const OilsCart = () => {
 
   const createOrderAndPay = async () => {
     if (!user || items.length === 0 || submitting || submissionLock.current) return;
+    if (!stockRulesReady || quantityCorrections.length > 0) {
+      toast({ title: "جاري ضبط الكمية حسب الرصيد", description: "انتظر لحظة واضغط متابعة مرة تانية." });
+      return;
+    }
     if (fulfillmentMethod === "pickup" && !pickupBranch) {
       toast({ title: "اختر فرع الاستلام أولًا", variant: "destructive" });
       return;
@@ -212,7 +216,7 @@ const OilsCart = () => {
       );
       if (itemsError) {
         await supabase.from("orders").delete().eq("id", order.id).eq("user_id", user.id);
-        throw itemsError;
+        throw new Error(itemsError.message || "ORDER_ITEMS_CREATE_FAILED");
       }
 
       if (couponCode.trim()) {
