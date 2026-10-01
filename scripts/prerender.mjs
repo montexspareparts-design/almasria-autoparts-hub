@@ -156,7 +156,7 @@ const productRoutes = products.map((p) => {
         ${partNumber ? `<li>بارت نمبر: ${esc(partNumber)}</li>` : ""}
         <li>العلامة: ${esc(brand)}</li>
         ${Number(p.base_price) > 0 ? `<li>السعر: ${Number(p.base_price).toFixed(2)} جنيه</li>` : ""}
-        <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "اطلب توفيره"}</li>
+        <li>الحالة: ${Number(p.stock_quantity) > 0 ? "متوفر" : "غير متوفر حاليًا"}</li>
       </ul>
       <p>${esc(p.description_ar || `${p.name_ar} من المصرية جروب — موزع معتمد لقطع غيار وزيوت تويوتا الأصلية في مصر. للاستعلام عن السعر والتوفر تواصل معنا.`)}</p>
       ${typeAr ? `<p>نوع القطعة: ${esc(typeAr)}</p>` : ""}

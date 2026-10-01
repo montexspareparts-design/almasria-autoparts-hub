@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { ChevronLeft, Search, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,18 +7,52 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { ItemListSchema } from "@/components/SEOSchemaMarkup";
 import { SEO_MODELS, SEO_TYPES } from "@/data/seoTaxonomy";
+import { productFits } from "@/data/seoShared.js";
+import { supabase } from "@/integrations/supabase/client";
 
 const SITE = "https://www.almasriaautoparts.com";
+
+interface CrossProduct {
+  sku: string;
+  name_ar: string;
+  part_number: string | null;
+  erp_item_code: string | null;
+  base_price: number | null;
+  stock_quantity: number | null;
+  image_url: string | null;
+}
 
 const ModelPartTypePage = () => {
   const { model: modelSlug, type: typeSlug } = useParams();
   const model = SEO_MODELS.find((m) => m.slug === modelSlug);
   const type = SEO_TYPES.find((t) => t.slug === typeSlug);
+  const [products, setProducts] = useState<CrossProduct[] | null>(null);
+
+  useEffect(() => {
+    if (!model || !type) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("sku, name_ar, part_number, erp_item_code, base_price, stock_quantity, image_url")
+        .eq("is_active", true)
+        .limit(2000);
+      if (!active) return;
+      const list = ((data as CrossProduct[]) ?? [])
+        .filter((p) => productFits(p.name_ar, model.slug, type.slug))
+        .sort((a, b) => Number(Number(b.stock_quantity) > 0) - Number(Number(a.stock_quantity) > 0));
+      setProducts(list);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [model, type]);
 
   if (!model || !type) return <Navigate to="/parts-by-model" replace />;
 
   const title = `${type.ar} تويوتا ${model.ar} الأصلية — أسعار وتوفر`;
   const canonical = `${SITE}/parts-by-model/${model.slug}/${type.slug}`;
+  const isEmpty = products !== null && products.length === 0;
 
   return (
     <div className="min-h-screen bg-background">
