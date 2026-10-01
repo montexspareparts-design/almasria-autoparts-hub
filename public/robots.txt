@@ -1,11 +1,9 @@
+# One policy for every crawler (Google/Bing pick the most specific group,
+# so private areas are listed here once and apply to all bots).
 User-agent: *
 Allow: /
-
-# Private / authenticated areas
 Disallow: /admin
-Disallow: /admin/
 Disallow: /dealer
-Disallow: /dealer/
 Disallow: /dealer-login
 Disallow: /dealer-register
 Disallow: /dealer-apply
@@ -18,18 +16,10 @@ Disallow: /reset-password
 Disallow: /auth
 Disallow: /my-profile
 Disallow: /dev
-
-# Block common query-string variants to avoid duplicate content
+Disallow: /staff
+Disallow: /oils/cart
 Disallow: /*?*utm_
 Disallow: /*?*fbclid=
 Disallow: /*?*gclid=
 
-# Allow major crawlers explicitly
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
 Sitemap: https://www.almasriaautoparts.com/sitemap.xml
-Host: https://www.almasriaautoparts.com
