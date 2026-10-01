@@ -42,7 +42,9 @@ document.documentElement.classList.add('oils-standalone');
 })();
 </script>`;
 
-if (!html.includes("__OILS_APP__")) {
+// Always inject the exact boot script: the site's index.html contains its own
+// (differently formatted) oils detector, which must not suppress this one.
+if (!html.includes("window.__OILS_APP__=true")) {
   html = html.replace(/<head[^>]*>/i, (m) => `${m}\n${oilsBootScript}`);
 }
 
