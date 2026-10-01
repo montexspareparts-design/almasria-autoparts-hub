@@ -1,0 +1,1 @@
+create policy "Users view own sessions" on public.customer_sessions for select to authenticated using (user_id = auth.uid());

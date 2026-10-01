@@ -51,7 +51,7 @@ const OilsProductDetail = () => {
         <button type="button" className="oils-circle-button" aria-label="رجوع" onClick={() => navigate(-1)}>
           <ArrowRight />
         </button>
-        <span className="oils-detail-brand">{product.brand || "ALMASRIA OILS"}</span>
+        <span className="oils-detail-brand">TOYOTA GENUINE OIL</span>
         <button type="button" className="oils-circle-button oils-circle-button--dark" aria-label="السلة" onClick={() => navigate("/oils/cart")}>
           <ShoppingBag />
         </button>
