@@ -1036,6 +1036,7 @@ html.oils-standalone *::-webkit-scrollbar {
   color: hsl(var(--oils-muted));
 }
 .oils-cart-carton-info svg { width: 14px; height: 14px; }
+.oils-cart-stock-limit { color: hsl(var(--oils-accent-deep)); font-size: 10px; font-weight: 850; white-space: nowrap; }
 .oils-cart-carton-actions { display: flex; gap: 6px; }
 .oils-app button.oils-cart-carton-actions > button,
 .oils-cart-carton-actions button {
@@ -1045,6 +1046,13 @@ html.oils-standalone *::-webkit-scrollbar {
   font-weight: 800;
   background: hsl(var(--oils-ink));
   color: hsl(var(--oils-card));
+}
+.oils-cart-stepper button:disabled,
+.oils-cart-carton-actions button:disabled { cursor: wait; opacity: .45; }
+
+@media (max-width: 390px) {
+  .oils-cart-carton { flex-wrap: wrap; }
+  .oils-cart-carton-actions { margin-inline-start: auto; }
 }
 
 .oils-coupon-row { display: flex; gap: 8px; align-items: center; }
