@@ -4436,6 +4436,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cron_erp_sync_if_due: { Args: never; Returns: undefined }
       cron_take_daily_erp_baseline: { Args: never; Returns: undefined }
       dealer_has_credentials: {
         Args: { p_dealer_account_id: string }
