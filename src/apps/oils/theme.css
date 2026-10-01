@@ -1084,3 +1084,12 @@ html.oils-standalone *::-webkit-scrollbar {
 .oils-join-doc.is-on img + span { margin-top: auto; margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; background: hsl(var(--oils-card) / .9); }
 .oils-join-doc-x { position: absolute; top: 6px; left: 6px; z-index: 2; width: 24px; height: 24px; border: 0; border-radius: 50%; display: grid; place-items: center; color: hsl(var(--oils-card)); background: hsl(var(--oils-ink) / .75); }
 .oils-join-doc-x svg { width: 13px; }
+
+/* Showcase: stable frame — only media + card details swap */
+.oils-featured { touch-action: pan-y; }
+.oils-featured-product { height: clamp(240px, 34dvh, 330px); min-height: 0; }
+.oils-featured-media { width: 100%; height: 100%; display: grid; place-items: center; will-change: transform, opacity; }
+.oils-featured-media img { height: 100%; max-height: 100%; }
+.oils-featured-card { height: 118px; min-height: 118px; }
+.oils-featured-card-copy { flex: 1; min-width: 0; }
+.oils-featured-card h3 { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; height: calc(1.35em * 2); max-width: none; }
