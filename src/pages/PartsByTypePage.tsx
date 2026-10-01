@@ -227,7 +227,7 @@ const TypeDetailView = ({ type }: { type: PartTypeData }) => {
               return (
                 <Link
                   key={m}
-                  to={`/parts-by-model/${slug}`}
+                  to={`/parts-by-model/${slug}/${type.slug}`}
                   className="inline-flex items-center gap-1.5 bg-secondary hover:bg-primary/10 border border-border hover:border-primary/30 rounded-full px-4 py-2 text-sm font-medium text-foreground transition-colors"
                 >
                   <Car className="w-3.5 h-3.5 text-primary" />
