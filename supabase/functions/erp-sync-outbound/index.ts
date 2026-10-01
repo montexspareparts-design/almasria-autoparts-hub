@@ -394,6 +394,11 @@ Deno.serve(async (req) => {
       syncType = "order_push";
       referenceId = data.order_id;
       referenceNumber = data.order_number;
+      if (!Array.isArray(data.items) || data.items.length === 0) {
+        return new Response(JSON.stringify({ success: false, skipped: true, error: "order has no items" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // Map to Al Faisal CreateOrder format (per API docs)
       // The website order number MUST always be visible inside the Faisal order,
