@@ -22,6 +22,13 @@
       "when": 1789684923731,
       "tag": "0002_allow_coupon_total_update",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790862272388,
+      "tag": "0003_oils_partner_applications",
+      "breakpoints": true
     }
   ]
 }

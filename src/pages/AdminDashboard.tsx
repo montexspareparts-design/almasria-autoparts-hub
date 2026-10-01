@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Database } from "@/integrations/supabase/types";
 
 // Lazy load admin sections
+const OilsPartnersCenter = lazy(() => import("@/components/admin/OilsPartnersCenter"));
 const AdminOrders = lazy(() => import("@/components/AdminOrders"));
 const VisitorLeadsPage = lazy(() => import("@/pages/VisitorLeadsPage"));
 const AdminHeroVideo = lazy(() => import("@/components/AdminHeroVideo"));
@@ -120,6 +121,7 @@ const sidebarGroups: SidebarGroup[] = [
       { id: "customers", label: "ملف العملاء", icon: Users },
       { id: "leads", label: "Leads (عملاء محتملين)", icon: Users },
       { id: "visitor-leads", label: "ليدز الزوار (واتساب)", icon: MessageCircle },
+      { id: "oils-partners", label: "🛢️ شركاء تطبيق الزيوت", icon: Users },
       { id: "analytics", label: "التحليلات و KPIs", icon: BarChart3 },
     ],
   },
@@ -867,6 +869,8 @@ const AdminDashboard = () => {
         );
       case "task-audit-log":
         return <Suspense fallback={<SectionLoader />}><AdminTaskActionAuditLog /></Suspense>;
+      case "oils-partners":
+        return <Suspense fallback={<SectionLoader />}><OilsPartnersCenter /></Suspense>;
       case "visitor-leads":
         return (
           <Suspense fallback={<SectionLoader />}>

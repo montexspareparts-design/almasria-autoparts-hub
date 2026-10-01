@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowRight, Camera, Check, FileText, Loader2, ShieldCheck, X } from "lucide-react";
+import { compressImageToDataUrl } from "@/lib/compressImage";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
@@ -24,6 +25,14 @@ const GOVERNORATES = [
   "الفيوم", "بني سويف", "المنيا", "أسيوط", "سوهاج", "قنا", "الأقصر", "أسوان",
   "البحر الأحمر", "مطروح", "شمال سيناء", "جنوب سيناء", "الوادي الجديد",
 ];
+
+const DOC_KINDS = [
+  { key: "shop_card", label: "كارت المحل" },
+  { key: "tax_card", label: "البطاقة الضريبية" },
+  { key: "commercial_register", label: "السجل التجاري" },
+  { key: "invoice", label: "فاتورة من المحل" },
+] as const;
+type DocKey = (typeof DOC_KINDS)[number]["key"];
 
 const VOLUMES = ["أقل من 20 ألف", "20 – 50 ألف", "50 – 150 ألف", "أكثر من 150 ألف"];
 
@@ -49,6 +58,31 @@ const OilsJoin = () => {
     agreed_terms: false,
   });
 
+  const [docs, setDocs] = useState<Partial<Record<DocKey, { url: string; pdf: boolean }>>>({});
+  const [docBusy, setDocBusy] = useState<DocKey | null>(null);
+
+  const pickDoc = async (key: DocKey, file?: File | null) => {
+    if (!file) return;
+    setError(null);
+    setDocBusy(key);
+    try {
+      if (file.type === "application/pdf") {
+        if (file.size > 4 * 1024 * 1024) { setError("ملف الـ PDF أكبر من 4 ميجا"); return; }
+        const url = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(file); });
+        setDocs((d) => ({ ...d, [key]: { url, pdf: true } }));
+      } else {
+        const url = await compressImageToDataUrl(file, { maxDimension: 1600, maxBytes: 1.5 * 1024 * 1024 });
+        setDocs((d) => ({ ...d, [key]: { url, pdf: false } }));
+      }
+      void haptic("light");
+    } catch {
+      setError("تعذّر قراءة الصورة، جرّب صورة تانية");
+    } finally {
+      setDocBusy(null);
+    }
+  };
+  const docCount = Object.keys(docs).length;
+
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
@@ -58,14 +92,19 @@ const OilsJoin = () => {
       : form.email.trim().length > 4 &&
         form.password.length >= 8 &&
         /^01[0-9]{9}$/.test(form.phone.replace(/\D/g, "")) &&
-        form.agreed_terms;
+        form.agreed_terms &&
+        docCount > 0;
 
   const submit = async () => {
     setLoading(true);
     setError(null);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("oils-join-request", {
-        body: { ...form, phone: form.phone.replace(/\D/g, "") },
+        body: {
+          ...form,
+          phone: form.phone.replace(/\D/g, ""),
+          documents: Object.entries(docs).map(([kind, d]) => ({ kind, data_url: d!.url })),
+        },
       });
       const payload = (data ?? {}) as { success?: boolean; error?: string };
       if (fnErr || !payload.success) {
@@ -197,6 +236,44 @@ const OilsJoin = () => {
             <div className="oils-join-field">
               <label className="oils-label" htmlFor="j-tax">البطاقة الضريبية</label>
               <input id="j-tax" className="oils-input" value={form.tax_card_no} onChange={(e) => set("tax_card_no", e.target.value)} placeholder="اختياري" />
+            </div>
+          </div>
+
+          <div className="oils-join-field">
+            <span className="oils-label">صورة مستند للنشاط (مستند واحد على الأقل)</span>
+            <p className="oils-join-hint">صوّر أو ارفع كارت المحل أو البطاقة الضريبية أو السجل التجاري أو فاتورة من المحل — بتساعدنا نعتمد حسابك أسرع.</p>
+            <div className="oils-join-docs">
+              {DOC_KINDS.map((k) => {
+                const d = docs[k.key];
+                return (
+                  <label key={k.key} className={`oils-join-doc ${d ? "is-on" : ""}`}>
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      hidden
+                      onChange={(e) => { void pickDoc(k.key, e.target.files?.[0]); e.target.value = ""; }}
+                    />
+                    {d ? (
+                      d.pdf ? <FileText className="oils-join-doc-ic" /> : <img src={d.url} alt={k.label} />
+                    ) : docBusy === k.key ? (
+                      <Loader2 className="oils-join-doc-ic animate-spin" />
+                    ) : (
+                      <Camera className="oils-join-doc-ic" />
+                    )}
+                    <span>{k.label}</span>
+                    {d && (
+                      <button
+                        type="button"
+                        aria-label="حذف"
+                        className="oils-join-doc-x"
+                        onClick={(e) => { e.preventDefault(); setDocs((all) => { const n = { ...all }; delete n[k.key]; return n; }); }}
+                      >
+                        <X />
+                      </button>
+                    )}
+                  </label>
+                );
+              })}
             </div>
           </div>
 

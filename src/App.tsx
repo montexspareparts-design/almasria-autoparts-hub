@@ -322,6 +322,7 @@ const MainAppRoot = () => (
                     <Route path="/staff/tasks" element={<StaffTasksPage />} />
                     <Route path="/admin/new-visitors" element={<NewVisitorsWorkflowPage />} />
                     <Route path="/admin/visitor-leads" element={<VisitorLeadsPage />} />
+                    <Route path="/admin/oils-partners" element={<Navigate to="/admin?section=oils-partners" replace />} />
                     <Route path="/admin/active-visitors" element={<ActiveVisitorsPage />} />
                     <Route path="/admin/whatsapp-logs" element={<AdminWhatsAppLogsPage />} />
                     <Route path="/admin/badge-qa" element={<BadgeContrastQA />} />
