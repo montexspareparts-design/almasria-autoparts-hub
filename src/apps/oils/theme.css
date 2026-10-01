@@ -1137,3 +1137,6 @@ html.oils-standalone *::-webkit-scrollbar {
 .oils-qty-input input:focus { border-color: hsl(var(--oils-accent)); box-shadow: 0 0 0 3px hsl(var(--oils-accent) / .18); }
 .oils-qty-cartons input { width: 40px; }
 .oils-qty-cartons span { font-size: 9px; font-weight: 800; color: hsl(var(--oils-muted)); }
+.oils-cart-carton { flex-wrap: wrap; row-gap: 8px; }
+.oils-cart-carton .oils-cart-carton-actions { flex: 1 0 100%; justify-content: center; align-items: center; margin-inline-start: 0; }
+.oils-cart-carton-info { white-space: nowrap; }
