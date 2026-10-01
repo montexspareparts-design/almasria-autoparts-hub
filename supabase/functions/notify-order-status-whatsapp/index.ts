@@ -95,10 +95,11 @@ Deno.serve(async (req) => {
     // Fetch order details if missing
     let shippingCompany: string | null = null;
     let trackingNumber: string | null = null;
-    if (!orderNumber || !userId || newStatus === "shipped") {
+    let pickupBranch: string | null = null;
+    if (!orderNumber || !userId || newStatus === "shipped" || newStatus === "delivered") {
       const { data: order } = await supabase
         .from("orders")
-        .select("order_number, user_id, shipping_company, tracking_number")
+        .select("order_number, user_id, shipping_company, tracking_number, pickup_branch")
         .eq("id", orderId)
         .single();
       if (!order) {
@@ -111,6 +112,7 @@ Deno.serve(async (req) => {
       userId = order.user_id;
       shippingCompany = order.shipping_company;
       trackingNumber = order.tracking_number;
+      pickupBranch = (order as any).pickup_branch ?? null;
     }
 
     // Get customer phone
@@ -126,7 +128,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const message = msgBuilder(orderNumber!, { shipping_company: shippingCompany, tracking_number: trackingNumber });
+    const message = msgBuilder(orderNumber!, { shipping_company: shippingCompany, tracking_number: trackingNumber, pickup_branch: pickupBranch });
     const customerResult = await sendWhatsAppText(profile.phone, message);
     if (!customerResult.ok) {
       console.error(
