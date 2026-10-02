@@ -96,7 +96,17 @@ import ReporterOnlyGuard from "./components/ReporterOnlyGuard";
 const DealerRtlAuditor = import.meta.env.DEV
   ? lazy(() => import("./components/dealer/DealerRtlAuditor"))
   : null;
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // البيانات تفضل صالحة 5 دقائق — التنقل بين الصفحات لا يعيد الجلب فورًا
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const isNativeShell = () => isNativeShellFn();
 const isStandaloneOilsApp = () =>
