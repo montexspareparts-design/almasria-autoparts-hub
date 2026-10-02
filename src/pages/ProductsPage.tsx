@@ -31,7 +31,7 @@ import brandDenso from "@/assets/brand-denso.webp";
 import brandAisin from "@/assets/brand-aisin.webp";
 import brandFbkBrakes from "@/assets/brand-fbk-logo.webp";
 import brandKyb from "@/assets/brand-kyb.png";
-import brandTp from "@/assets/brand-tp.png";
+import brandTp from "@/assets/brand-tp.webp";
 import oilBg from "@/assets/oil-hero-bg.webp";
 
 const brandConfig: Record<string, { title: string; subtitle: string; titleEn?: string; descriptionEn?: string; description: string; badge: string; brandKey: string; logo: string; backgroundImage?: string; logoScale?: number }> = {

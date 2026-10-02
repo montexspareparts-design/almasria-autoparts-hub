@@ -1,7 +1,7 @@
 import { ArrowLeft, Info, ChevronDown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMemo } from "react";
-import heroPart from "@/assets/hero-toyota-part.png";
+import heroPart from "@/assets/hero-toyota-part.webp";
 
 /**
  * Luxury Hero — Rolex / premium product feel.
