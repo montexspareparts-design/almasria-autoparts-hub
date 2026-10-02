@@ -1,4 +1,4 @@
-import logo from "@/assets/oils/almasria-oils-wholesale-transparent.png";
+import logo from "@/assets/oils/almasria-oils-wholesale-transparent.webp";
 
 interface OilsBrandMarkProps {
   className?: string;

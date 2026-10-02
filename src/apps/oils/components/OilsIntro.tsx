@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import logo from "@/assets/oils/almasria-oils-wholesale-transparent.png";
+import logo from "@/assets/oils/almasria-oils-wholesale-transparent.webp";
 
 const INTRO_KEY = "oils_intro_shown_v1";
 
