@@ -1,5 +1,9 @@
 # One policy for every crawler (Google/Bing pick the most specific group,
 # so private areas are listed here once and apply to all bots).
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Storebot-Google
+User-agent: AdsBot-Google
 User-agent: *
 Allow: /
 Disallow: /admin
