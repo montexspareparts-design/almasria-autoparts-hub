@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { normalizePaymobOrderReference, NATIVE_SRC_VALUES } from "@/lib/payment-return";
 import { isNativePlatform, returnToNativeApp } from "@/lib/native";
+import { showReviewsOptIn } from "@/lib/googleCustomerReviews";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
@@ -166,6 +167,12 @@ const PaymentCallback = () => {
     const value = Number(amountCents ?? 0) / 100;
     trackPurchase(orderNumber || merchantOrderId || orderId || "unknown", Number.isFinite(value) ? value : 0);
   }, [status, amountCents, orderNumber, merchantOrderId, orderId]);
+
+  useEffect(() => {
+    if (status !== "success" || fromNativeApp || !user?.email) return;
+    const ref = orderNumber || merchantOrderId || orderId;
+    if (ref) showReviewsOptIn(ref, user.email);
+  }, [status, user, orderNumber, merchantOrderId, orderId, fromNativeApp]);
 
   const handleReturnToApp = () => {
     // Deep link back into the native app if the user is on the public web

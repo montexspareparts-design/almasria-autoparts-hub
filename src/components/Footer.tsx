@@ -1,4 +1,5 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
+import { loadReviewsBadge } from "@/lib/googleCustomerReviews";
 import { Phone, Mail, MapPin, MessageCircle, Send, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { isNativePlatform } from "@/lib/native";
 import logo from "@/assets/logo.webp";
 
 const Footer = forwardRef<HTMLElement>((_, ref) => {
+  useEffect(() => { if (!isNativePlatform()) loadReviewsBadge(); }, []);
   const { t } = useLanguage();
   const { dealerAccount } = useAuth();
   const isDealer = !!dealerAccount;
